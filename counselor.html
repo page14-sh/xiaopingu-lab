@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#5C7A52">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>小平菇 · 咨询师档案录入</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+    background: #F7F4EF;
+    color: #3D3831;
+    font-size: 15px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+
+  .page-header {
+    background: rgba(255,255,255,0.95);
+    border-bottom: 1px solid #E8E4DC;
+    padding: 14px 20px;
+    display: flex; align-items: center; gap: 12px;
+    position: sticky; top: 0; z-index: 100;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+  .back-link {
+    color: #5C7A52; text-decoration: none; font-size: 13px;
+    display: flex; align-items: center; gap: 4px; flex-shrink: 0;
+  }
+  .logo-wrap {
+    display: flex; align-items: center; justify-content: center;
+    width: 38px; height: 38px;
+    background: linear-gradient(135deg, #E8F0E4 0%, #D4E4CC 100%);
+    border-radius: 10px; flex-shrink: 0;
+  }
+  .logo-wrap svg { width: 28px; height: 28px; }
+  .brand-name { font-size: 16px; font-weight: 600; color: #5C7A52; }
+  .page-header h1 { font-size: 13px; font-weight: 400; color: #6B635A; margin-top: 1px; }
+
+  .main { max-width: 700px; margin: 0 auto; padding: 20px 16px 60px; }
+
+  /* Progress */
+  .progress-bar-wrap { margin-bottom: 20px; }
+  .progress-steps { display: flex; gap: 0; margin-bottom: 8px; }
+  .step-item {
+    flex: 1; text-align: center; font-size: 11px; color: #B4B2A9;
+    padding-bottom: 7px; border-bottom: 2px solid #E8E8E3; transition: all 0.25s;
+  }
+  .step-item.active { color: #5C7A52; border-bottom-color: #5C7A52; font-weight: 600; }
+  .step-item.done { color: #8AAF7D; border-bottom-color: #C8DCC0; }
+
+  /* Card */
+  .card {
+    background: #fff; border: 1px solid #E8E4DC; border-radius: 14px;
+    padding: 24px 20px; margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .card-title { font-size: 16px; font-weight: 600; margin-bottom: 4px; color: #3D3831; }
+  .card-sub {
+    font-size: 13px; color: #A09889; margin-bottom: 20px;
+    padding-bottom: 14px; border-bottom: 1px solid #F0ECE5;
+  }
+
+  /* Form */
+  .form-row { margin-bottom: 18px; }
+  .form-row label {
+    display: block; font-size: 14px; font-weight: 500; margin-bottom: 6px; color: #6B635A;
+  }
+  .form-row .label-hint { font-size: 12px; color: #A09889; font-weight: 400; margin-left: 4px; }
+  .required::after { content: " *"; color: #C4654A; }
+  input[type="text"], input[type="number"], input[type="tel"],
+  select, textarea {
+    width: 100%; padding: 12px 14px;
+    border: 1.5px solid #D5D0C8; border-radius: 10px;
+    font-size: 16px; color: #3D3831; background: #fff; outline: none;
+    transition: border-color 0.2s; -webkit-appearance: none; appearance: none;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: #5C7A52; box-shadow: 0 0 0 3px rgba(92,122,82,0.1);
+  }
+  textarea { resize: vertical; min-height: 80px; font-size: 16px; }
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23A09889' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px;
+  }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+  /* Options */
+  .option-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; }
+  .opt-card {
+    border: 1.5px solid #E8E4DC; border-radius: 10px;
+    padding: 10px 12px; cursor: pointer; transition: all 0.2s; background: #fff;
+    user-select: none; -webkit-user-select: none; touch-action: manipulation;
+  }
+  .opt-card:active { transform: scale(0.97); }
+  .opt-card.selected { border-color: #5C7A52; background: #E8F0E4; }
+  .opt-card input { display: none; }
+  .opt-card .opt-label { font-size: 13px; font-weight: 500; color: #3D3831; }
+  .opt-card .opt-desc { font-size: 11px; color: #A09889; margin-top: 2px; }
+  .opt-card.selected .opt-label { color: #5C7A52; }
+
+  /* Divider */
+  .divider { border: none; border-top: 1px solid #F0ECE5; margin: 16px 0; }
+
+  /* Buttons */
+  .action-bar { display: flex; gap: 10px; justify-content: flex-end; padding-top: 10px; flex-wrap: wrap; }
+  .btn {
+    padding: 12px 24px; border-radius: 10px; font-size: 15px; font-weight: 500;
+    cursor: pointer; border: 1.5px solid transparent; transition: all 0.2s;
+    touch-action: manipulation; -webkit-appearance: none; appearance: none;
+  }
+  .btn:active { transform: scale(0.96); }
+  .btn-outline { background: #fff; border-color: #D5D0C8; color: #6B635A; }
+  .btn-primary { background: #5C7A52; color: #fff; border-color: #5C7A52; }
+  .btn-primary:hover { background: #4A6342; }
+
+  /* Section toggle */
+  .section-block { display: none; }
+  .section-block.active { display: block; animation: fadeIn 0.35s ease; }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: rgba(61,56,49,0.92); color: #fff; padding: 10px 24px; border-radius: 20px;
+    font-size: 14px; z-index: 999; opacity: 0; transition: all 0.3s; pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Preview card */
+  .preview-card {
+    background: #F7F4EF; border: 1px solid #E8E4DC; border-radius: 14px;
+    padding: 20px; margin-top: 16px;
+  }
+  .preview-card h3 { font-size: 15px; color: #5C7A52; margin-bottom: 12px; }
+  .preview-tag {
+    display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 10px;
+    background: #E8F0E4; color: #5C7A52; margin: 2px;
+  }
+  .preview-row { display: flex; justify-content: space-between; font-size: 13px; padding: 6px 0; border-bottom: 1px solid #F0ECE5; }
+  .preview-row:last-child { border-bottom: none; }
+  .preview-label { color: #A09889; }
+  .preview-val { color: #3D3831; font-weight: 500; }
+
+  /* Status indicator */
+  .status-dot {
+    display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+    margin-right: 6px; vertical-align: middle;
+  }
+  .status-dot.online { background: #5C7A52; }
+  .status-dot.offline { background: #D5D0C8; }
+
+  @media (max-width: 374px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .option-grid { grid-template-columns: 1fr 1fr; }
+  }
+  @media print {
+    .action-bar, .toast, .progress-bar-wrap { display: none !important; }
+    .page-header { position: static; background: #fff; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <a href="index.html" class="back-link">← 评估</a>
+  <div class="logo-wrap">
+    <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="24" cy="22" rx="18" ry="14" fill="#8AAF7D"/>
+      <circle cx="16" cy="17" r="3.5" fill="#fff" opacity="0.5"/>
+      <circle cx="28" cy="14" r="2.5" fill="#fff" opacity="0.4"/>
+      <circle cx="32" cy="22" r="3" fill="#fff" opacity="0.35"/>
+      <path d="M18 24 Q18 38 20 42 L28 42 Q30 38 30 24" fill="#F5EDE0"/>
+      <ellipse cx="24" cy="43" rx="12" ry="2" fill="#8AAF7D" opacity="0.15"/>
+    </svg>
+  </div>
+  <div>
+    <div class="brand-name">咨询师档案录入</div>
+    <h1>小平菇 · 注册咨询师信息，提升匹配精度</h1>
+  </div>
+</div>
+
+<div class="main">
+
+  <div class="progress-bar-wrap">
+    <div class="progress-steps">
+      <div class="step-item active" id="step1-bar">① 资质信息</div>
+      <div class="step-item" id="step2-bar">② 咨询取向</div>
+      <div class="step-item" id="step3-bar">③ 擅长领域</div>
+      <div class="step-item" id="step4-bar">④ 咨询方式</div>
+      <div class="step-item" id="step5-bar">⑤ 个人简介</div>
+    </div>
+  </div>
+
+  <!-- ===== STEP 1: 资质信息 ===== -->
+  <div class="section-block active" id="section1">
+    <div class="card">
+      <p class="card-title">资质与基本信息</p>
+      <p class="card-sub">这些信息用于来访者的初步筛选，确保匹配的咨询师满足最低资质要求</p>
+
+      <div class="form-row">
+        <label class="required">真实姓名 <span class="label-hint">（实名制，须与执业证姓名一致）</span></label>
+        <input type="text" id="c_name" placeholder="请输入您的真实姓名" autocomplete="off">
+      </div>
+
+      <div class="form-grid">
+        <div class="form-row">
+          <label class="required">资质等级</label>
+          <select id="c_credential">
+            <option value="">请选择</option>
+            <option value="三级">心理咨询师（三级）</option>
+            <option value="二级">心理咨询师（二级）</option>
+            <option value="心理治疗师">心理治疗师</option>
+            <option value="社会工作师（初级）">社会工作师（初级·助理社工师）</option>
+            <option value="社会工作师（中级）">社会工作师（中级·社工师）</option>
+            <option value="社会工作师（高级）">社会工作师（高级·高级社工师）</option>
+            <option value="精神科医生">精神科医生</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label class="required">从业年限</label>
+          <input type="number" id="c_years" placeholder="年" min="0" max="50" inputmode="numeric">
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-row">
+          <label>最高学历</label>
+          <select id="c_education">
+            <option value="">请选择</option>
+            <option value="学士">学士</option>
+            <option value="硕士">硕士</option>
+            <option value="博士">博士</option>
+            <option value="医学学位">医学学位（MD）</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>所在城市</label>
+          <input type="text" id="c_city" placeholder="如：上海">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label>注册编号 / 执业证号</label>
+        <input type="text" id="c_license" placeholder="心理咨询师注册号或医师执业证号（选填）" autocomplete="off">
+      </div>
+
+      <div class="action-bar">
+        <button class="btn btn-primary" onclick="goStep(2)">下一步 →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== STEP 2: 咨询取向 ===== -->
+  <div class="section-block" id="section2">
+    <div class="card">
+      <p class="card-title">咨询取向与受训背景</p>
+      <p class="card-sub">取向是匹配的核心维度，请如实填写您受过系统训练的取向</p>
+
+      <div class="form-row">
+        <label class="required">咨询取向（可多选）</label>
+        <div class="option-grid" id="approach_grid">
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="approach" value="CBT"><div class="opt-label">CBT</div><div class="opt-desc">认知行为疗法</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="approach" value="ACT"><div class="opt-label">ACT</div><div class="opt-desc">接纳承诺疗法</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="approach" value="DBT"><div class="opt-label">DBT</div><div class="opt-desc">辩证行为疗法</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="approach" value="EMDR"><div class="opt-label">EMDR</div><div class="opt-desc">眼动脱敏再处理</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="approach" value="精神动力学"><div class="opt-label">精神动力学</div><div class="opt-desc">心理动力学</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="approach" value="人本主义"><div class="opt-label">人本主义</div><div class="opt-desc">来访者中心</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="approach" value="家庭治疗"><div class="opt-label">家庭治疗</div><div class="opt-desc">系统式/结构式</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="approach" value="EFT"><div class="opt-label">EFT</div><div class="opt-desc">情绪聚焦治疗</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="approach" value="叙事治疗"><div class="opt-label">叙事治疗</div><div class="opt-desc">叙事取向</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="approach" value="沙盘游戏"><div class="opt-label">沙盘游戏</div><div class="opt-desc">表达性艺术</div></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:10px">
+          <input type="text" id="c_approach_other" placeholder="其他取向，如：正念减压(MBSR)、催眠治疗、躯体治疗…" style="flex:1;font-size:14px;padding:10px 12px" autocomplete="off">
+          <button type="button" class="btn btn-outline" style="padding:10px 16px;font-size:13px;white-space:nowrap" onclick="addOtherApproach()">+ 添加</button>
+        </div>
+        <div id="approach_other_tags" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px"></div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-row">
+          <label>首选取向</label>
+          <select id="c_approach_primary">
+            <option value="">请选择您最擅长的取向</option>
+            <option value="CBT">CBT</option>
+            <option value="ACT">ACT</option>
+            <option value="DBT">DBT</option>
+            <option value="EMDR">EMDR</option>
+            <option value="精神动力学">精神动力学</option>
+            <option value="人本主义">人本主义</option>
+            <option value="家庭治疗">家庭治疗</option>
+            <option value="EFT">EFT</option>
+            <option value="叙事治疗">叙事治疗</option>
+            <option value="沙盘游戏">沙盘游戏</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>累计督导时长</label>
+          <input type="number" id="c_supervision" placeholder="小时" min="0" inputmode="numeric">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label>自我体验时长</label>
+        <input type="number" id="c_personal_therapy" placeholder="小时" min="0" inputmode="numeric">
+      </div>
+
+      <div class="form-row">
+        <label>是否参加过伦理培训</label>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <label style="display:flex;align-items:center;gap:6px;font-size:14px;color:#6B635A;cursor:pointer">
+            <input type="radio" name="ethics_training" value="是"> 是
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:14px;color:#6B635A;cursor:pointer">
+            <input type="radio" name="ethics_training" value="否"> 否
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:14px;color:#6B635A;cursor:pointer">
+            <input type="radio" name="ethics_training" value="进行中"> 培训中
+          </label>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label>专项认证（可多选）</label>
+        <div class="option-grid" id="cert_grid" style="grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));">
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="cert" value="危机干预"><div class="opt-label">危机干预</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="cert" value="EMDR认证"><div class="opt-label">EMDR认证</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="cert" value="CBT认证"><div class="opt-label">CBT认证</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="cert" value="创伤专项"><div class="opt-label">创伤专项</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="cert" value="婚姻咨询专项"><div class="opt-label">婚姻咨询专项</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="cert" value="儿童青少年专项"><div class="opt-label">儿童青少年专项</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="cert" value="EAP专项"><div class="opt-label">EAP专项</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="cert" value="AHA危机干预"><div class="opt-label">AHA危机干预</div></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:10px">
+          <input type="text" id="c_cert_other" placeholder="其他认证，如：中德班、中美班、CAPA…" style="flex:1;font-size:14px;padding:10px 12px" autocomplete="off">
+          <button type="button" class="btn btn-outline" style="padding:10px 16px;font-size:13px;white-space:nowrap" onclick="addOtherCert()">+ 添加</button>
+        </div>
+        <div id="cert_other_tags" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px"></div>
+      </div>
+
+      <div class="form-row">
+        <label>受训背景</label>
+        <textarea id="c_training" placeholder="简要描述主要受训经历，如培训项目名称、时长、师资等"></textarea>
+      </div>
+
+      <div class="action-bar">
+        <button class="btn btn-outline" onclick="goStep(1)">← 上一步</button>
+        <button class="btn btn-primary" onclick="goStep(3)">下一步 →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== STEP 3: 擅长领域 ===== -->
+  <div class="section-block" id="section3">
+    <div class="card">
+      <p class="card-title">擅长议题与人群</p>
+      <p class="card-sub">选项与来访评估端一一对应，精准匹配的基础</p>
+
+      <div class="form-row">
+        <label class="required">擅长议题（可多选，与来访评估对应）</label>
+        <div class="option-grid" id="specialty_grid">
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="specialty" value="emotion"><div class="opt-label">情绪困扰</div><div class="opt-desc">抑郁/焦虑/恐慌</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="specialty" value="relationship"><div class="opt-label">关系困境</div><div class="opt-desc">亲密/亲子/社交</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="specialty" value="trauma"><div class="opt-label">创伤经历</div><div class="opt-desc">PTSD/童年创伤</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="specialty" value="growth"><div class="opt-label">自我成长</div><div class="opt-desc">认同/意义/职业</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="specialty" value="adolescent"><div class="opt-label">青少年问题</div><div class="opt-desc">学业/叛逆/进食</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="specialty" value="marriage"><div class="opt-label">婚姻/伴侣</div><div class="opt-desc">婚姻危机/出轨/离婚</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="specialty" value="personality"><div class="opt-label">人格议题</div><div class="opt-desc">边缘/自恋/强迫</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="specialty" value="crisis"><div class="opt-label">危机干预</div><div class="opt-desc">自伤/自杀/紧急</div></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:10px">
+          <input type="text" id="c_specialty_other" placeholder="其他议题，如：丧亲哀伤、成瘾行为、跨文化适应…" style="flex:1;font-size:14px;padding:10px 12px" autocomplete="off">
+          <button type="button" class="btn btn-outline" style="padding:10px 16px;font-size:13px;white-space:nowrap" onclick="addOtherSpecialty()">+ 添加</button>
+        </div>
+        <div id="specialty_other_tags" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px"></div>
+      </div>
+
+      <hr class="divider">
+
+      <div class="form-row">
+        <label>擅长服务人群（可多选）</label>
+        <div class="option-grid" id="population_grid" style="grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));">
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="population" value="成人"><div class="opt-label">成人</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="population" value="青少年"><div class="opt-label">青少年(12-18)</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="population" value="儿童"><div class="opt-label">儿童(6-12)</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="population" value="大学生"><div class="opt-label">大学生</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="population" value="家长"><div class="opt-label">家长</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="population" value="老年人"><div class="opt-label">老年人</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="population" value="LGBTQ+"><div class="opt-label">LGBTQ+</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="population" value="企业员工"><div class="opt-label">企业员工(EAP)</div></div>
+        </div>
+      </div>
+
+      <hr class="divider">
+
+      <div class="form-row">
+        <label>可承接的严重程度（可多选）</label>
+        <div class="option-grid" id="severity_grid" style="grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));">
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="severity" value="轻度"><div class="opt-label">轻度</div><div class="opt-desc">总分0-7</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="severity" value="中度"><div class="opt-label">中度</div><div class="opt-desc">总分8-14</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="severity" value="重度"><div class="opt-label">重度</div><div class="opt-desc">总分15-25</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="severity" value="需精神科联合"><div class="opt-label">医心联合</div><div class="opt-desc">需与精神科协作</div></div>
+        </div>
+      </div>
+
+      <div class="action-bar">
+        <button class="btn btn-outline" onclick="goStep(2)">← 上一步</button>
+        <button class="btn btn-primary" onclick="goStep(4)">下一步 →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== STEP 4: 咨询方式 ===== -->
+  <div class="section-block" id="section4">
+    <div class="card">
+      <p class="card-title">咨询方式与可预约时间</p>
+      <p class="card-sub">这些信息帮助来访者确认能否实际预约到您</p>
+
+      <div class="form-row">
+        <label class="required">咨询形式（可多选）</label>
+        <div class="option-grid" id="format_grid" style="grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));">
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="format" value="线下面询"><div class="opt-label">线下面询</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="format" value="视频咨询"><div class="opt-label">视频咨询</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="format" value="语音咨询"><div class="opt-label">语音咨询</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="format" value="文字咨询"><div class="opt-label">文字咨询</div></div>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-row">
+          <label>单次时长</label>
+          <select id="c_duration">
+            <option value="50分钟">50分钟</option>
+            <option value="60分钟">60分钟</option>
+            <option value="90分钟">90分钟</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>单次费用（元）</label>
+          <input type="number" id="c_fee_min" placeholder="如：500" min="0" step="50" autocomplete="off">
+        </div>
+        <div class="form-row">
+          <label>收费档位</label>
+          <select id="c_fee_level">
+            <option value="low">平价 ≤300元/次</option>
+            <option value="mid" selected>中等 300-600元/次</option>
+            <option value="high">偏高 600-1000元/次</option>
+            <option value="premium">高端 1000元/次以上</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label>可预约时段</label>
+        <textarea id="c_slots" placeholder="如：工作日白天(9:00-17:00)、周二四晚间(19:00-21:00)、周末上午" style="min-height:60px"></textarea>
+      </div>
+
+      <hr class="divider">
+
+      <div class="form-row">
+        <label>联系方式（选填，仅管理员可见，不展示给来访者）</label>
+        <div class="form-grid">
+          <div class="form-row">
+            <label style="font-size:13px;font-weight:400;color:#A09889">微信号</label>
+            <input type="text" id="c_wechat" placeholder="选填" autocomplete="off">
+          </div>
+          <div class="form-row">
+            <label style="font-size:13px;font-weight:400;color:#A09889">手机号</label>
+            <input type="tel" id="c_phone" placeholder="选填" autocomplete="off">
+          </div>
+        </div>
+      </div>
+
+      <div class="action-bar">
+        <button class="btn btn-outline" onclick="goStep(3)">← 上一步</button>
+        <button class="btn btn-primary" onclick="goStep(5)">下一步 →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== STEP 5: 个人简介 ===== -->
+  <div class="section-block" id="section5">
+    <div class="card">
+      <p class="card-title">个人简介</p>
+      <p class="card-sub">让来访者了解您的咨询风格和专业背景</p>
+
+      <div class="form-row">
+        <label class="required">一句话简介 <span class="label-hint">（展示在匹配卡片上，建议50字以内）</span></label>
+        <input type="text" id="c_bio_short" placeholder="如：注册心理师，8年经验，专注CBT取向的情绪与关系议题" maxlength="80" autocomplete="off">
+      </div>
+
+      <div class="form-row">
+        <label>详细个人介绍</label>
+        <textarea id="c_bio_full" placeholder="详细介绍您的受训经历、咨询理念、擅长领域、典型案例等（选填）" style="min-height:120px"></textarea>
+      </div>
+
+      <div class="action-bar">
+        <button class="btn btn-outline" onclick="goStep(4)">← 上一步</button>
+        <button class="btn btn-primary" onclick="previewAndSubmit()">预览并提交 →</button>
+      </div>
+    </div>
+
+    <!-- Preview -->
+    <div class="card" id="preview_card" style="display:none">
+      <p class="card-title">档案预览</p>
+      <div id="preview_content"></div>
+      <div class="action-bar" style="margin-top:16px">
+        <button class="btn btn-outline" onclick="document.getElementById('preview_card').style.display='none'; goStep(5);">返回修改</button>
+        <button class="btn btn-primary" onclick="submitProfile()">确认提交</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script src="supabase-config.js"></script>
+<script>
+var currentStep = 1;
+
+function goStep(n) {
+  document.getElementById('section' + currentStep).classList.remove('active');
+  document.getElementById('step' + currentStep + '-bar').classList.remove('active');
+  document.getElementById('step' + currentStep + '-bar').classList.add('done');
+  currentStep = n;
+  document.getElementById('section' + n).classList.add('active');
+  document.getElementById('step' + n + '-bar').classList.add('active');
+  document.getElementById('step' + n + '-bar').classList.remove('done');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function toggleOpt(el) {
+  el.classList.toggle('selected');
+  var cb = el.querySelector('input[type="checkbox"]');
+  if (cb) cb.checked = el.classList.contains('selected');
+}
+
+// --- "其他" 自定义标签管理 ---
+var otherApproaches = [];
+var otherSpecialties = [];
+var otherCerts = [];
+
+function addOtherApproach() {
+  var input = document.getElementById('c_approach_other');
+  var val = input.value.trim();
+  if (!val) return;
+  if (otherApproaches.indexOf(val) >= 0) { showToast('该取向已添加'); return; }
+  otherApproaches.push(val);
+  input.value = '';
+  renderOtherTags('approach');
+}
+
+function removeOtherApproach(idx) {
+  otherApproaches.splice(idx, 1);
+  renderOtherTags('approach');
+}
+
+function addOtherSpecialty() {
+  var input = document.getElementById('c_specialty_other');
+  var val = input.value.trim();
+  if (!val) return;
+  if (otherSpecialties.indexOf(val) >= 0) { showToast('该议题已添加'); return; }
+  otherSpecialties.push(val);
+  input.value = '';
+  renderOtherTags('specialty');
+}
+
+function removeOtherSpecialty(idx) {
+  otherSpecialties.splice(idx, 1);
+  renderOtherTags('specialty');
+}
+
+function addOtherCert() {
+  var input = document.getElementById('c_cert_other');
+  var val = input.value.trim();
+  if (!val) return;
+  if (otherCerts.indexOf(val) >= 0) { showToast('该认证已添加'); return; }
+  otherCerts.push(val);
+  input.value = '';
+  renderOtherTags('cert');
+}
+
+function removeOtherCert(idx) {
+  otherCerts.splice(idx, 1);
+  renderOtherTags('cert');
+}
+
+function renderOtherTags(type) {
+  var list = type === 'approach' ? otherApproaches : type === 'specialty' ? otherSpecialties : otherCerts;
+  var container = document.getElementById(type + '_other_tags');
+  var removeFn = type === 'approach' ? 'removeOtherApproach' : type === 'specialty' ? 'removeOtherSpecialty' : 'removeOtherCert';
+  var html = '';
+  list.forEach(function(v, i) {
+    html += '<span style="display:inline-flex;align-items:center;gap:4px;font-size:12px;padding:4px 10px;border-radius:16px;background:#E8F0E4;color:#5C7A52;border:1px solid #C8DCC0">';
+    html += v + ' <button type="button" onclick="' + removeFn + '(' + i + ')" style="background:none;border:none;color:#A09889;font-size:14px;cursor:pointer;padding:0 2px;line-height:1">&times;</button>';
+    html += '</span>';
+  });
+  container.innerHTML = html;
+}
+
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 2500);
+}
+
+function getMultiChecked(name) {
+  var vals = [];
+  document.querySelectorAll('input[name="' + name + '"]:checked').forEach(function(el) { vals.push(el.value); });
+  return vals;
+}
+
+function collectData() {
+  return {
+    name: document.getElementById('c_name').value.trim(),
+    credential_level: document.getElementById('c_credential').value,
+    years_experience: parseInt(document.getElementById('c_years').value) || 0,
+    education: document.getElementById('c_education').value,
+    city: document.getElementById('c_city').value.trim(),
+    license_number: document.getElementById('c_license').value.trim(),
+    approaches: getMultiChecked('approach'),
+    approaches_other: otherApproaches.slice(),
+    approach_primary: document.getElementById('c_approach_primary').value,
+    supervision_hours: parseInt(document.getElementById('c_supervision').value) || 0,
+    personal_therapy_hours: parseInt(document.getElementById('c_personal_therapy').value) || 0,
+    ethics_training: (function() { var el = document.querySelector('input[name="ethics_training"]:checked'); return el ? el.value : ''; })(),
+    certifications: getMultiChecked('cert'),
+    certifications_other: otherCerts.slice(),
+    training_background: document.getElementById('c_training').value.trim(),
+    specialties: getMultiChecked('specialty'),
+    specialties_other: otherSpecialties.slice(),
+    populations: getMultiChecked('population'),
+    severity_levels: getMultiChecked('severity'),
+    session_formats: getMultiChecked('format'),
+    session_duration: document.getElementById('c_duration').value,
+    fee_min: parseInt(document.getElementById('c_fee_min').value) || 0,
+    fee_budget_level: document.getElementById('c_fee_level').value,
+    available_slots: document.getElementById('c_slots').value.trim(),
+    contact_wechat: document.getElementById('c_wechat').value.trim(),
+    contact_phone: document.getElementById('c_phone').value.trim(),
+    bio_short: document.getElementById('c_bio_short').value.trim(),
+    bio_full: document.getElementById('c_bio_full').value.trim()
+  };
+}
+
+function previewAndSubmit() {
+  var d = collectData();
+  if (!d.name) { showToast('请填写真实姓名'); goStep(1); return; }
+  if (!/^[\u4e00-\u9fa5]{2,4}$/.test(d.name) && !/^[A-Za-z\s·]{2,30}$/.test(d.name)) { showToast('请填写真实姓名（中文2-4字或英文全名）'); goStep(1); return; }
+  if (!d.credential_level) { showToast('请选择资质等级'); goStep(1); return; }
+  if (d.approaches.length === 0) { showToast('请至少选择一个咨询取向'); goStep(2); return; }
+  if (d.specialties.length === 0) { showToast('请至少选择一个擅长议题'); goStep(3); return; }
+  if (!d.bio_short) { showToast('请填写一句话简介'); goStep(5); return; }
+
+  var html = '<div class="preview-card"><h3>' + d.name + '</h3>';
+  html += '<p style="font-size:12px;color:#C4654A;margin-bottom:12px">⚠ 实名制 · 须与执业证姓名一致</p>';
+  html += '<p style="font-size:13px;color:#6B635A;margin-bottom:12px">' + d.bio_short + '</p>';
+  html += '<div class="preview-row"><span class="preview-label">资质</span><span class="preview-val">' + d.credential_level + '</span></div>';
+  html += '<div class="preview-row"><span class="preview-label">从业年限</span><span class="preview-val">' + d.years_experience + '年</span></div>';
+  if (d.education) html += '<div class="preview-row"><span class="preview-label">学历</span><span class="preview-val">' + d.education + '</span></div>';
+  if (d.city) html += '<div class="preview-row"><span class="preview-label">所在城市</span><span class="preview-val">' + d.city + '</span></div>';
+  html += '<div class="preview-row"><span class="preview-label">咨询取向</span><span class="preview-val">';
+  d.approaches.forEach(function(s) { html += '<span class="preview-tag">' + s + '</span> '; });
+  d.approaches_other.forEach(function(s) { html += '<span class="preview-tag" style="background:#FFF3E6;color:#B8860B;border:1px solid #F0D9A8">' + s + '</span> '; });
+  html += (d.approaches.length + d.approaches_other.length === 0 ? '—' : '') + '</span></div>';
+  if (d.approach_primary) html += '<div class="preview-row"><span class="preview-label">首选取向</span><span class="preview-val">' + d.approach_primary + '</span></div>';
+  if (d.certifications.length) html += '<div class="preview-row"><span class="preview-label">专项认证</span><span class="preview-val">' + d.certifications.join('、');
+  d.certifications_other.forEach(function(s) { html += '<span class="preview-tag" style="background:#FFF3E6;color:#B8860B;border:1px solid #F0D9A8">' + s + '</span> '; });
+  html += '</span></div>';
+  if (d.supervision_hours) html += '<div class="preview-row"><span class="preview-label">督导时长</span><span class="preview-val">' + d.supervision_hours + '小时</span></div>';
+  if (d.personal_therapy_hours) html += '<div class="preview-row"><span class="preview-label">自我体验时长</span><span class="preview-val">' + d.personal_therapy_hours + '小时</span></div>';
+  if (d.ethics_training) html += '<div class="preview-row"><span class="preview-label">伦理培训</span><span class="preview-val">' + d.ethics_training + '</span></div>';
+  html += '<div class="preview-row"><span class="preview-label">擅长议题</span><span class="preview-val">';
+  d.specialties.forEach(function(s) { html += '<span class="preview-tag">' + s + '</span> '; });
+  d.specialties_other.forEach(function(s) { html += '<span class="preview-tag" style="background:#FFF3E6;color:#B8860B;border:1px solid #F0D9A8">' + s + '</span> '; });
+  html += '</span></div>';
+  if (d.populations.length) {
+    html += '<div class="preview-row"><span class="preview-label">服务人群</span><span class="preview-val">';
+    d.populations.forEach(function(p) { html += '<span class="preview-tag">' + p + '</span> '; });
+    html += '</span></div>';
+  }
+  if (d.severity_levels.length) {
+    html += '<div class="preview-row"><span class="preview-label">承接程度</span><span class="preview-val">';
+    d.severity_levels.forEach(function(s) { html += '<span class="preview-tag">' + s + '</span> '; });
+    html += '</span></div>';
+  }
+  if (d.session_formats.length) html += '<div class="preview-row"><span class="preview-label">咨询形式</span><span class="preview-val">' + d.session_formats.join('、') + '</span></div>';
+  if (d.session_duration) html += '<div class="preview-row"><span class="preview-label">单次时长</span><span class="preview-val">' + d.session_duration + '</span></div>';
+  if (d.fee_min) html += '<div class="preview-row"><span class="preview-label">单次费用</span><span class="preview-val">' + d.fee_min + '元/次</span></div>';
+  if (d.fee_budget_level) {
+    var levelText = {low:'平价(≤300元)',mid:'中等(300-600元)',high:'偏高(600-1000元)',premium:'高端(1000元以上)'};
+    html += '<div class="preview-row"><span class="preview-label">收费档位</span><span class="preview-val">' + (levelText[d.fee_budget_level]||d.fee_budget_level) + '</span></div>';
+  }
+  if (d.available_slots) html += '<div class="preview-row"><span class="preview-label">可预约时段</span><span class="preview-val">' + d.available_slots + '</span></div>';
+  if (d.bio_full) html += '<div style="margin-top:12px;font-size:13px;color:#5F5E5A;line-height:1.8;padding-top:10px;border-top:1px solid #E8E4DC">' + d.bio_full + '</div>';
+  html += '</div>';
+
+  document.getElementById('preview_content').innerHTML = html;
+  document.getElementById('preview_card').style.display = 'block';
+  document.getElementById('preview_card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function submitProfile() {
+  var d = collectData();
+  d.is_active = true;
+  // Merge standard + other into single arrays for storage and matching
+  d.approaches = d.approaches.concat(d.approaches_other);
+  d.specialties = d.specialties.concat(d.specialties_other);
+  d.certifications = d.certifications.concat(d.certifications_other);
+  delete d.approaches_other;
+  delete d.specialties_other;
+  delete d.certifications_other;
+
+  if (typeof saveCounselor === 'function' && SUPABASE_CONFIG.enableDataCollection && SUPABASE_CONFIG.url) {
+    saveCounselor(d).then(function(result) {
+      if (result && result[0] && result[0].id) {
+        showToast('档案已成功提交！');
+        localStorage.setItem('xiaopingu_counselor_id', result[0].id);
+      } else {
+        showToast('已保存到本地（后端未启用）');
+        localStorage.setItem('xiaopingu_counselor_draft', JSON.stringify(d));
+      }
+    });
+  } else {
+    showToast('已保存到本地（后端未启用）');
+    localStorage.setItem('xiaopingu_counselor_draft', JSON.stringify(d));
+  }
+}
+
+// Restore draft
+(function() {
+  try {
+    var draft = localStorage.getItem('xiaopingu_counselor_draft');
+    if (!draft) return;
+    var d = JSON.parse(draft);
+
+    if (d.name) document.getElementById('c_name').value = d.name;
+    if (d.credential_level) document.getElementById('c_credential').value = d.credential_level;
+    if (d.years_experience) document.getElementById('c_years').value = d.years_experience;
+    if (d.education) document.getElementById('c_education').value = d.education;
+    if (d.city) document.getElementById('c_city').value = d.city;
+    if (d.license_number) document.getElementById('c_license').value = d.license_number;
+    if (d.approach_primary) document.getElementById('c_approach_primary').value = d.approach_primary;
+    if (d.supervision_hours) document.getElementById('c_supervision').value = d.supervision_hours;
+    if (d.personal_therapy_hours) document.getElementById('c_personal_therapy').value = d.personal_therapy_hours;
+    if (d.ethics_training) {
+      var ethicsRadio = document.querySelector('input[name="ethics_training"][value="' + d.ethics_training + '"]');
+      if (ethicsRadio) ethicsRadio.checked = true;
+    }
+    if (d.training_background) document.getElementById('c_training').value = d.training_background;
+    if (d.session_duration) document.getElementById('c_duration').value = d.session_duration;
+    if (d.fee_min) document.getElementById('c_fee_min').value = d.fee_min;
+    if (d.fee_budget_level) document.getElementById('c_fee_level').value = d.fee_budget_level;
+    if (d.available_slots) document.getElementById('c_slots').value = d.available_slots;
+    if (d.contact_wechat) document.getElementById('c_wechat').value = d.contact_wechat;
+    if (d.contact_phone) document.getElementById('c_phone').value = d.contact_phone;
+    if (d.bio_short) document.getElementById('c_bio_short').value = d.bio_short;
+    if (d.bio_full) document.getElementById('c_bio_full').value = d.bio_full;
+
+    // Restore multi-select options
+    var stdApproaches = ['CBT','ACT','DBT','EMDR','精神动力学','人本主义','家庭治疗','EFT','叙事治疗','沙盘游戏'];
+    var stdSpecialties = ['emotion','relationship','trauma','growth','adolescent','marriage','personality','crisis'];
+    var stdCerts = ['危机干预','EMDR认证','CBT认证','创伤专项','婚姻咨询专项','儿童青少年专项','EAP专项','AHA危机干预'];
+
+    // Separate "other" values from approaches/specialties/certs before restoring checkboxes
+    var allApproaches = d.approaches || [];
+    var allSpecialties = d.specialties || [];
+    var allCerts = d.certifications || [];
+    otherApproaches = allApproaches.filter(function(v) { return stdApproaches.indexOf(v) < 0; });
+    otherSpecialties = allSpecialties.filter(function(v) { return stdSpecialties.indexOf(v) < 0; });
+    otherCerts = allCerts.filter(function(v) { return stdCerts.indexOf(v) < 0; });
+    renderOtherTags('approach');
+    renderOtherTags('specialty');
+    renderOtherTags('cert');
+
+    ['approach','cert','specialty','population','severity','format'].forEach(function(group) {
+      var keyMap = {
+        approach: 'approaches', cert: 'certifications', specialty: 'specialties',
+        population: 'populations', severity: 'severity_levels', format: 'session_formats'
+      };
+      var vals = d[keyMap[group]] || [];
+      if (!vals.length) return;
+      document.querySelectorAll('input[name="' + group + '"]').forEach(function(cb) {
+        if (vals.indexOf(cb.value) >= 0) {
+          cb.checked = true;
+          cb.closest('.opt-card').classList.add('selected');
+        }
+      });
+    });
+
+    showToast('已恢复上次填写的草稿');
+  } catch(e) {}
+})();
+
+// Enter key support for "other" inputs
+document.getElementById('c_approach_other').addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); addOtherApproach(); } });
+document.getElementById('c_specialty_other').addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); addOtherSpecialty(); } });
+</script>
+</body>
+</html>

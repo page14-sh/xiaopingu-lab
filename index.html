@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#5C7A52">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="小平菇">
+<title>小平菇 · 心理咨询自助评估</title>
+<link rel="manifest" href="manifest.json">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+    background: #F7F4EF; color: #3D3831; font-size: 15px; line-height: 1.65;
+    -webkit-font-smoothing: antialiased; min-height: 100vh;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+  .page-header {
+    background: rgba(255,255,255,0.95); border-bottom: 1px solid #E8E4DC;
+    padding: 16px 20px; display: flex; align-items: center; gap: 12px;
+    position: sticky; top: 0; z-index: 100;
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  }
+  .logo-wrap {
+    display: flex; align-items: center; justify-content: center;
+    width: 44px; height: 44px;
+    background: linear-gradient(135deg, #E8F0E4 0%, #D4E4CC 100%);
+    border-radius: 12px; flex-shrink: 0;
+  }
+  .logo-wrap svg { width: 32px; height: 32px; }
+  .brand-name { font-size: 18px; font-weight: 600; color: #5C7A52; letter-spacing: 1px; }
+  .page-header h1 { font-size: 14px; font-weight: 400; color: #6B635A; margin-top: 1px; }
+  .page-header p { font-size: 11px; color: #A09889; margin-top: 1px; }
+  .header-right { margin-left: auto; flex-shrink: 0; }
+  .header-link {
+    color: #5C7A52; text-decoration: none; font-size: 12px; font-weight: 500;
+    padding: 6px 12px; border: 1px solid #C8DCC0; border-radius: 8px;
+    display: inline-block;
+  }
+  .main { max-width: 860px; margin: 0 auto; padding: 20px 16px 40px; }
+  .progress-bar-wrap { margin-bottom: 24px; }
+  .progress-steps { display: flex; gap: 0; margin-bottom: 8px; }
+  .step-item {
+    flex: 1; text-align: center; font-size: 12px; color: #B4B2A9;
+    padding-bottom: 8px; border-bottom: 2px solid #E8E8E3; transition: all 0.25s;
+  }
+  .step-item.active { color: #5C7A52; border-bottom-color: #5C7A52; font-weight: 600; }
+  .step-item.done { color: #8AAF7D; border-bottom-color: #C8DCC0; }
+  .card {
+    background: #fff; border: 1px solid #E8E4DC; border-radius: 14px;
+    padding: 24px 20px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .card-title { font-size: 16px; font-weight: 600; margin-bottom: 4px; color: #3D3831; }
+  .card-sub { font-size: 13px; color: #A09889; margin-bottom: 20px; padding-bottom: 14px; border-bottom: 1px solid #F0ECE5; }
+  .form-row { margin-bottom: 18px; }
+  .form-row label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 6px; color: #6B635A; }
+  .required::after { content: " *"; color: #C4654A; }
+  input[type="text"], input[type="number"], input[type="tel"], select, textarea {
+    width: 100%; padding: 12px 14px; border: 1.5px solid #D5D0C8; border-radius: 10px;
+    font-size: 16px; color: #3D3831; background: #fff; outline: none; transition: border-color 0.2s;
+    -webkit-appearance: none; appearance: none;
+  }
+  input:focus, select:focus, textarea:focus { border-color: #5C7A52; box-shadow: 0 0 0 3px rgba(92,122,82,0.1); }
+  textarea { resize: vertical; min-height: 88px; font-size: 16px; }
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23A09889' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px;
+  }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .option-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+  .opt-card {
+    border: 1.5px solid #E8E4DC; border-radius: 12px; padding: 14px; cursor: pointer;
+    transition: all 0.2s; background: #fff; user-select: none; -webkit-user-select: none; touch-action: manipulation;
+  }
+  .opt-card:active { transform: scale(0.97); }
+  .opt-card.selected { border-color: #5C7A52; background: #E8F0E4; }
+  .opt-card input { display: none; }
+  .opt-card .opt-icon { font-size: 22px; margin-bottom: 6px; }
+  .opt-card .opt-label { font-size: 14px; font-weight: 500; color: #3D3831; }
+  .opt-card .opt-desc { font-size: 11px; color: #A09889; margin-top: 3px; line-height: 1.4; }
+  .opt-card.selected .opt-label { color: #5C7A52; }
+  .scale-row { display: flex; gap: 8px; align-items: center; margin-top: 10px; }
+  .scale-btn {
+    width: 44px; height: 44px; border-radius: 10px; border: 1.5px solid #D5D0C8; background: #fff;
+    font-size: 15px; cursor: pointer; font-weight: 600; transition: all 0.2s; color: #6B635A;
+    touch-action: manipulation; display: flex; align-items: center; justify-content: center;
+  }
+  .scale-btn:active { transform: scale(0.92); }
+  .scale-btn.sel { background: #5C7A52; color: #fff; border-color: #5C7A52; transform: scale(1.05); }
+  .scale-label { display: flex; justify-content: space-between; font-size: 11px; color: #A09889; margin-top: 6px; }
+  .crisis-alert {
+    display: none; background: #FCEBEB; border: 1px solid #F7C1C1;
+    border-radius: 12px; padding: 16px; margin-top: 14px;
+  }
+  .crisis-alert .alert-title { font-size: 14px; font-weight: 600; color: #A32D2D; margin-bottom: 6px; }
+  .crisis-alert p { font-size: 13px; color: #791F1F; }
+  .crisis-alert.show { display: block; animation: slideDown 0.3s ease; }
+  .result-panel {
+    display: none; background: #fff; border: 1px solid #E8E8E3; border-radius: 14px;
+    overflow: hidden; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .result-panel.show { display: block; animation: fadeIn 0.4s ease; }
+  .result-header {
+    background: linear-gradient(135deg, #E8F0E4 0%, #D4E4CC 100%);
+    padding: 20px 22px; border-bottom: 1px solid #C8DCC0;
+  }
+  .result-header h2 { font-size: 16px; font-weight: 600; color: #5C7A52; margin-bottom: 4px; }
+  .result-header p { font-size: 12px; color: #5C7A52; opacity: 0.75; }
+  .result-body { padding: 20px 22px; }
+  .result-section { margin-bottom: 18px; }
+  .result-section h3 { font-size: 14px; font-weight: 600; color: #6B635A; margin-bottom: 10px; padding-left: 10px; border-left: 3px solid #5C7A52; }
+  .match-card {
+    border: 1px solid #E8E4DC; border-radius: 12px; padding: 16px; margin-bottom: 12px; position: relative; transition: all 0.2s;
+  }
+  .match-card.top { border-color: #5C7A52; border-width: 1.5px; }
+  .match-badge {
+    position: absolute; top: 12px; right: 14px; font-size: 11px; padding: 3px 10px; border-radius: 12px; font-weight: 500;
+  }
+  .badge-green { background: #E8F0E4; color: #5C7A52; }
+  .badge-amber { background: #FAEEDA; color: #854F0B; }
+  .badge-red { background: #FCEBEB; color: #C4654A; }
+  .badge-blue { background: #E0EAF5; color: #4A6FA5; }
+  .match-card h4 { font-size: 14px; font-weight: 600; margin-bottom: 6px; color: #3D3831; padding-right: 80px; }
+  .match-card p { font-size: 13px; color: #6B635A; line-height: 1.75; }
+  .tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .tag { font-size: 11px; padding: 3px 10px; border-radius: 12px; background: #F0ECE5; color: #6B635A; white-space: nowrap; }
+  .tag.blue { background: #E0EAF5; color: #4A6FA5; }
+  .tag.teal { background: #E8F0E4; color: #5C7A52; }
+  .tag.amber { background: #FAEEDA; color: #854F0B; }
+  .tag.coral { background: #FAECE7; color: #C4654A; }
+  .tag.purple { background: #EEEDFE; color: #534AB7; }
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 10px; }
+  .info-item { background: #F7F4EF; border-radius: 10px; padding: 12px 14px; }
+  .info-item .info-label { font-size: 11px; color: #A09889; margin-bottom: 3px; }
+  .info-item .info-val { font-size: 14px; font-weight: 600; color: #3D3831; }
+
+  /* Counselor match cards */
+  .counselor-card {
+    border: 1.5px solid #E8E4DC; border-radius: 14px; padding: 18px; margin-bottom: 14px;
+    background: #fff; transition: all 0.2s; position: relative;
+  }
+  .counselor-card:active { transform: scale(0.98); }
+  .counselor-card.match-high { border-color: #5C7A52; }
+  .counselor-card.match-mid { border-color: #C8DCC0; }
+  .counselor-card.match-low { border-color: #E8E4DC; }
+  .counselor-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+  .counselor-name { font-size: 16px; font-weight: 600; color: #3D3831; }
+  .match-score-badge {
+    font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 14px;
+  }
+  .match-high-badge { background: #E8F0E4; color: #5C7A52; }
+  .match-mid-badge { background: #FAEEDA; color: #854F0B; }
+  .match-low-badge { background: #F0ECE5; color: #6B635A; }
+  .counselor-bio { font-size: 13px; color: #6B635A; line-height: 1.7; margin-bottom: 10px; }
+  .counselor-meta { display: flex; flex-wrap: wrap; gap: 8px; font-size: 12px; color: #A09889; }
+  .counselor-meta span { display: flex; align-items: center; gap: 4px; }
+  .loading-hint { text-align: center; padding: 30px; color: #A09889; font-size: 13px; }
+  .loading-hint .spinner {
+    display: inline-block; width: 20px; height: 20px; border: 2px solid #E8E4DC;
+    border-top-color: #5C7A52; border-radius: 50%; animation: spin 0.8s linear infinite;
+    margin-bottom: 8px;
+  }
+
+  .action-bar { display: flex; gap: 10px; justify-content: flex-end; padding-top: 10px; flex-wrap: wrap; }
+  .btn {
+    padding: 12px 24px; border-radius: 10px; font-size: 15px; font-weight: 500; cursor: pointer;
+    border: 1.5px solid transparent; transition: all 0.2s; touch-action: manipulation;
+    -webkit-appearance: none; appearance: none;
+  }
+  .btn:active { transform: scale(0.96); }
+  .btn-outline { background: #fff; border-color: #D5D0C8; color: #6B635A; }
+  .btn-primary { background: #5C7A52; color: #fff; border-color: #5C7A52; }
+  .btn-primary:hover { background: #4A6342; }
+  .divider { border: none; border-top: 1px solid #F0ECE5; margin: 18px 0; }
+  .section-block { display: none; animation: fadeIn 0.35s ease; }
+  .section-block.active { display: block; }
+  .toast {
+    position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: rgba(61,56,49,0.92); color: #fff; padding: 10px 24px; border-radius: 20px;
+    font-size: 14px; z-index: 999; opacity: 0; transition: all 0.3s; pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes slideDown { from { opacity: 0; max-height: 0; } to { opacity: 1; max-height: 500px; } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media print {
+    body { background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .progress-bar-wrap, .action-bar, .toast { display: none !important; }
+    .page-header { border-bottom: 2px solid #5C7A52; position: static; background: #fff; }
+    .card { border: 1px solid #ddd; break-inside: avoid; }
+    .result-panel { display: block !important; box-shadow: none; }
+    .match-card, .counselor-card { break-inside: avoid; }
+  }
+  @media (min-width: 768px) {
+    .main { padding: 28px 32px 48px; }
+    .card { padding: 28px 32px; }
+    .result-body { padding: 24px 28px; }
+    .page-header { padding: 20px 40px; }
+  }
+  @media (max-width: 374px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .option-grid { grid-template-columns: 1fr 1fr; }
+    .info-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <div class="logo-wrap">
+    <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="24" cy="22" rx="18" ry="14" fill="#8AAF7D"/>
+      <circle cx="16" cy="17" r="3.5" fill="#fff" opacity="0.5"/>
+      <circle cx="28" cy="14" r="2.5" fill="#fff" opacity="0.4"/>
+      <circle cx="32" cy="22" r="3" fill="#fff" opacity="0.35"/>
+      <circle cx="20" cy="25" r="2" fill="#fff" opacity="0.3"/>
+      <path d="M18 24 Q18 38 20 42 L28 42 Q30 38 30 24" fill="#F5EDE0"/>
+      <ellipse cx="24" cy="43" rx="12" ry="2" fill="#8AAF7D" opacity="0.15"/>
+      <defs>
+        <radialGradient id="capGrad" cx="50%" cy="40%" r="60%">
+          <stop offset="0%" stop-color="#A5C69A"/>
+          <stop offset="100%" stop-color="#6E9A60"/>
+        </radialGradient>
+        <linearGradient id="stemGrad" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#F5EDE0"/>
+          <stop offset="100%" stop-color="#E8D9C8"/>
+        </linearGradient>
+      </defs>
+    </svg>
+  </div>
+  <div>
+    <div class="brand-name">小平菇</div>
+    <h1>心理咨询自助评估</h1>
+    <p>专业心理评估，帮你找到最合适的心理支持 · v1.2 Lab</p>
+  </div>
+  <div class="header-right">
+    <a href="counselor.html" class="header-link">咨询师入驻 →</a>
+  </div>
+</div>
+
+<div class="main">
+  <div class="progress-bar-wrap">
+    <div class="progress-steps">
+      <div class="step-item active" id="step1-bar">① 基本信息</div>
+      <div class="step-item" id="step2-bar">② 主诉评估</div>
+      <div class="step-item" id="step3-bar">③ 症状筛查</div>
+      <div class="step-item" id="step4-bar">④ 转介建议</div>
+    </div>
+  </div>
+
+  <!-- STEP 1 -->
+  <div class="section-block active" id="section1">
+    <div class="card">
+      <p class="card-title">来访者基本信息</p>
+      <p class="card-sub">所有信息仅用于咨询匹配，严格保密</p>
+      <div class="form-grid">
+        <div class="form-row"><label class="required">姓名（可填化名）</label><input type="text" id="name" placeholder="请输入您的姓名或化名" autocomplete="off"></div>
+        <div class="form-row"><label class="required">年龄</label><input type="number" id="age" placeholder="请输入年龄" min="6" max="99" inputmode="numeric"></div>
+        <div class="form-row"><label>性别</label><select id="gender"><option value="">请选择</option><option value="male">男</option><option value="female">女</option><option value="other">其他/不便透露</option></select></div>
+        <div class="form-row"><label>职业身份</label><select id="occupation"><option value="">请选择</option><option value="student_k12">中小学生</option><option value="student_college">大学生/研究生</option><option value="worker">在职人员</option><option value="parent">家长/全职父母</option><option value="retired">退休人员</option><option value="other">其他</option></select></div>
+      </div>
+      <div class="form-row"><label>此前是否接受过心理咨询？</label><select id="prev_counseling"><option value="no">否，这是第一次</option><option value="yes_brief">是，接受过简短咨询（5次以内）</option><option value="yes_long">是，接受过系统咨询（5次以上）</option><option value="psychiatric">是，曾就诊精神科或接受心理治疗</option></select></div>
+      <div class="form-row"><label>经济承受能力 <span style="font-size:12px;color:#A09889;font-weight:400">（选填，帮助匹配收费合适的咨询师）</span></label><select id="budget"><option value="">不介意 / 未考虑</option><option value="low">希望控制在 300元/次 以内</option><option value="mid">可接受 300-600元/次</option><option value="high">可接受 600-1000元/次</option><option value="premium">1000元/次 以上均可</option></select></div>
+      <div class="form-row">
+        <span style="display:block;font-size:14px;font-weight:500;margin-bottom:6px;color:#444441">期望的咨询方式（可多选，点击选择）</span>
+        <div class="option-grid" id="format_grid">
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="format" value="线下面询"><div class="opt-icon">🏥</div><div class="opt-label">线下面询</div><div class="opt-desc">到咨询室面对面</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="format" value="视频咨询"><div class="opt-icon">💻</div><div class="opt-label">视频咨询</div><div class="opt-desc">在线视频沟通</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="format" value="语音咨询"><div class="opt-icon">📞</div><div class="opt-label">语音咨询</div><div class="opt-desc">电话或语音通话</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="format" value="文字咨询"><div class="opt-icon">💬</div><div class="opt-label">文字咨询</div><div class="opt-desc">文字消息交流</div></div>
+        </div>
+      </div>
+      <div class="form-row">
+        <span style="display:block;font-size:14px;font-weight:500;margin-bottom:6px;color:#444441">您的咨询预期是（可多选，点击选择）</span>
+        <div class="option-grid" id="expect_grid">
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="expect" value="understand"><div class="opt-icon">💡</div><div class="opt-label">了解自己</div><div class="opt-desc">探索内心与自我成长</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="expect" value="solve"><div class="opt-icon">🎯</div><div class="opt-label">解决问题</div><div class="opt-desc">针对具体困扰找方案</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="expect" value="support"><div class="opt-icon">🤝</div><div class="opt-label">情感支持</div><div class="opt-desc">需要被倾听和理解</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="expect" value="crisis"><div class="opt-icon">🚨</div><div class="opt-label">危机处理</div><div class="opt-desc">当前处于困难紧急状态</div></div>
+        </div>
+      </div>
+      <div class="action-bar"><button class="btn btn-primary" onclick="saveAndGo(2)">下一步 →</button></div>
+    </div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="section-block" id="section2">
+    <div class="card">
+      <p class="card-title">主要求助诉求</p>
+      <p class="card-sub">请选择最符合您当前状态的诉求类型（可多选）</p>
+      <div class="option-grid" id="issue_grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));">
+        <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="issue" value="emotion"><div class="opt-icon">😔</div><div class="opt-label">情绪困扰</div><div class="opt-desc">抑郁、焦虑、恐慌、情绪失调</div></div>
+        <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="issue" value="relationship"><div class="opt-icon">💔</div><div class="opt-label">关系困境</div><div class="opt-desc">亲密关系、亲子、社交、职场</div></div>
+        <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="issue" value="trauma"><div class="opt-icon">🩹</div><div class="opt-label">创伤经历</div><div class="opt-desc">PTSD、童年创伤、应激事件</div></div>
+        <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="issue" value="growth"><div class="opt-icon">🌱</div><div class="opt-label">自我成长</div><div class="opt-desc">自我认同、人生意义、职业困惑</div></div>
+        <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="issue" value="adolescent"><div class="opt-icon">🎒</div><div class="opt-label">青少年问题</div><div class="opt-desc">学业、叛逆、进食障碍、网络成瘾</div></div>
+        <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="issue" value="marriage"><div class="opt-icon">👫</div><div class="opt-label">婚姻/伴侣</div><div class="opt-desc">婚姻危机、出轨、离婚、伴侣冲突</div></div>
+        <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="issue" value="personality"><div class="opt-icon">🧩</div><div class="opt-label">人格议题</div><div class="opt-desc">边缘型、自恋、强迫等人格特征</div></div>
+        <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="issue" value="crisis"><div class="opt-icon">🚨</div><div class="opt-label">危机状态</div><div class="opt-desc">自伤、自杀念头、紧急危机</div></div>
+      </div>
+      <div class="form-row" style="margin-top:20px"><label>用您自己的话描述主要困扰（选填）</label><textarea id="description" placeholder="简短描述您希望咨询解决的问题…"></textarea></div>
+      <div class="form-row"><label>困扰持续时间</label><select id="duration"><option value="recent">近期才出现（1个月以内）</option><option value="months">几个月（1-6个月）</option><option value="half_year">半年到一年</option><option value="years">1年以上</option><option value="childhood">从小就有（儿童/青少年期开始）</option></select></div>
+      <div class="action-bar"><button class="btn btn-outline" onclick="saveAndGo(1)">← 上一步</button><button class="btn btn-primary" onclick="saveAndGo(3)">下一步 →</button></div>
+    </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="section-block" id="section3">
+    <div class="card">
+      <p class="card-title">症状程度评估</p>
+      <p class="card-sub">请根据过去两周的状态，为以下项目评分（0=完全没有，5=非常严重）</p>
+      <div class="form-row"><label>1. 情绪低落、悲伤或空洞感</label><div class="scale-row" id="scale_mood"><button class="scale-btn" onclick="setScale('mood',0,this)">0</button><button class="scale-btn" onclick="setScale('mood',1,this)">1</button><button class="scale-btn" onclick="setScale('mood',2,this)">2</button><button class="scale-btn" onclick="setScale('mood',3,this)">3</button><button class="scale-btn" onclick="setScale('mood',4,this)">4</button><button class="scale-btn" onclick="setScale('mood',5,this)">5</button></div><div class="scale-label"><span>完全没有</span><span>非常严重</span></div></div>
+      <div class="form-row"><label>2. 持续焦虑、担忧或紧张感</label><div class="scale-row" id="scale_anxiety"><button class="scale-btn" onclick="setScale('anxiety',0,this)">0</button><button class="scale-btn" onclick="setScale('anxiety',1,this)">1</button><button class="scale-btn" onclick="setScale('anxiety',2,this)">2</button><button class="scale-btn" onclick="setScale('anxiety',3,this)">3</button><button class="scale-btn" onclick="setScale('anxiety',4,this)">4</button><button class="scale-btn" onclick="setScale('anxiety',5,this)">5</button></div><div class="scale-label"><span>完全没有</span><span>非常严重</span></div></div>
+      <div class="form-row"><label>3. 睡眠困难（入睡难/早醒/多梦）</label><div class="scale-row" id="scale_sleep"><button class="scale-btn" onclick="setScale('sleep',0,this)">0</button><button class="scale-btn" onclick="setScale('sleep',1,this)">1</button><button class="scale-btn" onclick="setScale('sleep',2,this)">2</button><button class="scale-btn" onclick="setScale('sleep',3,this)">3</button><button class="scale-btn" onclick="setScale('sleep',4,this)">4</button><button class="scale-btn" onclick="setScale('sleep',5,this)">5</button></div><div class="scale-label"><span>完全没有</span><span>非常严重</span></div></div>
+      <div class="form-row"><label>4. 日常生活/工作/学业受影响程度</label><div class="scale-row" id="scale_function"><button class="scale-btn" onclick="setScale('function',0,this)">0</button><button class="scale-btn" onclick="setScale('function',1,this)">1</button><button class="scale-btn" onclick="setScale('function',2,this)">2</button><button class="scale-btn" onclick="setScale('function',3,this)">3</button><button class="scale-btn" onclick="setScale('function',4,this)">4</button><button class="scale-btn" onclick="setScale('function',5,this)">5</button></div><div class="scale-label"><span>完全没有</span><span>非常严重</span></div></div>
+      <div class="form-row"><label>5. 人际关系紧张、冲突或回避</label><div class="scale-row" id="scale_relation"><button class="scale-btn" onclick="setScale('relation',0,this)">0</button><button class="scale-btn" onclick="setScale('relation',1,this)">1</button><button class="scale-btn" onclick="setScale('relation',2,this)">2</button><button class="scale-btn" onclick="setScale('relation',3,this)">3</button><button class="scale-btn" onclick="setScale('relation',4,this)">4</button><button class="scale-btn" onclick="setScale('relation',5,this)">5</button></div><div class="scale-label"><span>完全没有</span><span>非常严重</span></div></div>
+      <hr class="divider">
+      <div class="form-row">
+        <label style="color: #A32D2D; font-weight:600;">⚠ 危机安全筛查（必填）</label>
+        <select id="crisis_screen" onchange="checkCrisis()"><option value="safe">没有自伤或伤害他人的想法</option><option value="passive">有不想活了/活着没意思的想法，但没有具体计划</option><option value="active">有自伤/自杀的具体想法或计划</option><option value="action">最近有过自伤行为</option></select>
+        <div class="crisis-alert" id="crisis_alert">
+          <div class="alert-title">请立即寻求紧急帮助</div>
+          <p style="margin-bottom:8px;">当您有自伤或自杀的想法/行为时，请立即联系以下热线：</p>
+          <p style="margin-bottom:6px;"><strong>全国心理援助热线：12356</strong><br>服务对象：所有有心理需要的人<br>服务时间：24小时 | 主办：国家及各地卫健委</p>
+          <p style="margin-bottom:6px;"><strong>妇女维权公益热线：12338</strong><br>服务对象：女性及儿童维权<br>服务时间：24小时（心理咨询 8:00-23:00）| 主办：全国妇联</p>
+          <p style="margin-bottom:6px;"><strong>青少年法律与心理咨询热线：12355</strong><br>服务对象：青少年<br>服务时间：9:00-19:00 | 主办：共青团</p>
+          <p style="margin-bottom:0;"><strong>紧急情况请拨打 120 或 110</strong></p>
+          <p style="margin-top:8px;font-size:12px;opacity:0.85;">本系统的转介建议不能替代紧急心理危机干预。</p>
+        </div>
+      </div>
+      <div class="form-row">
+        <label>是否有以下特殊情况？（可多选）</label>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:8px">
+          <div style="display:flex;align-items:center;gap:8px;font-size:14px;padding:10px;border:1.5px solid #E8E4DC;border-radius:10px;cursor:pointer" onclick="toggleSimple(this)" class="opt-simple"><input type="checkbox" name="special" value="medication" style="width:18px;height:18px;flex-shrink:0"> 目前正在服用精神类药物</div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:14px;padding:10px;border:1.5px solid #E8E4DC;border-radius:10px;cursor:pointer" onclick="toggleSimple(this)" class="opt-simple"><input type="checkbox" name="special" value="diagnosed" style="width:18px;height:18px;flex-shrink:0"> 已有精神科诊断</div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:14px;padding:10px;border:1.5px solid #E8E4DC;border-radius:10px;cursor:pointer" onclick="toggleSimple(this)" class="opt-simple"><input type="checkbox" name="special" value="substance" style="width:18px;height:18px;flex-shrink:0"> 存在物质滥用/成瘾</div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:14px;padding:10px;border:1.5px solid #E8E4DC;border-radius:10px;cursor:pointer" onclick="toggleSimple(this)" class="opt-simple"><input type="checkbox" name="special" value="medical" style="width:18px;height:18px;flex-shrink:0"> 有慢性躯体疾病</div>
+        </div>
+      </div>
+      <div class="action-bar"><button class="btn btn-outline" onclick="saveAndGo(2)">← 上一步</button><button class="btn btn-primary" onclick="generateResult()">生成转介建议 →</button></div>
+    </div>
+  </div>
+
+  <!-- STEP 4: Result -->
+  <div class="section-block" id="section4">
+    <div class="result-panel show" id="result_panel">
+      <div class="result-header">
+        <h2 id="result_title">转介评估报告</h2>
+        <p id="result_time"></p>
+      </div>
+      <div class="result-body">
+        <div class="result-section"><h3>来访者基本信息</h3><div class="info-grid" id="info_summary"></div></div>
+        <hr class="divider">
+        <div class="result-section"><h3>主诉议题分析</h3><div id="issue_summary"></div></div>
+        <hr class="divider">
+        <div class="result-section"><h3>症状程度评分</h3><div class="info-grid" id="score_summary"></div></div>
+        <hr class="divider">
+        <div class="result-section"><h3>转介匹配建议</h3><div id="referral_cards"></div></div>
+        <hr class="divider">
+        <div class="result-section" id="counselor_match_section" style="display:none"><h3>推荐咨询师</h3><div id="counselor_match_list"></div></div>
+        <div id="counselor_loading" style="display:none"><div class="loading-hint"><div class="spinner"></div><br>正在匹配咨询师…</div></div>
+        <hr class="divider">
+        <div class="result-section"><h3>咨询前注意事项</h3><div id="notes_section"></div></div>
+      </div>
+    </div>
+    <div class="action-bar">
+      <button class="btn btn-outline" onclick="saveAndGo(3)">← 修改答案</button>
+      <button class="btn btn-outline" onclick="saveAsImage()">📱 保存/分享</button>
+      <button class="btn btn-outline" onclick="window.print()">🖨️ 打印/PDF</button>
+      <button class="btn btn-primary" onclick="resetForm()">重新填写</button>
+    </div>
+  </div>
+</div>
+
+<div style="text-align:center;padding:24px 20px 12px;color:#B8AFA3;font-size:11px;">
+  <svg width="22" height="22" viewBox="0 0 48 48" fill="none" style="vertical-align:middle;margin-right:4px;"><ellipse cx="24" cy="22" rx="18" ry="14" fill="#B8AFA3"/><circle cx="16" cy="17" r="3" fill="#fff" opacity="0.3"/><circle cx="28" cy="15" r="2" fill="#fff" opacity="0.25"/><path d="M19 24 Q19 36 21 40 L27 40 Q29 36 29 24" fill="#D5CFC5"/></svg>
+  小平菇心理 · 用心倾听，自然疗愈
+</div>
+<div style="text-align:center;padding:0 20px 32px;color:#C5BEB3;font-size:10px;line-height:1.6;">
+  本系统为自助评估，仅供参考，不构成专业诊断或治疗建议。如需专业帮助，请联系持证心理咨询师或医疗机构。
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="supabase-config.js"></script>
+<script>
+var scores = { mood:0, anxiety:0, sleep:0, function:0, relation:0 };
+var currentStep = 1;
+var STORAGE_KEY = 'xiaopingu_draft';
+var currentRecommendedApproaches = [];
+var currentMinYears = 1;
+var currentMinCredential = '二级';
+
+(function init() {
+  try {
+    var saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      var d = JSON.parse(saved);
+      if (d.step && d.step > 1) {
+        if (d.name) document.getElementById('name').value = d.name;
+        if (d.age) document.getElementById('age').value = d.age;
+        if (d.gender) document.getElementById('gender').value = d.gender;
+        if (d.occupation) document.getElementById('occupation').value = d.occupation;
+        if (d.prev_counseling) document.getElementById('prev_counseling').value = d.prev_counseling;
+        if (d.budget) document.getElementById('budget').value = d.budget;
+        if (d.formats) d.formats.forEach(function(v) { var cards = document.querySelectorAll('#format_grid .opt-card'); cards.forEach(function(c) { var cb = c.querySelector('input[value="'+v+'"]'); if (cb) { cb.checked = true; c.classList.add('selected'); } }); });
+        if (d.duration) document.getElementById('duration').value = d.duration;
+        if (d.description) document.getElementById('description').value = d.description;
+        if (d.crisis_screen) document.getElementById('crisis_screen').value = d.crisis_screen;
+        if (d.expects) d.expects.forEach(function(v) { var cards = document.querySelectorAll('#expect_grid .opt-card'); cards.forEach(function(c) { var cb = c.querySelector('input[value="'+v+'"]'); if (cb) { cb.checked = true; c.classList.add('selected'); } }); });
+        if (d.issues) d.issues.forEach(function(v) { var cards = document.querySelectorAll('#issue_grid .opt-card'); cards.forEach(function(c) { var cb = c.querySelector('input[value="'+v+'"]'); if (cb) { cb.checked = true; c.classList.add('selected'); } }); });
+        if (d.specials) d.specials.forEach(function(v) { var cbs = document.querySelectorAll('input[name="special"]'); cbs.forEach(function(cb) { if (cb.value === v) { cb.checked = true; var el = cb.closest('.opt-simple'); if(el){el.style.borderColor='#5C7A52';el.style.background='#E8F0E4';} } }); });
+        if (d.scores) { Object.keys(d.scores).forEach(function(k) { scores[k] = d.scores[k]; var row = document.getElementById('scale_'+k); if(row){var btns=row.querySelectorAll('.scale-btn');btns.forEach(function(b,i){b.classList.toggle('sel',i<=d.scores[k]);});} }); }
+        currentStep = d.step;
+        document.querySelectorAll('.section-block').forEach(function(el,i){el.classList.toggle('active',i===currentStep-1);});
+        for(var i=1;i<=4;i++){var bar=document.getElementById('step'+i+'-bar');bar.classList.remove('active','done');if(i<currentStep)bar.classList.add('done');if(i===currentStep)bar.classList.add('active');}
+        showToast('已恢复上次填写的进度');
+      }
+    }
+  } catch(e) {}
+})();
+
+function showToast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2200);}
+function saveDraft(){try{var expects=[];document.querySelectorAll('#expect_grid input:checked').forEach(function(el){expects.push(el.value);});var issues=[];document.querySelectorAll('#issue_grid input:checked').forEach(function(el){issues.push(el.value);});var specials=[];document.querySelectorAll('input[name="special"]:checked').forEach(function(el){specials.push(el.value);});var formats=[];document.querySelectorAll('input[name="format"]:checked').forEach(function(el){formats.push(el.value);});localStorage.setItem(STORAGE_KEY,JSON.stringify({step:currentStep,name:document.getElementById('name').value,age:document.getElementById('age').value,gender:document.getElementById('gender').value,occupation:document.getElementById('occupation').value,prev_counseling:document.getElementById('prev_counseling').value,budget:document.getElementById('budget').value,formats:formats,duration:document.getElementById('duration').value,description:document.getElementById('description').value,crisis_screen:document.getElementById('crisis_screen').value,expects:expects,issues:issues,specials:specials,scores:scores}));}catch(e){}}
+function saveAndGo(n){saveDraft();goStep(n);}
+function goStep(n){document.getElementById('section'+currentStep).classList.remove('active');document.getElementById('step'+currentStep+'-bar').classList.remove('active');document.getElementById('step'+currentStep+'-bar').classList.add('done');currentStep=n;document.getElementById('section'+n).classList.add('active');document.getElementById('step'+n+'-bar').classList.add('active');document.getElementById('step'+n+'-bar').classList.remove('done');window.scrollTo({top:0,behavior:'smooth'});}
+function toggleOpt(el){el.classList.toggle('selected');var cb=el.querySelector('input[type="checkbox"]');if(cb)cb.checked=el.classList.contains('selected');}
+function toggleSimple(el){var cb=el.querySelector('input[type="checkbox"]');cb.checked=!cb.checked;if(cb.checked){el.style.borderColor='#5C7A52';el.style.background='#E8F0E4';}else{el.style.borderColor='#E8E4DC';el.style.background='#fff';}}
+function setScale(key,val,btn){scores[key]=val;var row=document.getElementById('scale_'+key);var btns=row.querySelectorAll('.scale-btn');btns.forEach(function(b,i){b.classList.toggle('sel',i<=val);});}
+function checkCrisis(){var v=document.getElementById('crisis_screen').value;var a=document.getElementById('crisis_alert');if(v==='active'||v==='action')a.classList.add('show');else a.classList.remove('show');}
+function saveAsImage(){if(navigator.share){navigator.share({title:'小平菇 · 转介评估报告',text:document.getElementById('result_title').innerText+'\n'+document.getElementById('result_time').innerText,url:window.location.href}).catch(function(){});}else{window.scrollTo({top:document.getElementById('result_panel').offsetTop-80,behavior:'smooth'});setTimeout(function(){window.print();},400);}}
+
+function generateResult() {
+  saveDraft();
+  var name=document.getElementById('name').value||'来访者',age=document.getElementById('age').value||'—';
+  var gender=document.getElementById('gender'),genderText=gender.options[gender.selectedIndex].text;
+  var occupation=document.getElementById('occupation'),occText=occupation.options[occupation.selectedIndex].text;
+  var duration=document.getElementById('duration'),durationText=duration.options[duration.selectedIndex].text;
+  var description=document.getElementById('description').value,crisisVal=document.getElementById('crisis_screen').value;
+  var prev=document.getElementById('prev_counseling'),prevText=prev.options[prev.selectedIndex].text;
+  var budget=document.getElementById('budget'),budgetVal=budget.value,budgetText=budget.options[budget.selectedIndex].text;
+  var formats=[];document.querySelectorAll('input[name="format"]:checked').forEach(function(el){formats.push(el.value);});
+  var issues=[];document.querySelectorAll('#issue_grid input:checked').forEach(function(el){issues.push(el.value);});
+  var specials=[];document.querySelectorAll('input[name="special"]:checked').forEach(function(el){specials.push(el.value);});
+  var totalScore=scores.mood+scores.anxiety+scores.sleep+scores.function+scores.relation;
+  var severity='轻度',severityColor='teal';
+  if(totalScore>=15){severity='重度';severityColor='coral';}else if(totalScore>=8){severity='中度';severityColor='amber';}
+  var now=new Date();var dateStr=now.getFullYear()+'-'+(now.getMonth()+1).toString().padStart(2,'0')+'-'+now.getDate().toString().padStart(2,'0');
+  document.getElementById('result_time').innerText='评估时间：'+dateStr+'  总分：'+totalScore+'/25  程度：'+severity;
+  document.getElementById('result_title').innerText='小平菇 · 转介评估报告 — '+name;
+
+  document.getElementById('info_summary').innerHTML=
+    '<div class="info-item"><div class="info-label">姓名</div><div class="info-val">'+name+'</div></div>'+
+    '<div class="info-item"><div class="info-label">年龄/性别</div><div class="info-val">'+age+'岁 / '+genderText+'</div></div>'+
+    '<div class="info-item"><div class="info-label">职业身份</div><div class="info-val">'+occText+'</div></div>'+
+    '<div class="info-item"><div class="info-label">困扰持续</div><div class="info-val">'+durationText+'</div></div>'+
+    '<div class="info-item"><div class="info-label">既往咨询</div><div class="info-val">'+prevText+'</div></div>'+
+    (budgetVal ? '<div class="info-item"><div class="info-label">经济承受</div><div class="info-val">'+budgetText+'</div></div>' : '')+
+    (formats.length ? '<div class="info-item"><div class="info-label">咨询方式</div><div class="info-val">'+formats.join('、')+'</div></div>' : '')+
+    '<div class="info-item"><div class="info-label">症状程度</div><div class="info-val" style="color:'+(totalScore>=15?'#C4654A':totalScore>=8?'#854F0B':'#5C7A52')+'">'+severity+'（'+totalScore+'/25）</div></div>';
+
+  var issueMap={emotion:'情绪困扰',relationship:'关系困境',trauma:'创伤经历',growth:'自我成长',adolescent:'青少年问题',marriage:'婚姻/伴侣',personality:'人格议题',crisis:'危机状态'};
+  var issueHtml='<div class="tag-row">';
+  if(issues.length===0){issueHtml+='<span style="color:#888780;font-size:13px">未选择具体议题</span>';}
+  else{issues.forEach(function(v){var c=(v==='crisis'||v==='trauma')?'coral':(v==='personality')?'purple':(v==='emotion')?'blue':'teal';issueHtml+='<span class="tag '+c+'">'+(issueMap[v]||v)+'</span>';});}
+  issueHtml+='</div>';
+  if(description)issueHtml+='<p style="margin-top:10px;font-size:13px;color:#5F5E5A;background:#F5F5F0;padding:12px 14px;border-radius:10px;line-height:1.7">'+description+'</p>';
+  document.getElementById('issue_summary').innerHTML=issueHtml;
+
+  document.getElementById('score_summary').innerHTML=
+    '<div class="info-item"><div class="info-label">情绪低落</div><div class="info-val">'+scores.mood+'/5</div></div>'+
+    '<div class="info-item"><div class="info-label">焦虑紧张</div><div class="info-val">'+scores.anxiety+'/5</div></div>'+
+    '<div class="info-item"><div class="info-label">睡眠困难</div><div class="info-val">'+scores.sleep+'/5</div></div>'+
+    '<div class="info-item"><div class="info-label">功能受损</div><div class="info-val">'+scores.function+'/5</div></div>'+
+    '<div class="info-item"><div class="info-label">人际紧张</div><div class="info-val">'+scores.relation+'/5</div></div>'+
+    '<div class="info-item"><div class="info-label">总分</div><div class="info-val" style="color:'+(totalScore>=15?'#C4654A':totalScore>=8?'#854F0B':'#5C7A52')+'">'+totalScore+'/25</div></div>';
+
+  // ===== Referral logic =====
+  var cards=[];
+  currentRecommendedApproaches=[];
+  currentMinYears=1;
+  currentMinCredential='二级';
+
+  if(crisisVal==='active'||crisisVal==='action'){cards.push({top:true,badge:'⚠ 紧急转介',badgeClass:'badge-red',title:'立即转介：危机干预专业机构',desc:'当前存在自伤/自杀风险，普通心理咨询不适用。建议立即联系危机干预机构或精神科急诊。',tags:['危机干预资质','注册心理师','精神科联动','安全评估'],require:['从业年限：8年+','危机干预专项培训','精神科医疗团队协作']});currentMinYears=8;currentMinCredential='注册心理师';currentRecommendedApproaches.push('DBT');}
+  else if(crisisVal==='passive'){cards.push({top:true,badge:'优先处理',badgeClass:'badge-amber',title:'优先安排：有危机倾向的支持性咨询',desc:'存在消极念头，需优先安排具备危机风险评估能力的咨询师。',tags:['DBT取向','危机风险评估','安全计划制定'],require:['从业年限：5年+','危机评估培训','DBT/CBT取向优先']});currentMinYears=5;currentRecommendedApproaches.push('DBT','CBT');}
+
+  if(specials.includes('diagnosed')||specials.includes('medication')||issues.includes('personality')){cards.push({top:!cards.length,badge:'医心联动',badgeClass:'badge-amber',title:'建议：精神科-咨询联合模式',desc:'存在精神科诊断或人格议题，建议采用联合工作模式。',tags:['DBT取向','精神动力学','精神科协作','长程咨询'],require:['从业年限：8年+','注册心理师级别','需与精神科协作']});currentMinYears=Math.max(currentMinYears,8);currentMinCredential='注册心理师';currentRecommendedApproaches.push('DBT','精神动力学');}
+
+  if(issues.includes('trauma')){cards.push({top:!cards.length,badge:'强烈推荐',badgeClass:'badge-green',title:'推荐取向：创伤聚焦咨询（EMDR / TF-CBT）',desc:'创伤类议题需要受过专项创伤训练的咨询师。',tags:['EMDR取向','TF-CBT','创伤专项培训'],require:['从业年限：5年+','创伤专项培训认证','督导≥200小时']});currentMinYears=Math.max(currentMinYears,5);currentRecommendedApproaches.push('EMDR','CBT');}
+
+  if(issues.includes('relationship')||issues.includes('marriage')){cards.push({top:!cards.length,badge:'推荐',badgeClass:'badge-green',title:'推荐取向：关系/婚姻咨询',desc:'关系类议题推荐具备家庭治疗培训背景的咨询师。',tags:['家庭治疗取向','EFT婚姻治疗','系统式治疗'],require:['从业年限：3年+','家庭/婚姻咨询专项培训']});currentMinYears=Math.max(currentMinYears,3);currentRecommendedApproaches.push('家庭治疗','EFT');}
+
+  if(issues.includes('adolescent')||document.getElementById('occupation').value==='student_k12'){cards.push({top:!cards.length,badge:'推荐',badgeClass:'badge-green',title:'推荐取向：青少年专项咨询',desc:'青少年问题推荐具备儿童青少年专项培训的咨询师。',tags:['青少年专项','家庭治疗','CBT取向'],require:['从业年限：3年+','青少年/儿童专项培训']});currentMinYears=Math.max(currentMinYears,3);currentRecommendedApproaches.push('家庭治疗','CBT');}
+
+  if(issues.includes('emotion')||(scores.mood>=3||scores.anxiety>=3)){cards.push({top:!cards.length,badge:totalScore>=15?'建议优先':'推荐',badgeClass:totalScore>=15?'badge-amber':'badge-green',title:'推荐取向：CBT / ACT 认知行为疗法',desc:'情绪困扰首选循证证据最充分的认知行为疗法。',tags:['CBT取向','ACT取向','短程结构化','循证支持'],require:['从业年限：1年+','二级咨询师及以上',totalScore>=15?'建议先精神科评估':'无特殊限制']});currentRecommendedApproaches.push('CBT','ACT');}
+
+  if(issues.includes('growth')||(!issues.length&&!cards.length)){cards.push({top:!cards.length,badge:'推荐',badgeClass:'badge-green',title:'推荐取向：人本主义 / 存在主义咨询',desc:'自我成长类议题适合人本主义或存在主义取向。',tags:['人本主义','存在主义','来访者中心','中长程'],require:['从业年限：1年+','二/三级咨询师均可','无特殊限制']});currentRecommendedApproaches.push('人本主义');}
+
+  if(!cards.length){cards.push({top:true,badge:'通用推荐',badgeClass:'badge-green',title:'推荐进行初始评估咨询',desc:'建议先预约1-2次初始评估。',tags:['初始评估','1-2次探索'],require:['从业年限：2年+','二级咨询师及以上']});}
+
+  var html='';
+  cards.forEach(function(c){
+    html+='<div class="match-card'+(c.top?' top':'')+'">';
+    html+='<span class="match-badge '+c.badgeClass+'">'+c.badge+'</span>';
+    html+='<h4>'+c.title+'</h4><p>'+c.desc+'</p>';
+    html+='<div class="tag-row">';c.tags.forEach(function(t){html+='<span class="tag teal">'+t+'</span>';});html+='</div>';
+    html+='<div class="tag-row" style="margin-top:6px">';c.require.forEach(function(r){html+='<span class="tag amber">▪ '+r+'</span>';});html+='</div></div>';
+  });
+  document.getElementById('referral_cards').innerHTML=html;
+
+  // Notes
+  var notes=['本问卷评估结果仅供参考，最终转介决策需由专业咨询师根据实际情况判断。','请携带本报告前往咨询，帮助咨询师快速了解您的基本情况。','初次咨询前，可以提前了解咨询师的受训背景和擅长议题。','心理咨询需要一定时间，建议做好连续4-8次咨询的准备。'];
+  if(totalScore>=15)notes.unshift('症状评分较高，建议在开始系统咨询前先进行精神科评估。');
+  if(crisisVal!=='safe')notes.unshift('存在危机风险，请确保咨询师了解您的危机状态。');
+  var notesHtml='<ul style="padding-left:18px;font-size:13px;color:#5F5E5A;line-height:2">';notes.forEach(function(n){notesHtml+='<li>'+n+'</li>';});notesHtml+='</ul>';
+  document.getElementById('notes_section').innerHTML=notesHtml;
+
+  goStep(4);
+  showToast('评估报告已生成');
+
+  // Try to match counselors from Supabase
+  if(typeof matchCounselors==='function'&&SUPABASE_CONFIG.enableDataCollection&&SUPABASE_CONFIG.url){
+    document.getElementById('counselor_loading').style.display='block';
+    matchCounselors({
+      issues: issues,
+      severity: severity,
+      recommendedApproaches: currentRecommendedApproaches,
+      minYears: currentMinYears,
+      minCredential: currentMinCredential,
+      budget: budgetVal,
+      preferred_formats: formats
+    }).then(function(results){
+      document.getElementById('counselor_loading').style.display='none';
+      if(results.length>0){
+        document.getElementById('counselor_match_section').style.display='block';
+        var chtml='';
+        results.slice(0,5).forEach(function(r){
+          var c=r.counselor;
+          var cls=r.matchScore>=70?'match-high':r.matchScore>=40?'match-mid':'match-low';
+          var badgeCls=r.matchScore>=70?'match-high-badge':r.matchScore>=40?'match-mid-badge':'match-low-badge';
+          // XSS防护：转义用户输入字段
+          function esc(s){if(!s)return '';var d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+          chtml+='<div class="counselor-card '+cls+'">';
+          chtml+='<div class="counselor-header"><span class="counselor-name">'+esc(c.name)+'</span>';
+          chtml+='<span class="match-score-badge '+badgeCls+'">匹配度 '+r.matchScore+'%</span></div>';
+          if(c.bio_short)chtml+='<div class="counselor-bio">'+esc(c.bio_short)+'</div>';
+          chtml+='<div class="counselor-meta">';
+          if(c.credential_level)chtml+='<span>'+esc(c.credential_level)+' · '+esc(String(c.years_experience))+'年</span>';
+          if(c.approaches)chtml+='<span>取向: '+c.approaches.slice(0,3).map(esc).join('/')+'</span>';
+          if(c.session_formats)chtml+='<span>'+c.session_formats.map(esc).join(' · ')+'</span>';
+          if(c.fee_min)chtml+='<span>'+esc(String(c.fee_min))+'元/次</span>';
+          chtml+='</div>';
+          if(r.matchDetails.length>0){
+            chtml+='<div class="tag-row" style="margin-top:8px">';
+            r.matchDetails.forEach(function(d){chtml+='<span class="tag teal">'+esc(d)+'</span>';});
+            chtml+='</div>';
+          }
+          chtml+='</div>';
+        });
+        document.getElementById('counselor_match_list').innerHTML=chtml;
+        document.getElementById('counselor_match_section').scrollIntoView({behavior:'smooth'});
+      } else {
+        document.getElementById('counselor_match_section').style.display='block';
+        document.getElementById('counselor_match_list').innerHTML='<div style="text-align:center;padding:24px;color:#A09889;font-size:14px;background:#F7F4EF;border-radius:12px">暂无匹配的咨询师<br><span style="font-size:12px;margin-top:6px;display:inline-block">系统正在招募更多咨询师，请稍后再试</span></div>';
+        document.getElementById('counselor_match_section').scrollIntoView({behavior:'smooth'});
+      }
+    });
+  }
+
+  // Save assessment data
+  if(typeof saveAssessment==='function'){
+    saveAssessment({
+      visitor_name:name,visitor_age:parseInt(age)||null,visitor_gender:genderText,
+      visitor_occupation:occText,prev_counseling:prevText,budget:budgetVal,preferred_formats:formats,
+      expects:Array.from(document.querySelectorAll('#expect_grid input:checked')).map(function(e){return e.value;}),
+      issues:issues,description:description,duration:durationText,
+      score_mood:scores.mood,score_anxiety:scores.anxiety,score_sleep:scores.sleep,
+      score_function:scores.function,score_relation:scores.relation,
+      total_score:totalScore,severity:severity,specials:specials,crisis_level:crisisVal,
+      user_agent:navigator.userAgent.substring(0,200)
+    });
+  }
+}
+
+function resetForm(){if(confirm('确认重新填写问卷？当前数据将被清除。')){localStorage.removeItem(STORAGE_KEY);location.reload();}}
+</script>
+</body>
+</html>
