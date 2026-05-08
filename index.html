@@ -183,6 +183,27 @@
     font-size: 14px; z-index: 999; opacity: 0; transition: all 0.3s; pointer-events: none;
   }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* Term tooltip */
+  .term-tip {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 16px; height: 16px; border-radius: 50%; background: #E8F0E4;
+    color: #5C7A52; font-size: 10px; font-weight: 700; cursor: help;
+    margin-left: 4px; vertical-align: middle; flex-shrink: 0;
+    position: relative;
+  }
+  .term-tip:hover::after, .term-tip:active::after {
+    content: attr(data-tip);
+    position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+    background: #3D3831; color: #F7F4EF; padding: 10px 14px; border-radius: 10px;
+    font-size: 12px; font-weight: 400; line-height: 1.7; width: 220px; max-width: 80vw;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.18); z-index: 100; pointer-events: none;
+    white-space: normal; text-align: left;
+  }
+  .term-tip:hover::before, .term-tip:active::before {
+    content: ''; position: absolute; bottom: calc(100% + 2px); left: 50%; transform: translateX(-50%);
+    border: 6px solid transparent; border-top-color: #3D3831; z-index: 100;
+  }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
   @keyframes slideDown { from { opacity: 0; max-height: 0; } to { opacity: 1; max-height: 500px; } }
   @keyframes spin { to { transform: rotate(360deg); } }
@@ -259,11 +280,12 @@
       <div class="form-grid">
         <div class="form-row"><label class="required">姓名（可填化名）</label><input type="text" id="name" placeholder="请输入您的姓名或化名" autocomplete="off"></div>
         <div class="form-row"><label class="required">年龄</label><input type="number" id="age" placeholder="请输入年龄" min="6" max="99" inputmode="numeric"></div>
-        <div class="form-row"><label>性别</label><select id="gender"><option value="">请选择</option><option value="male">男</option><option value="female">女</option><option value="other">其他/不便透露</option></select></div>
+        <div class="form-row"><label>性别</label><select id="gender"><option value="">请选择</option><option value="male">男</option><option value="female">女</option><option value="ta">TA</option><option value="lgbtq">LGBTQ+</option><option value="other">其他/不便透露</option></select></div>
         <div class="form-row"><label>职业身份</label><select id="occupation"><option value="">请选择</option><option value="student_k12">中小学生</option><option value="student_college">大学生/研究生</option><option value="worker">在职人员</option><option value="parent">家长/全职父母</option><option value="retired">退休人员</option><option value="other">其他</option></select></div>
       </div>
       <div class="form-row"><label>此前是否接受过心理咨询？</label><select id="prev_counseling"><option value="no">否，这是第一次</option><option value="yes_brief">是，接受过简短咨询（5次以内）</option><option value="yes_long">是，接受过系统咨询（5次以上）</option><option value="psychiatric">是，曾就诊精神科或接受心理治疗</option></select></div>
       <div class="form-row"><label>经济承受能力 <span style="font-size:12px;color:#A09889;font-weight:400">（选填，帮助匹配收费合适的咨询师）</span></label><select id="budget"><option value="">不介意 / 未考虑</option><option value="low">希望控制在 300元/次 以内</option><option value="mid">可接受 300-600元/次</option><option value="high">可接受 600-1000元/次</option><option value="premium">1000元/次 以上均可</option></select></div>
+      <div class="form-row"><label>对咨询师的性别偏好 <span style="font-size:12px;color:#A09889;font-weight:400">（选填，不填写则随机匹配）</span></label><select id="gender_pref"><option value="">不限 / 随机匹配</option><option value="male">希望是男性咨询师</option><option value="female">希望是女性咨询师</option><option value="any">咨询师性别不重要</option></select></div>
       <div class="form-row">
         <span style="display:block;font-size:14px;font-weight:500;margin-bottom:6px;color:#444441">期望的咨询方式（可多选，点击选择）</span>
         <div class="option-grid" id="format_grid">
@@ -279,6 +301,9 @@
           <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="expect" value="understand"><div class="opt-icon">💡</div><div class="opt-label">了解自己</div><div class="opt-desc">探索内心与自我成长</div></div>
           <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="expect" value="solve"><div class="opt-icon">🎯</div><div class="opt-label">解决问题</div><div class="opt-desc">针对具体困扰找方案</div></div>
           <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="expect" value="support"><div class="opt-icon">🤝</div><div class="opt-label">情感支持</div><div class="opt-desc">需要被倾听和理解</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="expect" value="relationship_improve"><div class="opt-icon">❤️</div><div class="opt-label">改善关系</div><div class="opt-desc">修复亲密关系或家庭关系</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="expect" value="emotion_manage"><div class="opt-icon">🧘</div><div class="opt-label">情绪管理</div><div class="opt-desc">学习调节焦虑、抑郁等情绪</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="expect" value="career_develop"><div class="opt-icon">💼</div><div class="opt-label">职业发展</div><div class="opt-desc">职场困惑、倦怠或转型决策</div></div>
           <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="expect" value="crisis"><div class="opt-icon">🚨</div><div class="opt-label">危机处理</div><div class="opt-desc">当前处于困难紧急状态</div></div>
         </div>
       </div>
@@ -293,14 +318,26 @@
       <p class="card-sub">请选择最符合您当前状态的诉求类型（可多选）</p>
       <div class="option-grid" id="issue_grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));">
         <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="issue" value="emotion"><div class="opt-icon">😔</div><div class="opt-label">情绪困扰</div><div class="opt-desc">抑郁、焦虑、恐慌、情绪失调</div></div>
-        <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="issue" value="relationship"><div class="opt-icon">💔</div><div class="opt-label">关系困境</div><div class="opt-desc">亲密关系、亲子、社交、职场</div></div>
-        <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="issue" value="trauma"><div class="opt-icon">🩹</div><div class="opt-label">创伤经历</div><div class="opt-desc">PTSD、童年创伤、应激事件</div></div>
-        <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="issue" value="growth"><div class="opt-icon">🌱</div><div class="opt-label">自我成长</div><div class="opt-desc">自我认同、人生意义、职业困惑</div></div>
-        <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="issue" value="adolescent"><div class="opt-icon">🎒</div><div class="opt-label">青少年问题</div><div class="opt-desc">学业、叛逆、进食障碍、网络成瘾</div></div>
+        <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="issue" value="relationship"><div class="opt-icon">💔</div><div class="opt-label">关系困境</div><div class="opt-desc">亲密关系、亲子、社交困扰</div></div>
+        <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="issue" value="trauma"><div class="opt-icon">🩹</div><div class="opt-label">创伤经历<span class="term-tip" data-tip="指经历重大创伤事件（如事故、暴力、自然灾害等）后遗留的心理阴影，可能反复出现闪回、噩梦、回避等症状，专业术语为 PTSD（创伤后应激障碍）">?</span></div><div class="opt-desc">PTSD、童年创伤、重大应激事件</div></div>
+        <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="issue" value="growth"><div class="opt-icon">🌱</div><div class="opt-label">自我成长</div><div class="opt-desc">自我认同、人生意义、价值观探索</div></div>
+        <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="issue" value="adolescent"><div class="opt-icon">🎒</div><div class="opt-label">青少年问题</div><div class="opt-desc">学业压力、叛逆期、同伴关系</div></div>
         <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="issue" value="marriage"><div class="opt-icon">👫</div><div class="opt-label">婚姻/伴侣</div><div class="opt-desc">婚姻危机、出轨、离婚、伴侣冲突</div></div>
-        <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="issue" value="personality"><div class="opt-icon">🧩</div><div class="opt-label">人格议题</div><div class="opt-desc">边缘型、自恋、强迫等人格特征</div></div>
+        <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="issue" value="personality"><div class="opt-icon">🧩</div><div class="opt-label">人格议题<span class="term-tip" data-tip="指长期形成的僵化思维和行为模式（如边缘型人格、自恋型人格等），导致人际关系困难、情绪剧烈波动，通常需要长程专业咨询干预">?</span></div><div class="opt-desc">边缘型、自恋、强迫等人格困扰</div></div>
         <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="issue" value="crisis"><div class="opt-icon">🚨</div><div class="opt-label">危机状态</div><div class="opt-desc">自伤、自杀念头、紧急危机</div></div>
+        <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="issue" value="workplace"><div class="opt-icon">💼</div><div class="opt-label">职场困扰</div><div class="opt-desc">倦怠、人际冲突、职场霸凌、转型</div></div>
+        <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="issue" value="eating"><div class="opt-icon">🍽️</div><div class="opt-label">进食障碍<span class="term-tip" data-tip="一类以异常进食行为为核心的心理障碍，包括神经性厌食（过度节食、体重过低）、神经性暴食（反复暴食后催吐/泻药），常与身材焦虑、完美主义、情绪调节困难相关">?</span></div><div class="opt-desc">厌食、暴食、节食焦虑、体像困扰</div></div>
+        <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="issue" value="addiction"><div class="opt-icon">🚫</div><div class="opt-label">成瘾行为<span class="term-tip" data-tip="指对某种物质或行为产生依赖，无法自主控制使用频率和剂量，常见包括酒精依赖、网络/游戏成瘾、赌博成瘾等，常需要专业干预">?</span></div><div class="opt-desc">酒精、网络、游戏、赌博等成瘾</div></div>
+        <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="issue" value="grief"><div class="opt-icon">🕊️</div><div class="opt-label">丧亲哀伤<span class="term-tip" data-tip="指因亲人离世、关系断裂等重大丧失而产生的悲伤反应，正常的哀伤会随时间缓解，但若持续过久或过于强烈（复杂性哀伤），建议寻求专业帮助">?</span></div><div class="opt-desc">亲人离世、失恋分手、重大丧失</div></div>
+        <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="issue" value="sexual"><div class="opt-icon">🌸</div><div class="opt-label">性心理议题<span class="term-tip" data-tip="涵盖性认同困惑、性取向焦虑、性功能障碍（如性欲低下、性疼痛等）、以及亲密关系中的性问题，需在安全信任的咨询环境中探讨">?</span></div><div class="opt-desc">性认同、性功能障碍、亲密性困扰</div></div>
+        <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="issue" value="somatic"><div class="opt-icon">🫀</div><div class="opt-label">心身困扰<span class="term-tip" data-tip="指长期心理压力表现为身体不适（如头痛、胃痛、胸闷），去医院检查却没有器质性病变。心理学上称为「躯体化」，说明身心是紧密关联的">?</span></div><div class="opt-desc">躯体化症状、慢性疼痛、健康焦虑</div></div>
+        <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="issue" value="family"><div class="opt-icon">👨‍👩‍👧</div><div class="opt-label">家庭系统<span class="term-tip" data-tip="家庭系统理论认为，家庭中一个人的问题往往是整个家庭互动模式的结果。家庭治疗不只关注「患者」本人，而是帮助家庭成员理解彼此的关系模式">?</span></div><div class="opt-desc">原生家庭、家庭矛盾、代际冲突</div></div>
       </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:10px">
+        <input type="text" id="issue_other_input" placeholder="没有找到匹配选项？请补充您的诉求…" style="flex:1;font-size:14px;padding:10px 12px;border:1.5px solid #E8E4DC;border-radius:8px" autocomplete="off">
+        <button type="button" class="btn btn-outline" style="padding:10px 16px;font-size:13px;white-space:nowrap" onclick="addOtherIssue()">+ 补充</button>
+      </div>
+      <div id="issue_other_tags" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px"></div>
       <div class="form-row" style="margin-top:20px"><label>用您自己的话描述主要困扰（选填）</label><textarea id="description" placeholder="简短描述您希望咨询解决的问题…"></textarea></div>
       <div class="form-row"><label>困扰持续时间</label><select id="duration"><option value="recent">近期才出现（1个月以内）</option><option value="months">几个月（1-6个月）</option><option value="half_year">半年到一年</option><option value="years">1年以上</option><option value="childhood">从小就有（儿童/青少年期开始）</option></select></div>
       <div class="action-bar"><button class="btn btn-outline" onclick="saveAndGo(1)">← 上一步</button><button class="btn btn-primary" onclick="saveAndGo(3)">下一步 →</button></div>
@@ -311,12 +348,12 @@
   <div class="section-block" id="section3">
     <div class="card">
       <p class="card-title">症状程度评估</p>
-      <p class="card-sub">请根据过去两周的状态，为以下项目评分（0=完全没有，5=非常严重）</p>
-      <div class="form-row"><label>1. 情绪低落、悲伤或空洞感</label><div class="scale-row" id="scale_mood"><button class="scale-btn" onclick="setScale('mood',0,this)">0</button><button class="scale-btn" onclick="setScale('mood',1,this)">1</button><button class="scale-btn" onclick="setScale('mood',2,this)">2</button><button class="scale-btn" onclick="setScale('mood',3,this)">3</button><button class="scale-btn" onclick="setScale('mood',4,this)">4</button><button class="scale-btn" onclick="setScale('mood',5,this)">5</button></div><div class="scale-label"><span>完全没有</span><span>非常严重</span></div></div>
-      <div class="form-row"><label>2. 持续焦虑、担忧或紧张感</label><div class="scale-row" id="scale_anxiety"><button class="scale-btn" onclick="setScale('anxiety',0,this)">0</button><button class="scale-btn" onclick="setScale('anxiety',1,this)">1</button><button class="scale-btn" onclick="setScale('anxiety',2,this)">2</button><button class="scale-btn" onclick="setScale('anxiety',3,this)">3</button><button class="scale-btn" onclick="setScale('anxiety',4,this)">4</button><button class="scale-btn" onclick="setScale('anxiety',5,this)">5</button></div><div class="scale-label"><span>完全没有</span><span>非常严重</span></div></div>
-      <div class="form-row"><label>3. 睡眠困难（入睡难/早醒/多梦）</label><div class="scale-row" id="scale_sleep"><button class="scale-btn" onclick="setScale('sleep',0,this)">0</button><button class="scale-btn" onclick="setScale('sleep',1,this)">1</button><button class="scale-btn" onclick="setScale('sleep',2,this)">2</button><button class="scale-btn" onclick="setScale('sleep',3,this)">3</button><button class="scale-btn" onclick="setScale('sleep',4,this)">4</button><button class="scale-btn" onclick="setScale('sleep',5,this)">5</button></div><div class="scale-label"><span>完全没有</span><span>非常严重</span></div></div>
-      <div class="form-row"><label>4. 日常生活/工作/学业受影响程度</label><div class="scale-row" id="scale_function"><button class="scale-btn" onclick="setScale('function',0,this)">0</button><button class="scale-btn" onclick="setScale('function',1,this)">1</button><button class="scale-btn" onclick="setScale('function',2,this)">2</button><button class="scale-btn" onclick="setScale('function',3,this)">3</button><button class="scale-btn" onclick="setScale('function',4,this)">4</button><button class="scale-btn" onclick="setScale('function',5,this)">5</button></div><div class="scale-label"><span>完全没有</span><span>非常严重</span></div></div>
-      <div class="form-row"><label>5. 人际关系紧张、冲突或回避</label><div class="scale-row" id="scale_relation"><button class="scale-btn" onclick="setScale('relation',0,this)">0</button><button class="scale-btn" onclick="setScale('relation',1,this)">1</button><button class="scale-btn" onclick="setScale('relation',2,this)">2</button><button class="scale-btn" onclick="setScale('relation',3,this)">3</button><button class="scale-btn" onclick="setScale('relation',4,this)">4</button><button class="scale-btn" onclick="setScale('relation',5,this)">5</button></div><div class="scale-label"><span>完全没有</span><span>非常严重</span></div></div>
+      <p class="card-sub">请根据过去两周的状态，为以下项目评分（0=完全没有，5=极明显/几乎每天）</p>
+      <div class="form-row"><label>1. 情绪低落、悲伤或空洞感</label><div class="scale-row" id="scale_mood"><button class="scale-btn" onclick="setScale('mood',0,this)">0</button><button class="scale-btn" onclick="setScale('mood',1,this)">1</button><button class="scale-btn" onclick="setScale('mood',2,this)">2</button><button class="scale-btn" onclick="setScale('mood',3,this)">3</button><button class="scale-btn" onclick="setScale('mood',4,this)">4</button><button class="scale-btn" onclick="setScale('mood',5,this)">5</button></div><div class="scale-label"><span>完全没有</span><span>几乎持续存在</span></div></div>
+      <div class="form-row"><label>2. 持续焦虑、担忧或紧张感</label><div class="scale-row" id="scale_anxiety"><button class="scale-btn" onclick="setScale('anxiety',0,this)">0</button><button class="scale-btn" onclick="setScale('anxiety',1,this)">1</button><button class="scale-btn" onclick="setScale('anxiety',2,this)">2</button><button class="scale-btn" onclick="setScale('anxiety',3,this)">3</button><button class="scale-btn" onclick="setScale('anxiety',4,this)">4</button><button class="scale-btn" onclick="setScale('anxiety',5,this)">5</button></div><div class="scale-label"><span>完全没有</span><span>难以自控</span></div></div>
+      <div class="form-row"><label>3. 睡眠困难（入睡难/早醒/多梦）</label><div class="scale-row" id="scale_sleep"><button class="scale-btn" onclick="setScale('sleep',0,this)">0</button><button class="scale-btn" onclick="setScale('sleep',1,this)">1</button><button class="scale-btn" onclick="setScale('sleep',2,this)">2</button><button class="scale-btn" onclick="setScale('sleep',3,this)">3</button><button class="scale-btn" onclick="setScale('sleep',4,this)">4</button><button class="scale-btn" onclick="setScale('sleep',5,this)">5</button></div><div class="scale-label"><span>完全没有</span><span>严重影响休息</span></div></div>
+      <div class="form-row"><label>4. 日常生活/工作/学业受影响程度</label><div class="scale-row" id="scale_function"><button class="scale-btn" onclick="setScale('function',0,this)">0</button><button class="scale-btn" onclick="setScale('function',1,this)">1</button><button class="scale-btn" onclick="setScale('function',2,this)">2</button><button class="scale-btn" onclick="setScale('function',3,this)">3</button><button class="scale-btn" onclick="setScale('function',4,this)">4</button><button class="scale-btn" onclick="setScale('function',5,this)">5</button></div><div class="scale-label"><span>完全没有</span><span>难以维持日常</span></div></div>
+      <div class="form-row"><label>5. 人际关系紧张、冲突或回避</label><div class="scale-row" id="scale_relation"><button class="scale-btn" onclick="setScale('relation',0,this)">0</button><button class="scale-btn" onclick="setScale('relation',1,this)">1</button><button class="scale-btn" onclick="setScale('relation',2,this)">2</button><button class="scale-btn" onclick="setScale('relation',3,this)">3</button><button class="scale-btn" onclick="setScale('relation',4,this)">4</button><button class="scale-btn" onclick="setScale('relation',5,this)">5</button></div><div class="scale-label"><span>完全没有</span><span>严重回避社交</span></div></div>
       <hr class="divider">
       <div class="form-row">
         <label style="color: #A32D2D; font-weight:600;">⚠ 危机安全筛查（必填）</label>
@@ -334,10 +371,10 @@
       <div class="form-row">
         <label>是否有以下特殊情况？（可多选）</label>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:8px">
-          <div style="display:flex;align-items:center;gap:8px;font-size:14px;padding:10px;border:1.5px solid #E8E4DC;border-radius:10px;cursor:pointer" onclick="toggleSimple(this)" class="opt-simple"><input type="checkbox" name="special" value="medication" style="width:18px;height:18px;flex-shrink:0"> 目前正在服用精神类药物</div>
-          <div style="display:flex;align-items:center;gap:8px;font-size:14px;padding:10px;border:1.5px solid #E8E4DC;border-radius:10px;cursor:pointer" onclick="toggleSimple(this)" class="opt-simple"><input type="checkbox" name="special" value="diagnosed" style="width:18px;height:18px;flex-shrink:0"> 已有精神科诊断</div>
-          <div style="display:flex;align-items:center;gap:8px;font-size:14px;padding:10px;border:1.5px solid #E8E4DC;border-radius:10px;cursor:pointer" onclick="toggleSimple(this)" class="opt-simple"><input type="checkbox" name="special" value="substance" style="width:18px;height:18px;flex-shrink:0"> 存在物质滥用/成瘾</div>
-          <div style="display:flex;align-items:center;gap:8px;font-size:14px;padding:10px;border:1.5px solid #E8E4DC;border-radius:10px;cursor:pointer" onclick="toggleSimple(this)" class="opt-simple"><input type="checkbox" name="special" value="medical" style="width:18px;height:18px;flex-shrink:0"> 有慢性躯体疾病</div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:14px;padding:10px;border:1.5px solid #E8E4DC;border-radius:10px;cursor:pointer" onclick="toggleSimple(this)" class="opt-simple"><input type="checkbox" name="special" value="medication" style="width:18px;height:18px;flex-shrink:0"> 目前正在服用精神类药物<span class="term-tip" data-tip="指精神科医生开具的处方药物，如抗抑郁药（如百忧解、左洛复）、抗焦虑药（如阿普唑仑）、情绪稳定剂等，用于缓解心理症状">?</span></div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:14px;padding:10px;border:1.5px solid #E8E4DC;border-radius:10px;cursor:pointer" onclick="toggleSimple(this)" class="opt-simple"><input type="checkbox" name="special" value="diagnosed" style="width:18px;height:18px;flex-shrink:0"> 已有精神科诊断<span class="term-tip" data-tip="指曾在医院精神科或心理科就诊并获得正式诊断，如抑郁症、焦虑症、双相情感障碍、ADHD等。有诊断不代表不能做心理咨询，但建议让咨询师了解">?</span></div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:14px;padding:10px;border:1.5px solid #E8E4DC;border-radius:10px;cursor:pointer" onclick="toggleSimple(this)" class="opt-simple"><input type="checkbox" name="special" value="substance" style="width:18px;height:18px;flex-shrink:0"> 存在物质滥用/成瘾<span class="term-tip" data-tip="指对酒精、药物或其他精神活性物质的使用超出了社交或医疗范围，且无法自行停止。可能需要先进行脱毒治疗，再配合心理咨询">?</span></div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:14px;padding:10px;border:1.5px solid #E8E4DC;border-radius:10px;cursor:pointer" onclick="toggleSimple(this)" class="opt-simple"><input type="checkbox" name="special" value="medical" style="width:18px;height:18px;flex-shrink:0"> 有慢性躯体疾病<span class="term-tip" data-tip="指需要长期治疗的身体疾病，如糖尿病、高血压、慢性疼痛、自身免疫疾病等。心理咨询可以帮助改善心理状态，从而辅助身体健康管理">?</span></div>
         </div>
       </div>
       <div class="action-bar"><button class="btn btn-outline" onclick="saveAndGo(2)">← 上一步</button><button class="btn btn-primary" onclick="generateResult()">生成转介建议 →</button></div>
@@ -424,13 +461,40 @@ var currentMinCredential = '二级';
 })();
 
 function showToast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2200);}
-function saveDraft(){try{var expects=[];document.querySelectorAll('#expect_grid input:checked').forEach(function(el){expects.push(el.value);});var issues=[];document.querySelectorAll('#issue_grid input:checked').forEach(function(el){issues.push(el.value);});var specials=[];document.querySelectorAll('input[name="special"]:checked').forEach(function(el){specials.push(el.value);});var formats=[];document.querySelectorAll('input[name="format"]:checked').forEach(function(el){formats.push(el.value);});localStorage.setItem(STORAGE_KEY,JSON.stringify({step:currentStep,name:document.getElementById('name').value,age:document.getElementById('age').value,gender:document.getElementById('gender').value,occupation:document.getElementById('occupation').value,prev_counseling:document.getElementById('prev_counseling').value,budget:document.getElementById('budget').value,formats:formats,duration:document.getElementById('duration').value,description:document.getElementById('description').value,crisis_screen:document.getElementById('crisis_screen').value,expects:expects,issues:issues,specials:specials,scores:scores}));}catch(e){}}
+function saveDraft(){try{var expects=[];document.querySelectorAll('#expect_grid input:checked').forEach(function(el){expects.push(el.value);});var issues=[];document.querySelectorAll('#issue_grid input:checked').forEach(function(el){issues.push(el.value);});var specials=[];document.querySelectorAll('input[name="special"]:checked').forEach(function(el){specials.push(el.value);});var formats=[];document.querySelectorAll('input[name="format"]:checked').forEach(function(el){formats.push(el.value);});localStorage.setItem(STORAGE_KEY,JSON.stringify({step:currentStep,name:document.getElementById('name').value,age:document.getElementById('age').value,gender:document.getElementById('gender').value,occupation:document.getElementById('occupation').value,prev_counseling:document.getElementById('prev_counseling').value,budget:document.getElementById('budget').value,gender_pref:document.getElementById('gender_pref').value,formats:formats,duration:document.getElementById('duration').value,description:document.getElementById('description').value,crisis_screen:document.getElementById('crisis_screen').value,expects:expects,issues:issues,issues_other:otherIssues,specials:specials,scores:scores}));}catch(e){}}
 function saveAndGo(n){saveDraft();goStep(n);}
 function goStep(n){document.getElementById('section'+currentStep).classList.remove('active');document.getElementById('step'+currentStep+'-bar').classList.remove('active');document.getElementById('step'+currentStep+'-bar').classList.add('done');currentStep=n;document.getElementById('section'+n).classList.add('active');document.getElementById('step'+n+'-bar').classList.add('active');document.getElementById('step'+n+'-bar').classList.remove('done');window.scrollTo({top:0,behavior:'smooth'});}
 function toggleOpt(el){el.classList.toggle('selected');var cb=el.querySelector('input[type="checkbox"]');if(cb)cb.checked=el.classList.contains('selected');}
 function toggleSimple(el){var cb=el.querySelector('input[type="checkbox"]');cb.checked=!cb.checked;if(cb.checked){el.style.borderColor='#5C7A52';el.style.background='#E8F0E4';}else{el.style.borderColor='#E8E4DC';el.style.background='#fff';}}
 function setScale(key,val,btn){scores[key]=val;var row=document.getElementById('scale_'+key);var btns=row.querySelectorAll('.scale-btn');btns.forEach(function(b,i){b.classList.toggle('sel',i<=val);});}
 function checkCrisis(){var v=document.getElementById('crisis_screen').value;var a=document.getElementById('crisis_alert');if(v==='active'||v==='action')a.classList.add('show');else a.classList.remove('show');}
+
+// --- "其他" 自定义议题标签 ---
+var otherIssues = [];
+function addOtherIssue() {
+  var input = document.getElementById('issue_other_input');
+  var val = input.value.trim();
+  if (!val) return;
+  if (otherIssues.indexOf(val) >= 0) { showToast('该诉求已添加'); return; }
+  otherIssues.push(val);
+  input.value = '';
+  renderOtherIssueTags();
+}
+function removeOtherIssue(idx) {
+  otherIssues.splice(idx, 1);
+  renderOtherIssueTags();
+}
+function renderOtherIssueTags() {
+  var container = document.getElementById('issue_other_tags');
+  container.innerHTML = '';
+  otherIssues.forEach(function(val, idx) {
+    var tag = document.createElement('span');
+    tag.className = 'tag teal';
+    tag.style.cssText = 'display:inline-flex;align-items:center;gap:4px;padding:4px 10px;font-size:13px;border-radius:6px;';
+    tag.innerHTML = val + ' <span style="cursor:pointer;margin-left:2px;color:#888" onclick="removeOtherIssue(' + idx + ')">×</span>';
+    container.appendChild(tag);
+  });
+}
 function saveAsImage(){if(navigator.share){navigator.share({title:'小平菇 · 转介评估报告',text:document.getElementById('result_title').innerText+'\n'+document.getElementById('result_time').innerText,url:window.location.href}).catch(function(){});}else{window.scrollTo({top:document.getElementById('result_panel').offsetTop-80,behavior:'smooth'});setTimeout(function(){window.print();},400);}}
 
 function generateResult() {
@@ -444,6 +508,7 @@ function generateResult() {
   var budget=document.getElementById('budget'),budgetVal=budget.value,budgetText=budget.options[budget.selectedIndex].text;
   var formats=[];document.querySelectorAll('input[name="format"]:checked').forEach(function(el){formats.push(el.value);});
   var issues=[];document.querySelectorAll('#issue_grid input:checked').forEach(function(el){issues.push(el.value);});
+  issues = issues.concat(otherIssues);
   var specials=[];document.querySelectorAll('input[name="special"]:checked').forEach(function(el){specials.push(el.value);});
   var totalScore=scores.mood+scores.anxiety+scores.sleep+scores.function+scores.relation;
   var severity='轻度',severityColor='teal';
@@ -452,20 +517,25 @@ function generateResult() {
   document.getElementById('result_time').innerText='评估时间：'+dateStr+'  总分：'+totalScore+'/25  程度：'+severity;
   document.getElementById('result_title').innerText='小平菇 · 转介评估报告 — '+name;
 
+  var genderPref=document.getElementById('gender_pref'),genderPrefText=genderPref.options[genderPref.selectedIndex].text;
   document.getElementById('info_summary').innerHTML=
     '<div class="info-item"><div class="info-label">姓名</div><div class="info-val">'+name+'</div></div>'+
     '<div class="info-item"><div class="info-label">年龄/性别</div><div class="info-val">'+age+'岁 / '+genderText+'</div></div>'+
     '<div class="info-item"><div class="info-label">职业身份</div><div class="info-val">'+occText+'</div></div>'+
+    (genderPref.value&&genderPref.value!=='any' ? '<div class="info-item"><div class="info-label">性别偏好</div><div class="info-val">'+genderPrefText+'</div></div>' : '')+
     '<div class="info-item"><div class="info-label">困扰持续</div><div class="info-val">'+durationText+'</div></div>'+
     '<div class="info-item"><div class="info-label">既往咨询</div><div class="info-val">'+prevText+'</div></div>'+
     (budgetVal ? '<div class="info-item"><div class="info-label">经济承受</div><div class="info-val">'+budgetText+'</div></div>' : '')+
     (formats.length ? '<div class="info-item"><div class="info-label">咨询方式</div><div class="info-val">'+formats.join('、')+'</div></div>' : '')+
     '<div class="info-item"><div class="info-label">症状程度</div><div class="info-val" style="color:'+(totalScore>=15?'#C4654A':totalScore>=8?'#854F0B':'#5C7A52')+'">'+severity+'（'+totalScore+'/25）</div></div>';
 
-  var issueMap={emotion:'情绪困扰',relationship:'关系困境',trauma:'创伤经历',growth:'自我成长',adolescent:'青少年问题',marriage:'婚姻/伴侣',personality:'人格议题',crisis:'危机状态'};
+  var issueMap={emotion:'情绪困扰',relationship:'关系困境',trauma:'创伤经历',growth:'自我成长',adolescent:'青少年问题',marriage:'婚姻/伴侣',personality:'人格议题',crisis:'危机状态',workplace:'职场困扰',eating:'进食障碍',addiction:'成瘾行为',grief:'丧亲哀伤',sexual:'性心理议题',somatic:'心身困扰',family:'家庭系统'};
   var issueHtml='<div class="tag-row">';
-  if(issues.length===0){issueHtml+='<span style="color:#888780;font-size:13px">未选择具体议题</span>';}
-  else{issues.forEach(function(v){var c=(v==='crisis'||v==='trauma')?'coral':(v==='personality')?'purple':(v==='emotion')?'blue':'teal';issueHtml+='<span class="tag '+c+'">'+(issueMap[v]||v)+'</span>';});}
+  if(issues.length===0&&otherIssues.length===0){issueHtml+='<span style="color:#888780;font-size:13px">未选择具体议题</span>';}
+  else{
+    issues.forEach(function(v){var c=(v==='crisis'||v==='trauma'||v==='addiction')?'coral':(v==='personality'||v==='eating')?'purple':(v==='emotion'||v==='somatic'||v==='grief')?'blue':(v==='sexual')?'pink':(v==='workplace'||v==='family')?'amber':'teal';issueHtml+='<span class="tag '+c+'">'+(issueMap[v]||v)+'</span>';});
+    otherIssues.forEach(function(v){issueHtml+='<span class="tag gray">'+v+'</span>';});
+  }
   issueHtml+='</div>';
   if(description)issueHtml+='<p style="margin-top:10px;font-size:13px;color:#5F5E5A;background:#F5F5F0;padding:12px 14px;border-radius:10px;line-height:1.7">'+description+'</p>';
   document.getElementById('issue_summary').innerHTML=issueHtml;
@@ -499,6 +569,20 @@ function generateResult() {
 
   if(issues.includes('growth')||(!issues.length&&!cards.length)){cards.push({top:!cards.length,badge:'推荐',badgeClass:'badge-green',title:'推荐取向：人本主义 / 存在主义咨询',desc:'自我成长类议题适合人本主义或存在主义取向。',tags:['人本主义','存在主义','来访者中心','中长程'],require:['从业年限：1年+','二/三级咨询师均可','无特殊限制']});currentRecommendedApproaches.push('人本主义');}
 
+  if(issues.includes('workplace')){cards.push({top:!cards.length,badge:'推荐',badgeClass:'badge-green',title:'推荐取向：EAP / 组织心理学方向',desc:'职场困扰（倦怠、霸凌、转型）推荐具备EAP或组织心理学背景的咨询师。',tags:['EAP经验','CBT取向','职业规划'],require:['从业年限：3年+','EAP或企业心理服务经验']});currentMinYears=Math.max(currentMinYears,3);currentRecommendedApproaches.push('CBT');}
+
+  if(issues.includes('eating')){cards.push({top:!cards.length,badge:'建议优先',badgeClass:'badge-amber',title:'建议：进食障碍专项咨询',desc:'进食障碍涉及身心双重因素，建议寻求具备专项训练的咨询师，必要时配合精神科评估。',tags:['进食障碍专项','CBT-E','精神科协作'],require:['从业年限：5年+','进食障碍专项培训','建议精神科联合评估']});currentMinYears=Math.max(currentMinYears,5);currentRecommendedApproaches.push('CBT','DBT');}
+
+  if(issues.includes('addiction')){cards.push({top:!cards.length,badge:'建议优先',badgeClass:'badge-amber',title:'建议：成瘾行为专项咨询',desc:'成瘾类议题建议寻求具备成瘾干预专项训练的咨询师，配合精神科评估。',tags:['成瘾干预专项','CBT取向','精神科协作'],require:['从业年限：5年+','成瘾行为专项培训','需排除共病']});currentMinYears=Math.max(currentMinYears,5);currentRecommendedApproaches.push('CBT','DBT');}
+
+  if(issues.includes('grief')){cards.push({top:!cards.length,badge:'推荐',badgeClass:'badge-green',title:'推荐取向：哀伤辅导 / 存在主义咨询',desc:'丧亲哀伤类议题推荐具备哀伤辅导训练的咨询师。',tags:['哀伤辅导','存在主义','人本主义'],require:['从业年限：2年+','哀伤辅导专项培训']});currentRecommendedApproaches.push('人本主义');}
+
+  if(issues.includes('sexual')){cards.push({top:!cards.length,badge:'推荐',badgeClass:'badge-green',title:'推荐取向：性心理专项咨询',desc:'性心理议题需要受过性心理专项训练的咨询师。',tags:['性心理专项培训','CBT取向','系统式治疗'],require:['从业年限：3年+','性心理专项培训认证','尊重多元性别认同']});currentMinYears=Math.max(currentMinYears,3);currentRecommendedApproaches.push('CBT');}
+
+  if(issues.includes('somatic')){cards.push({top:!cards.length,badge:'推荐',badgeClass:'badge-green',title:'推荐取向：身心整合 / CBT / 正念',desc:'心身困扰（躯体化、健康焦虑）推荐具备身心整合或正念训练的咨询师。',tags:['正念减压(MBSR)','CBT取向','精神科协作'],require:['从业年限：3年+','正念或身心训练','建议先排除器质性病变']});currentMinYears=Math.max(currentMinYears,3);currentRecommendedApproaches.push('CBT');}
+
+  if(issues.includes('family')){cards.push({top:!cards.length,badge:'推荐',badgeClass:'badge-green',title:'推荐取向：家庭系统治疗',desc:'家庭系统议题推荐具备家庭治疗培训背景的咨询师。',tags:['家庭治疗取向','系统式治疗','鲍恩家庭系统'],require:['从业年限：5年+','家庭治疗专项培训','建议家庭成员参与']});currentMinYears=Math.max(currentMinYears,5);currentRecommendedApproaches.push('家庭治疗');}
+
   if(!cards.length){cards.push({top:true,badge:'通用推荐',badgeClass:'badge-green',title:'推荐进行初始评估咨询',desc:'建议先预约1-2次初始评估。',tags:['初始评估','1-2次探索'],require:['从业年限：2年+','二级咨询师及以上']});}
 
   var html='';
@@ -531,7 +615,8 @@ function generateResult() {
       minYears: currentMinYears,
       minCredential: currentMinCredential,
       budget: budgetVal,
-      preferred_formats: formats
+      preferred_formats: formats,
+      gender_pref: document.getElementById('gender_pref').value
     }).then(function(results){
       document.getElementById('counselor_loading').style.display='none';
       if(results.length>0){

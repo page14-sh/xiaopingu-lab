@@ -211,6 +211,17 @@
         <input type="text" id="c_name" placeholder="请输入您的真实姓名" autocomplete="off">
       </div>
 
+      <div class="form-row">
+        <label>性别</label>
+        <select id="c_gender">
+          <option value="">请选择</option>
+          <option value="male">男</option>
+          <option value="female">女</option>
+          <option value="ta">TA</option>
+          <option value="other">其他/不便透露</option>
+        </select>
+      </div>
+
       <div class="form-grid">
         <div class="form-row">
           <label class="required">资质等级</label>
@@ -371,15 +382,22 @@
         <div class="option-grid" id="specialty_grid">
           <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="specialty" value="emotion"><div class="opt-label">情绪困扰</div><div class="opt-desc">抑郁/焦虑/恐慌</div></div>
           <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="specialty" value="relationship"><div class="opt-label">关系困境</div><div class="opt-desc">亲密/亲子/社交</div></div>
-          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="specialty" value="trauma"><div class="opt-label">创伤经历</div><div class="opt-desc">PTSD/童年创伤</div></div>
-          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="specialty" value="growth"><div class="opt-label">自我成长</div><div class="opt-desc">认同/意义/职业</div></div>
-          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="specialty" value="adolescent"><div class="opt-label">青少年问题</div><div class="opt-desc">学业/叛逆/进食</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="specialty" value="trauma"><div class="opt-label">创伤经历</div><div class="opt-desc">PTSD/童年创伤/重大应激</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="specialty" value="growth"><div class="opt-label">自我成长</div><div class="opt-desc">认同/意义/价值观</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="specialty" value="adolescent"><div class="opt-label">青少年问题</div><div class="opt-desc">学业/叛逆/同伴关系</div></div>
           <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="specialty" value="marriage"><div class="opt-label">婚姻/伴侣</div><div class="opt-desc">婚姻危机/出轨/离婚</div></div>
           <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="specialty" value="personality"><div class="opt-label">人格议题</div><div class="opt-desc">边缘/自恋/强迫</div></div>
           <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="specialty" value="crisis"><div class="opt-label">危机干预</div><div class="opt-desc">自伤/自杀/紧急</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="specialty" value="workplace"><div class="opt-label">职场困扰</div><div class="opt-desc">倦怠/霸凌/转型</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="specialty" value="eating"><div class="opt-label">进食障碍</div><div class="opt-desc">厌食/暴食/体像</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="specialty" value="addiction"><div class="opt-label">成瘾行为</div><div class="opt-desc">酒精/网络/游戏/赌博</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="specialty" value="grief"><div class="opt-label">丧亲哀伤</div><div class="opt-desc">亲人离世/分手/丧失</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="specialty" value="sexual"><div class="opt-label">性心理议题</div><div class="opt-desc">性认同/性功能/亲密性</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="specialty" value="somatic"><div class="opt-label">心身困扰</div><div class="opt-desc">躯体化/慢性疼痛/健康焦虑</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="specialty" value="family"><div class="opt-label">家庭系统</div><div class="opt-desc">原生家庭/代际冲突</div></div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;margin-top:10px">
-          <input type="text" id="c_specialty_other" placeholder="其他议题，如：丧亲哀伤、成瘾行为、跨文化适应…" style="flex:1;font-size:14px;padding:10px 12px" autocomplete="off">
+          <input type="text" id="c_specialty_other" placeholder="其他议题，如：跨文化适应、遗赠咨询、学习困难…" style="flex:1;font-size:14px;padding:10px 12px" autocomplete="off">
           <button type="button" class="btn btn-outline" style="padding:10px 16px;font-size:13px;white-space:nowrap" onclick="addOtherSpecialty()">+ 添加</button>
         </div>
         <div id="specialty_other_tags" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px"></div>
@@ -626,6 +644,7 @@ function getMultiChecked(name) {
 function collectData() {
   return {
     name: document.getElementById('c_name').value.trim(),
+    gender: document.getElementById('c_gender').value,
     credential_level: document.getElementById('c_credential').value,
     years_experience: parseInt(document.getElementById('c_years').value) || 0,
     education: document.getElementById('c_education').value,
@@ -665,8 +684,9 @@ function previewAndSubmit() {
   if (d.specialties.length === 0) { showToast('请至少选择一个擅长议题'); goStep(3); return; }
   if (!d.bio_short) { showToast('请填写一句话简介'); goStep(5); return; }
 
-  var html = '<div class="preview-card"><h3>' + d.name + '</h3>';
-  html += '<p style="font-size:12px;color:#C4654A;margin-bottom:12px">⚠ 实名制 · 须与执业证姓名一致</p>';
+    var html = '<div class="preview-card"><h3>' + d.name + '</h3>';
+    if (d.gender) { var gMap = {male:'男',female:'女',ta:'TA',other:'其他'}; html += '<span style="font-size:12px;color:#6B635A;margin-left:8px">' + (gMap[d.gender]||d.gender) + '</span>'; }
+    html += '<p style="font-size:12px;color:#C4654A;margin-bottom:12px">⚠ 实名制 · 须与执业证姓名一致</p>';
   html += '<p style="font-size:13px;color:#6B635A;margin-bottom:12px">' + d.bio_short + '</p>';
   html += '<div class="preview-row"><span class="preview-label">资质</span><span class="preview-val">' + d.credential_level + '</span></div>';
   html += '<div class="preview-row"><span class="preview-label">从业年限</span><span class="preview-val">' + d.years_experience + '年</span></div>';
