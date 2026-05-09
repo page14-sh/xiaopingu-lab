@@ -224,9 +224,9 @@
 
       <div class="form-grid">
         <div class="form-row">
-          <label class="required">资质等级</label>
+          <label class="required">主资质</label>
           <select id="c_credential">
-            <option value="">请选择</option>
+            <option value="">请选择（用于匹配排序）</option>
             <option value="三级">心理咨询师（三级）</option>
             <option value="二级">心理咨询师（二级）</option>
             <option value="心理治疗师">心理治疗师</option>
@@ -240,6 +240,26 @@
           <label class="required">从业年限</label>
           <input type="number" id="c_years" placeholder="年" min="0" max="50" inputmode="numeric">
         </div>
+      </div>
+
+      <div class="form-row">
+        <label>附加资质（可多选）</label>
+        <div style="font-size:12px;color:#A09889;margin-bottom:8px">除主资质外，还持有的其他资质证书，将展示在档案中</div>
+        <div class="option-grid" id="extra_credential_grid" style="grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));">
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="extra_credential" value="心理咨询师（三级）"><div class="opt-label">心理咨询师（三级）</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="extra_credential" value="心理咨询师（二级）"><div class="opt-label">心理咨询师（二级）</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="extra_credential" value="心理治疗师"><div class="opt-label">心理治疗师</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="extra_credential" value="社会工作师（初级）"><div class="opt-label">社工师（初级）</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="extra_credential" value="社会工作师（中级）"><div class="opt-label">社工师（中级）</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="extra_credential" value="社会工作师（高级）"><div class="opt-label">社工师（高级）</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="extra_credential" value="精神科医生"><div class="opt-label">精神科医生</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="extra_credential" value="注册心理师"><div class="opt-label">注册心理师</div></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:10px">
+          <input type="text" id="c_extra_credential_other" placeholder="其他资质，如：教师资格证、健康管理师…" style="flex:1;font-size:14px;padding:10px 12px" autocomplete="off">
+          <button type="button" class="btn btn-outline" style="padding:10px 16px;font-size:13px;white-space:nowrap" onclick="addOtherExtraCredential()">+ 添加</button>
+        </div>
+        <div id="extra_credential_other_tags" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px"></div>
       </div>
 
       <div class="form-grid">
@@ -350,7 +370,7 @@
           <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="cert" value="婚姻咨询专项"><div class="opt-label">婚姻咨询专项</div></div>
           <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="cert" value="儿童青少年专项"><div class="opt-label">儿童青少年专项</div></div>
           <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="cert" value="EAP专项"><div class="opt-label">EAP专项</div></div>
-          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="cert" value="AHA危机干预"><div class="opt-label">AHA危机干预</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="cert" value="危机干预"><div class="opt-label">危机干预</div></div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;margin-top:10px">
           <input type="text" id="c_cert_other" placeholder="其他认证，如：中德班、中美班、CAPA…" style="flex:1;font-size:14px;padding:10px 12px" autocomplete="off">
@@ -583,6 +603,7 @@ function toggleOpt(el) {
 var otherApproaches = [];
 var otherSpecialties = [];
 var otherCerts = [];
+var otherExtraCredentials = [];
 
 function addOtherApproach() {
   var input = document.getElementById('c_approach_other');
@@ -629,10 +650,27 @@ function removeOtherCert(idx) {
   renderOtherTags('cert');
 }
 
+function addOtherExtraCredential() {
+  var input = document.getElementById('c_extra_credential_other');
+  var val = input.value.trim();
+  if (!val) return;
+  if (otherExtraCredentials.indexOf(val) >= 0) { showToast('该资质已添加'); return; }
+  otherExtraCredentials.push(val);
+  input.value = '';
+  renderOtherTags('extra_credential');
+}
+
+function removeOtherExtraCredential(idx) {
+  otherExtraCredentials.splice(idx, 1);
+  renderOtherTags('extra_credential');
+}
+
 function renderOtherTags(type) {
-  var list = type === 'approach' ? otherApproaches : type === 'specialty' ? otherSpecialties : otherCerts;
+  var listMap = {approach: otherApproaches, specialty: otherSpecialties, cert: otherCerts, extra_credential: otherExtraCredentials};
+  var removeFnMap = {approach: 'removeOtherApproach', specialty: 'removeOtherSpecialty', cert: 'removeOtherCert', extra_credential: 'removeOtherExtraCredential'};
+  var list = listMap[type] || [];
   var container = document.getElementById(type + '_other_tags');
-  var removeFn = type === 'approach' ? 'removeOtherApproach' : type === 'specialty' ? 'removeOtherSpecialty' : 'removeOtherCert';
+  var removeFn = removeFnMap[type] || '';
   var html = '';
   list.forEach(function(v, i) {
     html += '<span style="display:inline-flex;align-items:center;gap:4px;font-size:12px;padding:4px 10px;border-radius:16px;background:#E8F0E4;color:#5C7A52;border:1px solid #C8DCC0">';
@@ -660,6 +698,8 @@ function collectData() {
     name: document.getElementById('c_name').value.trim(),
     gender: document.getElementById('c_gender').value,
     credential_level: document.getElementById('c_credential').value,
+    extra_credentials: getMultiChecked('extra_credential'),
+    extra_credentials_other: otherExtraCredentials.slice(),
     years_experience: parseInt(document.getElementById('c_years').value) || 0,
     education: document.getElementById('c_education').value,
     city: document.getElementById('c_city').value.trim(),
@@ -707,6 +747,11 @@ function previewAndSubmit() {
     html += '<p style="font-size:12px;color:#C4654A;margin-bottom:12px">⚠ 实名制 · 须与执业证姓名一致</p>';
   html += '<p style="font-size:13px;color:#6B635A;margin-bottom:12px">' + d.bio_short + '</p>';
   html += '<div class="preview-row"><span class="preview-label">资质</span><span class="preview-val">' + d.credential_level + '</span></div>';
+  if (d.extra_credentials && d.extra_credentials.length) {
+    html += '<div class="preview-row"><span class="preview-label">附加资质</span><span class="preview-val">';
+    d.extra_credentials.forEach(function(e) { html += '<span class="preview-tag">' + e + '</span> '; });
+    html += '</span></div>';
+  }
   html += '<div class="preview-row"><span class="preview-label">从业年限</span><span class="preview-val">' + d.years_experience + '年</span></div>';
   if (d.education) html += '<div class="preview-row"><span class="preview-label">学历</span><span class="preview-val">' + d.education + '</span></div>';
   if (d.city) html += '<div class="preview-row"><span class="preview-label">所在城市</span><span class="preview-val">' + d.city + '</span></div>';
@@ -765,9 +810,11 @@ function submitProfile() {
   d.approaches = d.approaches.concat(d.approaches_other);
   d.specialties = d.specialties.concat(d.specialties_other);
   d.certifications = d.certifications.concat(d.certifications_other);
+  d.extra_credentials = d.extra_credentials.concat(d.extra_credentials_other);
   delete d.approaches_other;
   delete d.specialties_other;
   delete d.certifications_other;
+  delete d.extra_credentials_other;
 
   if (typeof saveCounselor === 'function' && SUPABASE_CONFIG.enableDataCollection && SUPABASE_CONFIG.url) {
     saveCounselor(d).then(function(result) {
@@ -822,23 +869,28 @@ function submitProfile() {
     // Restore multi-select options
     var stdApproaches = ['CBT','ACT','DBT','EMDR','精神动力学','人本主义','家庭治疗','EFT','叙事治疗','沙盘游戏'];
     var stdSpecialties = ['emotion','relationship','trauma','growth','adolescent','marriage','personality','crisis'];
-    var stdCerts = ['危机干预','EMDR认证','CBT认证','创伤专项','婚姻咨询专项','儿童青少年专项','EAP专项','AHA危机干预'];
+    var stdCerts = ['危机干预','EMDR认证','CBT认证','创伤专项','婚姻咨询专项','儿童青少年专项','EAP专项','危机干预'];
+    var stdExtraCredentials = ['心理咨询师（三级）','心理咨询师（二级）','心理治疗师','社会工作师（初级）','社会工作师（中级）','社会工作师（高级）','精神科医生','注册心理师'];
 
-    // Separate "other" values from approaches/specialties/certs before restoring checkboxes
+    // Separate "other" values from approaches/specialties/certs/extra_credentials before restoring checkboxes
     var allApproaches = d.approaches || [];
     var allSpecialties = d.specialties || [];
     var allCerts = d.certifications || [];
+    var allExtraCredentials = d.extra_credentials || [];
     otherApproaches = allApproaches.filter(function(v) { return stdApproaches.indexOf(v) < 0; });
     otherSpecialties = allSpecialties.filter(function(v) { return stdSpecialties.indexOf(v) < 0; });
     otherCerts = allCerts.filter(function(v) { return stdCerts.indexOf(v) < 0; });
+    otherExtraCredentials = allExtraCredentials.filter(function(v) { return stdExtraCredentials.indexOf(v) < 0; });
     renderOtherTags('approach');
     renderOtherTags('specialty');
     renderOtherTags('cert');
+    renderOtherTags('extra_credential');
 
-    ['approach','cert','specialty','population','severity','format'].forEach(function(group) {
+    ['approach','cert','specialty','population','severity','format','extra_credential'].forEach(function(group) {
       var keyMap = {
         approach: 'approaches', cert: 'certifications', specialty: 'specialties',
-        population: 'populations', severity: 'severity_levels', format: 'session_formats'
+        population: 'populations', severity: 'severity_levels', format: 'session_formats',
+        extra_credential: 'extra_credentials'
       };
       var vals = d[keyMap[group]] || [];
       if (!vals.length) return;
@@ -857,6 +909,7 @@ function submitProfile() {
 // Enter key support for "other" inputs
 document.getElementById('c_approach_other').addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); addOtherApproach(); } });
 document.getElementById('c_specialty_other').addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); addOtherSpecialty(); } });
+document.getElementById('c_extra_credential_other').addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); addOtherExtraCredential(); } });
 </script>
 </body>
 </html>
