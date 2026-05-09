@@ -341,6 +341,21 @@
       </div>
 
       <div class="form-row">
+        <label>是否接受过自我体验</label>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <label style="display:flex;align-items:center;gap:6px;font-size:14px;color:#6B635A;cursor:pointer">
+            <input type="radio" name="personal_therapy_status" value="是"> 是
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:14px;color:#6B635A;cursor:pointer">
+            <input type="radio" name="personal_therapy_status" value="否"> 否
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:14px;color:#6B635A;cursor:pointer">
+            <input type="radio" name="personal_therapy_status" value="进行中"> 进行中
+          </label>
+        </div>
+      </div>
+
+      <div class="form-row">
         <label>自我体验时长</label>
         <input type="number" id="c_personal_therapy" placeholder="小时" min="0" inputmode="numeric">
       </div>
@@ -712,6 +727,7 @@ function collectData() {
     approach_primary: document.getElementById('c_approach_primary').value,
     supervision_hours: parseInt(document.getElementById('c_supervision').value) || 0,
     personal_therapy_hours: parseInt(document.getElementById('c_personal_therapy').value) || 0,
+    personal_therapy_status: (function() { var el = document.querySelector('input[name="personal_therapy_status"]:checked'); return el ? el.value : ''; })(),
     ethics_training: (function() { var el = document.querySelector('input[name="ethics_training"]:checked'); return el ? el.value : ''; })(),
     certifications: getMultiChecked('cert'),
     certifications_other: otherCerts.slice(),
@@ -767,7 +783,8 @@ function previewAndSubmit() {
   d.certifications_other.forEach(function(s) { html += '<span class="preview-tag" style="background:#FFF3E6;color:#B8860B;border:1px solid #F0D9A8">' + s + '</span> '; });
   html += '</span></div>';
   if (d.supervision_hours) html += '<div class="preview-row"><span class="preview-label">督导时长</span><span class="preview-val">' + d.supervision_hours + '小时</span></div>';
-  if (d.personal_therapy_hours) html += '<div class="preview-row"><span class="preview-label">自我体验时长</span><span class="preview-val">' + d.personal_therapy_hours + '小时</span></div>';
+  if (d.personal_therapy_status) html += '<div class="preview-row"><span class="preview-label">自我体验</span><span class="preview-val">' + d.personal_therapy_status + (d.personal_therapy_hours ? '（' + d.personal_therapy_hours + '小时）' : '') + '</span></div>';
+  else if (d.personal_therapy_hours) html += '<div class="preview-row"><span class="preview-label">自我体验时长</span><span class="preview-val">' + d.personal_therapy_hours + '小时</span></div>';
   if (d.ethics_training) html += '<div class="preview-row"><span class="preview-label">伦理培训</span><span class="preview-val">' + d.ethics_training + '</span></div>';
   html += '<div class="preview-row"><span class="preview-label">擅长议题</span><span class="preview-val">';
   d.specialties.forEach(function(s) { html += '<span class="preview-tag">' + s + '</span> '; });
@@ -851,6 +868,10 @@ function submitProfile() {
     if (d.approach_primary) document.getElementById('c_approach_primary').value = d.approach_primary;
     if (d.supervision_hours) document.getElementById('c_supervision').value = d.supervision_hours;
     if (d.personal_therapy_hours) document.getElementById('c_personal_therapy').value = d.personal_therapy_hours;
+    if (d.personal_therapy_status) {
+      var ptRadio = document.querySelector('input[name="personal_therapy_status"][value="' + d.personal_therapy_status + '"]');
+      if (ptRadio) ptRadio.checked = true;
+    }
     if (d.ethics_training) {
       var ethicsRadio = document.querySelector('input[name="ethics_training"][value="' + d.ethics_training + '"]');
       if (ethicsRadio) ethicsRadio.checked = true;
