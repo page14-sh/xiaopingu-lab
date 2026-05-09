@@ -370,7 +370,9 @@
           <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="cert" value="婚姻咨询专项"><div class="opt-label">婚姻咨询专项</div></div>
           <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="cert" value="儿童青少年专项"><div class="opt-label">儿童青少年专项</div></div>
           <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="cert" value="EAP专项"><div class="opt-label">EAP专项</div></div>
-          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="cert" value="危机干预"><div class="opt-label">危机干预</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="cert" value="心理测量"><div class="opt-label">心理测量</div><div class="opt-desc">量表施测与解读</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="cert" value="评估性治疗"><div class="opt-label">评估性治疗</div><div class="opt-desc">诊断性访谈/评估</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="cert" value="循证咨询受训"><div class="opt-label">循证咨询受训</div><div class="opt-desc">EBP系统训练</div></div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;margin-top:10px">
           <input type="text" id="c_cert_other" placeholder="其他认证，如：中德班、中美班、CAPA…" style="flex:1;font-size:14px;padding:10px 12px" autocomplete="off">
@@ -869,7 +871,7 @@ function submitProfile() {
     // Restore multi-select options
     var stdApproaches = ['CBT','ACT','DBT','EMDR','精神动力学','人本主义','家庭治疗','EFT','叙事治疗','沙盘游戏'];
     var stdSpecialties = ['emotion','relationship','trauma','growth','adolescent','marriage','personality','crisis'];
-    var stdCerts = ['危机干预','EMDR认证','CBT认证','创伤专项','婚姻咨询专项','儿童青少年专项','EAP专项','危机干预'];
+    var stdCerts = ['危机干预','EMDR认证','CBT认证','创伤专项','婚姻咨询专项','儿童青少年专项','EAP专项','心理测量','评估性治疗','循证咨询受训'];
     var stdExtraCredentials = ['心理咨询师（三级）','心理咨询师（二级）','心理治疗师','社会工作师（初级）','社会工作师（中级）','社会工作师（高级）','精神科医生','注册心理师'];
 
     // Separate "other" values from approaches/specialties/certs/extra_credentials before restoring checkboxes
