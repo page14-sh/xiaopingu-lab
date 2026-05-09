@@ -190,6 +190,26 @@
 
 <div class="main">
 
+  <!-- 口令验证层 -->
+  <div id="token_gate" style="display:none">
+    <div class="card" style="text-align:center;padding:40px 24px">
+      <div class="logo-wrap" style="margin:0 auto 16px;width:56px;height:56px;border-radius:16px">
+        <svg viewBox="0 0 100 100" style="width:40px;height:40px"><circle cx="50" cy="62" r="28" fill="#5C7A52" opacity="0.15"/><ellipse cx="50" cy="38" rx="18" ry="22" fill="#5C7A52" opacity="0.2"/><circle cx="40" cy="34" r="3" fill="#5C7A52"/><circle cx="60" cy="34" r="3" fill="#5C7A52"/><path d="M42 48 Q50 56 58 48" stroke="#5C7A52" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>
+      </div>
+      <p style="font-size:18px;font-weight:600;color:#3D3831;margin-bottom:8px">咨询师专属录入通道</p>
+      <p style="font-size:13px;color:#A09889;margin-bottom:24px">请输入您收到的录入口令以继续</p>
+      <div style="max-width:320px;margin:0 auto">
+        <input type="text" id="token_input" placeholder="请输入录入口令" autocomplete="off" style="width:100%;font-size:15px;padding:12px 16px;border:1.5px solid #E8E4DC;border-radius:10px;text-align:center;letter-spacing:2px;outline:none" onfocus="this.style.borderColor='#5C7A52'" onblur="this.style.borderColor='#E8E4DC'">
+        <div id="token_error" style="color:#C4654A;font-size:13px;margin-top:10px;display:none">口令无效，请检查后重新输入</div>
+        <button type="button" class="btn btn-primary" style="margin-top:16px;width:100%;padding:12px" onclick="verifyToken()">验证并进入</button>
+      </div>
+      <p style="font-size:11px;color:#C4BFB6;margin-top:20px">如未收到口令，请联系管理员获取</p>
+    </div>
+  </div>
+
+  <!-- 正式表单区域 -->
+  <div id="form_area">
+
   <div class="progress-bar-wrap">
     <div class="progress-steps">
       <div class="step-item active" id="step1-bar">① 资质信息</div>
@@ -613,6 +633,7 @@
       </div>
     </div>
   </div>
+  </div><!-- end form_area -->
 
 </div>
 
@@ -621,6 +642,70 @@
 
 <script src="supabase-config.js"></script>
 <script>
+// ===== 口令验证（咨询师专属录入链接） =====
+// 管理员在此配置有效的录入口令，每个口令对应一个咨询师
+// 格式：{ '口令值': '咨询师备注（仅管理员可见，不展示给来访）' }
+var VALID_TOKENS = {
+  'pg2026': '平台测试',
+  // 在此添加更多口令，例如：
+  // 'c001': '张老师',
+  // 'c002': '李老师',
+};
+
+function checkTokenAccess() {
+  var params = new URLSearchParams(window.location.search);
+  var token = params.get('t') || '';
+  if (!token) {
+    // 没有口令参数，显示口令输入界面
+    showTokenGate();
+    return false;
+  }
+  if (VALID_TOKENS[token]) {
+    sessionStorage.setItem('counselor_token', token);
+    return true;
+  }
+  showTokenGate();
+  return false;
+}
+
+function showTokenGate() {
+  document.getElementById('token_gate').style.display = 'block';
+  document.getElementById('form_area').style.display = 'none';
+  document.querySelector('.progress-bar-wrap').style.display = 'none';
+}
+
+function verifyToken() {
+  var input = document.getElementById('token_input').value.trim();
+  if (!input) return;
+  if (VALID_TOKENS[input]) {
+    sessionStorage.setItem('counselor_token', input);
+    document.getElementById('token_gate').style.display = 'none';
+    document.getElementById('form_area').style.display = 'block';
+    document.querySelector('.progress-bar-wrap').style.display = '';
+    // 更新URL加上口令参数，方便收藏
+    var url = new URL(window.location);
+    url.searchParams.set('t', input);
+    window.history.replaceState({}, '', url);
+  } else {
+    document.getElementById('token_error').style.display = 'block';
+    document.getElementById('token_input').style.borderColor = '#C4654A';
+    setTimeout(function() {
+      document.getElementById('token_error').style.display = 'none';
+      document.getElementById('token_input').style.borderColor = '#E8E4DC';
+    }, 3000);
+  }
+}
+
+// 口令输入框回车支持
+document.getElementById('token_input').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') { e.preventDefault(); verifyToken(); }
+});
+
+// 页面加载时检查口令
+if (!checkTokenAccess()) {
+  // 隐藏表单，等验证通过
+}
+
 var currentStep = 1;
 
 function goStep(n) {
@@ -872,6 +957,7 @@ function previewAndSubmit() {
 function submitProfile() {
   var d = collectData();
   d.is_active = true;
+  d.invite_token = sessionStorage.getItem('counselor_token') || '';
   // Merge standard + other into single arrays for storage and matching
   d.approaches = d.approaches.concat(d.approaches_other);
   d.specialties = d.specialties.concat(d.specialties_other);
