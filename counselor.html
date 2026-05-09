@@ -477,12 +477,18 @@
       <hr class="divider">
 
         <div class="form-row">
-        <label>可承接的严重程度（可多选）<span class="term-tip" data-tip="总分指来访者在5项症状评分（情绪、焦虑、睡眠、日常功能、人际关系）的总分，每项0-5分，满分25分。评分标准与PHQ-9/GAD-7类似，可帮助您判断适合承接的个案严重程度">?</span></label>
+        <label>可承接的严重程度（可多选）<span class="term-tip" data-tip="评分标准（5题×5分，满分25）：
+0-7分：一般心理困扰 — 生活/情绪轻微受影响，心理咨询可有效帮助
+8-14分：需要外力介入 — 中度困扰，建议专业心理咨询
+15-19分：需要心理治疗介入 — 中重度，建议系统心理治疗，可联合精神科评估
+20-25分：需要精神科就医 — 重度，建议精神科优先评估，可联合心理咨询
+危机：需要紧急干预 — 自伤/自杀风险，立即干预">?</span></label>
         <div class="option-grid" id="severity_grid" style="grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));">
-          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="severity" value="轻度"><div class="opt-label">轻度</div><div class="opt-desc">总分0-7</div></div>
-          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="severity" value="中度"><div class="opt-label">中度</div><div class="opt-desc">总分8-14</div></div>
-          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="severity" value="重度"><div class="opt-label">重度</div><div class="opt-desc">总分15-25</div></div>
-          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="severity" value="需精神科联合"><div class="opt-label">医心联合</div><div class="opt-desc">需与精神科协作</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="severity" value="一般心理困扰"><div class="opt-label">一般心理困扰</div><div class="opt-desc">总分0-7，轻中度，心理咨询可有效帮助</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="severity" value="需要外力介入"><div class="opt-label">需要外力介入</div><div class="opt-desc">总分8-14，建议专业心理咨询</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="severity" value="需要心理治疗介入"><div class="opt-label">需要心理治疗介入</div><div class="opt-desc">总分15-19，建议系统治疗，可联合精神科</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="severity" value="需精神科就医"><div class="opt-label">需精神科就医</div><div class="opt-desc">总分20-25，精神科优先评估</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="severity" value="危机紧急"><div class="opt-label">需要紧急干预</div><div class="opt-desc">自伤/自杀风险，立即干预</div></div>
         </div>
       </div>
 
