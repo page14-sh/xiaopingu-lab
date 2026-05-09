@@ -511,8 +511,8 @@ function generateResult() {
   issues = issues.concat(otherIssues);
   var specials=[];document.querySelectorAll('input[name="special"]:checked').forEach(function(el){specials.push(el.value);});
   var totalScore=scores.mood+scores.anxiety+scores.sleep+scores.function+scores.relation;
-  var severity='轻度',severityColor='teal';
-  if(totalScore>=15){severity='重度';severityColor='coral';}else if(totalScore>=8){severity='中度';severityColor='amber';}
+  var severity='一般心理困扰',severityColor='teal';
+  if(totalScore>=20){severity='需精神科就医';severityColor='coral';}else if(totalScore>=15){severity='需要心理治疗介入';severityColor='coral';}else if(totalScore>=8){severity='需要外力介入';severityColor='amber';}
   var now=new Date();var dateStr=now.getFullYear()+'-'+(now.getMonth()+1).toString().padStart(2,'0')+'-'+now.getDate().toString().padStart(2,'0');
   document.getElementById('result_time').innerText='评估时间：'+dateStr+'  总分：'+totalScore+'/25  程度：'+severity;
   document.getElementById('result_title').innerText='小平菇 · 转介评估报告 — '+name;
@@ -527,7 +527,7 @@ function generateResult() {
     '<div class="info-item"><div class="info-label">既往咨询</div><div class="info-val">'+prevText+'</div></div>'+
     (budgetVal ? '<div class="info-item"><div class="info-label">经济承受</div><div class="info-val">'+budgetText+'</div></div>' : '')+
     (formats.length ? '<div class="info-item"><div class="info-label">咨询方式</div><div class="info-val">'+formats.join('、')+'</div></div>' : '')+
-    '<div class="info-item"><div class="info-label">症状程度</div><div class="info-val" style="color:'+(totalScore>=15?'#C4654A':totalScore>=8?'#854F0B':'#5C7A52')+'">'+severity+'（'+totalScore+'/25）</div></div>';
+    '<div class="info-item"><div class="info-label">症状程度</div><div class="info-val" style="color:'+(totalScore>=20?'#A03030':totalScore>=15?'#C4654A':totalScore>=8?'#854F0B':'#5C7A52')+'">'+severity+'（'+totalScore+'/25）</div></div>';
 
   var issueMap={emotion:'情绪困扰',relationship:'关系困境',trauma:'创伤经历',growth:'自我成长',adolescent:'青少年问题',marriage:'婚姻/伴侣',personality:'人格议题',crisis:'危机状态',workplace:'职场困扰',eating:'进食障碍',addiction:'成瘾行为',grief:'丧亲哀伤',sexual:'性心理议题',somatic:'心身困扰',family:'家庭系统'};
   var issueHtml='<div class="tag-row">';
