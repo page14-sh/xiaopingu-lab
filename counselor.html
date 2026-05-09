@@ -467,12 +467,17 @@
           <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="population" value="LGBTQ+"><div class="opt-label">LGBTQ+</div></div>
           <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="population" value="企业员工"><div class="opt-label">企业员工(EAP)</div></div>
         </div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:10px">
+          <input type="text" id="c_population_other" placeholder="其他人群，如：孕产女性、慢性病患者…" style="flex:1;font-size:14px;padding:10px 12px" autocomplete="off">
+          <button type="button" class="btn btn-outline" style="padding:10px 16px;font-size:13px;white-space:nowrap" onclick="addOtherPopulation()">+ 添加</button>
+        </div>
+        <div id="population_other_tags" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px"></div>
       </div>
 
       <hr class="divider">
 
-      <div class="form-row">
-        <label>可承接的严重程度（可多选）</label>
+        <div class="form-row">
+        <label>可承接的严重程度（可多选）<span class="term-tip" data-tip="总分指来访者在5项症状评分（情绪、焦虑、睡眠、日常功能、人际关系）的总分，每项0-5分，满分25分。评分标准与PHQ-9/GAD-7类似，可帮助您判断适合承接的个案严重程度">?</span></label>
         <div class="option-grid" id="severity_grid" style="grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));">
           <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="severity" value="轻度"><div class="opt-label">轻度</div><div class="opt-desc">总分0-7</div></div>
           <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="severity" value="中度"><div class="opt-label">中度</div><div class="opt-desc">总分8-14</div></div>
@@ -634,6 +639,7 @@ var otherApproaches = [];
 var otherSpecialties = [];
 var otherCerts = [];
 var otherExtraCredentials = [];
+var otherPopulations = [];
 
 function addOtherApproach() {
   var input = document.getElementById('c_approach_other');
@@ -663,6 +669,21 @@ function addOtherSpecialty() {
 function removeOtherSpecialty(idx) {
   otherSpecialties.splice(idx, 1);
   renderOtherTags('specialty');
+}
+
+function addOtherPopulation() {
+  var input = document.getElementById('c_population_other');
+  var val = input.value.trim();
+  if (!val) return;
+  if (otherPopulations.indexOf(val) >= 0) { showToast('该人群已添加'); return; }
+  otherPopulations.push(val);
+  input.value = '';
+  renderOtherTags('population');
+}
+
+function removeOtherPopulation(idx) {
+  otherPopulations.splice(idx, 1);
+  renderOtherTags('population');
 }
 
 function addOtherCert() {
@@ -696,8 +717,8 @@ function removeOtherExtraCredential(idx) {
 }
 
 function renderOtherTags(type) {
-  var listMap = {approach: otherApproaches, specialty: otherSpecialties, cert: otherCerts, extra_credential: otherExtraCredentials};
-  var removeFnMap = {approach: 'removeOtherApproach', specialty: 'removeOtherSpecialty', cert: 'removeOtherCert', extra_credential: 'removeOtherExtraCredential'};
+  var listMap = {approach: otherApproaches, specialty: otherSpecialties, cert: otherCerts, extra_credential: otherExtraCredentials, population: otherPopulations};
+  var removeFnMap = {approach: 'removeOtherApproach', specialty: 'removeOtherSpecialty', cert: 'removeOtherCert', extra_credential: 'removeOtherExtraCredential', population: 'removeOtherPopulation'};
   var list = listMap[type] || [];
   var container = document.getElementById(type + '_other_tags');
   var removeFn = removeFnMap[type] || '';
@@ -748,6 +769,7 @@ function collectData() {
     specialties: getMultiChecked('specialty'),
     specialties_other: otherSpecialties.slice(),
     populations: getMultiChecked('population'),
+    populations_other: otherPopulations.slice(),
     severity_levels: getMultiChecked('severity'),
     session_formats: getMultiChecked('format'),
     session_duration: document.getElementById('c_duration').value,
@@ -807,9 +829,10 @@ function previewAndSubmit() {
   d.specialties.forEach(function(s) { html += '<span class="preview-tag">' + s + '</span> '; });
   d.specialties_other.forEach(function(s) { html += '<span class="preview-tag" style="background:#FFF3E6;color:#B8860B;border:1px solid #F0D9A8">' + s + '</span> '; });
   html += '</span></div>';
-  if (d.populations.length) {
+  if (d.populations.length || (d.populations_other && d.populations_other.length)) {
     html += '<div class="preview-row"><span class="preview-label">服务人群</span><span class="preview-val">';
     d.populations.forEach(function(p) { html += '<span class="preview-tag">' + p + '</span> '; });
+    if (d.populations_other) d.populations_other.forEach(function(p) { html += '<span class="preview-tag" style="background:#E8F0E4;color:#5C7A52;border:1px solid #C8DCC0">' + p + '</span> '; });
     html += '</span></div>';
   }
   if (d.severity_levels.length) {
@@ -848,10 +871,12 @@ function submitProfile() {
   d.specialties = d.specialties.concat(d.specialties_other);
   d.certifications = d.certifications.concat(d.certifications_other);
   d.extra_credentials = d.extra_credentials.concat(d.extra_credentials_other);
+  d.populations = d.populations.concat(d.populations_other);
   delete d.approaches_other;
   delete d.specialties_other;
   delete d.certifications_other;
   delete d.extra_credentials_other;
+  delete d.populations_other;
 
   if (typeof saveCounselor === 'function' && SUPABASE_CONFIG.enableDataCollection && SUPABASE_CONFIG.url) {
     saveCounselor(d).then(function(result) {
@@ -915,21 +940,25 @@ function submitProfile() {
     var stdApproaches = ['CBT','ACT','DBT','EMDR','精神动力学','人本主义','家庭治疗','EFT','叙事治疗','沙盘游戏'];
     var stdSpecialties = ['emotion','relationship','trauma','growth','adolescent','marriage','personality','crisis'];
     var stdCerts = ['危机干预','EMDR认证','CBT认证','创伤专项','婚姻咨询专项','儿童青少年专项','EAP专项','心理测量','评估性治疗','循证咨询受训','精神科门诊见习'];
-    var stdExtraCredentials = ['心理咨询师（三级）','心理咨询师（二级）','心理治疗师','社会工作师（初级）','社会工作师（中级）','社会工作师（高级）','精神科医生','注册心理师'];
+    var stdPopulations = ['成人','青少年','儿童','大学生','家长','老年人','LGBTQ+','企业员工'];
+    var stdExtraCredentials = ['心理咨询师（三级','心理咨询师（二级','心理治疗师','社会工作师（初级）','社会工作师（中级）','社会工作师（高级）','精神科医生','注册心理师'];
 
     // Separate "other" values from approaches/specialties/certs/extra_credentials before restoring checkboxes
     var allApproaches = d.approaches || [];
     var allSpecialties = d.specialties || [];
     var allCerts = d.certifications || [];
     var allExtraCredentials = d.extra_credentials || [];
+    var allPopulations = d.populations || [];
     otherApproaches = allApproaches.filter(function(v) { return stdApproaches.indexOf(v) < 0; });
     otherSpecialties = allSpecialties.filter(function(v) { return stdSpecialties.indexOf(v) < 0; });
     otherCerts = allCerts.filter(function(v) { return stdCerts.indexOf(v) < 0; });
     otherExtraCredentials = allExtraCredentials.filter(function(v) { return stdExtraCredentials.indexOf(v) < 0; });
+    otherPopulations = allPopulations.filter(function(v) { return stdPopulations.indexOf(v) < 0; });
     renderOtherTags('approach');
     renderOtherTags('specialty');
     renderOtherTags('cert');
     renderOtherTags('extra_credential');
+    renderOtherTags('population');
 
     ['approach','cert','specialty','population','severity','format','extra_credential'].forEach(function(group) {
       var keyMap = {
@@ -954,6 +983,8 @@ function submitProfile() {
 // Enter key support for "other" inputs
 document.getElementById('c_approach_other').addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); addOtherApproach(); } });
 document.getElementById('c_specialty_other').addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); addOtherSpecialty(); } });
+document.getElementById('c_population_other').addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); addOtherPopulation(); } });
+document.getElementById('c_cert_other').addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); addOtherCert(); } });
 document.getElementById('c_extra_credential_other').addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); addOtherExtraCredential(); } });
 </script>
 </body>
