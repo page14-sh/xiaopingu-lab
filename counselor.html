@@ -235,7 +235,12 @@
             <option value="社会工作师（中级）">社会工作师（中级·社工师）</option>
             <option value="社会工作师（高级）">社会工作师（高级·高级社工师）</option>
             <option value="精神科医生">精神科医生</option>
+            <option value="督导师">督导师</option>
           </select>
+        </div>
+        <div class="form-row">
+          <label>督导师证书编号</label>
+          <input type="text" id="c_supervisor_cert" placeholder="选填，如：中国心理学会注册督导师编号" style="font-size:14px;padding:10px 12px" autocomplete="off">
         </div>
         <div class="form-row">
           <label class="required">从业年限</label>
@@ -255,6 +260,7 @@
           <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="extra_credential" value="社会工作师（高级）"><div class="opt-label">社工师（高级）</div></div>
           <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="extra_credential" value="精神科医生"><div class="opt-label">精神科医生</div></div>
           <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="extra_credential" value="注册心理师"><div class="opt-label">注册心理师</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="extra_credential" value="督导师"><div class="opt-label">督导师</div></div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;margin-top:10px">
           <input type="text" id="c_extra_credential_other" placeholder="其他资质，如：教师资格证、健康管理师…" style="flex:1;font-size:14px;padding:10px 12px" autocomplete="off">
@@ -757,6 +763,7 @@ function collectData() {
     name: document.getElementById('c_name').value.trim(),
     gender: document.getElementById('c_gender').value,
     credential_level: document.getElementById('c_credential').value,
+    supervisor_cert: document.getElementById('c_supervisor_cert').value.trim(),
     extra_credentials: getMultiChecked('extra_credential'),
     extra_credentials_other: otherExtraCredentials.slice(),
     years_experience: parseInt(document.getElementById('c_years').value) || 0,
@@ -809,6 +816,7 @@ function previewAndSubmit() {
     html += '<p style="font-size:12px;color:#C4654A;margin-bottom:12px">⚠ 实名制 · 须与执业证姓名一致</p>';
   html += '<p style="font-size:13px;color:#6B635A;margin-bottom:12px">' + d.bio_short + '</p>';
   html += '<div class="preview-row"><span class="preview-label">资质</span><span class="preview-val">' + d.credential_level + '</span></div>';
+  if (d.supervisor_cert) html += '<div class="preview-row"><span class="preview-label">督导师证书编号</span><span class="preview-val">' + d.supervisor_cert + '</span></div>';
   if (d.extra_credentials && d.extra_credentials.length) {
     html += '<div class="preview-row"><span class="preview-label">附加资质</span><span class="preview-val">';
     d.extra_credentials.forEach(function(e) { html += '<span class="preview-tag">' + e + '</span> '; });
@@ -911,6 +919,7 @@ function submitProfile() {
 
     if (d.name) document.getElementById('c_name').value = d.name;
     if (d.credential_level) document.getElementById('c_credential').value = d.credential_level;
+    if (d.supervisor_cert) document.getElementById('c_supervisor_cert').value = d.supervisor_cert;
     if (d.years_experience) document.getElementById('c_years').value = d.years_experience;
     if (d.education) document.getElementById('c_education').value = d.education;
     if (d.city) document.getElementById('c_city').value = d.city;
@@ -949,7 +958,7 @@ function submitProfile() {
     var stdSpecialties = ['emotion','relationship','trauma','growth','adolescent','marriage','personality','crisis'];
     var stdCerts = ['危机干预','EMDR认证','CBT认证','创伤专项','婚姻咨询专项','儿童青少年专项','EAP专项','心理测量','评估性治疗','循证咨询受训','精神科门诊见习'];
     var stdPopulations = ['成人','青少年','儿童','大学生','家长','老年人','LGBTQ+','企业员工'];
-    var stdExtraCredentials = ['心理咨询师（三级','心理咨询师（二级','心理治疗师','社会工作师（初级）','社会工作师（中级）','社会工作师（高级）','精神科医生','注册心理师'];
+    var stdExtraCredentials = ['心理咨询师（三级','心理咨询师（二级','心理治疗师','社会工作师（初级）','社会工作师（中级）','社会工作师（高级）','精神科医生','注册心理师','督导师'];
 
     // Separate "other" values from approaches/specialties/certs/extra_credentials before restoring checkboxes
     var allApproaches = d.approaches || [];
