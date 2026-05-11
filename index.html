@@ -155,8 +155,8 @@
   .match-mid-badge { background: #FAEEDA; color: #854F0B; }
   .match-low-badge { background: #F0ECE5; color: #6B635A; }
   .counselor-bio { font-size: 13px; color: #6B635A; line-height: 1.7; margin-bottom: 10px; }
-  .counselor-meta { display: flex; flex-wrap: wrap; gap: 8px; font-size: 12px; color: #A09889; }
-  .counselor-meta span { display: flex; align-items: center; gap: 4px; }
+  .counselor-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .meta-item { font-size: 12px; color: #6B635A; background: #F5F5F0; padding: 3px 10px; border-radius: 6px; white-space: nowrap; }
   .loading-hint { text-align: center; padding: 30px; color: #A09889; font-size: 13px; }
   .loading-hint .spinner {
     display: inline-block; width: 20px; height: 20px; border: 2px solid #E8E4DC;
@@ -180,6 +180,15 @@
     font-size: 13px; color: #5C7A52; display: flex; align-items: center; gap: 8px;
     border: 1px solid #D4E8CC;
   }
+  .counselor-contact.no-contact {
+    background: #FFF8E1; border-color: #FFE0B2; color: #E65100;
+    flex-wrap: wrap;
+  }
+  .btn-match-apply {
+    margin-left: auto; padding: 6px 14px; border-radius: 8px; border: 1.5px solid #5C7A52;
+    background: #5C7A52; color: #fff; font-size: 12px; font-weight: 500; cursor: pointer;
+  }
+  .btn-match-apply:active { background: #4A6342; }
   .counselor-expand-btn {
     display: inline-flex; align-items: center; gap: 4px;
     margin-top: 10px; font-size: 12px; color: #5C7A52; cursor: pointer;
@@ -304,6 +313,33 @@
   }
   .crisis-resources h4 { font-size: 13px; color: #E65100; margin-bottom: 8px; }
   .crisis-resources p { font-size: 12px; color: #5D4037; line-height: 1.8; }
+  #match-apply-overlay {
+    position: fixed; top:0; left:0; right:0; botom:0;
+    background: rgba(0,0,0,0.55); z-index: 99999;
+    display: flex; justify-content: center; align-items: center; padding: 20px;
+  }
+  #match-apply-overlay.hidden { display: none; }
+  .match-apply-modal {
+    background: #fff; border-radius: 18px; max-width: 420px; width: 100%;
+    padding: 28px 24px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    animation: consentFadeIn 0.4s ease;
+  }
+  .match-apply-modal h3 { font-size: 18px; color: #5C7A52; margin-bottom: 4px; }
+  .match-apply-modal .modal-sub { font-size: 13px; color: #A09889; margin-bottom: 16px; }
+  .match-apply-modal .counselor-name-display {
+    background: #F7F4EF; padding: 10px 14px; border-radius: 10px;
+    font-size: 14px; color: #5C7A52; margin-bottom: 16px;
+  }
+  .apply-form-row { margin-bottom: 12px; }
+  .apply-form-row label { display: block; font-size: 13px; color: #6B635A; margin-bottom: 4px; font-weight: 500; }
+  .apply-form-row input {
+    width: 100%; padding: 10px 12px; border: 1.5px solid #D5D0C8; border-radius: 10px;
+    font-size: 14px; box-sizing: border-box;
+  }
+  .apply-success { display: none; text-align: center; padding: 20px 0; }
+  .apply-success.show { display: block; }
+  .apply-form.show { display: block; }
+  .apply-form { display: block; }
 </style>
 </head>
 <body>
@@ -432,6 +468,7 @@
         <div class="form-row"><label class="required">年龄</label><input type="number" id="age" placeholder="请输入年龄" min="6" max="99" inputmode="numeric"></div>
         <div class="form-row"><label>性别</label><select id="gender"><option value="">请选择</option><option value="male">男</option><option value="female">女</option><option value="ta">TA</option><option value="lgbtq">LGBTQ+</option><option value="other">其他/不便透露</option></select></div>
         <div class="form-row"><label>职业身份</label><select id="occupation"><option value="">请选择</option><option value="student_k12">中小学生</option><option value="student_college">大学生/研究生</option><option value="worker">在职人员</option><option value="parent">家长/全职父母</option><option value="retired">退休人员</option><option value="other">其他</option></select></div>
+        <div class="form-row"><label>所在城市 <span style="font-size:12px;color:#A09889;font-weight:400">（选填，用于匹配同城咨询师）</span></label><input type="text" id="city" placeholder="例如：上海、北京、杭州…" autocomplete="off"></div>
       </div>
       <div class="form-row"><label>此前是否接受过心理咨询？</label><select id="prev_counseling"><option value="no">否，这是第一次</option><option value="yes_brief">是，接受过简短咨询（5次以内）</option><option value="yes_long">是，接受过系统咨询（5次以上）</option><option value="psychiatric">是，曾就诊精神科或接受心理治疗</option></select></div>
       <div class="form-row"><label>经济承受能力 <span style="font-size:12px;color:#A09889;font-weight:400">（选填，帮助匹配收费合适的咨询师）</span></label><select id="budget"><option value="">不介意 / 未考虑</option><option value="low">希望控制在 300元/次 以内</option><option value="mid">可接受 300-600元/次</option><option value="high">可接受 600-1000元/次</option><option value="premium">1000元/次 以上均可</option></select></div>
@@ -601,6 +638,7 @@ function initApp() {
         if (d.age) document.getElementById('age').value = d.age;
         if (d.gender) document.getElementById('gender').value = d.gender;
         if (d.occupation) document.getElementById('occupation').value = d.occupation;
+        if (d.city) document.getElementById('city').value = d.city;
         if (d.prev_counseling) document.getElementById('prev_counseling').value = d.prev_counseling;
         if (d.budget) document.getElementById('budget').value = d.budget;
         if (d.formats) d.formats.forEach(function(v) { var cards = document.querySelectorAll('#format_grid .opt-card'); cards.forEach(function(c) { var cb = c.querySelector('input[value="'+v+'"]'); if (cb) { cb.checked = true; c.classList.add('selected'); } }); });
@@ -652,7 +690,7 @@ function handleConsent() {
 }
 
 function showToast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2200);}
-function saveDraft(){try{var expects=[];document.querySelectorAll('#expect_grid input:checked').forEach(function(el){expects.push(el.value);});var issues=[];document.querySelectorAll('#issue_grid input:checked').forEach(function(el){issues.push(el.value);});var specials=[];document.querySelectorAll('input[name="special"]:checked').forEach(function(el){specials.push(el.value);});var formats=[];document.querySelectorAll('input[name="format"]:checked').forEach(function(el){formats.push(el.value);});localStorage.setItem(STORAGE_KEY,JSON.stringify({step:currentStep,name:document.getElementById('name').value,age:document.getElementById('age').value,gender:document.getElementById('gender').value,occupation:document.getElementById('occupation').value,prev_counseling:document.getElementById('prev_counseling').value,budget:document.getElementById('budget').value,gender_pref:document.getElementById('gender_pref').value,formats:formats,duration:document.getElementById('duration').value,description:document.getElementById('description').value,crisis_screen:document.getElementById('crisis_screen').value,expects:expects,issues:issues,issues_other:otherIssues,specials:specials,scores:scores}));}catch(e){}}
+function saveDraft(){try{var expects=[];document.querySelectorAll('#expect_grid input:checked').forEach(function(el){expects.push(el.value);});var issues=[];document.querySelectorAll('#issue_grid input:checked').forEach(function(el){issues.push(el.value);});var specials=[];document.querySelectorAll('input[name="special"]:checked').forEach(function(el){specials.push(el.value);});var formats=[];document.querySelectorAll('input[name="format"]:checked').forEach(function(el){formats.push(el.value);});localStorage.setItem(STORAGE_KEY,JSON.stringify({step:currentStep,name:document.getElementById('name').value,age:document.getElementById('age').value,gender:document.getElementById('gender').value,occupation:document.getElementById('occupation').value,city:document.getElementById('city').value,prev_counseling:document.getElementById('prev_counseling').value,budget:document.getElementById('budget').value,gender_pref:document.getElementById('gender_pref').value,formats:formats,duration:document.getElementById('duration').value,description:document.getElementById('description').value,crisis_screen:document.getElementById('crisis_screen').value,expects:expects,issues:issues,issues_other:otherIssues,specials:specials,scores:scores}));}catch(e){}}
 function saveAndGo(n){saveDraft();goStep(n);}
 function goStep(n){document.getElementById('section'+currentStep).classList.remove('active');document.getElementById('step'+currentStep+'-bar').classList.remove('active');document.getElementById('step'+currentStep+'-bar').classList.add('done');currentStep=n;document.getElementById('section'+n).classList.add('active');document.getElementById('step'+n+'-bar').classList.add('active');document.getElementById('step'+n+'-bar').classList.remove('done');window.scrollTo({top:0,behavior:'smooth'});}
 function toggleOpt(el){el.classList.toggle('selected');var cb=el.querySelector('input[type="checkbox"]');if(cb)cb.checked=el.classList.contains('selected');}
@@ -697,6 +735,7 @@ function generateResult() {
   var description=document.getElementById('description').value,crisisVal=document.getElementById('crisis_screen').value;
   var prev=document.getElementById('prev_counseling'),prevText=prev.options[prev.selectedIndex].text;
   var budget=document.getElementById('budget'),budgetVal=budget.value,budgetText=budget.options[budget.selectedIndex].text;
+  var cityVal=document.getElementById('city').value.trim();
   var formats=[];document.querySelectorAll('input[name="format"]:checked').forEach(function(el){formats.push(el.value);});
   var issues=[];document.querySelectorAll('#issue_grid input:checked').forEach(function(el){issues.push(el.value);});
   issues = issues.concat(otherIssues);
@@ -720,6 +759,7 @@ function generateResult() {
     '<div class="info-item"><div class="info-label">困扰持续</div><div class="info-val">'+durationText+'</div></div>'+
     '<div class="info-item"><div class="info-label">既往咨询</div><div class="info-val">'+prevText+'</div></div>'+
     (budgetVal ? '<div class="info-item"><div class="info-label">经济承受</div><div class="info-val">'+budgetText+'</div></div>' : '')+
+    (cityVal ? '<div class="info-item"><div class="info-label">所在城市</div><div class="info-val">📍 '+cityVal+'</div></div>' : '')+
     (formats.length ? '<div class="info-item"><div class="info-label">咨询方式</div><div class="info-val">'+formats.join('、')+'</div></div>' : '')+
     '<div class="info-item"><div class="info-label">症状程度</div><div class="info-val" style="color:'+(totalScore>=20?'#A03030':totalScore>=15?'#C4654A':totalScore>=8?'#854F0B':'#5C7A52')+'">'+severity+'（'+totalScore+'/25）</div></div>';
 
@@ -809,14 +849,15 @@ function generateResult() {
       minYears: currentMinYears,
       minCredential: currentMinCredential,
       budget: budgetVal,
-      preferred_formats: formats,
+      visitor_city: document.getElementById('city').value.trim(),
+      visitor_formats: formats,
       gender_pref: document.getElementById('gender_pref').value
     }).then(function(results){
       document.getElementById('counselor_loading').style.display='none';
       if(results.length>0){
         document.getElementById('counselor_match_section').style.display='block';
         var chtml='';
-        results.slice(0,5).forEach(function(r,idx){
+        results.slice(0,3).forEach(function(r,idx){
           var c=r.counselor;
           var cls=r.matchScore>=70?'match-high':r.matchScore>=40?'match-mid':'match-low';
           var badgeCls=r.matchScore>=70?'match-high-badge':r.matchScore>=40?'match-mid-badge':'match-low-badge';
@@ -833,13 +874,14 @@ function generateResult() {
           // 简介
           if(c.bio_short)chtml+='<div class="counselor-bio">'+esc(c.bio_short)+'</div>';
 
-          // 基本信息行
+          // 基本信息（统一格式：图标+内容，每项一行）
           chtml+='<div class="counselor-meta">';
-          if(c.credential_level)chtml+='<span>'+esc(c.credential_level)+' · '+esc(String(c.years_experience))+'年</span>';
-          if(c.city)chtml+='<span>📍 '+esc(c.city)+'</span>';
-          if(c.approaches)chtml+='<span>取向: '+c.approaches.slice(0,3).map(esc).join('/')+'</span>';
-          if(c.session_formats)chtml+='<span>'+c.session_formats.map(esc).join(' · ')+'</span>';
-          if(c.fee_min)chtml+='<span>'+esc(String(c.fee_min))+'元/次</span>';
+          var metaItems=[];
+          if(c.credential_level)metaItems.push('🎓 '+esc(c.credential_level)+' · '+esc(String(c.years_experience))+'年');
+          if(c.city)metaItems.push('📍 '+esc(c.city));
+          if(c.fee_min)metaItems.push('💰 '+esc(String(c.fee_min))+'元/次');
+          if(c.session_formats&&c.session_formats.length)metaItems.push('💻 '+c.session_formats.slice(0,2).map(esc).join(' · '));
+          metaItems.forEach(function(m){chtml+='<div class="meta-item">'+m+'</div>';});
           chtml+='</div>';
 
           // 擅长议题标签
@@ -858,9 +900,11 @@ function generateResult() {
             chtml+='</div>';
           }
 
-          // 联系方式（仅对外公布的）
+          // 联系方式（有公布微信→显示；无→显示申请匹配按钮）
           if(c.contact_wechat&&c.contact_wechat_public!==false){
             chtml+='<div class="counselor-contact">💬 微信：'+esc(c.contact_wechat)+'</div>';
+          } else {
+            chtml+='<div class="counselor-contact no-contact"><span>📞 联系方式不公开</span><button class="btn-match-apply" onclick="openMatchApply(\''+c.id+'\',\''+esc(c.name)+'\')">申请匹配</button></div>';
           }
 
           // 展开详情按钮
@@ -891,7 +935,7 @@ function generateResult() {
   if(typeof saveAssessment==='function'){
     saveAssessment({
       visitor_name:name,visitor_age:parseInt(age)||null,visitor_gender:genderText,
-      visitor_occupation:occText,prev_counseling:prevText,budget:budgetVal,preferred_formats:formats,
+      visitor_occupation:occText,visitor_city:cityVal,prev_counseling:prevText,budget:budgetVal,preferred_formats:formats,
       expects:Array.from(document.querySelectorAll('#expect_grid input:checked')).map(function(e){return e.value;}),
       issues:issues,description:description,duration:durationText,
       score_mood:scores.mood,score_anxiety:scores.anxiety,score_sleep:scores.sleep,
@@ -907,7 +951,68 @@ function generateResult() {
 }
 
 function resetForm(){if(confirm('确认重新填写问卷？当前数据将被清除。')){localStorage.removeItem(STORAGE_KEY);location.reload();}}
+
+// ===== 申请匹配弹窗 =====
+function openMatchApply(cid,cname){
+  document.getElementById('apply-cname').textContent=cname||'';
+  document.getElementById('apply-cid').value=cid;
+  document.getElementById('apply-form').classList.add('show');
+  document.getElementById('apply-success').classList.remove('show');
+  document.getElementById('match-apply-overlay').classList.remove('hidden');
+}
+function closeMatchApply(){
+  document.getElementById('match-apply-overlay').classList.add('hidden');
+  document.getElementById('apply-name').value='';
+  document.getElementById('apply-contact').value='';
+}
+function submitMatchApply(){
+  var name=document.getElementById('apply-name').value.trim();
+  var contact=document.getElementById('apply-contact').value.trim();
+  if(!name||!contact){alert('请填写姓名和联系方式');return;}
+  // 保存到 assessments 表（需要 match_request_name 和 match_request_contact 字段）
+  var asid=sessionStorage.getItem('xiaopingu_assessment_id');
+  if(asid){
+    fetch(SUPABASE_CONFIG.url+'/rest/v1/assessments?id=eq.'+asid,{
+      method:'PATCH',
+      headers:{'Content-Type':'application/json','apikey':SUPABASE_CONFIG.anonKey,'Authorization':'Bearer '+SUPABASE_CONFIG.anonKey,'Prefer':'return=representation'},
+      body:JSON.stringify({match_request_name:name,match_request_contact:contact,match_request_cid:document.getElementById('apply-cid').value,updated_at:new Date().toISOString()})
+    }).then(function(r){if(r.ok)console.log('[小平菇] 匹配申请已保存');});
+  }
+  document.getElementById('apply-form').classList.remove('show');
+  document.getElementById('apply-success').classList.add('show');
+}
 </script>
 </div>
+
+<!-- 申请匹配弹窗 -->
+<div id="match-apply-overlay" class="hidden">
+  <div class="match-apply-modal">
+    <h3>📞 申请匹配咨询师</h3>
+    <p class="modal-sub">请填写您的联系方式，咨询师会尽快与您联系</p>
+    <div id="apply-form" class="apply-form">
+      <div class="apply-form-row">
+        <label>咨询师</label>
+        <div id="apply-cname" style="padding:8px 12px;background:#F7F4EF;border-radius:8px;font-size:14px;color:#5C7A52;"></div>
+      </div>
+      <div class="apply-form-row">
+        <label>您的姓名（或化名）</label>
+        <input type="text" id="apply-name" placeholder="请输入您的姓名" autocomplete="off">
+      </div>
+      <div class="apply-form-row">
+        <label>联系方式（微信或电话）</label>
+        <input type="text" id="apply-contact" placeholder="微信号或手机号码" autocomplete="off">
+      </div>
+      <input type="hidden" id="apply-cid" value="">
+      <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="submitMatchApply()">提交申请</button>
+    </div>
+    <div id="apply-success" class="apply-success">
+      <div style="font-size:28px;margin-bottom:8px">✅</div>
+      <div style="font-size:14px;color:#5C7A52;font-weight:500">申请已提交</div>
+      <div style="font-size:12px;color:#A09889;margin-top:4px">咨询师会尽快通过系统联系您</div>
+      <button class="btn btn-outline" style="width:100%;margin-top:16px" onclick="closeMatchApply()">关闭</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>

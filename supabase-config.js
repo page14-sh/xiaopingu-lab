@@ -168,6 +168,7 @@ function updateCounselor(id, data) {
 }
 
 // 匹配咨询师（核心匹配算法）
+// 权重分配：议题30% + 取向20% + 程度15% + 城市10% + 门槛10% + 方式10% + 经济5% = 100%
 function matchCounselors(assessment) {
   if (!SUPABASE_CONFIG.enableDataCollection || !SUPABASE_CONFIG.url) return Promise.resolve([]);
 
@@ -182,45 +183,43 @@ function matchCounselors(assessment) {
       var score = 0;
       var details = [];
 
-      // 1. 议题匹配 35%
+      // 1. 议题匹配 30%
       if (c.specialties && assessment.issues && assessment.issues.length > 0) {
         var overlap = assessment.issues.filter(function(i) {
           return c.specialties.indexOf(i) >= 0;
         });
-        var issueScore = (overlap.length / assessment.issues.length) * 35;
+        var issueScore = (overlap.length / assessment.issues.length) * 30;
         score += issueScore;
         if (overlap.length > 0) {
           details.push('议题匹配: ' + overlap.length + '/' + assessment.issues.length);
         }
       }
 
-      // 2. 取向匹配 25%
+      // 2. 取向匹配 20%
       if (c.approaches && assessment.recommendedApproaches) {
         var approachMatch = assessment.recommendedApproaches.filter(function(a) {
           return c.approaches.indexOf(a) >= 0;
         });
         if (approachMatch.length > 0) {
-          score += Math.min(25, approachMatch.length * 12.5);
+          score += Math.min(20, approachMatch.length * 10);
           details.push('取向匹配: ' + approachMatch.join('/'));
         }
       }
 
-      // 3. 程度承接 20%
+      // 3. 程度承接 15%
       if (c.severity_levels) {
         var severityMap = { '轻度': 'mild', '中度': 'moderate', '重度': 'severe' };
         var clientLevel = severityMap[assessment.severity] || assessment.severity;
         var levelMap = { 'mild': '轻度', 'moderate': '中度', 'severe': '重度' };
         if (c.severity_levels.indexOf(levelMap[clientLevel]) >= 0 || c.severity_levels.indexOf(assessment.severity) >= 0) {
-          score += 20;
+          score += 15;
           details.push('程度承接: 可承接' + assessment.severity);
         }
       }
 
       // 4. 门槛匹配 10%（核心硬性条件，不满足扣20分）
       var thresholdMet = true;
-      // 从业年限
       if (assessment.minYears && c.years_experience < assessment.minYears) thresholdMet = false;
-      // 资质等级
       if (assessment.minCredential) {
         var credRank = { '三级': 1, '二级': 2, '心理治疗师': 3, '社会工作师（初级）': 1, '社会工作师（中级）': 2, '社会工作师（高级）': 3, '精神科医生': 4 };
         if ((credRank[c.credential_level] || 0) < (credRank[assessment.minCredential] || 0)) {
@@ -231,14 +230,23 @@ function matchCounselors(assessment) {
         score += 10;
         details.push('门槛匹配: 满足要求');
       } else {
-        // 不满足硬性门槛时大幅扣分，使其排序靠后但不完全排除
         score = Math.max(0, score - 20);
         details.push('门槛匹配: 部分不满足（排序靠后）');
       }
 
-      // 5. 咨询方式匹配 10%
-      if (assessment.preferred_formats && assessment.preferred_formats.length > 0 && c.session_formats) {
-        var formatOverlap = assessment.preferred_formats.filter(function(f) {
+      // 5. 城市匹配 10%
+      if (assessment.visitor_city && c.city) {
+        var cityLower = assessment.visitor_city.toLowerCase();
+        var cCityLower = c.city.toLowerCase();
+        if (cCityLower.indexOf(cityLower) >= 0 || cityLower.indexOf(cCityLower) >= 0) {
+          score += 10;
+          details.push('城市匹配: ' + c.city);
+        }
+      }
+
+      // 6. 咨询方式匹配 10%
+      if (assessment.visitor_formats && assessment.visitor_formats.length > 0 && c.session_formats) {
+        var formatOverlap = assessment.visitor_formats.filter(function(f) {
           return c.session_formats.indexOf(f) >= 0;
         });
         if (formatOverlap.length > 0) {
@@ -247,7 +255,7 @@ function matchCounselors(assessment) {
         }
       }
 
-      // 6. 经济匹配 5%
+      // 7. 经济匹配 5%
       if (assessment.budget && c.fee_budget_level) {
         var budgetRank = { 'low': 1, 'mid': 2, 'high': 3, 'premium': 4 };
         var clientRank = budgetRank[assessment.budget] || 0;
