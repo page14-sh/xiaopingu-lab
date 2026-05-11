@@ -164,6 +164,41 @@
     margin-bottom: 8px;
   }
 
+  /* Enhanced counselor card */
+  .counselor-welfare-badge {
+    display: inline-flex; align-items: center; gap: 3px;
+    font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 10px;
+    background: #E8F5E2; color: #3D7A2E;
+  }
+  .counselor-specialty-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+  .counselor-specialty-tag {
+    font-size: 11px; padding: 2px 8px; border-radius: 10px;
+    background: #F0ECE5; color: #6B635A;
+  }
+  .counselor-contact {
+    margin-top: 10px; padding: 10px 14px; background: #F7F9F5; border-radius: 10px;
+    font-size: 13px; color: #5C7A52; display: flex; align-items: center; gap: 8px;
+    border: 1px solid #D4E8CC;
+  }
+  .counselor-expand-btn {
+    display: inline-flex; align-items: center; gap: 4px;
+    margin-top: 10px; font-size: 12px; color: #5C7A52; cursor: pointer;
+    padding: 4px 0; border: none; background: none; font-weight: 500;
+  }
+  .counselor-expand-btn:hover { color: #4A6342; }
+  .counselor-expand-btn .arrow { transition: transform 0.2s; display: inline-block; font-size: 10px; }
+  .counselor-expand-btn.open .arrow { transform: rotate(90deg); }
+  .counselor-detail {
+    max-height: 0; overflow: hidden; transition: max-height 0.3s ease, padding 0.3s ease;
+    font-size: 13px; color: #5F5E5A; line-height: 1.8;
+  }
+  .counselor-detail.open {
+    max-height: 500px; padding-top: 10px;
+    border-top: 1px dashed #E8E4DC; margin-top: 10px;
+  }
+  .counselor-detail .detail-row { display: flex; gap: 8px; margin-bottom: 4px; }
+  .counselor-detail .detail-label { color: #A09889; min-width: 72px; flex-shrink: 0; }
+
   .action-bar { display: flex; gap: 10px; justify-content: flex-end; padding-top: 10px; flex-wrap: wrap; }
   .btn {
     padding: 12px 24px; border-radius: 10px; font-size: 15px; font-weight: 500; cursor: pointer;
@@ -226,9 +261,124 @@
     .option-grid { grid-template-columns: 1fr 1fr; }
     .info-grid { grid-template-columns: 1fr 1fr; }
   }
+
+  /* ===== 知情同意弹窗 ===== */
+  #consent-overlay {
+    position: fixed; top:0; left:0; right:0; bottom:0;
+    background: rgba(0,0,0,0.55);
+    z-index: 99999;
+    display: flex; justify-content: center; align-items: center;
+    padding: 16px;
+  }
+  #consent-overlay.hidden { display: none; }
+  .consent-modal {
+    background: #fff; border-radius: 18px;
+    max-width: 600px; width: 100%; max-height: 90vh;
+    overflow-y: auto; padding: 32px 28px 28px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    animation: consentFadeIn 0.4s ease;
+  }
+  @keyframes consentFadeIn { from { opacity:0; transform: translateY(30px); } to { opacity:1; transform: translateY(0); } }
+  .consent-modal h2 { font-size: 20px; color: #5C7A52; margin-bottom: 4px; }
+  .consent-modal .consent-sub { font-size: 13px; color: #A09889; margin-bottom: 20px; }
+  .consent-section { margin-bottom: 18px; }
+  .consent-section h3 { font-size: 14px; font-weight: 600; color: #5C7A52; margin-bottom: 8px; padding-left: 10px; border-left: 3px solid #5C7A52; }
+  .consent-section p, .consent-section li { font-size: 13px; color: #444; line-height: 1.8; }
+  .consent-section ul { padding-left: 20px; }
+  .consent-section li { margin-bottom: 4px; }
+  .consent-section .highlight { background: #FFF8E1; padding: 12px 14px; border-radius: 8px; font-size: 13px; color: #5C7A52; line-height: 1.8; }
+  .consent-check { display: flex; align-items: flex-start; gap: 10px; margin: 20px 0; padding: 14px; background: #F7F4EF; border-radius: 10px; }
+  .consent-check input[type="checkbox"] { width: 18px; height: 18px; margin-top: 2px; flex-shrink: 0; accent-color: #5C7A52; }
+  .consent-check label { font-size: 14px; color: #3D3831; cursor: pointer; line-height: 1.6; }
+  .consent-btn {
+    width: 100%; padding: 14px; border: none; border-radius: 10px;
+    font-size: 16px; font-weight: 600; cursor: pointer;
+    background: #C8DCC0; color: #fff; transition: all 0.3s;
+  }
+  .consent-btn.active { background: #5C7A52; }
+  .consent-btn.active:hover { background: #4A6342; }
+  .consent-btn:not(.active) { cursor: not-allowed; }
+  .crisis-resources {
+    background: #FFF8E1; border: 1px solid #FFE0B2; border-radius: 10px;
+    padding: 14px; margin-top: 14px;
+  }
+  .crisis-resources h4 { font-size: 13px; color: #E65100; margin-bottom: 8px; }
+  .crisis-resources p { font-size: 12px; color: #5D4037; line-height: 1.8; }
 </style>
 </head>
 <body>
+
+<!-- ===== 知情同意弹窗 ===== -->
+<div id="consent-overlay">
+  <div class="consent-modal">
+    <h2>📋 心理咨询评估 · 知情同意书</h2>
+    <p class="consent-sub">在您开始心理评估之前，请仔细阅读以下条款</p>
+
+    <div class="consent-section">
+      <h3>一、评估目的</h3>
+      <p>本评估旨在帮助您了解当前心理状态，并为您匹配最合适的心理咨询师。评估结果仅供参考，不构成医学诊断。</p>
+    </div>
+
+    <div class="consent-section">
+      <h3>二、数据收集与使用</h3>
+      <p>您填写的所有信息（包括基本信息、评估答案、文字描述）将被用于：</p>
+      <ul>
+        <li>生成您的心理评估报告</li>
+        <li>为您匹配最合适的心理咨询师</li>
+        <li>改进本系统的评估算法和服务质量</li>
+      </ul>
+      <div class="highlight">
+        ⚠️ 我们承诺：您的数据仅用于上述用途，不会被出售、出租或用于任何商业广告推送。
+      </div>
+    </div>
+
+    <div class="consent-section">
+      <h3>三、数据存储与安全</h3>
+      <ul>
+        <li>数据存储于加密的云端数据库（Supabase），传输过程采用 SSL 加密</li>
+        <li>我们采取了行业标准的技术措施保护您的数据安全</li>
+        <li>您有权随时要求删除您的全部数据，请联系管理员处理</li>
+      </ul>
+    </div>
+
+    <div class="consent-section">
+      <h3>四、您的权利</h3>
+      <ul>
+        <li>您可以随时中止评估，已填写的内容将保存在浏览器本地</li>
+        <li>您可以要求查看、修改或删除您的个人数据</li>
+        <li>如您处于危机状态（有自伤或自杀风险），本系统会自动提供危机干预热线</li>
+      </ul>
+    </div>
+
+    <div class="consent-section">
+      <h3>五、免责声明</h3>
+      <p>本评估工具不能替代专业精神科诊断或心理治疗。如果您正在经历严重的心理危机，或有自伤/自杀念头，请立即联系专业机构（见下方危机干预资源）。</p>
+      <div class="crisis-resources">
+        <h4>🆘 危机干预资源</h4>
+        <p>全国心理援助热线：<strong>12356</strong>（24小时）</p>
+        <p>妇女维权热线：<strong>12338</strong></p>
+        <p>青少年心理咨询热线：<strong>12355</strong></p>
+      </div>
+    </div>
+
+    <div class="consent-section">
+      <h3>六、联系我们</h3>
+      <p>如对本评估有任何疑问，或需要查阅/删除您的个人数据，请通过系统管理员联系我们。</p>
+    </div>
+
+    <div class="consent-check">
+      <input type="checkbox" id="consent-checkbox" onchange="toggleConsentBtn()">
+      <label for="consent-checkbox">
+        我已仔细阅读并理解上述内容，同意我的个人信息被用于心理咨询匹配评估，并知晓我有权随时撤回此同意。
+      </label>
+    </div>
+
+    <button class="consent-btn" id="consent-btn" disabled onclick="handleConsent()">请先勾选同意条款</button>
+  </div>
+</div>
+
+<!-- ===== 主内容区 ===== -->
+<div id="main-app" style="display:none;">
 
 <div class="page-header">
   <div class="logo-wrap">
@@ -273,7 +423,7 @@
   </div>
 
   <!-- STEP 1 -->
-  <div class="section-block active" id="section1">
+  <div class="section-block" id="section1">
     <div class="card">
       <p class="card-title">来访者基本信息</p>
       <p class="card-sub">所有信息仅用于咨询匹配，严格保密</p>
@@ -432,6 +582,16 @@ var currentMinYears = 1;
 var currentMinCredential = '二级';
 
 (function init() {
+  // Check if consent was already given in this session
+  if (sessionStorage.getItem('xiaopingu_consent') === 'given') {
+    document.getElementById('consent-overlay').classList.add('hidden');
+    document.getElementById('main-app').style.display = 'block';
+    initApp();
+  }
+  // Otherwise: consent overlay is visible, main-app is hidden → wait for user to agree
+})();
+
+function initApp() {
   try {
     var saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
@@ -455,10 +615,41 @@ var currentMinCredential = '二级';
         document.querySelectorAll('.section-block').forEach(function(el,i){el.classList.toggle('active',i===currentStep-1);});
         for(var i=1;i<=4;i++){var bar=document.getElementById('step'+i+'-bar');bar.classList.remove('active','done');if(i<currentStep)bar.classList.add('done');if(i===currentStep)bar.classList.add('active');}
         showToast('已恢复上次填写的进度');
+      } else {
+        // No saved progress, show step 1
+        document.getElementById('section1').classList.add('active');
+        document.getElementById('step1-bar').classList.add('active');
       }
+    } else {
+      // No saved data at all, show step 1
+      document.getElementById('section1').classList.add('active');
+      document.getElementById('step1-bar').classList.add('active');
     }
   } catch(e) {}
-})();
+}
+
+function toggleConsentBtn() {
+  var cb = document.getElementById('consent-checkbox');
+  var btn = document.getElementById('consent-btn');
+  if (cb.checked) {
+    btn.disabled = false;
+    btn.classList.add('active');
+    btn.textContent = '我已同意，开始评估 ✅';
+  } else {
+    btn.disabled = true;
+    btn.classList.remove('active');
+    btn.textContent = '请先勾选同意条款';
+  }
+}
+
+function handleConsent() {
+  var cb = document.getElementById('consent-checkbox');
+  if (!cb.checked) return;
+  sessionStorage.setItem('xiaopingu_consent', 'given');
+  document.getElementById('consent-overlay').classList.add('hidden');
+  document.getElementById('main-app').style.display = 'block';
+  initApp();
+}
 
 function showToast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2200);}
 function saveDraft(){try{var expects=[];document.querySelectorAll('#expect_grid input:checked').forEach(function(el){expects.push(el.value);});var issues=[];document.querySelectorAll('#issue_grid input:checked').forEach(function(el){issues.push(el.value);});var specials=[];document.querySelectorAll('input[name="special"]:checked').forEach(function(el){specials.push(el.value);});var formats=[];document.querySelectorAll('input[name="format"]:checked').forEach(function(el){formats.push(el.value);});localStorage.setItem(STORAGE_KEY,JSON.stringify({step:currentStep,name:document.getElementById('name').value,age:document.getElementById('age').value,gender:document.getElementById('gender').value,occupation:document.getElementById('occupation').value,prev_counseling:document.getElementById('prev_counseling').value,budget:document.getElementById('budget').value,gender_pref:document.getElementById('gender_pref').value,formats:formats,duration:document.getElementById('duration').value,description:document.getElementById('description').value,crisis_screen:document.getElementById('crisis_screen').value,expects:expects,issues:issues,issues_other:otherIssues,specials:specials,scores:scores}));}catch(e){}}
@@ -513,6 +704,9 @@ function generateResult() {
   var totalScore=scores.mood+scores.anxiety+scores.sleep+scores.function+scores.relation;
   var severity='一般心理困扰',severityColor='teal';
   if(totalScore>=20){severity='需精神科就医';severityColor='coral';}else if(totalScore>=15){severity='需要心理治疗介入';severityColor='coral';}else if(totalScore>=8){severity='需要外力介入';severityColor='amber';}
+  // 标准三级制 severity（用于匹配算法）
+  var severityStandard='轻度';
+  if(totalScore>=15)severityStandard='重度';else if(totalScore>=8)severityStandard='中度';
   var now=new Date();var dateStr=now.getFullYear()+'-'+(now.getMonth()+1).toString().padStart(2,'0')+'-'+now.getDate().toString().padStart(2,'0');
   document.getElementById('result_time').innerText='评估时间：'+dateStr+'  总分：'+totalScore+'/25  程度：'+severity;
   document.getElementById('result_title').innerText='小平菇 · 转介评估报告 — '+name;
@@ -610,7 +804,7 @@ function generateResult() {
     document.getElementById('counselor_loading').style.display='block';
     matchCounselors({
       issues: issues,
-      severity: severity,
+      severity: severityStandard,
       recommendedApproaches: currentRecommendedApproaches,
       minYears: currentMinYears,
       minCredential: currentMinCredential,
@@ -622,27 +816,65 @@ function generateResult() {
       if(results.length>0){
         document.getElementById('counselor_match_section').style.display='block';
         var chtml='';
-        results.slice(0,5).forEach(function(r){
+        results.slice(0,5).forEach(function(r,idx){
           var c=r.counselor;
           var cls=r.matchScore>=70?'match-high':r.matchScore>=40?'match-mid':'match-low';
           var badgeCls=r.matchScore>=70?'match-high-badge':r.matchScore>=40?'match-mid-badge':'match-low-badge';
           // XSS防护：转义用户输入字段
           function esc(s){if(!s)return '';var d=document.createElement('div');d.textContent=s;return d.innerHTML;}
           chtml+='<div class="counselor-card '+cls+'">';
-          chtml+='<div class="counselor-header"><span class="counselor-name">'+esc(c.name)+'</span>';
+
+          // 头部：姓名 + 匹配度 + 公益标识
+          chtml+='<div class="counselor-header"><span class="counselor-name">'+esc(c.name);
+          if(c.public_welfare) chtml+=' <span class="counselor-welfare-badge">🌿 公益</span>';
+          chtml+='</span>';
           chtml+='<span class="match-score-badge '+badgeCls+'">匹配度 '+r.matchScore+'%</span></div>';
+
+          // 简介
           if(c.bio_short)chtml+='<div class="counselor-bio">'+esc(c.bio_short)+'</div>';
+
+          // 基本信息行
           chtml+='<div class="counselor-meta">';
           if(c.credential_level)chtml+='<span>'+esc(c.credential_level)+' · '+esc(String(c.years_experience))+'年</span>';
+          if(c.city)chtml+='<span>📍 '+esc(c.city)+'</span>';
           if(c.approaches)chtml+='<span>取向: '+c.approaches.slice(0,3).map(esc).join('/')+'</span>';
           if(c.session_formats)chtml+='<span>'+c.session_formats.map(esc).join(' · ')+'</span>';
           if(c.fee_min)chtml+='<span>'+esc(String(c.fee_min))+'元/次</span>';
           chtml+='</div>';
+
+          // 擅长议题标签
+          if(c.specialties&&c.specialties.length>0){
+            chtml+='<div class="counselor-specialty-tags">';
+            var specMap={emotion:'情绪困扰',relationship:'关系困境',trauma:'创伤经历',growth:'自我成长',adolescent:'青少年问题',marriage:'婚姻/伴侣',personality:'人格议题',crisis:'危机状态',workplace:'职场困扰',eating:'进食障碍',addiction:'成瘾行为',grief:'丧亲哀伤',sexual:'性心理议题',somatic:'心身困扰',family:'家庭系统'};
+            c.specialties.slice(0,4).forEach(function(s){chtml+='<span class="counselor-specialty-tag">'+esc(specMap[s]||s)+'</span>';});
+            if(c.specialties.length>4)chtml+='<span class="counselor-specialty-tag">+'+(c.specialties.length-4)+'</span>';
+            chtml+='</div>';
+          }
+
+          // 匹配详情
           if(r.matchDetails.length>0){
             chtml+='<div class="tag-row" style="margin-top:8px">';
             r.matchDetails.forEach(function(d){chtml+='<span class="tag teal">'+esc(d)+'</span>';});
             chtml+='</div>';
           }
+
+          // 联系方式（仅对外公布的）
+          if(c.contact_wechat&&c.contact_wechat_public!==false){
+            chtml+='<div class="counselor-contact">💬 微信：'+esc(c.contact_wechat)+'</div>';
+          }
+
+          // 展开详情按钮
+          if(c.bio_full||c.education||c.training_background||c.available_slots){
+            chtml+='<button class="counselor-expand-btn" onclick="this.classList.toggle(\'open\');this.nextElementSibling.classList.toggle(\'open\')">';
+            chtml+='<span class="arrow">▶</span> 查看详细介绍</button>';
+            chtml+='<div class="counselor-detail">';
+            if(c.education)chtml+='<div class="detail-row"><span class="detail-label">学历</span><span>'+esc(c.education)+'</span></div>';
+            if(c.training_background)chtml+='<div class="detail-row"><span class="detail-label">受训背景</span><span>'+esc(c.training_background)+'</span></div>';
+            if(c.available_slots)chtml+='<div class="detail-row"><span class="detail-label">可预约</span><span>'+esc(c.available_slots)+'</span></div>';
+            if(c.bio_full)chtml+='<div style="margin-top:6px">'+esc(c.bio_full)+'</div>';
+            chtml+='</div>';
+          }
+
           chtml+='</div>';
         });
         document.getElementById('counselor_match_list').innerHTML=chtml;
@@ -666,11 +898,16 @@ function generateResult() {
       score_function:scores.function,score_relation:scores.relation,
       total_score:totalScore,severity:severity,specials:specials,crisis_level:crisisVal,
       user_agent:navigator.userAgent.substring(0,200)
+    }).then(function(result){
+      if(result&&result[0]&&result[0].id){
+        sessionStorage.setItem('xiaopingu_assessment_id', result[0].id);
+      }
     });
   }
 }
 
 function resetForm(){if(confirm('确认重新填写问卷？当前数据将被清除。')){localStorage.removeItem(STORAGE_KEY);location.reload();}}
 </script>
+</div>
 </body>
 </html>

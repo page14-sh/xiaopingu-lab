@@ -485,17 +485,14 @@
 
         <div class="form-row">
         <label>可承接的严重程度（可多选）<span class="term-tip" data-tip="评分标准（5题×5分，满分25）：
-0-7分：一般心理困扰 — 生活/情绪轻微受影响，心理咨询可有效帮助
-8-14分：需要外力介入 — 中度困扰，建议专业心理咨询
-15-19分：需要心理治疗介入 — 中重度，建议系统心理治疗，可联合精神科评估
-20-25分：需要精神科就医 — 重度，建议精神科优先评估，可联合心理咨询
+轻度（0-7分）：生活/情绪轻微受影响，心理咨询可有效帮助
+中度（8-14分）：中度困扰，建议专业心理咨询
+重度（15分以上）：中重度，建议系统心理治疗，可联合精神科评估
 危机：需要紧急干预 — 自伤/自杀风险，立即干预">?</span></label>
         <div class="option-grid" id="severity_grid" style="grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));">
-          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="severity" value="一般心理困扰"><div class="opt-label">一般心理困扰</div><div class="opt-desc">总分0-7，轻中度，心理咨询可有效帮助</div></div>
-          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="severity" value="需要外力介入"><div class="opt-label">需要外力介入</div><div class="opt-desc">总分8-14，建议专业心理咨询</div></div>
-          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="severity" value="需要心理治疗介入"><div class="opt-label">需要心理治疗介入</div><div class="opt-desc">总分15-19，建议系统治疗，可联合精神科</div></div>
-          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="severity" value="需精神科就医"><div class="opt-label">需精神科就医</div><div class="opt-desc">总分20-25，精神科优先评估</div></div>
-          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="severity" value="危机紧急"><div class="opt-label">需要紧急干预</div><div class="opt-desc">自伤/自杀风险，立即干预</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="severity" value="轻度"><div class="opt-label">轻度</div><div class="opt-desc">总分0-7，轻微困扰，心理咨询可有效帮助</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="severity" value="中度"><div class="opt-label">中度</div><div class="opt-desc">总分8-14，建议专业心理咨询</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="severity" value="重度"><div class="opt-label">重度</div><div class="opt-desc">总分15+，建议系统治疗，可联合精神科</div></div>
         </div>
       </div>
 
@@ -581,6 +578,22 @@
         </div>
       </div>
 
+      <hr class="divider">
+
+      <!-- 公益咨询服务意愿 -->
+      <div class="form-row">
+        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:14px 16px;background:#f4f9f2;border-radius:10px;border:1px solid #c8ddc2;">
+          <input type="checkbox" id="c_public_welfare" style="width:18px;height:18px;margin-top:2px;accent-color:#5C7A52;flex-shrink:0;">
+          <div>
+            <span style="font-size:14px;font-weight:600;color:#3d5c35;">愿意参与公益咨询服务</span>
+            <div style="font-size:12px;color:#7a9170;margin-top:4px;line-height:1.7;">
+              参与社会性服务，以较低收费或无偿形式参与社会心理服务体系，为有需要但经济困难的来访者提供支持。
+              包括但不限于：社区心理援助、妇联/学校转介项目、EAP公益项目等。
+            </div>
+          </div>
+        </label>
+      </div>
+
       <div class="action-bar">
         <button class="btn btn-outline" onclick="goStep(3)">← 上一步</button>
         <button class="btn btn-primary" onclick="goStep(5)">下一步 →</button>
@@ -616,7 +629,7 @@
       <div id="preview_content"></div>
       <div class="action-bar" style="margin-top:16px">
         <button class="btn btn-outline" onclick="document.getElementById('preview_card').style.display='none'; goStep(5);">返回修改</button>
-        <button class="btn btn-primary" onclick="submitProfile()">确认提交</button>
+        <button class="btn btn-primary" id="submit-btn" onclick="submitProfile()">确认提交</button>
       </div>
     </div>
   </div>
@@ -797,6 +810,7 @@ function collectData() {
     contact_phone_public: document.getElementById('c_phone_public').checked,
     contact_email: document.getElementById('c_email').value.trim(),
     contact_email_public: document.getElementById('c_email_public').checked,
+    public_welfare: document.getElementById('c_public_welfare').checked,
     bio_short: document.getElementById('c_bio_short').value.trim(),
     bio_full: document.getElementById('c_bio_full').value.trim()
   };
@@ -864,6 +878,7 @@ function previewAndSubmit() {
     html += '<div class="preview-row"><span class="preview-label">收费档位</span><span class="preview-val">' + (levelText[d.fee_budget_level]||d.fee_budget_level) + '</span></div>';
   }
   if (d.available_slots) html += '<div class="preview-row"><span class="preview-label">可预约时段</span><span class="preview-val">' + d.available_slots + '</span></div>';
+  if (d.public_welfare) html += '<div class="preview-row"><span class="preview-label">公益服务</span><span class="preview-val"><span style="color:#5C7A52;font-weight:600;">✓ 愿意参与公益咨询服务</span></span></div>';
   if (d.contact_wechat || d.contact_phone || d.contact_email) {
     html += '<div style="margin-top:8px">';
     if (d.contact_wechat) html += '<div class="preview-row"><span class="preview-label">微信号</span><span class="preview-val">' + d.contact_wechat + (d.contact_wechat_public ? ' <span style="font-size:11px;color:#5C7A52">✓ 对外公布</span>' : ' <span style="font-size:11px;color:#A09889">仅管理员可见</span>') + '</span></div>';
@@ -879,7 +894,13 @@ function previewAndSubmit() {
   document.getElementById('preview_card').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
+// ========== 防重复提交锁 ==========
+var _isSubmitting = false;
+
 function submitProfile() {
+  // 防重复提交：如果正在提交，直接返回
+  if (_isSubmitting) return;
+
   var d = collectData();
   d.is_active = true;
   // Merge standard + other into single arrays for storage and matching
@@ -894,19 +915,53 @@ function submitProfile() {
   delete d.extra_credentials_other;
   delete d.populations_other;
 
+  // 锁定按钮
+  _isSubmitting = true;
+  var submitBtn = document.getElementById('submit-btn');
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = '提交中…';
+    submitBtn.style.opacity = '0.6';
+    submitBtn.style.cursor = 'not-allowed';
+  }
+
+  function onSuccess(msg) {
+    showToast(msg);
+    if (submitBtn) {
+      submitBtn.textContent = '✅ 已提交';
+      submitBtn.style.background = '#28a745';
+    }
+    // 提交成功后不再解锁，防止二次提交
+  }
+
+  function onFail(msg) {
+    showToast(msg);
+    // 失败时解锁，允许重试
+    _isSubmitting = false;
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = '确认提交';
+      submitBtn.style.opacity = '';
+      submitBtn.style.cursor = '';
+    }
+  }
+
   if (typeof saveCounselor === 'function' && SUPABASE_CONFIG.enableDataCollection && SUPABASE_CONFIG.url) {
     saveCounselor(d).then(function(result) {
       if (result && result[0] && result[0].id) {
-        showToast('档案已成功提交！');
         localStorage.setItem('xiaopingu_counselor_id', result[0].id);
+        onSuccess('档案已成功提交！');
       } else {
-        showToast('已保存到本地（后端未启用）');
         localStorage.setItem('xiaopingu_counselor_draft', JSON.stringify(d));
+        onFail('已保存到本地（后端未启用）');
       }
+    }).catch(function(err) {
+      console.error('提交失败:', err);
+      onFail('提交失败，请稍后重试');
     });
   } else {
-    showToast('已保存到本地（后端未启用）');
     localStorage.setItem('xiaopingu_counselor_draft', JSON.stringify(d));
+    onSuccess('已保存到本地（后端未启用）');
   }
 }
 
@@ -950,6 +1005,7 @@ function submitProfile() {
     if (d.contact_wechat_public) document.getElementById('c_wechat_public').checked = true;
     if (d.contact_phone_public) document.getElementById('c_phone_public').checked = true;
     if (d.contact_email_public) document.getElementById('c_email_public').checked = true;
+    if (d.public_welfare) document.getElementById('c_public_welfare').checked = true;
     if (d.bio_short) document.getElementById('c_bio_short').value = d.bio_short;
     if (d.bio_full) document.getElementById('c_bio_full').value = d.bio_full;
 

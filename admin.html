@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>小平菇 · 数据管理后台</title>
+  <style>
+    * { box-sizing: border-box; margin:0; padding:0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f5f5f5;
+      color: #333;
+    }
+
+    /* ===== 登录界面 ===== */
+    #login-screen {
+      position: fixed;
+      top:0; left:0; right:0; bottom:0;
+      background: linear-gradient(135deg, #5C7A52, #7A9E6E);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+    .login-box {
+      background: white;
+      border-radius: 16px;
+      padding: 40px;
+      width: 380px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      text-align: center;
+    }
+    .login-box .logo { font-size: 48px; margin-bottom: 10px; }
+    .login-box h2 { color: #5C7A52; margin-bottom: 5px; }
+    .login-box .subtitle { color: #999; font-size: 13px; margin-bottom: 30px; }
+    .login-box input[type="password"] {
+      width: 100%;
+      padding: 12px 15px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.3s;
+      margin-bottom: 15px;
+    }
+    .login-box input[type="password"]:focus { border-color: #5C7A52; }
+    .login-box button {
+      width: 100%;
+      padding: 12px;
+      background: #5C7A52;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .login-box button:hover { background: #4a6542; }
+    .login-error { color: #dc3545; font-size: 13px; margin-top: 10px; min-height: 20px; }
+    .login-hint { color: #999; font-size: 12px; margin-top: 15px; }
+
+    /* ===== 主界面（默认隐藏） ===== */
+    #main-app { display: none; }
+
+    /* 头部 */
+    .header {
+      background: linear-gradient(135deg, #5C7A52, #7A9E6E);
+      color: white;
+      padding: 20px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .header h1 { font-size: 24px; font-weight: 600; }
+    .header .subtitle { font-size: 14px; opacity: 0.9; margin-top: 4px; }
+    .header .stats { display: flex; gap: 20px; }
+    .header .stat-item { text-align: center; }
+    .header .stat-num { font-size: 28px; font-weight: bold; }
+    .header .stat-label { font-size: 12px; opacity: 0.8; }
+    .header-right { display: flex; align-items: center; gap: 15px; }
+    .btn-settings {
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.4);
+      color: white;
+      padding: 8px 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.3s;
+    }
+    .btn-settings:hover { background: rgba(255,255,255,0.3); }
+    .btn-logout {
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.4);
+      color: white;
+      padding: 8px 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.3s;
+    }
+    .btn-logout:hover { background: rgba(255,255,255,0.3); }
+
+    /* 标签页 */
+    .tabs {
+      background: white;
+      padding: 0 30px;
+      border-bottom: 2px solid #e0e0e0;
+      display: flex;
+      gap: 0;
+    }
+    .tab {
+      padding: 15px 30px;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      font-size: 15px;
+      color: #666;
+      transition: all 0.3s;
+      user-select: none;
+    }
+    .tab:hover { color: #5C7A52; background: #f9f9f9; }
+    .tab.active {
+      color: #5C7A52;
+      border-bottom-color: #5C7A52;
+      font-weight: 600;
+    }
+
+    /* 工具栏 */
+    .toolbar {
+      padding: 20px 30px;
+      background: white;
+      border-bottom: 1px solid #e0e0e0;
+      display: flex;
+      gap: 15px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .search-box {
+      flex: 1;
+      min-width: 250px;
+      position: relative;
+    }
+    .search-box input {
+      width: 100%;
+      padding: 10px 15px 10px 40px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.3s;
+    }
+    .search-box input:focus { border-color: #5C7A52; }
+    .search-box::before {
+      content: "🔍";
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 14px;
+    }
+    .filter-select {
+      padding: 10px 15px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      cursor: pointer;
+      background: white;
+    }
+    .filter-select:focus { border-color: #5C7A52; }
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-weight: 500;
+    }
+    .btn-primary { background: #5C7A52; color: white; }
+    .btn-primary:hover { background: #4a6542; }
+    .btn-danger { background: #dc3545; color: white; }
+    .btn-danger:hover { background: #c82333; }
+    .btn-secondary { background: #6c757d; color: white; }
+    .btn-secondary:hover { background: #5a6268; }
+    .btn-success { background: #28a745; color: white; }
+    .btn-success:hover { background: #218838; }
+
+    /* 数据表格 */
+    .content { padding: 30px; }
+    .table-container {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    table { width: 100%; border-collapse: collapse; }
+    thead { background: #f8f9fa; position: sticky; top: 0; z-index: 10; }
+    th {
+      padding: 15px;
+      text-align: left;
+      font-size: 13px;
+      font-weight: 600;
+      color: #666;
+      border-bottom: 2px solid #dee2e6;
+      white-space: nowrap;
+    }
+    td {
+      padding: 12px 15px;
+      font-size: 14px;
+      border-bottom: 1px solid #f0f0f0;
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    tr:hover { background: #f8f9fa; }
+    tr:last-child td { border-bottom: none; }
+
+    /* 标签 */
+    .tag {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      margin: 2px;
+    }
+    .tag-green { background: #d4edda; color: #155724; }
+    .tag-blue { background: #d1ecf1; color: #0c5460; }
+    .tag-yellow { background: #fff3cd; color: #856404; }
+    .tag-red { background: #f8d7da; color: #721c24; }
+
+    /* 操作按钮 */
+    .action-btns { display: flex; gap: 8px; }
+    .action-btn {
+      padding: 5px 10px;
+      border: none;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .action-btn.view { background: #e7f3ff; color: #0066cc; }
+    .action-btn.view:hover { background: #cce5ff; }
+    .action-btn.delete { background: #ffe7e7; color: #cc0000; }
+    .action-btn.delete:hover { background: #ffcccc; }
+
+    /* 空状态 */
+    .empty-state { text-align: center; padding: 60px 20px; color: #999; }
+    .empty-state .icon { font-size: 48px; margin-bottom: 15px; }
+    .empty-state .text { font-size: 16px; }
+
+    /* 加载动画 */
+    .loading { text-align: center; padding: 40px; color: #999; }
+    .spinner {
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #5C7A52;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    /* 模态框（详情 + 设置） */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top:0; left:0; right:0; bottom:0;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal {
+      background: white;
+      border-radius: 12px;
+      max-width: 800px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+      padding: 30px;
+      position: relative;
+    }
+    .modal-close {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #999;
+    }
+    .modal-close:hover { color: #333; }
+    .modal h2 { margin-bottom: 20px; color: #5C7A52; }
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 15px;
+    }
+    .detail-item {
+      padding: 10px;
+      background: #f8f9fa;
+      border-radius: 8px;
+    }
+    .detail-label { font-size: 12px; color: #999; margin-bottom: 5px; }
+    .detail-value { font-size: 14px; color: #333; word-break: break-all; }
+
+    /* 设置面板 */
+    .settings-form { max-width: 400px; }
+    .settings-form .form-group { margin-bottom: 20px; }
+    .settings-form label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 8px;
+    }
+    .settings-form input {
+      width: 100%;
+      padding: 10px 15px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.3s;
+    }
+    .settings-form input:focus { border-color: #5C7A52; }
+    .settings-form .hint { font-size: 12px; color: #999; margin-top: 5px; }
+    .settings-form .btn { margin-top: 10px; }
+
+    /* 分页 */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      padding: 20px;
+      background: white;
+      border-top: 1px solid #e0e0e0;
+    }
+    .page-btn {
+      padding: 8px 15px;
+      border: 1px solid #ddd;
+      background: white;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .page-btn:hover:not(:disabled) { background: #5C7A52; color: white; border-color: #5C7A52; }
+    .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .page-info { font-size: 14px; color: #666; }
+
+    /* Toast 提示 */
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 15px 20px;
+      border-radius: 8px;
+      color: white;
+      font-size: 14px;
+      z-index: 10000;
+      animation: slideIn 0.3s ease;
+    }
+    .toast.success { background: #28a745; }
+    .toast.error { background: #dc3545; }
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    /* 只读模式标识 */
+    .readonly-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,193,7,0.25);
+      border: 1px solid rgba(255,193,7,0.6);
+      color: #fff8e1;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    /* 响应式 */
+    @media (max-width: 768px) {
+      .header { flex-direction: column; gap: 15px; }
+      .toolbar { flex-direction: column; }
+      .search-box { min-width: 100%; }
+      table { font-size: 12px; }
+      th, td { padding: 8px 10px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== 登录界面 ===== -->
+  <div id="login-screen">
+    <div class="login-box">
+      <div class="logo">🍄</div>
+      <h2>小平菇管理后台</h2>
+      <div class="subtitle">心理咨询自助评估转介系统</div>
+      <input type="password" id="login-password" placeholder="请输入管理密码" onkeypress="if(event.key==='Enter') doLogin()">
+      <button onclick="doLogin()">进入后台</button>
+      <div class="login-error" id="login-error"></div>
+      <div class="login-hint">首次使用默认密码请查看文件内说明</div>
+    </div>
+  </div>
+
+  <!-- ===== 主界面 ===== -->
+  <div id="main-app">
+
+    <!-- 头部统计 -->
+    <div class="header">
+      <div>
+        <h1>🍄 小平菇 · 数据管理后台</h1>
+        <div class="subtitle">心理咨询自助评估转介系统 · 数据查看与管理</div>
+      </div>
+      <div class="header-right">
+        <div class="stats" style="margin-right:10px;">
+          <div class="stat-item">
+            <div class="stat-num" id="stat-counselors">-</div>
+            <div class="stat-label">咨询师</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-num" id="stat-assessments">-</div>
+            <div class="stat-label">评估记录</div>
+          </div>
+        </div>
+        <span id="readonly-badge" class="readonly-badge" style="display:none;">👁️ 只读模式</span>
+        <button class="btn-settings" id="btn-settings" onclick="openSettings()">⚙️ 设置</button>
+        <button class="btn-logout" id="btn-logout" onclick="doLogout()">🚪 退出</button>
+      </div>
+    </div>
+
+    <!-- 标签页 -->
+    <div class="tabs">
+      <div class="tab active" data-tab="counselors" onclick="switchTab('counselors')">
+        👨⚕️ 咨询师管理
+      </div>
+      <div class="tab" data-tab="assessments" onclick="switchTab('assessments')">
+        📋 来访者评估
+      </div>
+    </div>
+
+    <!-- 咨询师工具栏 -->
+    <div class="toolbar" id="toolbar-counselors">
+      <div class="search-box">
+        <input type="text" id="search-counselors" placeholder="搜索咨询师姓名、资质、城市..." oninput="filterData()">
+      </div>
+      <select class="filter-select" id="filter-credential" onchange="filterData()">
+        <option value="">全部资质</option>
+        <option value="三级">三级心理咨询师</option>
+        <option value="二级">二级心理咨询师</option>
+        <option value="心理治疗师">心理治疗师</option>
+        <option value="精神科医生">精神科医生</option>
+      </select>
+      <select class="filter-select" id="filter-active" onchange="filterData()">
+        <option value="">全部状态</option>
+        <option value="true">激活</option>
+        <option value="false">未激活</option>
+      </select>
+      <button class="btn btn-success readonly-hide" onclick="exportCSV('counselors')">📥 导出CSV</button>
+      <button class="btn btn-danger readonly-hide" onclick="deleteSelected('counselors')">🗑️ 删除选中</button>
+    </div>
+
+    <!-- 评估工具栏 -->
+    <div class="toolbar" id="toolbar-assessments" style="display:none;">
+      <div class="search-box">
+        <input type="text" id="search-assessments" placeholder="搜索来访者姓名、主诉问题..." oninput="filterData()">
+      </div>
+      <select class="filter-select" id="filter-severity" onchange="filterData()">
+        <option value="">全部严重程度</option>
+        <option value="轻度">轻度</option>
+        <option value="中度">中度</option>
+        <option value="重度">重度</option>
+      </select>
+      <select class="filter-select" id="filter-crisis" onchange="filterData()">
+        <option value="">全部危机等级</option>
+        <option value="无">无</option>
+        <option value="低">低</option>
+        <option value="中">中</option>
+        <option value="高">高</option>
+      </select>
+      <button class="btn btn-success readonly-hide" onclick="exportCSV('assessments')">📥 导出CSV</button>
+      <button class="btn btn-danger readonly-hide" onclick="deleteSelected('assessments')">🗑️ 删除选中</button>
+    </div>
+
+    <!-- 数据内容区 -->
+    <div class="content">
+      <!-- 咨询师表格 -->
+      <div id="content-counselors">
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th><input type="checkbox" id="select-all-counselors" onchange="toggleSelectAll('counselors')"></th>
+                <th>姓名</th>
+                <th>资质等级</th>
+                <th>从业年限</th>
+                <th>城市</th>
+                <th>咨询取向</th>
+                <th>擅长议题</th>
+                <th>咨询方式</th>
+                <th>费用</th>
+                <th>状态</th>
+                <th>创建时间</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-counselors">
+              <tr><td colspan="12" class="loading"><div class="spinner"></div></td></tr>
+            </tbody>
+          </table>
+          <div class="empty-state" id="empty-counselors" style="display:none;">
+            <div class="icon">📭</div>
+            <div class="text">暂无咨询师数据</div>
+          </div>
+          <div class="pagination" id="pagination-counselors"></div>
+        </div>
+      </div>
+
+      <!-- 评估表格 -->
+      <div id="content-assessments" style="display:none;">
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th><input type="checkbox" id="select-all-assessments" onchange="toggleSelectAll('assessments')"></th>
+                <th>姓名</th>
+                <th>性别</th>
+                <th>年龄</th>
+                <th>主诉问题</th>
+                <th>总分</th>
+                <th>严重程度</th>
+                <th>危机等级</th>
+                <th>咨询方式</th>
+                <th>预算</th>
+                <th>创建时间</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-assessments">
+              <tr><td colspan="12" class="loading"><div class="spinner"></div></td></tr>
+            </tbody>
+          </table>
+          <div class="empty-state" id="empty-assessments" style="display:none;">
+            <div class="icon">📭</div>
+            <div class="text">暂无评估数据</div>
+          </div>
+          <div class="pagination" id="pagination-assessments"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 详情模态框 -->
+  <div class="modal-overlay" id="modal-detail" onclick="closeModal(event, 'modal-detail')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="closeModal(null, 'modal-detail')">&times;</button>
+      <h2 id="modal-title">详情</h2>
+      <div id="modal-content"></div>
+    </div>
+  </div>
+
+  <!-- 设置模态框 -->
+  <div class="modal-overlay" id="modal-settings" onclick="closeModal(event, 'modal-settings')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="closeModal(null, 'modal-settings')">&times;</button>
+      <h2>⚙️ 系统设置</h2>
+      <div class="settings-form">
+        <div class="form-group">
+          <label>当前管理密码</label>
+          <input type="text" id="current-pwd-display" readonly style="background:#f8f9fa;cursor:default;">
+          <div class="hint">这是当前正在使用的管理密码</div>
+        </div>
+        <div class="form-group">
+          <label>修改管理密码</label>
+          <input type="password" id="new-password" placeholder="输入新密码（至少4位）">
+          <div class="hint">留空表示不修改</div>
+        </div>
+        <div class="form-group">
+          <label>确认新密码</label>
+          <input type="password" id="confirm-password" placeholder="再次输入新密码">
+        </div>
+        <button class="btn btn-primary" onclick="changePassword()">保存设置</button>
+      </div>
+      <hr style="margin:30px 0;border:none;border-top:1px solid #eee;">
+      <h3 style="font-size:15px;color:#333;margin-bottom:15px;">如何查询密码</h3>
+      <div style="font-size:13px;color:#666;line-height:2;">
+        <p><strong>方法1（推荐）：</strong>登录后进入此设置面板，上方会显示当前密码</p>
+        <p><strong>方法2：</strong>打开 <code>admin.html</code> 文件，查找 <code>ADMIN_PASSWORD</code> 变量</p>
+        <p><strong>方法3（忘记密码）：</strong>删除浏览器 LocalStorage 后重启页面，使用文件中的默认密码重新登录</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ========== 只读模式检测 ==========
+    const READONLY_MODE = new URLSearchParams(location.search).get('mode') === 'view';
+
+    // ========== 密码配置（修改这里可更改默认密码）==========
+    let ADMIN_PASSWORD = localStorage.getItem('xiaopingu_admin_pwd') || 'xiaopingu2026';
+
+    // ========== Supabase 配置 ==========
+    const SUPABASE_URL = 'https://csvhikdiliwqoacitlag.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_atXq0SmWEiEY6UMouG4dLw_ouXN2U6B';
+
+    // ========== 全局状态 ==========
+    let currentTab = 'counselors';
+    let allData = { counselors: [], assessments: [] };
+    let filteredData = { counselors: [], assessments: [] };
+    let currentPage = { counselors: 1, assessments: 1 };
+    const PAGE_SIZE = 20;
+    let selectedIds = { counselors: new Set(), assessments: new Set() };
+
+    // ========== 登录逻辑 ==========
+    function doLogin() {
+      const input = document.getElementById('login-password').value;
+      const errorEl = document.getElementById('login-error');
+      if (input === ADMIN_PASSWORD) {
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('main-app').style.display = 'block';
+        // 记住登录状态（2小时）
+        sessionStorage.setItem('xiaopingu_logged_in', 'true');
+        initApp();
+      } else {
+        errorEl.textContent = '密码错误，请重新输入';
+        document.getElementById('login-password').value = '';
+      }
+    }
+
+    function doLogout() {
+      sessionStorage.removeItem('xiaopingu_logged_in');
+      document.getElementById('main-app').style.display = 'none';
+      document.getElementById('login-screen').style.display = 'flex';
+      document.getElementById('login-password').value = '';
+    }
+
+    // 页面加载时检查登录状态
+    window.addEventListener('load', function() {
+      if (READONLY_MODE) {
+        // 只读模式：直接跳过登录
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('main-app').style.display = 'block';
+        // 显示只读标识，隐藏管理按钮
+        document.getElementById('readonly-badge').style.display = 'inline-flex';
+        document.getElementById('btn-settings').style.display = 'none';
+        document.getElementById('btn-logout').style.display = 'none';
+        // 隐藏所有只读隐藏元素
+        document.querySelectorAll('.readonly-hide').forEach(el => el.style.display = 'none');
+        // 隐藏全选框列
+        document.querySelectorAll('th input[type="checkbox"]').forEach(el => {
+          el.parentElement.style.display = 'none';
+        });
+        document.title = '小平菇 · 数据查看（只读）';
+        initApp();
+      } else if (sessionStorage.getItem('xiaopingu_logged_in') === 'true') {
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('main-app').style.display = 'block';
+        initApp();
+      }
+    });
+
+    function initApp() {
+      loadData('counselors');
+      loadData('assessments');
+      updateStats();
+    }
+
+    // ========== 设置面板 ==========
+    function openSettings() {
+      document.getElementById('current-pwd-display').value = ADMIN_PASSWORD;
+      document.getElementById('new-password').value = '';
+      document.getElementById('confirm-password').value = '';
+      document.getElementById('modal-settings').classList.add('active');
+    }
+
+    function changePassword() {
+      const newPwd = document.getElementById('new-password').value;
+      const confirmPwd = document.getElementById('confirm-password').value;
+
+      if (newPwd && newPwd.length < 4) {
+        showToast('密码长度至少4位', 'error');
+        return;
+      }
+      if (newPwd && newPwd !== confirmPwd) {
+        showToast('两次输入的密码不一致', 'error');
+        return;
+      }
+
+      if (newPwd) {
+        ADMIN_PASSWORD = newPwd;
+        localStorage.setItem('xiaopingu_admin_pwd', newPwd);
+        document.getElementById('current-pwd-display').value = newPwd;
+        showToast('密码修改成功！已保存到浏览器', 'success');
+      } else {
+        showToast('设置已保存', 'success');
+      }
+
+      // 同时保存到文件提示
+      setTimeout(() => {
+        alert('💡 提示：密码已保存到浏览器本地存储。\n\n如需永久修改默认密码（下次重装系统后生效），请编辑 admin.html 文件第 约297 行的：\n\n  let ADMIN_PASSWORD = ...\n\n将值改为新密码即可。');
+      }, 500);
+    }
+
+    // ========== Toast 提示 ==========
+    function showToast(msg, type) {
+      const toast = document.createElement('div');
+      toast.className = 'toast ' + type;
+      toast.textContent = msg;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    // ========== 模态框关闭 ==========
+    function closeModal(event, id) {
+      if (event && event.target !== event.currentTarget) return;
+      document.getElementById(id).classList.remove('active');
+    }
+
+    // ========== 加载数据 ==========
+    async function loadData(type) {
+      try {
+        const url = SUPABASE_URL + '/rest/v1/' + type + '?select=*&order=created_at.desc';
+        const res = await fetch(url, {
+          headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
+          }
+        });
+        const data = await res.json();
+        allData[type] = data;
+        filteredData[type] = [...data];
+        renderTable(type);
+        updateStats();
+      } catch (e) {
+        console.error('加载数据失败:', e);
+      }
+    }
+
+    // ========== 更新统计 ==========
+    function updateStats() {
+      document.getElementById('stat-counselors').textContent = allData.counselors.length;
+      document.getElementById('stat-assessments').textContent = allData.assessments.length;
+    }
+
+    // ========== 切换标签页 ==========
+    function switchTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelector('[data-tab="' + tab + '"]').classList.add('active');
+
+      document.getElementById('content-counselors').style.display = tab === 'counselors' ? 'block' : 'none';
+      document.getElementById('content-assessments').style.display = tab === 'assessments' ? 'block' : 'none';
+      document.getElementById('toolbar-counselors').style.display = tab === 'counselors' ? 'flex' : 'none';
+      document.getElementById('toolbar-assessments').style.display = tab === 'assessments' ? 'flex' : 'none';
+    }
+
+    // ========== 过滤数据 ==========
+    function filterData() {
+      const type = currentTab;
+      const search = document.getElementById('search-' + type).value.toLowerCase();
+
+      filteredData[type] = allData[type].filter(item => {
+        let match = true;
+
+        if (type === 'counselors') {
+          const credFilter = document.getElementById('filter-credential').value;
+          const activeFilter = document.getElementById('filter-active').value;
+
+          if (credFilter && item.credential_level !== credFilter) match = false;
+          if (activeFilter && String(item.is_active) !== activeFilter) match = false;
+          if (search) {
+            const text = [item.name, item.credential_level, item.city, item.bio_short].filter(Boolean).join(' ').toLowerCase();
+            if (!text.includes(search)) match = false;
+          }
+        } else {
+          const severityFilter = document.getElementById('filter-severity').value;
+          const crisisFilter = document.getElementById('filter-crisis').value;
+
+          if (severityFilter && item.severity !== severityFilter) match = false;
+          if (crisisFilter && item.crisis_level !== crisisFilter) match = false;
+          if (search) {
+            const text = [item.visitor_name, item.issues, item.description].filter(Boolean).join(' ').toLowerCase();
+            if (!text.includes(search)) match = false;
+          }
+        }
+
+        return match;
+      });
+
+      currentPage[type] = 1;
+      renderTable(type);
+    }
+
+    // ========== 渲染表格 ==========
+    function renderTable(type) {
+      const tbody = document.getElementById('tbody-' + type);
+      const empty = document.getElementById('empty-' + type);
+      const data = filteredData[type];
+      const page = currentPage[type];
+
+      if (data.length === 0) {
+        tbody.innerHTML = '';
+        empty.style.display = 'block';
+        document.getElementById('pagination-' + type).innerHTML = '';
+        return;
+      }
+
+      empty.style.display = 'none';
+      const start = (page - 1) * PAGE_SIZE;
+      const end = Math.min(start + PAGE_SIZE, data.length);
+      const pageData = data.slice(start, end);
+
+      let html = '';
+      pageData.forEach(item => {
+        if (type === 'counselors') {
+          html += renderCounselorRow(item);
+        } else {
+          html += renderAssessmentRow(item);
+        }
+      });
+
+      tbody.innerHTML = html;
+      renderPagination(type, data.length);
+    }
+
+    // ========== 渲染咨询师行 ==========
+    function renderCounselorRow(c) {
+      const checked = selectedIds.counselors.has(c.id) ? 'checked' : '';
+      const statusTag = c.is_active
+        ? '<span class="tag tag-green">激活</span>'
+        : '<span class="tag tag-red">未激活</span>';
+      const selectCell = READONLY_MODE ? '<td style="display:none"></td>' : '<td><input type="checkbox" ' + checked + ' onchange="toggleSelect(\'counselors\', \'' + c.id + '\', this.checked)"></td>';
+      const deleteBtn = READONLY_MODE ? '' : '<button class="action-btn delete" onclick="deleteItem(\'counselors\', \'' + c.id + '\')">删除</button>';
+
+      return '<tr>' +
+        selectCell +
+        '<td><strong>' + (c.name || '-') + '</strong></td>' +
+        '<td>' + (c.credential_level || '-') + '</td>' +
+        '<td>' + (c.years_experience || 0) + '年</td>' +
+        '<td>' + (c.city || '-') + '</td>' +
+        '<td>' + formatArray(c.approaches, 'blue') + '</td>' +
+        '<td>' + formatArray(c.specialties, 'green') + '</td>' +
+        '<td>' + formatArray(c.session_formats, 'yellow') + '</td>' +
+        '<td>¥' + (c.fee_min || 0) + '</td>' +
+        '<td>' + statusTag + '</td>' +
+        '<td>' + formatTime(c.created_at) + '</td>' +
+        '<td><div class="action-btns">' +
+          '<button class="action-btn view" onclick="viewDetail(\'counselors\', \'' + c.id + '\')">查看</button>' +
+          deleteBtn +
+        '</div></td>' +
+      '</tr>';
+    }
+
+    // ========== 渲染评估行 ==========
+    function renderAssessmentRow(a) {
+      const checked = selectedIds.assessments.has(a.id) ? 'checked' : '';
+      const severityTag = a.severity === '重度' ? '<span class="tag tag-red">' + a.severity + '</span>'
+        : a.severity === '中度' ? '<span class="tag tag-yellow">' + a.severity + '</span>'
+        : '<span class="tag tag-green">' + (a.severity || '-') + '</span>';
+
+      const crisisTag = a.crisis_level === '高' ? '<span class="tag tag-red">高</span>'
+        : a.crisis_level === '中' ? '<span class="tag tag-yellow">中</span>'
+        : '<span class="tag tag-green">' + (a.crisis_level || '无') + '</span>';
+
+      const selectCell = READONLY_MODE ? '<td style="display:none"></td>' : '<td><input type="checkbox" ' + checked + ' onchange="toggleSelect(\'assessments\', \'' + a.id + '\', this.checked)"></td>';
+      const deleteBtn = READONLY_MODE ? '' : '<button class="action-btn delete" onclick="deleteItem(\'assessments\', \'' + a.id + '\')">删除</button>';
+
+      return '<tr>' +
+        selectCell +
+        '<td><strong>' + (a.visitor_name || '匿名') + '</strong></td>' +
+        '<td>' + (a.visitor_gender || '-') + '</td>' +
+        '<td>' + (a.visitor_age || '-') + '</td>' +
+        '<td>' + formatArray(a.issues, 'blue') + '</td>' +
+        '<td><strong>' + (a.total_score || 0) + '</strong></td>' +
+        '<td>' + severityTag + '</td>' +
+        '<td>' + crisisTag + '</td>' +
+        '<td>' + formatArray(a.preferred_formats, 'yellow') + '</td>' +
+        '<td>' + (a.budget || '-') + '</td>' +
+        '<td>' + formatTime(a.created_at) + '</td>' +
+        '<td><div class="action-btns">' +
+          '<button class="action-btn view" onclick="viewDetail(\'assessments\', \'' + a.id + '\')">查看</button>' +
+          deleteBtn +
+        '</div></td>' +
+      '</tr>';
+    }
+
+    // ========== 格式化数组 ==========
+    function formatArray(arr, color) {
+      if (!arr || arr.length === 0) return '-';
+      return arr.slice(0, 2).map(item => '<span class="tag tag-' + color + '">' + item + '</span>').join('') +
+        (arr.length > 2 ? '<span class="tag tag-' + color + '">+' + (arr.length - 2) + '</span>' : '');
+    }
+
+    // ========== 格式化时间 ==========
+    function formatTime(iso) {
+      if (!iso) return '-';
+      const d = new Date(iso);
+      return d.toLocaleDateString('zh-CN') + ' ' + d.toLocaleTimeString('zh-CN', {hour: '2-digit', minute:'2-digit'});
+    }
+
+    // ========== 分页 ==========
+    function renderPagination(type, total) {
+      const totalPages = Math.ceil(total / PAGE_SIZE);
+      const page = currentPage[type];
+      const container = document.getElementById('pagination-' + type);
+
+      if (totalPages <= 1) { container.innerHTML = ''; return; }
+
+      let html = '<button class="page-btn" ' + (page <= 1 ? 'disabled' : '') + ' onclick="goPage(\'' + type + '\', ' + (page - 1) + ')">← 上一页</button>' +
+        '<span class="page-info">第 ' + page + ' / ' + totalPages + ' 页（共 ' + total + ' 条）</span>' +
+        '<button class="page-btn" ' + (page >= totalPages ? 'disabled' : '') + ' onclick="goPage(\'' + type + '\', ' + (page + 1) + ')">下一页 →</button>';
+
+      container.innerHTML = html;
+    }
+
+    function goPage(type, page) {
+      currentPage[type] = page;
+      renderTable(type);
+    }
+
+    // ========== 选择操作 ==========
+    function toggleSelectAll(type) {
+      const checked = document.getElementById('select-all-' + type).checked;
+      const ids = filteredData[type].map(item => item.id);
+      if (checked) {
+        ids.forEach(id => selectedIds[type].add(id));
+      } else {
+        ids.forEach(id => selectedIds[type].delete(id));
+      }
+      renderTable(type);
+    }
+
+    function toggleSelect(type, id, checked) {
+      if (checked) {
+        selectedIds[type].add(id);
+      } else {
+        selectedIds[type].delete(id);
+      }
+    }
+
+    // ========== 查看详情 ==========
+    function viewDetail(type, id) {
+      const item = allData[type].find(d => d.id === id);
+      if (!item) return;
+
+      const modal = document.getElementById('modal-detail');
+      const title = document.getElementById('modal-title');
+      const content = document.getElementById('modal-content');
+
+      title.textContent = type === 'counselors' ? '👨⚕️ 咨询师详情 - ' + (item.name || '') : '📋 评估详情 - ' + (item.visitor_name || '匿名');
+
+      let html = '<div class="detail-grid">';
+      Object.keys(item).forEach(key => {
+        if (key === 'id') return;
+        let value = item[key];
+        if (Array.isArray(value)) value = value.join(', ');
+        if (key === 'created_at' || key === 'updated_at') value = formatTime(value);
+        html += '<div class="detail-item">' +
+          '<div class="detail-label">' + formatLabel(key) + '</div>' +
+          '<div class="detail-value">' + (value || '-') + '</div>' +
+        '</div>';
+      });
+      html += '</div>';
+
+      content.innerHTML = html;
+      modal.classList.add('active');
+    }
+
+    function formatLabel(key) {
+      const labels = {
+        name: '姓名', credential_level: '资质等级', years_experience: '从业年限',
+        education: '学历', license_number: '执照编号', city: '城市',
+        approaches: '咨询取向', approach_primary: '首选取向', training_background: '受训背景',
+        supervision_hours: '督导小时数', personal_therapy_hours: '个人体验小时数',
+        ethics_training: '伦理培训', certifications: '认证',
+        specialties: '擅长议题', populations: '服务对象', severity_levels: '承接程度',
+        session_formats: '咨询方式', session_duration: '咨询时长',
+        fee_min: '最低费用', fee_budget_level: '费用等级', available_slots: '可预约时段',
+        bio_short: '简介', bio_full: '详细介绍', is_active: '是否激活',
+        contact_wechat: '微信', contact_phone: '电话',
+        visitor_name: '姓名', visitor_age: '年龄', visitor_gender: '性别',
+        visitor_occupation: '职业', prev_counseling: '既往咨询',
+        budget: '预算', preferred_formats: '偏好方式', expects: '预期目标',
+        issues: '主诉问题', description: '详细描述', duration: '困扰时长',
+        score_mood: '情绪评分', score_anxiety: '焦虑评分', score_sleep: '睡眠评分',
+        score_function: '功能评分', score_relation: '关系评分',
+        total_score: '总分', severity: '严重程度', specials: '特殊情况',
+        crisis_level: '危机等级', user_agent: '用户代理'
+      };
+      return labels[key] || key;
+    }
+
+    // ========== 删除操作 ==========
+    async function deleteItem(type, id) {
+      if (!confirm('确定要删除这条记录吗？此操作不可撤销。')) return;
+
+      try {
+        const res = await fetch(SUPABASE_URL + '/rest/v1/' + type + '?id=eq.' + id, {
+          method: 'DELETE',
+          headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
+          }
+        });
+
+        if (res.ok || res.status === 204) {
+          showToast('删除成功！', 'success');
+          loadData(type);
+        } else {
+          showToast('删除失败: ' + res.status, 'error');
+        }
+      } catch (e) {
+        showToast('删除失败: ' + e.message, 'error');
+      }
+    }
+
+    async function deleteSelected(type) {
+      const ids = Array.from(selectedIds[type]);
+      if (ids.length === 0) { showToast('请先选择要删除的记录', 'error'); return; }
+      if (!confirm('确定要删除选中的 ' + ids.length + ' 条记录吗？此操作不可撤销。')) return;
+
+      let success = 0;
+      for (const id of ids) {
+        try {
+          const res = await fetch(SUPABASE_URL + '/rest/v1/' + type + '?id=eq.' + id, {
+            method: 'DELETE',
+            headers: {
+              'apikey': SUPABASE_ANON_KEY,
+              'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
+            }
+          });
+          if (res.ok || res.status === 204) success++;
+        } catch (e) { console.error(e); }
+      }
+
+      showToast('成功删除 ' + success + ' 条记录', 'success');
+      selectedIds[type].clear();
+      loadData(type);
+    }
+
+    // ========== 导出CSV ==========
+    function exportCSV(type) {
+      const data = filteredData[type];
+      if (data.length === 0) { showToast('没有数据可导出', 'error'); return; }
+
+      const headers = Object.keys(data[0]).filter(k => k !== 'user_agent');
+      let csv = '\uFEFF';
+      csv += headers.map(h => formatLabel(h)).join(',') + '\n';
+
+      data.forEach(row => {
+        csv += headers.map(h => {
+          let val = row[h];
+          if (Array.isArray(val)) val = val.join(';');
+          if (val === null || val === undefined) val = '';
+          return '"' + String(val).replace(/"/g, '""') + '"';
+        }).join(',') + '\n';
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = (type === 'counselors' ? '咨询师数据' : '评估数据') + '_' + new Date().toISOString().slice(0,10) + '.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('导出成功！', 'success');
+    }
+  </script>
+</body>
+</html>

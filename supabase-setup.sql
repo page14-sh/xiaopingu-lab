@@ -65,6 +65,8 @@ CREATE TABLE counselors (
   bio_full TEXT,
   -- 状态
   is_active BOOLEAN DEFAULT true,
+  -- 公益服务意愿
+  public_welfare BOOLEAN DEFAULT false,
   -- 联系（可选）
   contact_wechat TEXT,
   contact_phone TEXT

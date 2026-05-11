@@ -130,15 +130,15 @@ function getSupabaseHeaders() {
 
 // 保存评估数据
 function saveAssessment(data) {
-  if (!SUPABASE_CONFIG.enableDataCollection || !SUPABASE_CONFIG.url) return Promise.resolve();
+  if (!SUPABASE_CONFIG.enableDataCollection || !SUPABASE_CONFIG.url) return Promise.resolve(null);
   return fetch(SUPABASE_CONFIG.url + '/rest/v1/assessments', {
     method: 'POST',
     headers: getSupabaseHeaders(),
     body: JSON.stringify(data)
   }).then(function(r) {
     if (r.ok) { console.log('[小平菇] 评估数据已保存'); return r.json(); }
-    else console.warn('[小平菇] 保存失败:', r.status, r.statusText);
-  }).catch(function(e) { console.warn('[小平菇] 网络错误:', e); });
+    else { console.warn('[小平菇] 保存失败:', r.status, r.statusText); return null; }
+  }).catch(function(e) { console.warn('[小平菇] 网络错误:', e); return null; });
 }
 
 // 保存咨询师档案
