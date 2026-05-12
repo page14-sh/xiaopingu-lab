@@ -820,7 +820,7 @@ function generateResult() {
   if(!cards.length){cards.push({top:true,badge:'通用推荐',badgeClass:'badge-green',title:'推荐进行初始评估咨询',desc:'建议先预约1-2次初始评估。',tags:['初始评估','1-2次探索'],require:['从业年限：2年+','二级咨询师及以上']});}
 
   var html='';
-  cards.forEach(function(c){
+  cards.slice(0,3).forEach(function(c){
     html+='<div class="match-card'+(c.top?' top':'')+'">';
     html+='<span class="match-badge '+c.badgeClass+'">'+c.badge+'</span>';
     html+='<h4>'+c.title+'</h4><p>'+c.desc+'</p>';
