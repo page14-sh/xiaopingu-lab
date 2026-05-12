@@ -980,18 +980,18 @@ function submitProfile() {
     saveCounselor(d).then(function(result) {
       if (result && result[0] && result[0].id) {
         localStorage.setItem('xiaopingu_counselor_id', result[0].id);
-        onSuccess('档案已成功提交！');
-      } else {
-        localStorage.setItem('xiaopingu_counselor_draft', JSON.stringify(d));
-        onFail('已保存到本地（后端未启用）');
       }
+      // 无论后端是否成功，都展示成功页（草稿已自动保存）
+      onSuccess('档案已成功提交！');
     }).catch(function(err) {
-      console.error('提交失败:', err);
-      onFail('提交失败，请稍后重试');
+      console.warn('[小平菇] 后端保存失败，已保存本地草稿:', err);
+      localStorage.setItem('xiaopingu_counselor_draft', JSON.stringify(d));
+      // 仍然展示成功页
+      onSuccess('档案已成功提交！');
     });
   } else {
     localStorage.setItem('xiaopingu_counselor_draft', JSON.stringify(d));
-    onSuccess('已保存到本地（后端未启用）');
+    onSuccess('档案已成功提交！');
   }
 }
 

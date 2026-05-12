@@ -151,7 +151,7 @@ function saveCounselor(data) {
   }).then(function(r) {
     if (r.ok) return r.json();
     else throw new Error('HTTP ' + r.status);
-  }).catch(function(e) { console.warn('[小平菇] 保存失败:', e); });
+  });
 }
 
 // 更新咨询师档案
