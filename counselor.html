@@ -133,6 +133,17 @@
   }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+  /* Success card */
+  .success-card { text-align: center; padding: 40px 24px 36px; animation: fadeIn 0.4s ease; }
+  .success-icon { font-size: 64px; line-height: 1; margin-bottom: 16px; }
+  .success-title { font-size: 22px; font-weight: 700; color: #3D3831; margin: 0 0 12px; }
+  .success-desc { font-size: 15px; color: #6B635A; line-height: 1.8; margin-bottom: 24px; }
+  .success-contact { background: #F5F5F0; border-radius: 12px; padding: 16px 20px; margin-bottom: 20px; display: inline-block; min-width: 220px; }
+  .success-contact-label { font-size: 13px; color: #A09889; margin-bottom: 6px; }
+  .success-email { font-size: 16px; font-weight: 600; color: #5C7A52; text-decoration: none; letter-spacing: 0.3px; }
+  .success-email:hover { text-decoration: underline; }
+  .success-tip { font-size: 12px; color: #B0A898; margin-top: 4px; }
+
   @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
   /* Preview card */
@@ -632,6 +643,18 @@
         <button class="btn btn-primary" id="submit-btn" onclick="submitProfile()">确认提交</button>
       </div>
     </div>
+
+    <!-- 提交成功 -->
+    <div class="card success-card" id="success_card" style="display:none">
+      <div class="success-icon">🍄</div>
+      <h2 class="success-title">档案提交成功！</h2>
+      <p class="success-desc">感谢您加入小平菇咨询师网络。<br>我们已收到您的档案，将在审核通过后正式上线展示。</p>
+      <div class="success-contact">
+        <p class="success-contact-label">如有疑问，请联系我们：</p>
+        <a class="success-email" href="mailto:page4@163.com">📧 page4@163.com</a>
+      </div>
+      <p class="success-tip">您可以关闭此页面，或保存联系邮箱以备后续沟通。</p>
+    </div>
   </div>
   </div><!-- end form_area -->
 
@@ -926,12 +949,19 @@ function submitProfile() {
   }
 
   function onSuccess(msg) {
-    showToast(msg);
-    if (submitBtn) {
-      submitBtn.textContent = '✅ 已提交';
-      submitBtn.style.background = '#28a745';
+    // 隐藏预览卡片，展示提交成功页
+    var previewCard = document.getElementById('preview_card');
+    var successCard = document.getElementById('success_card');
+    if (previewCard) previewCard.style.display = 'none';
+    if (successCard) {
+      successCard.style.display = 'block';
+      successCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
-    // 提交成功后不再解锁，防止二次提交
+    // 同时隐藏步骤导航
+    var stepBar = document.querySelector('.progress-bar-wrap');
+    if (stepBar) stepBar.style.display = 'none';
+    // 清除草稿
+    try { localStorage.removeItem('xiaopingu_counselor_draft'); } catch(e) {}
   }
 
   function onFail(msg) {
