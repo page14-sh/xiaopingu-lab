@@ -465,7 +465,7 @@
       <p class="card-sub">所有信息仅用于咨询匹配，严格保密</p>
       <div class="form-grid">
         <div class="form-row"><label class="required">姓名（可填化名）</label><input type="text" id="name" placeholder="请输入您的姓名或化名" autocomplete="off"></div>
-        <div class="form-row"><label class="required">年龄</label><input type="number" id="age" placeholder="请输入年龄" min="6" max="99" inputmode="numeric"></div>
+        <div class="form-row"><label class="required">年龄</label><input type="number" id="age" placeholder="请输入年龄" min="6" max="99" inputmode="numeric" oninput="toggleMinorNotice()"><p id="minor_notice" style="display:none;margin:4px 0 0;font-size:12px;color:#E65100;line-height:1.6;background:#FFF3E0;padding:8px 10px;border-radius:8px;">⚠️ 如果您未满 18 周岁，请在填写本问卷前取得监护人的同意和知晓。未成年人寻求心理咨询服务需要监护人知情并配合。</p></div>
         <div class="form-row"><label>性别</label><select id="gender"><option value="">请选择</option><option value="male">男</option><option value="female">女</option><option value="ta">TA</option><option value="lgbtq">LGBTQ+</option><option value="other">其他/不便透露</option></select></div>
         <div class="form-row"><label>职业身份</label><select id="occupation"><option value="">请选择</option><option value="student_k12">中小学生</option><option value="student_college">大学生/研究生</option><option value="worker">在职人员</option><option value="parent">家长/全职父母</option><option value="retired">退休人员</option><option value="other">其他</option></select></div>
         <div class="form-row"><label>所在城市 <span style="font-size:12px;color:#A09889;font-weight:400">（选填，用于匹配同城咨询师）</span></label><input type="text" id="city" placeholder="例如：浙江省 杭州市、上海市 上海市" autocomplete="off"></div>
@@ -781,6 +781,13 @@ function generateResult() {
     '<div class="info-item"><div class="info-label">功能受损</div><div class="info-val">'+scores.function+'/5</div></div>'+
     '<div class="info-item"><div class="info-label">人际紧张</div><div class="info-val">'+scores.relation+'/5</div></div>'+
     '<div class="info-item"><div class="info-label">总分</div><div class="info-val" style="color:'+(totalScore>=15?'#C4654A':totalScore>=8?'#854F0B':'#5C7A52')+'">'+totalScore+'/25</div></div>';
+
+  // ===== 未成年人提示 =====
+  function toggleMinorNotice(){
+    var age=parseInt(document.getElementById('age').value);
+    var notice=document.getElementById('minor_notice');
+    if(notice)notice.style.display=(age>0&&age<18)?'block':'none';
+  }
 
   // ===== Referral logic =====
   var cards=[];
