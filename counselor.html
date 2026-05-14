@@ -543,11 +543,15 @@
       <div class="form-grid">
         <div class="form-row">
           <label>单次时长</label>
-          <select id="c_duration">
+          <select id="c_duration" onchange="toggleDurationOther()">
             <option value="50分钟">50分钟</option>
             <option value="60分钟">60分钟</option>
             <option value="90分钟">90分钟</option>
+            <option value="其他">其他</option>
           </select>
+        </div>
+        <div class="form-row" id="duration_other_row" style="display:none">
+          <input type="text" id="c_duration_other" placeholder="请填写具体时长，如：45分钟、120分钟" autocomplete="off">
         </div>
         <div class="form-row">
           <label>单次费用（元）</label>
@@ -693,6 +697,12 @@ function toggleOpt(el) {
   var cb = el.querySelector('input[type="checkbox"]');
   if (cb) cb.checked = el.classList.contains('selected');
 }
+function toggleDurationOther() {
+  var sel = document.getElementById('c_duration');
+  var row = document.getElementById('duration_other_row');
+  row.style.display = (sel.value === '其他') ? 'block' : 'none';
+  if (sel.value !== '其他') document.getElementById('c_duration_other').value = '';
+}
 
 // --- "其他" 自定义标签管理 ---
 var otherApproaches = [];
@@ -833,7 +843,7 @@ function collectData() {
     populations_other: otherPopulations.slice(),
     severity_levels: getMultiChecked('severity'),
     session_formats: getMultiChecked('format'),
-    session_duration: document.getElementById('c_duration').value,
+    session_duration: document.getElementById('c_duration').value === '其他' ? document.getElementById('c_duration_other').value : document.getElementById('c_duration').value,
     fee_min: parseInt(document.getElementById('c_fee_min').value) || 0,
     fee_budget_level: document.getElementById('c_fee_level').value,
     available_slots: document.getElementById('c_slots').value.trim(),
@@ -1035,7 +1045,17 @@ function submitProfile() {
       if (ethicsRadio) ethicsRadio.checked = true;
     }
     if (d.training_background) document.getElementById('c_training').value = d.training_background;
-    if (d.session_duration) document.getElementById('c_duration').value = d.session_duration;
+    if (d.session_duration) {
+      var durOptions = Array.from(document.getElementById('c_duration').options).map(function(o){return o.value});
+      if (durOptions.indexOf(d.session_duration) >= 0) {
+        document.getElementById('c_duration').value = d.session_duration;
+        document.getElementById('duration_other_row').style.display = 'none';
+      } else {
+        document.getElementById('c_duration').value = '其他';
+        document.getElementById('c_duration_other').value = d.session_duration;
+        document.getElementById('duration_other_row').style.display = 'block';
+      }
+    }
     if (d.fee_min) document.getElementById('c_fee_min').value = d.fee_min;
     if (d.fee_budget_level) document.getElementById('c_fee_level').value = d.fee_budget_level;
     if (d.available_slots) document.getElementById('c_slots').value = d.available_slots;
