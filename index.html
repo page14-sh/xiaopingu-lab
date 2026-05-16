@@ -466,6 +466,7 @@
       <div class="form-grid">
         <div class="form-row"><label class="required">姓名（可填化名）</label><input type="text" id="name" placeholder="请输入您的姓名或化名" autocomplete="off"></div>
         <div class="form-row"><label class="required">年龄</label><input type="number" id="age" placeholder="请输入年龄" min="6" max="99" inputmode="numeric" oninput="toggleMinorNotice()"><p id="minor_notice" style="display:none;margin:4px 0 0;font-size:12px;color:#E65100;line-height:1.6;background:#FFF3E0;padding:8px 10px;border-radius:8px;">⚠️ 如果您未满 18 周岁，请在填写本问卷前取得监护人的同意和知晓。未成年人寻求心理咨询服务需要监护人知情并配合。</p></div>
+        <div class="form-row"><label>填写身份</label><select id="filled_by"><option value="self">本人填写</option><option value="parent">家长 / 监护人代填</option></select><p style="margin:4px 0 0;font-size:12px;color:#A09889;line-height:1.6;">如为家长代未成年人填写，请选择「家长 / 监护人代填」，系统会优先推荐擅长儿童青少年方向的咨询师。</p></div>
         <div class="form-row"><label>性别</label><select id="gender"><option value="">请选择</option><option value="male">男</option><option value="female">女</option><option value="ta">TA</option><option value="lgbtq">LGBTQ+</option><option value="other">其他/不便透露</option></select></div>
         <div class="form-row"><label>职业身份</label><select id="occupation"><option value="">请选择</option><option value="student_k12">中小学生</option><option value="student_college">大学生/研究生</option><option value="worker">在职人员</option><option value="parent">家长/全职父母</option><option value="retired">退休人员</option><option value="other">其他</option></select></div>
         <div class="form-row"><label>所在城市 <span style="font-size:12px;color:#A09889;font-weight:400">（选填，用于匹配同城咨询师）</span></label><input type="text" id="city" placeholder="例如：浙江省 杭州市、上海市 上海市" autocomplete="off"></div>
@@ -643,6 +644,7 @@ function initApp() {
         if (d.age) document.getElementById('age').value = d.age;
         if (d.gender) document.getElementById('gender').value = d.gender;
         if (d.occupation) document.getElementById('occupation').value = d.occupation;
+        if (d.filled_by) document.getElementById('filled_by').value = d.filled_by;
         if (d.city) document.getElementById('city').value = d.city;
         if (d.prev_counseling) document.getElementById('prev_counseling').value = d.prev_counseling;
         if (d.budget) document.getElementById('budget').value = d.budget;
@@ -699,7 +701,7 @@ function handleConsent() {
 }
 
 function showToast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2200);}
-function saveDraft(){try{var expects=[];document.querySelectorAll('#expect_grid input:checked').forEach(function(el){expects.push(el.value);});var issues=[];document.querySelectorAll('#issue_grid input:checked').forEach(function(el){issues.push(el.value);});var specials=[];document.querySelectorAll('input[name="special"]:checked').forEach(function(el){specials.push(el.value);});var formats=[];document.querySelectorAll('input[name="format"]:checked').forEach(function(el){formats.push(el.value);});localStorage.setItem(STORAGE_KEY,JSON.stringify({step:currentStep,name:document.getElementById('name').value,age:document.getElementById('age').value,gender:document.getElementById('gender').value,occupation:document.getElementById('occupation').value,city:document.getElementById('city').value,prev_counseling:document.getElementById('prev_counseling').value,budget:document.getElementById('budget').value,gender_pref:document.getElementById('gender_pref').value,age_pref:document.getElementById('age_pref').value,orientation_pref:document.getElementById('orientation_pref').value,comm_style:document.getElementById('comm_style').value,formats:formats,duration:document.getElementById('duration').value,description:document.getElementById('description').value,crisis_screen:document.getElementById('crisis_screen').value,expects:expects,issues:issues,issues_other:otherIssues,specials:specials,scores:scores}));}catch(e){}}
+function saveDraft(){try{var expects=[];document.querySelectorAll('#expect_grid input:checked').forEach(function(el){expects.push(el.value);});var issues=[];document.querySelectorAll('#issue_grid input:checked').forEach(function(el){issues.push(el.value);});var specials=[];document.querySelectorAll('input[name="special"]:checked').forEach(function(el){specials.push(el.value);});var formats=[];document.querySelectorAll('input[name="format"]:checked').forEach(function(el){formats.push(el.value);});localStorage.setItem(STORAGE_KEY,JSON.stringify({step:currentStep,name:document.getElementById('name').value,age:document.getElementById('age').value,gender:document.getElementById('gender').value,occupation:document.getElementById('occupation').value,filled_by:document.getElementById('filled_by').value,city:document.getElementById('city').value,prev_counseling:document.getElementById('prev_counseling').value,budget:document.getElementById('budget').value,gender_pref:document.getElementById('gender_pref').value,age_pref:document.getElementById('age_pref').value,orientation_pref:document.getElementById('orientation_pref').value,comm_style:document.getElementById('comm_style').value,formats:formats,duration:document.getElementById('duration').value,description:document.getElementById('description').value,crisis_screen:document.getElementById('crisis_screen').value,expects:expects,issues:issues,issues_other:otherIssues,specials:specials,scores:scores}));}catch(e){}}
 function saveAndGo(n){saveDraft();goStep(n);}
 function goStep(n){document.getElementById('section'+currentStep).classList.remove('active');document.getElementById('step'+currentStep+'-bar').classList.remove('active');document.getElementById('step'+currentStep+'-bar').classList.add('done');currentStep=n;document.getElementById('section'+n).classList.add('active');document.getElementById('step'+n+'-bar').classList.add('active');document.getElementById('step'+n+'-bar').classList.remove('done');window.scrollTo({top:0,behavior:'smooth'});}
 function toggleOpt(el){el.classList.toggle('selected');var cb=el.querySelector('input[type="checkbox"]');if(cb)cb.checked=el.classList.contains('selected');}
@@ -745,6 +747,9 @@ function generateResult() {
   var prev=document.getElementById('prev_counseling'),prevText=prev.options[prev.selectedIndex].text;
   var budget=document.getElementById('budget'),budgetVal=budget.value,budgetText=budget.options[budget.selectedIndex].text;
   var cityVal=document.getElementById('city').value.trim();
+  var filledBy=document.getElementById('filled_by').value; // 'self' or 'parent'
+  var isParentFilled = filledBy === 'parent';
+  var isMinor = parseInt(age) < 18;
   var formats=[];document.querySelectorAll('input[name="format"]:checked').forEach(function(el){formats.push(el.value);});
   var issues=[];document.querySelectorAll('#issue_grid input:checked').forEach(function(el){issues.push(el.value);});
   issues = issues.concat(otherIssues);
@@ -761,8 +766,10 @@ function generateResult() {
 
   var genderPref=document.getElementById('gender_pref'),genderPrefText=genderPref.options[genderPref.selectedIndex].text;
   document.getElementById('info_summary').innerHTML=
+    (isParentFilled ? '<div style="grid-column:1/-1;background:#FFF3E0;border-radius:10px;padding:10px 14px;font-size:13px;color:#E65100;line-height:1.6;margin-bottom:6px">📋 本次评估由家长 / 监护人代为填写，部分主观症状（如情绪、睡眠、社会功能等）可能存在观察偏差，评估结果仅供参考。</div>' : '')+
     '<div class="info-item"><div class="info-label">姓名</div><div class="info-val">'+name+'</div></div>'+
     '<div class="info-item"><div class="info-label">年龄/性别</div><div class="info-val">'+age+'岁 / '+genderText+'</div></div>'+
+    '<div class="info-item"><div class="info-label">填写身份</div><div class="info-val">'+(isParentFilled?'家长 / 监护人代填':'本人填写')+'</div></div>'+
     '<div class="info-item"><div class="info-label">职业身份</div><div class="info-val">'+occText+'</div></div>'+
     (genderPref.value&&genderPref.value!=='any' ? '<div class="info-item"><div class="info-label">性别偏好</div><div class="info-val">'+genderPrefText+'</div></div>' : '')+
     '<div class="info-item"><div class="info-label">困扰持续</div><div class="info-val">'+durationText+'</div></div>'+
@@ -872,7 +879,9 @@ function generateResult() {
       visitor_age: age,
       age_pref: document.getElementById('age_pref').value,
       orientation_pref: document.getElementById('orientation_pref').value,
-      comm_style: document.getElementById('comm_style').value
+      comm_style: document.getElementById('comm_style').value,
+      filled_by: filledBy,
+      is_minor: isMinor
     }).then(function(results){
       document.getElementById('counselor_loading').style.display='none';
       if(results.length>0){
@@ -956,7 +965,7 @@ function generateResult() {
   if(typeof saveAssessment==='function'){
     saveAssessment({
       visitor_name:name,visitor_age:parseInt(age)||null,visitor_gender:genderText,
-      visitor_occupation:occText,visitor_city:cityVal,prev_counseling:prevText,budget:budgetVal,preferred_formats:formats,
+      visitor_occupation:occText,visitor_city:cityVal,filled_by:filledBy,prev_counseling:prevText,budget:budgetVal,preferred_formats:formats,
       gender_pref:document.getElementById('gender_pref').value,
       age_pref:document.getElementById('age_pref').value,
       orientation_pref:document.getElementById('orientation_pref').value,

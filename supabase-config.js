@@ -360,6 +360,9 @@ function matchCounselors(assessment) {
         }
       }
 
+      // 14. 未成年人优先（家长代填时，只保留擅长儿童青少年的咨询师）
+      // 注意：这不是加分，而是排序优先——在最终排序时给未成年人专长咨询师加权
+
       return {
         counselor: c,
         matchScore: Math.min(125, Math.round(score)),
@@ -367,7 +370,16 @@ function matchCounselors(assessment) {
       };
     })
     .filter(function(item) { return item.matchScore > 0; })
-    .sort(function(a, b) { return b.matchScore - a.matchScore; });
+    .sort(function(a, b) {
+      // 家长代填 + 未成年人：擅长儿童青少年的咨询师排序优先
+      if (assessment.filled_by === 'parent' && assessment.is_minor) {
+        var aYouth = a.counselor.client_age_prefs && a.counselor.client_age_prefs.some(function(g) { return g.indexOf('6-12') >= 0 || g.indexOf('12-18') >= 0; });
+        var bYouth = b.counselor.client_age_prefs && b.counselor.client_age_prefs.some(function(g) { return g.indexOf('6-12') >= 0 || g.indexOf('12-18') >= 0; });
+        if (aYouth && !bYouth) return -1;
+        if (!aYouth && bYouth) return 1;
+      }
+      return b.matchScore - a.matchScore;
+    });
   })
   .catch(function(e) {
     console.warn('[小平菇] 匹配查询失败:', e);
