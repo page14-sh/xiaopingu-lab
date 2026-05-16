@@ -468,7 +468,7 @@
         <div class="form-row"><label class="required">年龄</label><input type="number" id="age" placeholder="请输入年龄" min="6" max="99" inputmode="numeric" oninput="toggleMinorNotice()"><p id="minor_notice" style="display:none;margin:4px 0 0;font-size:12px;color:#E65100;line-height:1.6;background:#FFF3E0;padding:8px 10px;border-radius:8px;">⚠️ 如果您未满 18 周岁，请在填写本问卷前取得监护人的同意和知晓。未成年人寻求心理咨询服务需要监护人知情并配合。</p></div>
         <div class="form-row"><label>填写身份</label><select id="filled_by"><option value="self">本人填写</option><option value="parent">家长 / 监护人代填</option></select><p style="margin:4px 0 0;font-size:12px;color:#A09889;line-height:1.6;">如为家长代未成年人填写，请选择「家长 / 监护人代填」，系统会优先推荐擅长儿童青少年方向的咨询师。</p></div>
         <div class="form-row"><label>性别</label><select id="gender"><option value="">请选择</option><option value="male">男</option><option value="female">女</option><option value="ta">TA</option><option value="lgbtq">LGBTQ+</option><option value="other">其他/不便透露</option></select></div>
-        <div class="form-row"><label>职业身份</label><select id="occupation"><option value="">请选择</option><option value="student_k12">中小学生</option><option value="student_college">大学生/研究生</option><option value="worker">在职人员</option><option value="parent">家长/全职父母</option><option value="retired">退休人员</option><option value="other">其他</option></select></div>
+        <div class="form-row"><label>职业身份</label><select id="occupation" onchange="toggleOccupationOther()"><option value="">请选择</option><option value="student_k12">在校学生（中小学）</option><option value="student_college">在校学生（大学及以上）</option><option value="worker">在职人员</option><option value="homemaker">全职照顾家庭</option><option value="freelance">自由职业 / 待业</option><option value="retired">退休人员</option><option value="other">其他</option></select><input type="text" id="occupation_other" placeholder="请填写您的职业" style="display:none;margin-top:8px;font-size:14px;padding:10px 12px;border:1.5px solid #E8E4DC;border-radius:8px" autocomplete="off"></div>
         <div class="form-row"><label>所在城市 <span style="font-size:12px;color:#A09889;font-weight:400">（选填，用于匹配同城咨询师）</span></label><input type="text" id="city" placeholder="例如：浙江省 杭州市、上海市 上海市" autocomplete="off"></div>
       </div>
       <div class="form-row"><label>是否接受过心理健康服务？</label><select id="prev_counseling"><option value="no">否，这是第一次</option><option value="yes_brief">是，接受过简短咨询（5次以内）</option><option value="yes_long">是，接受过系统咨询（5次以上）</option><option value="psychiatric">是，曾就诊精神科或接受心理治疗</option></select></div>
@@ -643,7 +643,8 @@ function initApp() {
         if (d.name) document.getElementById('name').value = d.name;
         if (d.age) document.getElementById('age').value = d.age;
         if (d.gender) document.getElementById('gender').value = d.gender;
-        if (d.occupation) document.getElementById('occupation').value = d.occupation;
+        if (d.occupation) { document.getElementById('occupation').value = d.occupation; toggleOccupationOther(); }
+        if (d.occupation_other) document.getElementById('occupation_other').value = d.occupation_other;
         if (d.filled_by) document.getElementById('filled_by').value = d.filled_by;
         if (d.city) document.getElementById('city').value = d.city;
         if (d.prev_counseling) document.getElementById('prev_counseling').value = d.prev_counseling;
@@ -701,7 +702,7 @@ function handleConsent() {
 }
 
 function showToast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2200);}
-function saveDraft(){try{var expects=[];document.querySelectorAll('#expect_grid input:checked').forEach(function(el){expects.push(el.value);});var issues=[];document.querySelectorAll('#issue_grid input:checked').forEach(function(el){issues.push(el.value);});var specials=[];document.querySelectorAll('input[name="special"]:checked').forEach(function(el){specials.push(el.value);});var formats=[];document.querySelectorAll('input[name="format"]:checked').forEach(function(el){formats.push(el.value);});localStorage.setItem(STORAGE_KEY,JSON.stringify({step:currentStep,name:document.getElementById('name').value,age:document.getElementById('age').value,gender:document.getElementById('gender').value,occupation:document.getElementById('occupation').value,filled_by:document.getElementById('filled_by').value,city:document.getElementById('city').value,prev_counseling:document.getElementById('prev_counseling').value,budget:document.getElementById('budget').value,gender_pref:document.getElementById('gender_pref').value,age_pref:document.getElementById('age_pref').value,orientation_pref:document.getElementById('orientation_pref').value,comm_style:document.getElementById('comm_style').value,formats:formats,duration:document.getElementById('duration').value,description:document.getElementById('description').value,crisis_screen:document.getElementById('crisis_screen').value,expects:expects,issues:issues,issues_other:otherIssues,specials:specials,scores:scores}));}catch(e){}}
+function saveDraft(){try{var expects=[];document.querySelectorAll('#expect_grid input:checked').forEach(function(el){expects.push(el.value);});var issues=[];document.querySelectorAll('#issue_grid input:checked').forEach(function(el){issues.push(el.value);});var specials=[];document.querySelectorAll('input[name="special"]:checked').forEach(function(el){specials.push(el.value);});var formats=[];document.querySelectorAll('input[name="format"]:checked').forEach(function(el){formats.push(el.value);});localStorage.setItem(STORAGE_KEY,JSON.stringify({step:currentStep,name:document.getElementById('name').value,age:document.getElementById('age').value,gender:document.getElementById('gender').value,occupation:document.getElementById('occupation').value,occupation_other:document.getElementById('occupation_other').value,filled_by:document.getElementById('filled_by').value,city:document.getElementById('city').value,prev_counseling:document.getElementById('prev_counseling').value,budget:document.getElementById('budget').value,gender_pref:document.getElementById('gender_pref').value,age_pref:document.getElementById('age_pref').value,orientation_pref:document.getElementById('orientation_pref').value,comm_style:document.getElementById('comm_style').value,formats:formats,duration:document.getElementById('duration').value,description:document.getElementById('description').value,crisis_screen:document.getElementById('crisis_screen').value,expects:expects,issues:issues,issues_other:otherIssues,specials:specials,scores:scores}));}catch(e){}}
 function saveAndGo(n){saveDraft();goStep(n);}
 function goStep(n){document.getElementById('section'+currentStep).classList.remove('active');document.getElementById('step'+currentStep+'-bar').classList.remove('active');document.getElementById('step'+currentStep+'-bar').classList.add('done');currentStep=n;document.getElementById('section'+n).classList.add('active');document.getElementById('step'+n+'-bar').classList.add('active');document.getElementById('step'+n+'-bar').classList.remove('done');window.scrollTo({top:0,behavior:'smooth'});}
 function toggleOpt(el){el.classList.toggle('selected');var cb=el.querySelector('input[type="checkbox"]');if(cb)cb.checked=el.classList.contains('selected');}
@@ -741,7 +742,7 @@ function generateResult() {
   saveDraft();
   var name=document.getElementById('name').value||'来访者',age=document.getElementById('age').value||'—';
   var gender=document.getElementById('gender'),genderText=gender.options[gender.selectedIndex].text;
-  var occupation=document.getElementById('occupation'),occText=occupation.options[occupation.selectedIndex].text;
+  var occupation=document.getElementById('occupation'),occText=occupation.value==='other'?document.getElementById('occupation_other').value.trim()||'其他':occupation.options[occupation.selectedIndex].text;
   var duration=document.getElementById('duration'),durationText=duration.options[duration.selectedIndex].text;
   var description=document.getElementById('description').value,crisisVal=document.getElementById('crisis_screen').value;
   var prev=document.getElementById('prev_counseling'),prevText=prev.options[prev.selectedIndex].text;
@@ -803,6 +804,14 @@ function generateResult() {
     var age=parseInt(document.getElementById('age').value);
     var notice=document.getElementById('minor_notice');
     if(notice)notice.style.display=(age>0&&age<18)?'block':'none';
+  }
+
+  // ===== 职业身份"其他"输入框 =====
+  function toggleOccupationOther(){
+    var sel=document.getElementById('occupation');
+    var inp=document.getElementById('occupation_other');
+    inp.style.display=(sel.value==='other')?'block':'none';
+    if(sel.value!=='other')inp.value='';
   }
 
   // ===== Referral logic =====
