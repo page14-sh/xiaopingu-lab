@@ -344,9 +344,25 @@ function matchCounselors(assessment) {
         }
       }
 
+      // 沟通风格匹配（+5分）
+      if (assessment.comm_style && c.comm_styles && c.comm_styles.length > 0) {
+        var commMap = {
+          'talkative': 'listening',
+          'guided': 'guided',
+          'shy': 'leading',
+          'collaborative': 'collaborative',
+          'directive': 'directive'
+        };
+        var matchedStyle = commMap[assessment.comm_style];
+        if (matchedStyle && c.comm_styles.indexOf(matchedStyle) >= 0) {
+          score += 5;
+          details.push('沟通风格: 匹配');
+        }
+      }
+
       return {
         counselor: c,
-        matchScore: Math.min(120, Math.round(score)),
+        matchScore: Math.min(125, Math.round(score)),
         matchDetails: details
       };
     })

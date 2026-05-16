@@ -552,6 +552,17 @@
         </div>
       </div>
 
+      <div class="form-row">
+        <label>沟通风格（可多选，选填）<span style="font-size:12px;color:#A09889;font-weight:400"> 标记您擅长的沟通方式，以匹配来访者需求</span></label>
+        <div class="option-grid" id="comm_style_grid" style="grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));">
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="comm_style" value="listening"><div class="opt-label">倾听型</div><div class="opt-desc">善于倾听，给来访者充足的表达空间</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="comm_style" value="guided"><div class="opt-label">引导型</div><div class="opt-desc">善于提问引导，帮来访者理清思路</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="comm_style" value="leading"><div class="opt-label">带动型</div><div class="opt-desc">善于温和带动，帮助不善表达的来访者</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="comm_style" value="collaborative"><div class="opt-label">对话型</div><div class="opt-desc">善于平等交流，与来访者合作探索</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="comm_style" value="directive"><div class="opt-label">指导型</div><div class="opt-desc">善于给予建议和方向性反馈</div></div>
+        </div>
+      </div>
+
       <hr class="divider">
 
       <div class="form-row">
@@ -896,6 +907,7 @@ function collectData() {
     client_age_prefs: getMultiChecked('client_age_pref'),
     orientation_friendly: getMultiChecked('orientation_friendly'),
     gender_identity_friendly: getMultiChecked('gender_identity_friendly'),
+    comm_styles: getMultiChecked('comm_style'),
     session_formats: getMultiChecked('format'),
     session_duration: document.getElementById('c_duration').value === '其他' ? document.getElementById('c_duration_other').value : document.getElementById('c_duration').value,
     fee_min: parseInt(document.getElementById('c_fee_min').value) || 0,
@@ -982,6 +994,13 @@ function previewAndSubmit() {
   if (gifVals.length) {
     html += '<div class="preview-row"><span class="preview-label">性别认同友好</span><span class="preview-val">';
     gifVals.forEach(function(g) { html += '<span class="preview-tag">' + g + '</span> '; });
+    html += '</span></div>';
+  }
+  var csVals = getMultiChecked('comm_style');
+  if (csVals.length) {
+    var csMap = {listening:'倾听型',guided:'引导型',leading:'带动型',collaborative:'对话型',directive:'指导型'};
+    html += '<div class="preview-row"><span class="preview-label">沟通风格</span><span class="preview-val">';
+    csVals.forEach(function(c) { html += '<span class="preview-tag">' + (csMap[c]||c) + '</span> '; });
     html += '</span></div>';
   }
   if (d.severity_levels.length) {
@@ -1172,12 +1191,13 @@ function submitProfile() {
     renderOtherTags('extra_credential');
     renderOtherTags('population');
 
-    ['approach','cert','specialty','population','severity','format','extra_credential','client_age_pref','orientation_friendly','gender_identity_friendly'].forEach(function(group) {
+    ['approach','cert','specialty','population','severity','format','extra_credential','client_age_pref','orientation_friendly','gender_identity_friendly','comm_style'].forEach(function(group) {
       var keyMap = {
         approach: 'approaches', cert: 'certifications', specialty: 'specialties',
         population: 'populations', severity: 'severity_levels', format: 'session_formats',
         extra_credential: 'extra_credentials', client_age_pref: 'client_age_prefs',
-        orientation_friendly: 'orientation_friendly', gender_identity_friendly: 'gender_identity_friendly'
+        orientation_friendly: 'orientation_friendly', gender_identity_friendly: 'gender_identity_friendly',
+        comm_style: 'comm_styles'
       };
       var vals = d[keyMap[group]] || [];
       if (!vals.length) return;
