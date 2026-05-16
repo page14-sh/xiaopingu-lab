@@ -504,7 +504,57 @@
 
       <hr class="divider">
 
-        <div class="form-row">
+      <!-- 来访者偏好设置 -->
+      <div class="form-row">
+        <label>您偏好的来访者性别 <span style="font-size:12px;color:#A09889;font-weight:400">（选填）</span></label>
+        <select id="c_client_gender_pref">
+          <option value="">不限</option>
+          <option value="male_only">仅接男性来访者</option>
+          <option value="female_only">仅接女性来访者</option>
+          <option value="any_with_lgbtq">不限，具备 LGBTQ+ 友善能力</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <label>偏好的来访者年龄段（可多选）<span style="font-size:12px;color:#A09889;font-weight:400">（选填）</span></label>
+        <div class="option-grid" id="client_age_pref_grid" style="grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));">
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="client_age_pref" value="儿童(6-12)"><div class="opt-label">儿童 (6-12)</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="client_age_pref" value="青少年(12-18)"><div class="opt-label">青少年 (12-18)</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="client_age_pref" value="青年(18-35)"><div class="opt-label">青年 (18-35)</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="client_age_pref" value="中年(35-55)"><div class="opt-label">中年 (35-55)</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="client_age_pref" value="老年(55+)"><div class="opt-label">老年 (55+)</div></div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label>性取向友好（可多选）<span style="font-size:12px;color:#A09889;font-weight:400">（选填，标记您友善/有经验的性取向群体）</span></label>
+        <div class="option-grid" id="orientation_friendly_grid" style="grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));">
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="orientation_friendly" value="异性恋"><div class="opt-label">异性恋</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="orientation_friendly" value="同性恋"><div class="opt-label">同性恋</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="orientation_friendly" value="双性恋"><div class="opt-label">双性恋</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="orientation_friendly" value="跨性别"><div class="opt-label">跨性别</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="orientation_friendly" value="酷儿"><div class="opt-label">酷儿</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="orientation_friendly" value="无性恋"><div class="opt-label">无性恋</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="orientation_friendly" value="泛性恋"><div class="opt-label">泛性恋</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="orientation_friendly" value="其他"><div class="opt-label">其他</div></div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label>性别认同友好（可多选）<span style="font-size:12px;color:#A09889;font-weight:400">（选填，标记您友善/有经验的性别认同群体）</span></label>
+        <div class="option-grid" id="gender_identity_friendly_grid" style="grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));">
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="gender_identity_friendly" value="顺性别"><div class="opt-label">顺性别</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="gender_identity_friendly" value="跨性别"><div class="opt-label">跨性别</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="gender_identity_friendly" value="非二元性别"><div class="opt-label">非二元性别</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="gender_identity_friendly" value="性别酷儿"><div class="opt-label">性别酷儿</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="gender_identity_friendly" value="性别流动"><div class="opt-label">性别流动</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="gender_identity_friendly" value="其他"><div class="opt-label">其他</div></div>
+        </div>
+      </div>
+
+      <hr class="divider">
+
+      <div class="form-row">
         <label>可承接的严重程度（可多选）<span class="term-tip" data-tip="评分标准（5题×5分，满分25）：
 轻度（0-7分）：生活/情绪轻微受影响，心理咨询可有效帮助
 中度（8-14分）：中度困扰，建议专业心理咨询
@@ -842,6 +892,10 @@ function collectData() {
     populations: getMultiChecked('population'),
     populations_other: otherPopulations.slice(),
     severity_levels: getMultiChecked('severity'),
+    client_gender_pref: document.getElementById('c_client_gender_pref').value,
+    client_age_prefs: getMultiChecked('client_age_pref'),
+    orientation_friendly: getMultiChecked('orientation_friendly'),
+    gender_identity_friendly: getMultiChecked('gender_identity_friendly'),
     session_formats: getMultiChecked('format'),
     session_duration: document.getElementById('c_duration').value === '其他' ? document.getElementById('c_duration_other').value : document.getElementById('c_duration').value,
     fee_min: parseInt(document.getElementById('c_fee_min').value) || 0,
@@ -906,6 +960,28 @@ function previewAndSubmit() {
     html += '<div class="preview-row"><span class="preview-label">服务人群</span><span class="preview-val">';
     d.populations.forEach(function(p) { html += '<span class="preview-tag">' + p + '</span> '; });
     if (d.populations_other) d.populations_other.forEach(function(p) { html += '<span class="preview-tag" style="background:#E8F0E4;color:#5C7A52;border:1px solid #C8DCC0">' + p + '</span> '; });
+    html += '</span></div>';
+  }
+  // 来访者偏好设置
+  var cgpMap = {'':'不限','male_only':'仅接男性来访者','female_only':'仅接女性来访者','any_with_lgbtq':'不限，LGBTQ+友善'};
+  var cgpVal = document.getElementById('c_client_gender_pref').value;
+  if (cgpVal) html += '<div class="preview-row"><span class="preview-label">来访者性别偏好</span><span class="preview-val">' + (cgpMap[cgpVal]||cgpVal) + '</span></div>';
+  var capVals = getMultiChecked('client_age_pref');
+  if (capVals.length) {
+    html += '<div class="preview-row"><span class="preview-label">偏好年龄段</span><span class="preview-val">';
+    capVals.forEach(function(a) { html += '<span class="preview-tag">' + a + '</span> '; });
+    html += '</span></div>';
+  }
+  var ofVals = getMultiChecked('orientation_friendly');
+  if (ofVals.length) {
+    html += '<div class="preview-row"><span class="preview-label">性取向友好</span><span class="preview-val">';
+    ofVals.forEach(function(o) { html += '<span class="preview-tag">' + o + '</span> '; });
+    html += '</span></div>';
+  }
+  var gifVals = getMultiChecked('gender_identity_friendly');
+  if (gifVals.length) {
+    html += '<div class="preview-row"><span class="preview-label">性别认同友好</span><span class="preview-val">';
+    gifVals.forEach(function(g) { html += '<span class="preview-tag">' + g + '</span> '; });
     html += '</span></div>';
   }
   if (d.severity_levels.length) {
@@ -1069,6 +1145,9 @@ function submitProfile() {
     if (d.bio_short) document.getElementById('c_bio_short').value = d.bio_short;
     if (d.bio_full) document.getElementById('c_bio_full').value = d.bio_full;
 
+    // 偏好设置
+    if (d.client_gender_pref) document.getElementById('c_client_gender_pref').value = d.client_gender_pref;
+
     // Restore multi-select options
     var stdApproaches = ['CBT','ACT','DBT','EMDR','精神动力学','人本主义','家庭治疗','EFT','叙事治疗','沙盘游戏'];
     var stdSpecialties = ['emotion','relationship','trauma','growth','adolescent','marriage','personality','crisis'];
@@ -1093,11 +1172,12 @@ function submitProfile() {
     renderOtherTags('extra_credential');
     renderOtherTags('population');
 
-    ['approach','cert','specialty','population','severity','format','extra_credential'].forEach(function(group) {
+    ['approach','cert','specialty','population','severity','format','extra_credential','client_age_pref','orientation_friendly','gender_identity_friendly'].forEach(function(group) {
       var keyMap = {
         approach: 'approaches', cert: 'certifications', specialty: 'specialties',
         population: 'populations', severity: 'severity_levels', format: 'session_formats',
-        extra_credential: 'extra_credentials'
+        extra_credential: 'extra_credentials', client_age_pref: 'client_age_prefs',
+        orientation_friendly: 'orientation_friendly', gender_identity_friendly: 'gender_identity_friendly'
       };
       var vals = d[keyMap[group]] || [];
       if (!vals.length) return;

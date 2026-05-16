@@ -271,9 +271,82 @@ function matchCounselors(assessment) {
         }
       }
 
+      // 8. 性别偏好匹配 5%
+      if (assessment.gender_pref && c.gender) {
+        var gpMap = { 'male': 'male', 'female': 'female' };
+        if (gpMap[assessment.gender_pref] === c.gender) {
+          score += 5;
+          details.push('性别偏好: 符合');
+        }
+        // 来访者要求不限(any)时，任何性别都加分（但已在gender_pref=''时不触发）
+      }
+
+      // 9. 咨询师性别偏好与来访者匹配 3%
+      if (c.client_gender_pref) {
+        var visitorGender = assessment.visitor_gender || '';
+        var genderMatchOk = true;
+        if (c.client_gender_pref === 'male_only' && visitorGender !== '男' && visitorGender !== 'male') genderMatchOk = false;
+        if (c.client_gender_pref === 'female_only' && visitorGender !== '女' && visitorGender !== 'female') genderMatchOk = false;
+        if (genderMatchOk && c.client_gender_pref !== '') {
+          score += 3;
+          details.push('咨询师偏好: 符合');
+        }
+      }
+
+      // 10. 年龄偏好匹配 5%
+      if (assessment.age_pref && c.years_experience) {
+        var agePref = assessment.age_pref;
+        if (agePref === 'older' && c.years_experience >= 10) {
+          score += 5;
+          details.push('年龄偏好: 资深咨询师');
+        } else if (agePref === 'younger' && c.years_experience <= 5) {
+          score += 5;
+          details.push('年龄偏好: 新锐咨询师');
+        } else if (agePref === 'peer' && c.years_experience >= 3 && c.years_experience <= 10) {
+          score += 5;
+          details.push('年龄偏好: 同龄相仿');
+        }
+      }
+
+      // 11. 来访者年龄段与咨询师偏好匹配 3%
+      if (c.client_age_prefs && c.client_age_prefs.length > 0 && assessment.visitor_age) {
+        var age = parseInt(assessment.visitor_age);
+        if (age) {
+          var ageGroupMatch = false;
+          c.client_age_prefs.forEach(function(g) {
+            if (g.indexOf('6-12') >= 0 && age >= 6 && age <= 12) ageGroupMatch = true;
+            if (g.indexOf('12-18') >= 0 && age >= 12 && age <= 18) ageGroupMatch = true;
+            if (g.indexOf('18-35') >= 0 && age >= 18 && age <= 35) ageGroupMatch = true;
+            if (g.indexOf('35-55') >= 0 && age >= 35 && age <= 55) ageGroupMatch = true;
+            if (g.indexOf('55+') >= 0 && age >= 55) ageGroupMatch = true;
+          });
+          if (ageGroupMatch) {
+            score += 3;
+            details.push('年龄阶段: 在偏好范围内');
+          }
+        }
+      }
+
+      // 12. 性取向友善匹配 5%
+      if (assessment.orientation_pref && c.orientation_friendly) {
+        if (assessment.orientation_pref === 'friendly' && c.orientation_friendly.length > 0) {
+          score += 5;
+          details.push('LGBTQ+友善: 具备友好能力');
+        } else if (assessment.orientation_pref === 'experienced') {
+          // 需要性少数经验：检查是否有具体性取向友好标记
+          var hasSpecific = c.orientation_friendly.filter(function(v) {
+            return v !== '异性恋';
+          }).length > 0;
+          if (hasSpecific) {
+            score += 5;
+            details.push('LGBTQ+经验: 具备性少数相关经验');
+          }
+        }
+      }
+
       return {
         counselor: c,
-        matchScore: Math.min(100, Math.round(score)),
+        matchScore: Math.min(120, Math.round(score)),
         matchDetails: details
       };
     })

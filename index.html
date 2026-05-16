@@ -473,6 +473,10 @@
       <div class="form-row"><label>是否接受过心理健康服务？</label><select id="prev_counseling"><option value="no">否，这是第一次</option><option value="yes_brief">是，接受过简短咨询（5次以内）</option><option value="yes_long">是，接受过系统咨询（5次以上）</option><option value="psychiatric">是，曾就诊精神科或接受心理治疗</option></select></div>
       <div class="form-row"><label>经济承受能力 <span style="font-size:12px;color:#A09889;font-weight:400">（选填，帮助匹配收费合适的咨询师）</span></label><select id="budget"><option value="">不介意 / 未考虑</option><option value="low">希望控制在 300元/次 以内</option><option value="mid">可接受 300-600元/次</option><option value="high">可接受 600-1000元/次</option><option value="premium">1000元/次 以上均可</option></select></div>
       <div class="form-row"><label>对咨询师的性别偏好 <span style="font-size:12px;color:#A09889;font-weight:400">（选填，不填写则随机匹配）</span></label><select id="gender_pref"><option value="">不限 / 随机匹配</option><option value="male">希望是男性咨询师</option><option value="female">希望是女性咨询师</option><option value="any">咨询师性别不重要</option></select></div>
+      <div class="form-grid">
+        <div class="form-row"><label>对咨询师的年龄偏好 <span style="font-size:12px;color:#A09889;font-weight:400">（选填）</span></label><select id="age_pref"><option value="">不限</option><option value="older">偏年长（更有经验感）</option><option value="younger">偏年轻（更容易亲近）</option><option value="peer">同龄相仿（更易共情）</option></select></div>
+        <div class="form-row"><label>性取向友善需求 <span style="font-size:12px;color:#A09889;font-weight:400">（选填）</span></label><select id="orientation_pref"><option value="">不需要</option><option value="friendly">希望咨询师对 LGBTQ+ 友善</option><option value="experienced">需要性少数相关经验的咨询师</option></select></div>
+      </div>
       <div class="form-row">
         <span style="display:block;font-size:14px;font-weight:500;margin-bottom:6px;color:#444441">期望的咨询方式（可多选，点击选择）</span>
         <div class="option-grid" id="format_grid">
@@ -641,6 +645,9 @@ function initApp() {
         if (d.city) document.getElementById('city').value = d.city;
         if (d.prev_counseling) document.getElementById('prev_counseling').value = d.prev_counseling;
         if (d.budget) document.getElementById('budget').value = d.budget;
+        if (d.gender_pref) document.getElementById('gender_pref').value = d.gender_pref;
+        if (d.age_pref) document.getElementById('age_pref').value = d.age_pref;
+        if (d.orientation_pref) document.getElementById('orientation_pref').value = d.orientation_pref;
         if (d.formats) d.formats.forEach(function(v) { var cards = document.querySelectorAll('#format_grid .opt-card'); cards.forEach(function(c) { var cb = c.querySelector('input[value="'+v+'"]'); if (cb) { cb.checked = true; c.classList.add('selected'); } }); });
         if (d.duration) document.getElementById('duration').value = d.duration;
         if (d.description) document.getElementById('description').value = d.description;
@@ -690,7 +697,7 @@ function handleConsent() {
 }
 
 function showToast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2200);}
-function saveDraft(){try{var expects=[];document.querySelectorAll('#expect_grid input:checked').forEach(function(el){expects.push(el.value);});var issues=[];document.querySelectorAll('#issue_grid input:checked').forEach(function(el){issues.push(el.value);});var specials=[];document.querySelectorAll('input[name="special"]:checked').forEach(function(el){specials.push(el.value);});var formats=[];document.querySelectorAll('input[name="format"]:checked').forEach(function(el){formats.push(el.value);});localStorage.setItem(STORAGE_KEY,JSON.stringify({step:currentStep,name:document.getElementById('name').value,age:document.getElementById('age').value,gender:document.getElementById('gender').value,occupation:document.getElementById('occupation').value,city:document.getElementById('city').value,prev_counseling:document.getElementById('prev_counseling').value,budget:document.getElementById('budget').value,gender_pref:document.getElementById('gender_pref').value,formats:formats,duration:document.getElementById('duration').value,description:document.getElementById('description').value,crisis_screen:document.getElementById('crisis_screen').value,expects:expects,issues:issues,issues_other:otherIssues,specials:specials,scores:scores}));}catch(e){}}
+function saveDraft(){try{var expects=[];document.querySelectorAll('#expect_grid input:checked').forEach(function(el){expects.push(el.value);});var issues=[];document.querySelectorAll('#issue_grid input:checked').forEach(function(el){issues.push(el.value);});var specials=[];document.querySelectorAll('input[name="special"]:checked').forEach(function(el){specials.push(el.value);});var formats=[];document.querySelectorAll('input[name="format"]:checked').forEach(function(el){formats.push(el.value);});localStorage.setItem(STORAGE_KEY,JSON.stringify({step:currentStep,name:document.getElementById('name').value,age:document.getElementById('age').value,gender:document.getElementById('gender').value,occupation:document.getElementById('occupation').value,city:document.getElementById('city').value,prev_counseling:document.getElementById('prev_counseling').value,budget:document.getElementById('budget').value,gender_pref:document.getElementById('gender_pref').value,age_pref:document.getElementById('age_pref').value,orientation_pref:document.getElementById('orientation_pref').value,formats:formats,duration:document.getElementById('duration').value,description:document.getElementById('description').value,crisis_screen:document.getElementById('crisis_screen').value,expects:expects,issues:issues,issues_other:otherIssues,specials:specials,scores:scores}));}catch(e){}}
 function saveAndGo(n){saveDraft();goStep(n);}
 function goStep(n){document.getElementById('section'+currentStep).classList.remove('active');document.getElementById('step'+currentStep+'-bar').classList.remove('active');document.getElementById('step'+currentStep+'-bar').classList.add('done');currentStep=n;document.getElementById('section'+n).classList.add('active');document.getElementById('step'+n+'-bar').classList.add('active');document.getElementById('step'+n+'-bar').classList.remove('done');window.scrollTo({top:0,behavior:'smooth'});}
 function toggleOpt(el){el.classList.toggle('selected');var cb=el.querySelector('input[type="checkbox"]');if(cb)cb.checked=el.classList.contains('selected');}
@@ -858,7 +865,11 @@ function generateResult() {
       budget: budgetVal,
       visitor_city: document.getElementById('city').value.trim(),
       visitor_formats: formats,
-      gender_pref: document.getElementById('gender_pref').value
+      gender_pref: document.getElementById('gender_pref').value,
+      visitor_gender: genderText,
+      visitor_age: age,
+      age_pref: document.getElementById('age_pref').value,
+      orientation_pref: document.getElementById('orientation_pref').value
     }).then(function(results){
       document.getElementById('counselor_loading').style.display='none';
       if(results.length>0){
@@ -866,8 +877,8 @@ function generateResult() {
         var chtml='';
         results.slice(0,3).forEach(function(r,idx){
           var c=r.counselor;
-          var cls=r.matchScore>=70?'match-high':r.matchScore>=40?'match-mid':'match-low';
-          var badgeCls=r.matchScore>=70?'match-high-badge':r.matchScore>=40?'match-mid-badge':'match-low-badge';
+          var cls=r.matchScore>=80?'match-high':r.matchScore>=50?'match-mid':'match-low';
+          var badgeCls=r.matchScore>=80?'match-high-badge':r.matchScore>=50?'match-mid-badge':'match-low-badge';
           // XSS防护：转义用户输入字段
           function esc(s){if(!s)return '';var d=document.createElement('div');d.textContent=s;return d.innerHTML;}
           chtml+='<div class="counselor-card '+cls+'">';
@@ -943,6 +954,9 @@ function generateResult() {
     saveAssessment({
       visitor_name:name,visitor_age:parseInt(age)||null,visitor_gender:genderText,
       visitor_occupation:occText,visitor_city:cityVal,prev_counseling:prevText,budget:budgetVal,preferred_formats:formats,
+      gender_pref:document.getElementById('gender_pref').value,
+      age_pref:document.getElementById('age_pref').value,
+      orientation_pref:document.getElementById('orientation_pref').value,
       expects:Array.from(document.querySelectorAll('#expect_grid input:checked')).map(function(e){return e.value;}),
       issues:issues,description:description,duration:durationText,
       score_mood:scores.mood,score_anxiety:scores.anxiety,score_sleep:scores.sleep,
