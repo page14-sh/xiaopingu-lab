@@ -1112,7 +1112,7 @@ function restoreResultPanel(){
     '</div>';
 }
 
-function resetForm(){if(confirm('确认重新填写问卷？当前数据将被清除。')){localStorage.removeItem(STORAGE_KEY);location.reload();}}
+function resetForm(){if(confirm('确认重新填写问卷？当前数据将被清除。')){localStorage.removeItem(STORAGE_KEY);currentViewToken=null;window.history.replaceState(null,'',window.location.pathname);location.reload();}}
 
 // ===== 申请匹配弹窗 =====
 function openMatchApply(cid,cname){
