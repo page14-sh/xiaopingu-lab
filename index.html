@@ -757,7 +757,7 @@ function renderOtherIssueTags() {
 function saveAsImage(){if(navigator.share){navigator.share({title:'小平菇 · 转介评估报告',text:document.getElementById('result_title').innerText+'\n'+document.getElementById('result_time').innerText,url:window.location.href}).catch(function(){});}else{window.scrollTo({top:document.getElementById('result_panel').offsetTop-80,behavior:'smooth'});setTimeout(function(){window.print();},400);}}
 
 function generateResult() {
-  saveDraft();
+  if(!currentViewToken) saveDraft();
   var name=document.getElementById('name').value||'来访者',age=document.getElementById('age').value||'—';
   var gender=document.getElementById('gender'),genderText=gender.options[gender.selectedIndex].text;
   var occupation=document.getElementById('occupation'),occText=occupation.value==='other'?document.getElementById('occupation_other').value.trim()||'其他':occupation.options[occupation.selectedIndex].text;
@@ -1081,8 +1081,20 @@ function enterViewMode(token){
       if(d.score_function!=null)scores.function=d.score_function;
       if(d.score_relation!=null)scores.relation=d.score_relation;
       Object.keys(scores).forEach(function(k){var row=document.getElementById('scale_'+k);if(row){var btns=row.querySelectorAll('.scale-btn');btns.forEach(function(b,i){b.classList.toggle('sel',i<=scores[k]);});}});
-      // 回填 checkbox 组
-      if(d.issues){d.issues.forEach(function(v){var cards=document.querySelectorAll('#issue_grid .opt-card');cards.forEach(function(c){var cb=c.querySelector('input[value="'+v+'"]');if(cb){cb.checked=true;c.classList.add('selected');}});});}
+      // 回填 checkbox 组（issues / expects / specials / formats）
+      // 恢复 otherIssues（自定义议题）
+      otherIssues = [];
+      if(d.issues){
+        d.issues.forEach(function(v){
+          var found = false;
+          document.querySelectorAll('#issue_grid .opt-card').forEach(function(c){
+            var cb = c.querySelector('input[value="'+v+'"]');
+            if(cb){ cb.checked=true; c.classList.add('selected'); found=true; }
+          });
+          if(!found) otherIssues.push(v);
+        });
+        renderOtherIssueTags();
+      }
       if(d.expects){d.expects.forEach(function(v){var cards=document.querySelectorAll('#expect_grid .opt-card');cards.forEach(function(c){var cb=c.querySelector('input[value="'+v+'"]');if(cb){cb.checked=true;c.classList.add('selected');}});});}
       if(d.specials){d.specials.forEach(function(v){var cbs=document.querySelectorAll('input[name="special"]');cbs.forEach(function(cb){if(cb.value===v){cb.checked=true;var el=cb.closest('.opt-simple');if(el){el.style.borderColor='#5C7A52';el.style.background='#E8F0E4';}}});});}
       if(d.preferred_formats){d.preferred_formats.forEach(function(v){var cards=document.querySelectorAll('#format_grid .opt-card');cards.forEach(function(c){var cb=c.querySelector('input[value="'+v+'"]');if(cb){cb.checked=true;c.classList.add('selected');}});});}
