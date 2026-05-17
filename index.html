@@ -613,7 +613,8 @@
     <div class="action-bar" id="result_action_bar">
       <button class="btn btn-outline" id="btn_modify" onclick="saveAndGo(3)">← 修改答案</button>
       <button class="btn btn-outline" onclick="saveAsImage()">📱 保存/分享</button>
-      <button class="btn btn-outline" onclick="window.print()">🖨️ 打印/PDF</button>
+      <button class="btn btn-outline" onclick="exportToExcel()">📋 导出 Excel</button>
+      <button class="btn btn-outline" onclick="exportToPDF()">📄 导出 PDF 报告</button>
       <button class="btn btn-primary" onclick="resetForm()">重新填写</button>
     </div>
   </div>
@@ -638,6 +639,7 @@ var STORAGE_KEY = 'xiaopingu_draft';
 var currentRecommendedApproaches = [];
 var currentMinYears = 1;
 var currentMinCredential = '二级';
+var lastResultData = null; // 用于导出
 
 (function init() {
   // Check view mode first
@@ -759,6 +761,139 @@ function renderOtherIssueTags() {
   });
 }
 function saveAsImage(){if(navigator.share){navigator.share({title:'小平菇 · 转介评估报告',text:document.getElementById('result_title').innerText+'\n'+document.getElementById('result_time').innerText,url:window.location.href}).catch(function(){});}else{window.scrollTo({top:document.getElementById('result_panel').offsetTop-80,behavior:'smooth'});setTimeout(function(){window.print();},400);}}
+
+// ===== 导出 Excel =====
+function exportToExcel(){
+  if(!lastResultData){showToast('请先生成评估报告');return;}
+  var d=lastResultData;
+  // BOM + CSV 内容（Excel 可直接打开 UTF-8 CSV）
+  var csv='\uFEFF'; // BOM for Excel UTF-8
+  csv+='小平菇 · 转介评估报告\n';
+  csv+='评估时间,'+d.date+'\n';
+  csv+='来访者姓名,'+d.name+'\n';
+  csv+='年龄,'+d.age+'\n';
+  csv+='性别,'+d.gender+'\n';
+  csv+='职业身份,'+d.occupation+'\n';
+  csv+='填写身份,'+(d.filledBy==='parent'?'家长/监护人代填':'本人填写')+'\n';
+  csv+='困扰持续,'+d.duration+'\n';
+  csv+='既往咨询,'+d.prevCounseling+'\n';
+  if(d.city)csv+='所在城市,'+d.city+'\n';
+  if(d.budget)csv+='经济承受,'+d.budgetText+'\n';
+  if(d.formats&&d.formats.length)csv+='咨询方式,'+d.formats.join('、')+'\n';
+  csv+='\n--- 症状评分（0-5分）---\n';
+  csv+='情绪困扰,'+d.scores.mood+'\n';
+  csv+='焦虑程度,'+d.scores.anxiety+'\n';
+  csv+='睡眠质量,'+d.scores.sleep+'\n';
+  csv+='社会功能,'+d.scores.function+'\n';
+  csv+='人际关系,'+d.scores.relation+'\n';
+  csv+='总分,'+d.totalScore+'/25\n';
+  csv+='症状程度,'+d.severity+'\n';
+  csv+='匹配分级,'+d.severityStandard+'\n';
+  csv+='\n--- 主诉议题 ---\n';
+  if(d.issues&&d.issues.length)d.issues.forEach(function(i){csv+=i+'\n';});
+  if(d.description)csv+='详细描述,'+d.description+'\n';
+  csv+='\n--- 推荐取向 ---\n';
+  if(d.recommendedApproaches&&d.recommendedApproaches.length)d.recommendedApproaches.forEach(function(a){csv+=a+'\n';});
+  csv+='\n--- 危机筛查 ---\n';
+  csv+='危机等级,'+d.crisisLevel+'\n';
+  csv+='\n--- 注意事项 ---\n';
+  if(d.notes)d.notes.forEach(function(n){csv+=n.replace(/<[^>]*>/g,'')+'\n';});
+  csv+='\n--- 免责声明 ---\n';
+  csv+='本评估仅用于了解心理状态并辅助匹配咨询师，不构成任何医学诊断或临床结论。\n';
+  csv+='生成时间,'+new Date().toLocaleString('zh-CN')+'\n';
+
+  var blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;
+  a.download='小平菇_评估报告_'+d.name+'_'+d.date+'.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('Excel 文件已下载');
+}
+
+// ===== 导出 PDF 报告 =====
+function exportToPDF(){
+  if(!lastResultData){showToast('请先生成评估报告');return;}
+  var d=lastResultData;
+  var issueMap={emotion:'情绪困扰',relationship:'关系困境',trauma:'创伤经历',growth:'自我成长',adolescent:'青少年问题',marriage:'婚姻/伴侣',personality:'人格成长/发展性议题',crisis:'危机状态',workplace:'职场困扰',eating:'进食障碍',addiction:'成瘾行为',grief:'丧亲哀伤',sexual:'性心理议题',somatic:'心身困扰',family:'家庭系统'};
+  var sevColor=d.totalScore>=20?'#A03030':d.totalScore>=15?'#C4654A':d.totalScore>=8?'#854F0B':'#5C7A52';
+
+  var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>小平菇 · 转介评估报告</title>';
+  html+='<style>';
+  html+='*{margin:0;padding:0;box-sizing:border-box}';
+  html+='body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue",Arial,sans-serif;color:#3D3831;font-size:13px;line-height:1.7;padding:40px 48px;max-width:800px;margin:0 auto}';
+  html+='h1{font-size:20px;color:#5C7A52;text-align:center;margin-bottom:4px}';
+  html+'.subtitle{text-align:center;color:#A09889;font-size:12px;margin-bottom:24px}';
+  html+'.disclaimer{background:#FFF8E1;border:1px solid #FFE0B2;border-radius:8px;padding:10px 14px;font-size:11px;color:#5D4037;margin-bottom:20px;line-height:1.6}';
+  html+='h2{font-size:15px;color:#5C7A52;border-bottom:1px solid #E8E4DC;padding-bottom:6px;margin:20px 0 10px}';
+  html+'.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 16px}';
+  html+'.info-item{display:flex;font-size:12px}.info-label{color:#A09889;min-width:70px;flex-shrink:0}.info-val{color:#3D3831;font-weight:500}';
+  html='.score-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #F0ECE4}';
+  html='.tag{display:inline-block;padding:3px 10px;border-radius:6px;font-size:11px;margin:2px;background:#F0F7EC;color:#5C7A52}';
+  html='.tag-coral{background:#FFF0EC;color:#C4654A}.tag-amber{background:#FFF8E1;color:#854F0B}.tag-blue{background:#EBF5FF;color:#378ADD}.tag-purple{background:#F3E8FF;color:#7C3AED}.tag-pink{background:#FCE7F3;color:#DB2777}.tag-teal{background:#E0F2F1;color:#00897B}.tag-gray{background:#F5F5F0;color:#888780}';
+  html='.note{font-size:12px;color:#5F5E5A;padding-left:16px;margin:4px 0}';
+  html='.footer{text-align:center;margin-top:32px;padding-top:16px;border-top:1px solid #E8E4DC;font-size:10px;color:#C5BEB3;line-height:1.6}';
+  html+='@media print{body{padding:20px 24px}}';
+  html+='</style></head><body>';
+
+  html+='<h1>🍄 小平菇 · 转介评估报告</h1>';
+  html+='<div class="subtitle">'+d.name+' · '+d.date+'</div>';
+  html+='<div class="disclaimer"><strong>⚠️ 重要提示：</strong>本评估仅用于了解当前心理状态并辅助匹配咨询师，<strong>不构成任何医学诊断或临床结论</strong>。如感痛苦难以承受，请拨打心理援助热线 <strong>12356</strong>。</div>';
+
+  html+='<h2>一、来访者基本信息</h2>';
+  html+='<div class="info-grid">';
+  html+='<div class="info-item"><span class="info-label">姓名</span><span class="info-val">'+d.name+'</span></div>';
+  html+='<div class="info-item"><span class="info-label">年龄/性别</span><span class="info-val">'+d.age+'岁 / '+d.gender+'</span></div>';
+  html+='<div class="info-item"><span class="info-label">填写身份</span><span class="info-val">'+(d.filledBy==='parent'?'家长/监护人代填':'本人填写')+'</span></div>';
+  html+='<div class="info-item"><span class="info-label">职业身份</span><span class="info-val">'+d.occupation+'</span></div>';
+  html+='<div class="info-item"><span class="info-label">困扰持续</span><span class="info-val">'+d.duration+'</span></div>';
+  html+='<div class="info-item"><span class="info-label">既往咨询</span><span class="info-val">'+d.prevCounseling+'</span></div>';
+  if(d.city)html+='<div class="info-item"><span class="info-label">所在城市</span><span class="info-val">'+d.city+'</span></div>';
+  if(d.budget)html+='<div class="info-item"><span class="info-label">经济承受</span><span class="info-val">'+d.budgetText+'</span></div>';
+  html+='</div>';
+
+  html+='<h2>二、症状程度评分</h2>';
+  var dims=[['情绪困扰',d.scores.mood],['焦虑程度',d.scores.anxiety],['睡眠质量',d.scores.sleep],['社会功能',d.scores.function],['人际关系',d.scores.relation]];
+  dims.forEach(function(dim){
+    html+='<div class="score-row"><span>'+dim[0]+'</span><span style="font-weight:700;color:'+sevColor+'">'+dim[1]+'/5</span></div>';
+  });
+  html+='<div class="score-row" style="border-top:2px solid #E8E4DC;padding-top:8px;margin-top:4px"><span style="font-weight:700">总分</span><span style="font-size:18px;font-weight:700;color:'+sevColor+'">'+d.totalScore+'/25</span></div>';
+  html+='<div style="margin-top:8px;font-size:13px;font-weight:600;color:'+sevColor+'">'+d.severity+'<span style="font-weight:400;color:#A09889;font-size:11px;margin-left:8px">（自评分数，非诊断结论）</span></div>';
+
+  html+='<h2>三、主诉议题</h2>';
+  if(d.issues&&d.issues.length){
+    d.issues.forEach(function(i){
+      var c=(i==='crisis'||i==='trauma'||i==='addiction')?'coral':(i==='personality'||i==='eating')?'purple':(i==='emotion'||i==='somatic'||i==='grief')?'blue':(i==='sexual')?'pink':(i==='workplace'||i==='family')?'amber':'teal';
+      html+='<span class="tag tag-'+c+'">'+(issueMap[i]||i)+'</span>';
+    });
+  }
+  if(d.description)html+='<p style="margin-top:8px;font-size:12px;color:#5F5E5A;background:#F7F4EF;padding:10px;border-radius:8px">'+d.description+'</p>';
+
+  if(d.recommendedApproaches&&d.recommendedApproaches.length){
+    html+='<h2>四、推荐咨询取向</h2>';
+    d.recommendedApproaches.forEach(function(a){html+='<span class="tag">'+a+'</span>';});
+  }
+
+  html+='<h2>五、咨询前注意事项</h2>';
+  if(d.notes)d.notes.forEach(function(n){html+='<div class="note">• '+n.replace(/<[^>]*>/g,'')+'</div>';});
+
+  html+='<div class="footer">';
+  html+='本评估为心理自助评估工具，评估结果<strong>不构成专业医学诊断、精神障碍诊断或治疗建议</strong>。<br>';
+  html+='如您正在经历严重心理困扰，请及时联系持证心理咨询师、精神科医生或拨打心理援助热线。<br>';
+  html+='生成时间：'+new Date().toLocaleString('zh-CN')+' · 小平菇心理 · 用心倾听，自然疗愈';
+  html+='</div>';
+
+  html+='</body></html>';
+
+  var w=window.open('','_blank');
+  w.document.write(html);
+  w.document.close();
+  setTimeout(function(){w.print();},300);
+  showToast('PDF 报告窗口已打开，请保存或打印');
+}
 
 function generateResult() {
   if(!currentViewToken) saveDraft();
@@ -889,6 +1024,21 @@ function generateResult() {
   if(crisisVal!=='safe')notes.unshift('<strong style="color:#A03030">危机安全提醒：</strong>检测到危机风险信号。如果您正处于危险中，请立即拨打 <a href="tel:12356" style="color:#BF360C">12356（心理援助）</a> 或 <a href="tel:110" style="color:#BF360C">110（紧急求助）</a>，并确保告知身边信任的人。请将危机状态如实告知咨询师。');
   var notesHtml='<ul style="padding-left:18px;font-size:13px;color:#5F5E5A;line-height:2">';notes.forEach(function(n){notesHtml+='<li>'+n+'</li>';});notesHtml+='</ul>';
   document.getElementById('notes_section').innerHTML=notesHtml;
+
+  // 存储结果数据用于导出
+  lastResultData = {
+    name: name, age: age, gender: genderText, occupation: occText,
+    filledBy: filledBy, isMinor: isMinor, duration: durationText,
+    prevCounseling: prevText, budget: budgetVal, budgetText: budgetText,
+    city: cityVal, formats: formats, genderPref: genderPrefText,
+    issues: issues, description: description, specials: specials,
+    crisisLevel: crisisVal,
+    scores: { mood: scores.mood, anxiety: scores.anxiety, sleep: scores.sleep, function: scores.function, relation: scores.relation },
+    totalScore: totalScore, severity: severity, severityStandard: severityStandard,
+    recommendedApproaches: currentRecommendedApproaches,
+    date: dateStr, viewToken: currentViewToken,
+    notes: notes
+  };
 
   goStep(4);
   showToast('评估报告已生成');
