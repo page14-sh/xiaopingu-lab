@@ -596,8 +596,18 @@
         <div class="result-section"><h3>咨询前注意事项</h3><div id="notes_section"></div></div>
       </div>
     </div>
-    <div class="action-bar">
-      <button class="btn btn-outline" onclick="saveAndGo(3)">← 修改答案</button>
+    <div id="view_link_wrap" style="margin:0 0 16px;padding:16px;background:#F0F7EC;border:1px solid #C8DCC0;border-radius:10px;display:none;text-align:left">
+      <p style="font-size:13px;color:#5A6B52;margin-bottom:8px;line-height:1.7">
+        📝 <strong>您的专属查看链接</strong><br>
+        <span style="font-size:12px;color:#7A8B72">收藏此链接可随时回看评估结果与匹配建议</span>
+      </p>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <input type="text" id="view_link_input" style="flex:1;padding:8px 12px;font-size:12px;border:1px solid #C8DCC0;border-radius:8px;background:#fff;color:#5A6B52;min-width:0;overflow:hidden;text-overflow:ellipsis" readonly>
+        <button type="button" class="btn btn-outline" style="padding:8px 16px;font-size:13px;white-space:nowrap" onclick="copyViewLink()">复制链接</button>
+      </div>
+    </div>
+    <div class="action-bar" id="result_action_bar">
+      <button class="btn btn-outline" id="btn_modify" onclick="saveAndGo(3)">← 修改答案</button>
       <button class="btn btn-outline" onclick="saveAsImage()">📱 保存/分享</button>
       <button class="btn btn-outline" onclick="window.print()">🖨️ 打印/PDF</button>
       <button class="btn btn-primary" onclick="resetForm()">重新填写</button>
@@ -619,12 +629,20 @@
 <script>
 var scores = { mood:0, anxiety:0, sleep:0, function:0, relation:0 };
 var currentStep = 1;
+var currentViewToken = null;
 var STORAGE_KEY = 'xiaopingu_draft';
 var currentRecommendedApproaches = [];
 var currentMinYears = 1;
 var currentMinCredential = '二级';
 
 (function init() {
+  // Check view mode first
+  var params = new URLSearchParams(window.location.search);
+  var viewToken = params.get('view');
+  if (viewToken) {
+    enterViewMode(viewToken);
+    return;
+  }
   // Check if consent was already given in this session
   if (sessionStorage.getItem('xiaopingu_consent') === 'given') {
     document.getElementById('consent-overlay').classList.add('hidden');
@@ -970,9 +988,11 @@ function generateResult() {
     });
   }
 
-  // Save assessment data
-  if(typeof saveAssessment==='function'){
+  // Save assessment data (skip in view mode)
+  if(typeof saveAssessment==='function'&&!currentViewToken){
+    var viewToken = crypto.randomUUID();
     saveAssessment({
+      view_token:viewToken,
       visitor_name:name,visitor_age:parseInt(age)||null,visitor_gender:genderText,
       visitor_occupation:occText,visitor_city:cityVal,filled_by:filledBy,prev_counseling:prevText,budget:budgetVal,preferred_formats:formats,
       gender_pref:document.getElementById('gender_pref').value,
@@ -989,8 +1009,107 @@ function generateResult() {
       if(result&&result[0]&&result[0].id){
         sessionStorage.setItem('xiaopingu_assessment_id', result[0].id);
       }
+      showViewLink(result&&result[0]&&result[0].view_token ? result[0].view_token : viewToken);
     });
   }
+}
+
+// ===== 查看链接功能 =====
+function copyViewLink(){
+  var inp=document.getElementById('view_link_input');
+  if(!inp)return;
+  inp.select();inp.setSelectionRange(0,99999);
+  document.execCommand('copy');
+  showToast('链接已复制');
+}
+function showViewLink(token){
+  if(!token)return;
+  var wrap=document.getElementById('view_link_wrap');
+  var inp=document.getElementById('view_link_input');
+  if(wrap)wrap.style.display='block';
+  if(inp)inp.value=window.location.origin+window.location.pathname+'?view='+encodeURIComponent(token);
+}
+function enterViewMode(token){
+  currentViewToken=token;
+  document.getElementById('consent-overlay').classList.add('hidden');
+  document.getElementById('main-app').style.display='block';
+  if(typeof getAssessmentByToken==='function'){
+    document.getElementById('result_panel').innerHTML='<div class="loading-hint" style="padding:60px 20px"><div class="spinner"></div><br>正在加载评估记录…</div>';
+    goStep(4);
+    document.getElementById('result_action_bar').style.display='none';
+    getAssessmentByToken(token).then(function(d){
+      if(!d){
+        document.getElementById('result_panel').innerHTML='<div style="text-align:center;padding:60px 20px;color:#888"><div style="font-size:32px;margin-bottom:12px">🔍</div><p>未找到该评估记录</p><p style="font-size:12px;margin-top:8px;color:#aaa">链接可能已失效或不存在</p></div>';
+        return;
+      }
+      // 回填表单数据
+      if(d.visitor_name)document.getElementById('name').value=d.visitor_name;
+      if(d.visitor_age)document.getElementById('age').value=d.visitor_age;
+      if(d.visitor_gender){
+        var g=document.getElementById('gender');
+        for(var i=0;i<g.options.length;i++){if(g.options[i].text===d.visitor_gender){g.selectedIndex=i;break;}}
+      }
+      if(d.visitor_occupation){
+        var occ=document.getElementById('occupation');
+        var found=false;
+        for(var i=0;i<occ.options.length;i++){
+          if(occ.options[i].text===d.visitor_occupation||(occ.value==='other'&&!found)){occ.selectedIndex=i;found=true;if(occ.value==='other')document.getElementById('occupation_other').value=d.visitor_occupation;}
+        }
+        if(occ.value==='other')toggleOccupationOther();
+      }
+      if(d.visitor_city)document.getElementById('city').value=d.visitor_city;
+      if(d.filled_by)document.getElementById('filled_by').value=d.filled_by;
+      if(d.prev_counseling){
+        var pv=document.getElementById('prev_counseling');
+        for(var i=0;i<pv.options.length;i++){if(pv.options[i].text===d.prev_counseling){pv.selectedIndex=i;break;}}
+      }
+      if(d.budget)document.getElementById('budget').value=d.budget;
+      if(d.duration){
+        var du=document.getElementById('duration');
+        for(var i=0;i<du.options.length;i++){if(du.options[i].text===d.duration){du.selectedIndex=i;break;}}
+      }
+      if(d.crisis_level)document.getElementById('crisis_screen').value=d.crisis_level;
+      if(d.gender_pref)document.getElementById('gender_pref').value=d.gender_pref;
+      if(d.age_pref)document.getElementById('age_pref').value=d.age_pref;
+      if(d.orientation_pref)document.getElementById('orientation_pref').value=d.orientation_pref;
+      if(d.comm_style)document.getElementById('comm_style').value=d.comm_style;
+      if(d.description)document.getElementById('description').value=d.description;
+      // 回填 scores
+      if(d.score_mood!=null)scores.mood=d.score_mood;
+      if(d.score_anxiety!=null)scores.anxiety=d.score_anxiety;
+      if(d.score_sleep!=null)scores.sleep=d.score_sleep;
+      if(d.score_function!=null)scores.function=d.score_function;
+      if(d.score_relation!=null)scores.relation=d.score_relation;
+      Object.keys(scores).forEach(function(k){var row=document.getElementById('scale_'+k);if(row){var btns=row.querySelectorAll('.scale-btn');btns.forEach(function(b,i){b.classList.toggle('sel',i<=scores[k]);});}});
+      // 回填 checkbox 组
+      if(d.issues){d.issues.forEach(function(v){var cards=document.querySelectorAll('#issue_grid .opt-card');cards.forEach(function(c){var cb=c.querySelector('input[value="'+v+'"]');if(cb){cb.checked=true;c.classList.add('selected');}});});}
+      if(d.expects){d.expects.forEach(function(v){var cards=document.querySelectorAll('#expect_grid .opt-card');cards.forEach(function(c){var cb=c.querySelector('input[value="'+v+'"]');if(cb){cb.checked=true;c.classList.add('selected');}});});}
+      if(d.specials){d.specials.forEach(function(v){var cbs=document.querySelectorAll('input[name="special"]');cbs.forEach(function(cb){if(cb.value===v){cb.checked=true;var el=cb.closest('.opt-simple');if(el){el.style.borderColor='#5C7A52';el.style.background='#E8F0E4';}}});});}
+      if(d.preferred_formats){d.preferred_formats.forEach(function(v){var cards=document.querySelectorAll('#format_grid .opt-card');cards.forEach(function(c){var cb=c.querySelector('input[value="'+v+'"]');if(cb){cb.checked=true;c.classList.add('selected');}});});}
+      // 恢复 result_panel HTML（被 loading 替换了）
+      restoreResultPanel();
+      // 生成报告（不保存数据）
+      generateResult();
+      // 显示查看链接、隐藏修改按钮
+      showViewLink(d.view_token);
+      var btnModify=document.getElementById('btn_modify');
+      if(btnModify)btnModify.style.display='none';
+      document.getElementById('result_action_bar').style.display='flex';
+    });
+  }
+}
+function restoreResultPanel(){
+  var rp=document.getElementById('result_panel');
+  rp.innerHTML='<div class="result-header"><h2 id="result_title">转介评估报告</h2><p id="result_time"></p></div>'+
+    '<div class="result-body">'+
+    '<div class="result-section"><h3>来访者基本信息</h3><div class="info-grid" id="info_summary"></div></div><hr class="divider">'+
+    '<div class="result-section"><h3>主诉议题分析</h3><div id="issue_summary"></div></div><hr class="divider">'+
+    '<div class="result-section"><h3>症状程度评分</h3><div class="info-grid" id="score_summary"></div></div><hr class="divider">'+
+    '<div class="result-section"><h3>转介匹配建议</h3><div id="referral_cards"></div></div><hr class="divider">'+
+    '<div class="result-section" id="counselor_match_section" style="display:none"><h3>推荐咨询师</h3><div id="counselor_match_list"></div></div>'+
+    '<div id="counselor_loading" style="display:none"><div class="loading-hint"><div class="spinner"></div><br>正在匹配咨询师…</div></div><hr class="divider">'+
+    '<div class="result-section"><h3>咨询前注意事项</h3><div id="notes_section"></div></div>'+
+    '</div>';
 }
 
 function resetForm(){if(confirm('确认重新填写问卷？当前数据将被清除。')){localStorage.removeItem(STORAGE_KEY);location.reload();}}

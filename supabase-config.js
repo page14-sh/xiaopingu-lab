@@ -167,6 +167,19 @@ function updateCounselor(id, data) {
   }).catch(function(e) { console.warn('[小平菇] 更新失败:', e); });
 }
 
+// 按 view_token 获取评估记录（用于查看模式）
+function getAssessmentByToken(token) {
+  if (!SUPABASE_CONFIG.enableDataCollection || !SUPABASE_CONFIG.url) return Promise.resolve(null);
+  return fetch(SUPABASE_CONFIG.url + '/rest/v1/assessments?view_token=eq.' + encodeURIComponent(token) + '&select=*', {
+    headers: {
+      'apikey': SUPABASE_CONFIG.anonKey,
+      'Authorization': 'Bearer ' + SUPABASE_CONFIG.anonKey
+    }
+  }).then(function(r) { return r.json(); })
+    .then(function(data) { return data && data[0] || null; })
+    .catch(function(e) { console.warn('[小平菇] 获取评估记录失败:', e); return null; });
+}
+
 // 按 edit_token 获取咨询师档案（用于编辑模式）
 function getCounselorByToken(token) {
   if (!SUPABASE_CONFIG.enableDataCollection || !SUPABASE_CONFIG.url) return Promise.resolve(null);
