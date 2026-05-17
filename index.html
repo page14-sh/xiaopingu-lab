@@ -964,6 +964,13 @@ function generateResult() {
             chtml+='<div class="counselor-contact no-contact"><span>📞 联系方式不公开</span><button class="btn-match-apply" onclick="openMatchApply(\''+c.id+'\',\''+esc(c.name)+'\')">申请匹配</button></div>';
           }
 
+          // PCOMS 效果追踪入口
+          var asid=sessionStorage.getItem('xiaopingu_assessment_id');
+          if(asid){
+            var trackUrl='session.html?aid='+asid+'&cid='+c.id+'&name='+encodeURIComponent(name||'来访者')+'&sn=1';
+            chtml+='<div class="counselor-contact" style="margin-top:8px"><a href="'+trackUrl+'" style="color:#5C7A52;text-decoration:none;font-size:13px">📊 开始咨询效果追踪（PCOMS）</a></div>';
+          }
+
           // 展开详情按钮
           if(c.bio_full||c.education||c.training_background||c.available_slots){
             chtml+='<button class="counselor-expand-btn" onclick="this.classList.toggle(\'open\');this.nextElementSibling.classList.toggle(\'open\')">';
