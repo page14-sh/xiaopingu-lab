@@ -973,6 +973,7 @@ function generateResult() {
           if(asid){
             var trackUrl='session.html?aid='+asid+'&cid='+c.id+'&name='+encodeURIComponent(name||'来访者')+'&sn=1';
             chtml+='<div class="counselor-contact" style="margin-top:8px"><a href="'+trackUrl+'" style="color:#5C7A52;text-decoration:none;font-size:13px">📊 开始咨询效果追踪（PCOMS）</a></div>';
+  chtml+='<div class="counselor-contact" style="margin-top:4px"><a href="session-dashboard.html?aid='+asid+'" style="color:#7A8B72;text-decoration:none;font-size:12px">📈 查看追踪面板</a></div>';
           }
 
           // 展开详情按钮
