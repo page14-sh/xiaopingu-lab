@@ -734,6 +734,16 @@
         <a class="success-email" href="mailto:page14@163.com">📧 page14@163.com</a>
       </div>
       <p class="success-tip">您可以关闭此页面，或保存联系邮箱以备后续沟通。</p>
+      <div id="edit_link_wrap" style="margin-top:20px;padding:16px;background:#F0F7EC;border:1px solid #C8DCC0;border-radius:10px;display:none;text-align:left">
+        <p style="font-size:13px;color:#5A6B52;margin-bottom:8px;line-height:1.7">
+          📝 <strong>您的专属编辑链接</strong><br>
+          <span style="font-size:12px;color:#7A8B72">请收藏保存此链接，这是您未来修改档案的唯一方式。如链接丢失，需联系管理员。</span>
+        </p>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <input type="text" id="edit_link_input" style="flex:1;padding:8px 12px;font-size:12px;border:1px solid #C8DCC0;border-radius:8px;background:#fff;color:#5A6B52;min-width:0;overflow:hidden;text-overflow:ellipsis" readonly>
+          <button type="button" class="btn btn-outline" style="padding:8px 16px;font-size:13px;white-space:nowrap" onclick="copyEditLink()">复制链接</button>
+        </div>
+      </div>
     </div>
   </div>
   </div><!-- end form_area -->
@@ -746,6 +756,8 @@
 <script src="supabase-config.js"></script>
 <script>
 var currentStep = 1;
+var currentEditToken = null;
+var currentEditId = null;
 
 function goStep(n) {
   document.getElementById('section' + currentStep).classList.remove('active');
@@ -872,6 +884,124 @@ function showToast(msg) {
   t.textContent = msg;
   t.classList.add('show');
   setTimeout(function() { t.classList.remove('show'); }, 2500);
+}
+
+// ========== 编辑模式 ==========
+function copyEditLink() {
+  var input = document.getElementById('edit_link_input');
+  if (!input || !input.value) return;
+  input.select();
+  input.setSelectionRange(0, 99999);
+  document.execCommand('copy');
+  showToast('编辑链接已复制！');
+}
+
+function restoreFromData(d) {
+  if (d.name) document.getElementById('c_name').value = d.name;
+  if (d.gender) document.getElementById('c_gender').value = d.gender;
+  if (d.credential_level) document.getElementById('c_credential').value = d.credential_level;
+  if (d.supervisor_cert) document.getElementById('c_supervisor_cert').value = d.supervisor_cert;
+  if (d.years_experience) document.getElementById('c_years').value = d.years_experience;
+  if (d.education) document.getElementById('c_education').value = d.education;
+  if (d.city) document.getElementById('c_city').value = d.city;
+  if (d.license_number) document.getElementById('c_license').value = d.license_number;
+  if (d.approach_primary) document.getElementById('c_approach_primary').value = d.approach_primary;
+  if (d.supervision_hours) document.getElementById('c_supervision').value = d.supervision_hours;
+  if (d.personal_therapy_hours) document.getElementById('c_personal_therapy').value = d.personal_therapy_hours;
+  ['personal_therapy_status', 'therapy_cert', 'ethics_training'].forEach(function(name) {
+    var val = d[name];
+    if (val) {
+      var radio = document.querySelector('input[name="' + name + '"][value="' + val + '"]');
+      if (radio) radio.checked = true;
+    }
+  });
+  if (d.training_background) document.getElementById('c_training').value = d.training_background;
+  if (d.session_duration) {
+    var durOptions = Array.from(document.getElementById('c_duration').options).map(function(o){return o.value});
+    if (durOptions.indexOf(d.session_duration) >= 0) {
+      document.getElementById('c_duration').value = d.session_duration;
+      document.getElementById('duration_other_row').style.display = 'none';
+    } else {
+      document.getElementById('c_duration').value = '其他';
+      document.getElementById('c_duration_other').value = d.session_duration;
+      document.getElementById('duration_other_row').style.display = 'block';
+    }
+  }
+  if (d.fee_min) document.getElementById('c_fee_min').value = d.fee_min;
+  if (d.fee_budget_level) document.getElementById('c_fee_level').value = d.fee_budget_level;
+  if (d.available_slots) document.getElementById('c_slots').value = d.available_slots;
+  if (d.contact_wechat) document.getElementById('c_wechat').value = d.contact_wechat;
+  if (d.contact_phone) document.getElementById('c_phone').value = d.contact_phone;
+  if (d.contact_email) document.getElementById('c_email').value = d.contact_email;
+  if (d.contact_wechat_public) document.getElementById('c_wechat_public').checked = true;
+  if (d.contact_phone_public) document.getElementById('c_phone_public').checked = true;
+  if (d.contact_email_public) document.getElementById('c_email_public').checked = true;
+  if (d.public_welfare) document.getElementById('c_public_welfare').checked = true;
+  if (d.bio_short) document.getElementById('c_bio_short').value = d.bio_short;
+  if (d.bio_full) document.getElementById('c_bio_full').value = d.bio_full;
+  if (d.client_gender_pref) document.getElementById('c_client_gender_pref').value = d.client_gender_pref;
+
+  var stdApproaches = ['CBT','ACT','DBT','EMDR','精神动力学','人本主义','家庭治疗','EFT','叙事治疗','沙盘游戏'];
+  var stdSpecialties = ['emotion','relationship','trauma','growth','adolescent','marriage','personality','crisis'];
+  var stdCerts = ['危机干预','EMDR认证','CBT认证','创伤专项','婚姻咨询专项','儿童青少年专项','EAP专项','心理测量','评估性治疗','循证咨询受训','精神科门诊见习'];
+  var stdPopulations = ['成人','青少年','儿童','大学生','家长','老年人','LGBTQ+','企业员工'];
+  var stdExtraCredentials = ['心理咨询师（三级','心理咨询师（二级','心理治疗师','社会工作师（初级）','社会工作师（中级）','社会工作师（高级）','精神科医生','注册心理师','督导师'];
+
+  otherApproaches = (d.approaches || []).filter(function(v) { return stdApproaches.indexOf(v) < 0; });
+  otherSpecialties = (d.specialties || []).filter(function(v) { return stdSpecialties.indexOf(v) < 0; });
+  otherCerts = (d.certifications || []).filter(function(v) { return stdCerts.indexOf(v) < 0; });
+  otherExtraCredentials = (d.extra_credentials || []).filter(function(v) { return stdExtraCredentials.indexOf(v) < 0; });
+  otherPopulations = (d.populations || []).filter(function(v) { return stdPopulations.indexOf(v) < 0; });
+  renderOtherTags('approach');
+  renderOtherTags('specialty');
+  renderOtherTags('cert');
+  renderOtherTags('extra_credential');
+  renderOtherTags('population');
+
+  ['approach','cert','specialty','population','severity','format','extra_credential','client_age_pref','orientation_friendly','gender_identity_friendly','comm_style'].forEach(function(group) {
+    var keyMap = {
+      approach: 'approaches', cert: 'certifications', specialty: 'specialties',
+      population: 'populations', sever: 'severity_levels', format: 'session_formats',
+      extra_credential: 'extra_credentials', client_age_pref: 'client_age_prefs',
+      orientation_friendly: 'orientation_friendly', gender_identity_friendly: 'gender_identity_friendly',
+      comm_style: 'comm_styles'
+    };
+    var key = keyMap[group] || group + 's';
+    var vals = d[key] || [];
+    if (!vals.length) return;
+    document.querySelectorAll('input[name="' + group + '"]').forEach(function(cb) {
+      if (vals.indexOf(cb.value) >= 0) {
+        cb.checked = true;
+        cb.closest('.opt-card').classList.add('selected');
+      }
+    });
+  });
+}
+
+function enterEditMode(token) {
+  if (typeof getCounselorByToken !== 'function') {
+    showToast('系统错误：无法加载编辑功能');
+    return;
+  }
+  showToast('正在加载您的档案…');
+  getCounselorByToken(token).then(function(data) {
+    if (!data) {
+      document.getElementById('form_area').innerHTML = '<div style="text-align:center;padding:60px 20px;color:#A09889;font-size:15px;line-height:1.8">编辑链接无效或已过期。<br>请检查链接是否正确，或联系管理员。</div>';
+      return;
+    }
+    currentEditToken = token;
+    currentEditId = data.id;
+    restoreFromData(data);
+    var submitBtn = document.getElementById('submit-btn');
+    if (submitBtn) submitBtn.textContent = '保存修改';
+    var previewBtn = document.querySelector('button[onclick="previewAndSubmit()"]');
+    if (previewBtn) previewBtn.textContent = '预览并保存修改';
+    document.getElementById('form_area').querySelector('h1').textContent = '编辑咨询师档案';
+    document.querySelector('.page-header .brand-name').textContent = '编辑档案';
+    showToast('档案已加载，修改后点击提交即可保存。');
+  }).catch(function(e) {
+    showToast('加载失败，请稍后重试。');
+  });
 }
 
 function getMultiChecked(name) {
@@ -1046,6 +1176,10 @@ function submitProfile() {
 
   var d = collectData();
   d.is_active = true;
+  // 新注册时生成编辑令牌
+  if (!currentEditToken) {
+    d.edit_token = crypto.randomUUID();
+  }
   // Merge standard + other into single arrays for storage and matching
   d.approaches = d.approaches.concat(d.approaches_other);
   d.specialties = d.specialties.concat(d.specialties_other);
@@ -1057,6 +1191,38 @@ function submitProfile() {
   delete d.certifications_other;
   delete d.extra_credentials_other;
   delete d.populations_other;
+
+  // 编辑模式：更新现有档案
+  if (currentEditToken) {
+    _isSubmitting = true;
+    var submitBtn = document.getElementById('submit-btn');
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = '保存中…';
+      submitBtn.style.opacity = '0.6';
+      submitBtn.style.cursor = 'not-allowed';
+    }
+    updateCounselor(currentEditId, d).then(function(result) {
+      showToast('档案修改已保存！');
+      _isSubmitting = false;
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '保存修改';
+        submitBtn.style.opacity = '';
+        submitBtn.style.cursor = '';
+      }
+    }).catch(function(err) {
+      showToast('保存失败，请重试。');
+      _isSubmitting = false;
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '保存修改';
+        submitBtn.style.opacity = '';
+        submitBtn.style.cursor = '';
+      }
+    });
+    return;
+  }
 
   // 锁定按钮
   _isSubmitting = true;
@@ -1082,6 +1248,14 @@ function submitProfile() {
     if (stepBar) stepBar.style.display = 'none';
     // 清除草稿
     try { localStorage.removeItem('xiaopingu_counselor_draft'); } catch(e) {}
+    // 显示编辑链接（新注册时）
+    if (arguments[1]) {
+      var token = arguments[1];
+      var editWrap = document.getElementById('edit_link_wrap');
+      var editInput = document.getElementById('edit_link_input');
+      if (editWrap) editWrap.style.display = 'block';
+      if (editInput) editInput.value = window.location.origin + window.location.pathname + '?edit=' + encodeURIComponent(token);
+    }
   }
 
   function onFail(msg) {
@@ -1098,11 +1272,12 @@ function submitProfile() {
 
   if (typeof saveCounselor === 'function' && SUPABASE_CONFIG.enableDataCollection && SUPABASE_CONFIG.url) {
     saveCounselor(d).then(function(result) {
-      if (result && result[0] && result[0].id) {
+      var token = '';
+      if (result && result[0]) {
         localStorage.setItem('xiaopingu_counselor_id', result[0].id);
+        token = result[0].edit_token || d.edit_token || '';
       }
-      // 无论后端是否成功，都展示成功页（草稿已自动保存）
-      onSuccess('档案已成功提交！');
+      onSuccess('档案已成功提交！', token);
     }).catch(function(err) {
       console.warn('[小平菇] 后端保存失败，已保存本地草稿:', err);
       localStorage.setItem('xiaopingu_counselor_draft', JSON.stringify(d));
@@ -1115,8 +1290,16 @@ function submitProfile() {
   }
 }
 
-// Restore draft
+// 检查 URL 中的编辑令牌
 (function() {
+  var params = new URLSearchParams(window.location.search);
+  var editToken = params.get('edit');
+  if (editToken) {
+    enterEditMode(editToken);
+    return;
+  }
+
+  // Restore draft
   try {
     var draft = localStorage.getItem('xiaopingu_counselor_draft');
     if (!draft) return;

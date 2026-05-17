@@ -167,6 +167,19 @@ function updateCounselor(id, data) {
   }).catch(function(e) { console.warn('[小平菇] 更新失败:', e); });
 }
 
+// 按 edit_token 获取咨询师档案（用于编辑模式）
+function getCounselorByToken(token) {
+  if (!SUPABASE_CONFIG.enableDataCollection || !SUPABASE_CONFIG.url) return Promise.resolve(null);
+  return fetch(SUPABASE_CONFIG.url + '/rest/v1/counselors?edit_token=eq.' + encodeURIComponent(token) + '&select=*', {
+    headers: {
+      'apikey': SUPABASE_CONFIG.anonKey,
+      'Authorization': 'Bearer ' + SUPABASE_CONFIG.anonKey
+    }
+  }).then(function(r) { return r.json(); })
+    .then(function(data) { return data && data[0] || null; })
+    .catch(function(e) { console.warn('[小平菇] 获取咨询师失败:', e); return null; });
+}
+
 // 匹配咨询师（核心匹配算法）
 // 权重分配：议题30% + 取向20% + 程度15% + 城市10% + 门槛10% + 方式10% + 经济5% = 100%
 function matchCounselors(assessment) {
