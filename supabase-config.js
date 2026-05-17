@@ -409,12 +409,72 @@ function matchCounselors(assessment) {
         }
       }
 
+      // ===== C-NIP 咨询风格匹配（6维度，共+20分） =====
+      var cnip = assessment.cnip || {};
+      var cnipScore = 0;
+      var cnipDetails = [];
+
+      // 咨询结构（+4分）：来访者偏好与咨询师提供匹配
+      if (cnip.cnip_structure && c.cnip_styles && c.cnip_styles.length > 0) {
+        if (c.cnip_styles.indexOf(cnip.cnip_structure) >= 0) {
+          cnipScore += 4;
+        } else if (c.cnip_styles.indexOf('balanced') >= 0 && cnip.cnip_structure !== 'balanced') {
+          cnipScore += 2; // 咨询师有 balanced，兼容大部分来访者
+        }
+      }
+
+      // 情感深度（+4分）
+      if (cnip.cnip_emotion && c.cnip_emotion_focus && c.cnip_emotion_focus.length > 0) {
+        if (c.cnip_emotion_focus.indexOf(cnip.cnip_emotion) >= 0) {
+          cnipScore += 4;
+        } else if (c.cnip_emotion_focus.indexOf('balanced') >= 0 && cnip.cnip_emotion !== 'balanced') {
+          cnipScore += 2;
+        }
+      }
+
+      // 时间取向（+3分）
+      if (cnip.cnip_timefocus && c.cnip_time && c.cnip_time.length > 0) {
+        if (c.cnip_time.indexOf(cnip.cnip_timefocus) >= 0) {
+          cnipScore += 3;
+        } else if (c.cnip_time.indexOf('balanced') >= 0 && cnip.cnip_timefocus !== 'balanced') {
+          cnipScore += 1;
+        }
+      }
+
+      // 咨询师立场（+3分）
+      if (cnip.cnip_warmth && c.cnip_stance && c.cnip_stance.length > 0) {
+        if (c.cnip_stance.indexOf(cnip.cnip_warmth) >= 0) {
+          cnipScore += 3;
+        } else if (c.cnip_stance.indexOf('balanced') >= 0 && cnip.cnip_warmth !== 'balanced') {
+          cnipScore += 1;
+        }
+      }
+
+      // 课后作业（+3分）
+      if (cnip.cnip_homework && c.cnip_homework && c.cnip_homework.length > 0) {
+        if (c.cnip_homework.indexOf(cnip.cnip_homework) >= 0) {
+          cnipScore += 3;
+        }
+      }
+
+      // 咨访关系讨论（+3分）
+      if (cnip.cnip_relational && c.cnip_relational && c.cnip_relational.length > 0) {
+        if (c.cnip_relational.indexOf(cnip.cnip_relational) >= 0) {
+          cnipScore += 3;
+        }
+      }
+
+      if (cnipScore > 0) {
+        score += Math.min(20, cnipScore);
+        details.push('咨询风格: +' + cnipScore + '分');
+      }
+
       // 14. 未成年人优先（家长代填时，只保留擅长儿童青少年的咨询师）
       // 注意：这不是加分，而是排序优先——在最终排序时给未成年人专长咨询师加权
 
       return {
         counselor: c,
-        matchScore: Math.min(125, Math.round(score)),
+        matchScore: Math.min(145, Math.round(score)),
         matchDetails: details
       };
     })

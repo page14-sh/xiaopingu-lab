@@ -231,6 +231,7 @@
     .tag-blue { background: #d1ecf1; color: #0c5460; }
     .tag-yellow { background: #fff3cd; color: #856404; }
     .tag-red { background: #f8d7da; color: #721c24; }
+    .tag-purple { background: #e8daef; color: #6c3483; }
 
     /* 操作按钮 */
     .action-btns { display: flex; gap: 8px; }
@@ -590,6 +591,7 @@
                 <th>咨询取向</th>
                 <th>擅长议题</th>
                 <th>咨询方式</th>
+                <th>咨询风格</th>
                 <th>费用</th>
                 <th>状态</th>
                 <th>审核状态</th>
@@ -984,6 +986,7 @@
         '<td>' + formatArray(c.approaches, 'blue') + '</td>' +
         '<td>' + formatArray(c.specialties, 'green') + '</td>' +
         '<td>' + formatArray(c.session_formats, 'yellow') + '</td>' +
+        '<td>' + formatCnipStyles(c) + '</td>' +
         '<td>¥' + (c.fee_min || 0) + '</td>' +
         '<td>' + statusTag + '</td>' +
         '<td>' + reviewTag + '</td>' +
@@ -1107,6 +1110,27 @@
       if (!arr || arr.length === 0) return '-';
       return arr.slice(0, 2).map(item => '<span class="tag tag-' + color + '">' + item + '</span>').join('') +
         (arr.length > 2 ? '<span class="tag tag-' + color + '">+' + (arr.length - 2) + '</span>' : '');
+    }
+
+    // ========== 格式化 C-NIP 咨询风格 ==========
+    function formatCnipStyles(c) {
+      var labelMap = {
+        structured: '🎯 结构化', balanced: '⚖️ 适度引导', open: '🌱 开放探索',
+        emotional: '💧 深入感受', rational: '🧩 聚焦解决',
+        past: '🕰️ 过去', present: '📌 当下',
+        warm: '🤗 温和支持', direct: '💡 坦诚直接',
+        yes: '📝 有作业', no: '🚫 少作业', neutral: '🤷 视情况',
+        discuss: '💬 讨论关系', skip: '➡️ 少涉及'
+      };
+      var tags = [];
+      var all = [].concat(c.cnip_styles||[], c.cnip_emotion_focus||[], c.cnip_time||[], c.cnip_stance||[], c.cnip_homework||[], c.cnip_relational||[]);
+      if (all.length === 0) return '-';
+      all.forEach(function(v) {
+        if (v === 'balanced') return; // balanced 不展示（太通用）
+        tags.push(labelMap[v] || v);
+      });
+      return tags.slice(0, 4).map(function(t){ return '<span class="tag tag-purple">' + t + '</span>'; }).join('') +
+        (tags.length > 4 ? '<span class="tag tag-purple">+' + (tags.length - 4) + '</span>' : '');
     }
 
     // ========== 格式化时间 ==========

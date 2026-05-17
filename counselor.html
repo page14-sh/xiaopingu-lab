@@ -671,6 +671,68 @@
 
       <hr class="divider">
 
+      <!-- C-NIP 咨询风格偏好（基于 Cooper-Norcross 偏好问卷） -->
+      <div style="padding:14px 16px;background:linear-gradient(135deg,#F0F7EC 0%,#E8F0E4 100%);border:1px solid #C8DCC0;border-radius:10px;margin-bottom:16px">
+        <div style="font-size:14px;font-weight:600;color:#5C7A52;margin-bottom:4px">🎨 咨询风格画像 <span style="font-size:11px;font-weight:400;color:#7A8B72">（选填 · 基于C-NIP循证工具 · 帮助来访者匹配风格契合的咨询师）</span></div>
+        <div style="font-size:12px;color:#7A9170;margin-bottom:12px">多选：请选择您在咨询中通常会使用的风格，来访者将根据这些信息进行匹配</div>
+
+        <div class="form-row" style="margin-bottom:12px">
+          <label style="font-size:13px;font-weight:500;color:#4A5548">咨询结构</label>
+          <div class="option-grid" id="cnip_styles_grid">
+            <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="cnip_styles" value="structured"><div class="opt-label">🎯 结构化引导</div><div class="opt-desc">有明确议程和目标</div></div>
+            <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="cnip_styles" value="balanced"><div class="opt-label">⚖️ 适度引导</div><div class="opt-desc">结构化与开放灵活结合</div></div>
+            <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="cnip_styles" value="open"><div class="opt-label">🌱 开放探索</div><div class="opt-desc">以来访者节奏为主</div></div>
+          </div>
+        </div>
+
+        <div class="form-row" style="margin-bottom:12px">
+          <label style="font-size:13px;font-weight:500;color:#4A5548">情感深度</label>
+          <div class="option-grid" id="cnip_emotion_grid">
+            <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="cnip_emotion" value="emotional"><div class="opt-label">💧 深入感受</div><div class="opt-desc">探索深层情绪体验</div></div>
+            <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="cnip_emotion" value="balanced"><div class="opt-label">⚖️ 两者兼顾</div><div class="opt-desc">情感与认知并重</div></div>
+            <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="cnip_emotion" value="rational"><div class="opt-label">🧩 聚焦解决</div><div class="opt-desc">偏认知与行为层面</div></div>
+          </div>
+        </div>
+
+        <div class="form-row" style="margin-bottom:12px">
+          <label style="font-size:13px;font-weight:500;color:#4A5548">时间取向</label>
+          <div class="option-grid" id="cnip_time_grid">
+            <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="cnip_time" value="past"><div class="opt-label">🕰️ 探讨过去</div><div class="opt-desc">关注童年与早期经历</div></div>
+            <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="cnip_time" value="balanced"><div class="opt-label">⚖️ 两者兼顾</div><div class="opt-desc">过去与当下结合</div></div>
+            <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="cnip_time" value="present"><div class="opt-label">📌 关注当下</div><div class="opt-desc">聚焦当前问题与行动</div></div>
+          </div>
+        </div>
+
+        <div class="form-row" style="margin-bottom:12px">
+          <label style="font-size:13px;font-weight:500;color:#4A5548">咨询师立场</label>
+          <div class="option-grid" id="cnip_stance_grid">
+            <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="cnip_stance" value="warm"><div class="opt-label">🤗 温和支持</div><div class="opt-desc">强调共情与积极关注</div></div>
+            <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="cnip_stance" value="balanced"><div class="opt-label">⚖️ 两者兼顾</div><div class="opt-desc">支持性与挑战性平衡</div></div>
+            <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="cnip_stance" value="direct"><div class="opt-label">💡 坦诚直接</div><div class="opt-desc">敢于面质与直接反馈</div></div>
+          </div>
+        </div>
+
+        <div class="form-row" style="margin-bottom:12px">
+          <label style="font-size:13px;font-weight:500;color:#4A5548">课后作业</label>
+          <div class="option-grid" id="cnip_homework_grid">
+            <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="cnip_homework" value="yes"><div class="opt-label">📝 常布置</div><div class="opt-desc">通常会布置练习任务</div></div>
+            <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="cnip_homework" value="neutral"><div class="opt-label">🤷 偶尔</div><div class="opt-desc">视情况而定</div></div>
+            <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="cnip_homework" value="no"><div class="opt-label">🚫 很少布置</div><div class="opt-desc">以咨访对话为主</div></div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label style="font-size:13px;font-weight:500;color:#4A5548">咨访关系讨论</label>
+          <div class="option-grid" id="cnip_relational_grid">
+            <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="cnip_relational" value="discuss"><div class="opt-label">💬 经常讨论</div><div class="opt-desc">关注咨访关系动态</div></div>
+            <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="cnip_relational" value="neutral"><div class="opt-label">🤷 偶尔涉及</div><div class="opt-desc">不主动但可回应</div></div>
+            <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="cnip_relational" value="skip"><div class="opt-label">➡️ 较少涉及</div><div class="opt-desc">聚焦议题本身</div></div>
+          </div>
+        </div>
+      </div>
+
+      <hr class="divider">
+
       <!-- 公益咨询服务意愿 -->
       <div class="form-row">
         <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:14px 16px;background:#f4f9f2;border-radius:10px;border:1px solid #c8ddc2;">
@@ -959,13 +1021,15 @@ function restoreFromData(d) {
   renderOtherTags('extra_credential');
   renderOtherTags('population');
 
-  ['approach','cert','specialty','population','severity','format','extra_credential','client_age_pref','orientation_friendly','gender_identity_friendly','comm_style'].forEach(function(group) {
+  ['approach','cert','specialty','population','severity','format','extra_credential','client_age_pref','orientation_friendly','gender_identity_friendly','comm_style','cnip_styles','cnip_emotion','cnip_time','cnip_stance','cnip_homework','cnip_relational'].forEach(function(group) {
     var keyMap = {
       approach: 'approaches', cert: 'certifications', specialty: 'specialties',
       population: 'populations', sever: 'severity_levels', format: 'session_formats',
       extra_credential: 'extra_credentials', client_age_pref: 'client_age_prefs',
       orientation_friendly: 'orientation_friendly', gender_identity_friendly: 'gender_identity_friendly',
-      comm_style: 'comm_styles'
+      comm_style: 'comm_styles', cnip_styles: 'cnip_styles', cnip_emotion: 'cnip_emotion_focus',
+      cnip_time: 'cnip_time', cnip_stance: 'cnip_stance', cnip_homework: 'cnip_homework',
+      cnip_relational: 'cnip_relational'
     };
     var key = keyMap[group] || group + 's';
     var vals = d[key] || [];
@@ -1054,6 +1118,12 @@ function collectData() {
     orientation_friendly: getMultiChecked('orientation_friendly'),
     gender_identity_friendly: getMultiChecked('gender_identity_friendly'),
     comm_styles: getMultiChecked('comm_style'),
+    cnip_styles: getMultiChecked('cnip_styles'),
+    cnip_emotion_focus: getMultiChecked('cnip_emotion'),
+    cnip_time: getMultiChecked('cnip_time'),
+    cnip_stance: getMultiChecked('cnip_stance'),
+    cnip_homework: getMultiChecked('cnip_homework'),
+    cnip_relational: getMultiChecked('cnip_relational'),
     session_formats: getMultiChecked('format'),
     session_duration: document.getElementById('c_duration').value === '其他' ? document.getElementById('c_duration_other').value : document.getElementById('c_duration').value,
     fee_min: parseInt(document.getElementById('c_fee_min').value) || 0,
