@@ -580,6 +580,10 @@
       <div class="result-header">
         <h2 id="result_title">转介评估报告</h2>
         <p id="result_time"></p>
+        <div id="disclaimer_banner" style="margin-top:12px;padding:12px 16px;background:linear-gradient(135deg,#FFF8E1 0%,#FFF3E0 100%);border:1px solid #FFE0B2;border-radius:10px;font-size:13px;color:#5D4037;line-height:1.7">
+          <strong style="color:#E65100">⚠️ 重要提示</strong><br>
+          <span>本评估仅用于了解您当前的心理状态并辅助匹配咨询师，<strong>不构成任何医学诊断或临床结论</strong>。评估分数不能替代专业精神科医生的诊断。如果您感到痛苦难以承受，请拨打<a href="tel:12356" style="color:#BF360C;font-weight:600;text-decoration:none">心理援助热线 12356</a> 或前往最近的精神卫生中心。</span>
+        </div>
       </div>
       <div class="result-body">
         <div class="result-section"><h3>来访者基本信息</h3><div class="info-grid" id="info_summary"></div></div>
@@ -620,7 +624,7 @@
   小平菇心理 · 用心倾听，自然疗愈
 </div>
 <div style="text-align:center;padding:0 20px 32px;color:#C5BEB3;font-size:10px;line-height:1.6;">
-  本系统为自助评估，仅供参考，不构成专业诊断或治疗建议。如需专业帮助，请联系持证心理咨询师或医疗机构。
+  本系统为心理自助评估工具，评估结果<strong>不构成专业医学诊断、精神障碍诊断或治疗建议</strong>。如您正在经历严重心理困扰，请及时联系持证心理咨询师、精神科医生或拨打心理援助热线。如遇紧急危险，请立即拨打 110 或 120。
 </div>
 
 <div class="toast" id="toast"></div>
@@ -796,7 +800,7 @@ function generateResult() {
     (budgetVal ? '<div class="info-item"><div class="info-label">经济承受</div><div class="info-val">'+budgetText+'</div></div>' : '')+
     (cityVal ? '<div class="info-item"><div class="info-label">所在城市</div><div class="info-val">📍 '+cityVal+'</div></div>' : '')+
     (formats.length ? '<div class="info-item"><div class="info-label">咨询方式</div><div class="info-val">'+formats.join('、')+'</div></div>' : '')+
-    '<div class="info-item"><div class="info-label">症状程度</div><div class="info-val" style="color:'+(totalScore>=20?'#A03030':totalScore>=15?'#C4654A':totalScore>=8?'#854F0B':'#5C7A52')+'">'+severity+'（'+totalScore+'/25）</div></div>';
+    '<div class="info-item"><div class="info-label">症状程度</div><div class="info-val" style="color:'+(totalScore>=20?'#A03030':totalScore>=15?'#C4654A':totalScore>=8?'#854F0B':'#5C7A52')+'">'+severity+'（'+totalScore+'/25）<span style="display:block;font-size:11px;font-weight:400;color:#A09889;margin-top:2px">自评分数，非诊断结论</span></div></div>';
 
   var issueMap={emotion:'情绪困扰',relationship:'关系困境',trauma:'创伤经历',growth:'自我成长',adolescent:'青少年问题',marriage:'婚姻/伴侣',personality:'人格成长/发展性议题',crisis:'危机状态',workplace:'职场困扰',eating:'进食障碍',addiction:'成瘾行为',grief:'丧亲哀伤',sexual:'性心理议题',somatic:'心身困扰',family:'家庭系统'};
   var issueHtml='<div class="tag-row">';
@@ -880,9 +884,9 @@ function generateResult() {
   document.getElementById('referral_cards').innerHTML=html;
 
   // Notes
-  var notes=['本问卷评估结果仅供参考，最终转介决策需由专业咨询师根据实际情况判断。','请携带本报告前往咨询，帮助咨询师快速了解您的基本情况。','初次咨询前，可以提前了解咨询师的受训背景和擅长议题。','心理咨询需要一定时间，建议做好连续4-8次咨询的准备。'];
-  if(totalScore>=15)notes.unshift('症状评分较高，建议在开始系统咨询前先进行精神科评估。');
-  if(crisisVal!=='safe')notes.unshift('存在危机风险，请确保咨询师了解您的危机状态。');
+  var notes=['<strong>评估非诊断：</strong>本问卷仅作参考，不构成医学诊断。最终转介决策需由专业咨询师根据实际情况判断。','请携带本报告前往咨询，帮助咨询师快速了解您的基本情况。','初次咨询前，可以提前了解咨询师的受训背景和擅长议题。','心理咨询需要一定时间，建议做好连续4-8次咨询的准备。'];
+  if(totalScore>=15)notes.unshift('<strong style="color:#A03030">建议先行精神科评估：</strong>症状评分较高（'+totalScore+'/25），建议在开始系统心理咨询前，先前往精神卫生中心或三甲医院心理/精神科进行专业诊断，排除或确诊可能的精神障碍。');
+  if(crisisVal!=='safe')notes.unshift('<strong style="color:#A03030">危机安全提醒：</strong>检测到危机风险信号。如果您正处于危险中，请立即拨打 <a href="tel:12356" style="color:#BF360C">12356（心理援助）</a> 或 <a href="tel:110" style="color:#BF360C">110（紧急求助）</a>，并确保告知身边信任的人。请将危机状态如实告知咨询师。');
   var notesHtml='<ul style="padding-left:18px;font-size:13px;color:#5F5E5A;line-height:2">';notes.forEach(function(n){notesHtml+='<li>'+n+'</li>';});notesHtml+='</ul>';
   document.getElementById('notes_section').innerHTML=notesHtml;
 
@@ -913,7 +917,7 @@ function generateResult() {
       document.getElementById('counselor_loading').style.display='none';
       if(results.length>0){
         document.getElementById('counselor_match_section').style.display='block';
-        var chtml='';
+        var chtml='<div style="padding:10px 14px;background:#F0F7EC;border-radius:10px;font-size:12px;color:#5A6B52;line-height:1.7;margin-bottom:12px">💡 以下推荐基于您的评估信息自动匹配，仅供参考。建议结合咨询师的专业背景、个人感受和实际情况综合选择，匹配度不等于适合度。</div>';
         results.slice(0,3).forEach(function(r,idx){
           var c=r.counselor;
           var cls=r.matchScore>=80?'match-high':r.matchScore>=50?'match-mid':'match-low';
@@ -1119,7 +1123,8 @@ function enterViewMode(token){
 }
 function restoreResultPanel(){
   var rp=document.getElementById('result_panel');
-  rp.innerHTML='<div class="result-header"><h2 id="result_title">转介评估报告</h2><p id="result_time"></p></div>'+
+  rp.innerHTML='<div class="result-header"><h2 id="result_title">转介评估报告</h2><p id="result_time"></p>'+
+    '<div style="margin-top:12px;padding:12px 16px;background:linear-gradient(135deg,#FFF8E1 0%,#FFF3E0 100%);border:1px solid #FFE0B2;border-radius:10px;font-size:13px;color:#5D4037;line-height:1.7"><strong style="color:#E65100">⚠️ 重要提示</strong><br><span>本评估仅用于了解您当前的心理状态并辅助匹配咨询师，<strong>不构成任何医学诊断或临床结论</strong>。如果您感到痛苦难以承受，请拨打<a href="tel:12356" style="color:#BF360C;font-weight:600;text-decoration:none">心理援助热线 12356</a>。</span></div></div>'+
     '<div class="result-body">'+
     '<div class="result-section"><h3>来访者基本信息</h3><div class="info-grid" id="info_summary"></div></div><hr class="divider">'+
     '<div class="result-section"><h3>主诉议题分析</h3><div id="issue_summary"></div></div><hr class="divider">'+
