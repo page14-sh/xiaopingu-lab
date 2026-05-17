@@ -726,9 +726,9 @@
 
     <!-- 提交成功 -->
     <div class="card success-card" id="success_card" style="display:none">
-      <div class="success-icon">🍄</div>
-      <h2 class="success-title">档案提交成功！</h2>
-      <p class="success-desc">感谢您加入小平菇咨询师网络。<br>我们已收到您的档案，将在审核通过后正式上线展示。</p>
+      <div class="success-icon" id="success_icon">🍄</div>
+      <h2 class="success-title" id="success_title">档案提交成功！</h2>
+      <p class="success-desc" id="success_desc">感谢您加入小平菇咨询师网络。<br>我们已收到您的档案，将在审核通过后正式上线展示。</p>
       <div class="success-contact">
         <p class="success-contact-label">如有疑问，请联系我们：</p>
         <a class="success-email" href="mailto:page14@163.com">📧 page14@163.com</a>
@@ -758,6 +758,7 @@
 var currentStep = 1;
 var currentEditToken = null;
 var currentEditId = null;
+var currentReviewStatus = null;
 
 function goStep(n) {
   document.getElementById('section' + currentStep).classList.remove('active');
@@ -991,6 +992,7 @@ function enterEditMode(token) {
     }
     currentEditToken = token;
     currentEditId = data.id;
+    currentReviewStatus = data.review_status || 'pending';
     restoreFromData(data);
     var submitBtn = document.getElementById('submit-btn');
     if (submitBtn) submitBtn.textContent = '保存修改';
@@ -998,6 +1000,15 @@ function enterEditMode(token) {
     if (previewBtn) previewBtn.textContent = '预览并保存修改';
     document.getElementById('form_area').querySelector('h1').textContent = '编辑咨询师档案';
     document.querySelector('.page-header .brand-name').textContent = '编辑档案';
+    // 审核被拒绝时显示提示
+    if (data.review_status === 'rejected') {
+      var formArea = document.getElementById('form_area');
+      var warningHtml = '<div id="review_warning" style="margin-bottom:16px;padding:14px 16px;background:#FEF2F2;border:1px solid #FCA5A5;border-radius:10px;font-size:13px;color:#991B1B;line-height:1.7">'
+        + '<strong>❌ 审核未通过</strong><br>'
+        + (data.review_note ? '原因：' + data.review_note + '<br>' : '')
+        + '请修改信息后重新提交审核。</div>';
+      formArea.insertAdjacentHTML('afterbegin', warningHtml);
+    }
     showToast('档案已加载，修改后点击提交即可保存。');
   }).catch(function(e) {
     showToast('加载失败，请稍后重试。');
@@ -1176,9 +1187,12 @@ function submitProfile() {
 
   var d = collectData();
   d.is_active = true;
-  // 新注册时生成编辑令牌
+  // 审核状态处理
   if (!currentEditToken) {
+    d.review_status = 'pending';
     d.edit_token = crypto.randomUUID();
+  } else if (currentReviewStatus === 'rejected') {
+    d.review_status = 'pending'; // 被拒绝后重新提交，重置为待审核
   }
   // Merge standard + other into single arrays for storage and matching
   d.approaches = d.approaches.concat(d.approaches_other);
@@ -1203,7 +1217,12 @@ function submitProfile() {
       submitBtn.style.cursor = 'not-allowed';
     }
     updateCounselor(currentEditId, d).then(function(result) {
-      showToast('档案修改已保存！');
+      if (currentReviewStatus === 'rejected') {
+        showToast('✅ 已重新提交审核，请等待管理员审核结果');
+        currentReviewStatus = 'pending';
+      } else {
+        showToast('档案修改已保存！');
+      }
       _isSubmitting = false;
       if (submitBtn) {
         submitBtn.disabled = false;
@@ -1248,6 +1267,13 @@ function submitProfile() {
     if (stepBar) stepBar.style.display = 'none';
     // 清除草稿
     try { localStorage.removeItem('xiaopingu_counselor_draft'); } catch(e) {}
+    // 根据审核状态显示不同文案
+    var titleEl = document.getElementById('success_title');
+    var descEl = document.getElementById('success_desc');
+    if (currentEditToken && currentReviewStatus === 'rejected') {
+      if (titleEl) titleEl.textContent = '🔄 已重新提交审核';
+      if (descEl) descEl.innerHTML = '您修改后的档案已重新提交审核。<br>请等待管理员审核结果（通常 1-3 个工作日），审核通过后将在匹配池中展示。';
+    }
     // 显示编辑链接（新注册时）
     if (arguments[1]) {
       var token = arguments[1];

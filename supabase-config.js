@@ -80,6 +80,10 @@ CREATE TABLE counselors (
   bio_full TEXT,                  -- 详细介绍
   -- 状态
   is_active BOOLEAN DEFAULT true,
+  review_status TEXT NOT NULL DEFAULT 'pending',  -- pending/approved/rejected
+  review_note TEXT,
+  reviewed_at TIMESTAMPTZ,
+  reviewed_by TEXT,
   -- 联系（可选）
   contact_wechat TEXT,
   contact_phone TEXT
@@ -167,6 +171,25 @@ function updateCounselor(id, data) {
   }).catch(function(e) { console.warn('[小平菇] 更新失败:', e); });
 }
 
+// 审核咨询师档案
+function reviewCounselor(id, status, note, reviewer) {
+  if (!SUPABASE_CONFIG.enableDataCollection || !SUPABASE_CONFIG.url) return Promise.resolve();
+  return fetch(SUPABASE_CONFIG.url + '/rest/v1/counselors?id=eq.' + id, {
+    method: 'PATCH',
+    headers: getSupabaseHeaders(),
+    body: JSON.stringify({
+      review_status: status,
+      review_note: note || null,
+      reviewed_at: new Date().toISOString(),
+      reviewed_by: reviewer || 'admin',
+      updated_at: new Date().toISOString()
+    })
+  }).then(function(r) {
+    if (r.ok) return r.json();
+    else throw new Error('HTTP ' + r.status);
+  }).catch(function(e) { console.warn('[小平菇] 审核失败:', e); });
+}
+
 // 按 view_token 获取评估记录（用于查看模式）
 function getAssessmentByToken(token) {
   if (!SUPABASE_CONFIG.enableDataCollection || !SUPABASE_CONFIG.url) return Promise.resolve(null);
@@ -198,7 +221,7 @@ function getCounselorByToken(token) {
 function matchCounselors(assessment) {
   if (!SUPABASE_CONFIG.enableDataCollection || !SUPABASE_CONFIG.url) return Promise.resolve([]);
 
-  return fetch(SUPABASE_CONFIG.url + '/rest/v1/counselors?is_active=eq.true&select=*', {
+  return fetch(SUPABASE_CONFIG.url + '/rest/v1/counselors?is_active=eq.true&review_status=eq.approved&select=*', {
     headers: {
       'apikey': SUPABASE_CONFIG.anonKey,
       'Authorization': 'Bearer ' + SUPABASE_CONFIG.anonKey

@@ -245,6 +245,12 @@
     .action-btn.view:hover { background: #cce5ff; }
     .action-btn.delete { background: #ffe7e7; color: #cc0000; }
     .action-btn.delete:hover { background: #ffcccc; }
+    .action-btn.approve { background: #d4edda; color: #155724; }
+    .action-btn.approve:hover { background: #c1e2cb; }
+    .action-btn.reject { background: #f8d7da; color: #721c24; }
+    .action-btn.reject:hover { background: #f1c2c7; }
+    .action-btn.reset { background: #fff3cd; color: #856404; }
+    .action-btn.reset:hover { background: #ffeaa7; }
 
     /* 空状态 */
     .empty-state { text-align: center; padding: 60px 20px; color: #999; }
@@ -429,6 +435,10 @@
             <div class="stat-label">咨询师</div>
           </div>
           <div class="stat-item">
+            <div class="stat-num" id="stat-pending">-</div>
+            <div class="stat-label">⏳ 待审核</div>
+          </div>
+          <div class="stat-item">
             <div class="stat-num" id="stat-assessments">-</div>
             <div class="stat-label">评估记录</div>
           </div>
@@ -465,6 +475,12 @@
         <option value="">全部状态</option>
         <option value="true">激活</option>
         <option value="false">未激活</option>
+      </select>
+      <select class="filter-select" id="filter-review" onchange="filterData()">
+        <option value="">全部审核状态</option>
+        <option value="pending">待审核</option>
+        <option value="approved">已通过</option>
+        <option value="rejected">已拒绝</option>
       </select>
       <button class="btn btn-success readonly-hide" onclick="exportCSV('counselors')">📥 导出CSV</button>
       <button class="btn btn-danger readonly-hide" onclick="deleteSelected('counselors')">🗑️ 删除选中</button>
@@ -510,6 +526,7 @@
                 <th>咨询方式</th>
                 <th>费用</th>
                 <th>状态</th>
+                <th>审核状态</th>
                 <th>创建时间</th>
                 <th>操作</th>
               </tr>
@@ -597,6 +614,25 @@
         <p><strong>方法1（推荐）：</strong>登录后进入此设置面板，上方会显示当前密码</p>
         <p><strong>方法2：</strong>打开 <code>admin.html</code> 文件，查找 <code>ADMIN_PASSWORD</code> 变量</p>
         <p><strong>方法3（忘记密码）：</strong>删除浏览器 LocalStorage 后重启页面，使用文件中的默认密码重新登录</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 拒绝原因弹窗 -->
+  <div class="modal-overlay" id="reject-modal">
+    <div class="modal" style="max-width:500px;">
+      <button class="modal-close" onclick="closeRejectModal()">×</button>
+      <h2>❌ 拒绝咨询师申请</h2>
+      <p style="font-size:13px;color:#666;margin-bottom:15px;">
+        咨询师：<strong id="reject-counselor-name"></strong>
+      </p>
+      <div style="margin-bottom:15px;">
+        <label style="font-size:13px;color:#333;display:block;margin-bottom:5px;">拒绝原因（必填，咨询师可见）</label>
+        <textarea id="reject-note" style="width:100%;height:100px;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:14px;resize:vertical;" placeholder="请填写拒绝原因，咨询师修改后可重新提交审核..."></textarea>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button class="btn btn-secondary" onclick="closeRejectModal()">取消</button>
+        <button class="btn btn-danger" id="btn-submit-reject" onclick="submitReject()">确认拒绝</button>
       </div>
     </div>
   </div>
@@ -748,6 +784,8 @@
     // ========== 更新统计 ==========
     function updateStats() {
       document.getElementById('stat-counselors').textContent = allData.counselors.length;
+      const pendingCount = allData.counselors.filter(c => !c.review_status || c.review_status === 'pending').length;
+      document.getElementById('stat-pending').textContent = pendingCount;
       document.getElementById('stat-assessments').textContent = allData.assessments.length;
     }
 
@@ -771,13 +809,15 @@
       filteredData[type] = allData[type].filter(item => {
         let match = true;
 
-        if (type === 'counselors') {
-          const credFilter = document.getElementById('filter-credential').value;
-          const activeFilter = document.getElementById('filter-active').value;
+      if (type === 'counselors') {
+        const credFilter = document.getElementById('filter-credential').value;
+        const activeFilter = document.getElementById('filter-active').value;
+        const reviewFilter = document.getElementById('filter-review').value;
 
-          if (credFilter && item.credential_level !== credFilter) match = false;
-          if (activeFilter && String(item.is_active) !== activeFilter) match = false;
-          if (search) {
+        if (credFilter && item.credential_level !== credFilter) match = false;
+        if (activeFilter && String(item.is_active) !== activeFilter) match = false;
+        if (reviewFilter && item.review_status !== reviewFilter) match = false;
+        if (search) {
             const text = [item.name, item.credential_level, item.city, item.bio_short].filter(Boolean).join(' ').toLowerCase();
             if (!text.includes(search)) match = false;
           }
@@ -838,7 +878,23 @@
       const statusTag = c.is_active
         ? '<span class="tag tag-green">激活</span>'
         : '<span class="tag tag-red">未激活</span>';
+      const reviewTag = c.review_status === 'approved' ? '<span class="tag tag-green">✅ 已通过</span>'
+        : c.review_status === 'rejected' ? '<span class="tag tag-red">❌ 已拒绝</span>'
+        : '<span class="tag tag-yellow">⏳ 待审核</span>';
+
       const selectCell = READONLY_MODE ? '<td style="display:none"></td>' : '<td><input type="checkbox" ' + checked + ' onchange="toggleSelect(\'counselors\', \'' + c.id + '\', this.checked)"></td>';
+
+      // 审核操作按钮
+      let reviewBtns = '';
+      if (!READONLY_MODE) {
+        if (!c.review_status || c.review_status === 'pending') {
+          reviewBtns = '<button class="action-btn approve" onclick="approveCounselor(\'' + c.id + '\')">✅ 通过</button>'
+                    + '<button class="action-btn reject" onclick="showRejectModal(\'' + c.id + '\', \'' + (c.name || '未知') + '\')">❌ 拒绝</button>';
+        } else if (c.review_status === 'rejected') {
+          reviewBtns = '<button class="action-btn reset" onclick="resetReview(\'' + c.id + '\')">🔄 重新审核</button>';
+        }
+      }
+
       const deleteBtn = READONLY_MODE ? '' : '<button class="action-btn delete" onclick="deleteItem(\'counselors\', \'' + c.id + '\')">删除</button>';
 
       return '<tr>' +
@@ -852,12 +908,87 @@
         '<td>' + formatArray(c.session_formats, 'yellow') + '</td>' +
         '<td>¥' + (c.fee_min || 0) + '</td>' +
         '<td>' + statusTag + '</td>' +
+        '<td>' + reviewTag + '</td>' +
         '<td>' + formatTime(c.created_at) + '</td>' +
         '<td><div class="action-btns">' +
           '<button class="action-btn view" onclick="viewDetail(\'counselors\', \'' + c.id + '\')">查看</button>' +
+          reviewBtns +
           deleteBtn +
         '</div></td>' +
       '</tr>';
+    }
+
+    // ========== 审核相关函数 ==========
+    function reviewCounselor(id, status, note, reviewer) {
+      return fetch(SUPABASE_URL + '/rest/v1/counselors?id=eq.' + id, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify({
+          review_status: status,
+          review_note: note || null,
+          reviewed_at: new Date().toISOString(),
+          reviewed_by: reviewer || 'admin',
+          updated_at: new Date().toISOString()
+        })
+      }).then(function(r) {
+        if (r.ok) return r.json();
+        else throw new Error('HTTP ' + r.status);
+      }).catch(function(e) { console.warn('[小平菇] 审核失败:', e); throw e; });
+    }
+
+    let currentRejectId = null;
+
+    function approveCounselor(id) {
+      if (!confirm('确认通过这位咨询师的审核？')) return;
+      reviewCounselor(id, 'approved').then(function() {
+        showToast('✅ 审核已通过', 'success');
+        loadData('counselors');
+      }).catch(function() {
+        showToast('操作失败，请重试', 'error');
+      });
+    }
+
+    function showRejectModal(id, name) {
+      currentRejectId = id;
+      document.getElementById('reject-counselor-name').textContent = name;
+      document.getElementById('reject-note').value = '';
+      document.getElementById('reject-modal').classList.add('active');
+    }
+
+    function closeRejectModal() {
+      currentRejectId = null;
+      document.getElementById('reject-modal').classList.remove('active');
+    }
+
+    function submitReject() {
+      const note = document.getElementById('reject-note').value.trim();
+      if (!note) {
+        alert('请填写拒绝原因');
+        return;
+      }
+      if (!currentRejectId) return;
+      reviewCounselor(currentRejectId, 'rejected', note).then(function() {
+        showToast('❌ 已拒绝，咨询师可修改后重新提交', 'success');
+        closeRejectModal();
+        loadData('counselors');
+      }).catch(function() {
+        showToast('操作失败，请重试', 'error');
+      });
+    }
+
+    function resetReview(id) {
+      if (!confirm('确认将此咨询师状态设为「待审核」，让其重新进入审核队列？')) return;
+      reviewCounselor(id, 'pending').then(function() {
+        showToast('🔄 已设为待审核', 'success');
+        loadData('counselors');
+      }).catch(function() {
+        showToast('操作失败，请重试', 'error');
+      });
     }
 
     // ========== 渲染评估行 ==========
@@ -986,6 +1117,7 @@
         session_formats: '咨询方式', session_duration: '咨询时长',
         fee_min: '最低费用', fee_budget_level: '费用等级', available_slots: '可预约时段',
         bio_short: '简介', bio_full: '详细介绍', is_active: '是否激活',
+        review_status: '审核状态', review_note: '拒绝原因', reviewed_at: '审核时间', reviewed_by: '审核人',
         contact_wechat: '微信', contact_phone: '电话',
         visitor_name: '姓名', visitor_age: '年龄', visitor_gender: '性别',
         visitor_occupation: '职业', prev_counseling: '既往咨询',
