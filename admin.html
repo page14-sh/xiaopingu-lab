@@ -961,6 +961,9 @@
       const reviewTag = c.review_status === 'approved' ? '<span class="tag tag-green">✅ 已通过</span>'
         : c.review_status === 'rejected' ? '<span class="tag tag-red">❌ 已拒绝</span>'
         : '<span class="tag tag-yellow">⏳ 待审核</span>';
+      const deepReviewTag = c.needs_deep_review
+        ? '<span class="tag" style="background:#FFF3CD;color:#856404;border-color:#FFC107">⚠ 加深审核</span>'
+        : '';
 
       const selectCell = READONLY_MODE ? '<td style="display:none"></td>' : '<td><input type="checkbox" ' + checked + ' onchange="toggleSelect(\'counselors\', \'' + c.id + '\', this.checked)"></td>';
 
@@ -989,7 +992,7 @@
         '<td>' + formatCnipStyles(c) + '</td>' +
         '<td>¥' + (c.fee_min || 0) + '</td>' +
         '<td>' + statusTag + '</td>' +
-        '<td>' + reviewTag + '</td>' +
+        '<td>' + reviewTag + (deepReviewTag ? '<br>' + deepReviewTag : '') + '</td>' +
         '<td>' + formatTime(c.created_at) + '</td>' +
         '<td><div class="action-btns">' +
           '<button class="action-btn view" onclick="viewDetail(\'counselors\', \'' + c.id + '\')">查看</button>' +
@@ -1189,11 +1192,45 @@
       const title = document.getElementById('modal-title');
       const content = document.getElementById('modal-content');
 
-      title.textContent = type === 'counselors' ? '👨⚕️ 咨询师详情 - ' + (item.name || '') : '📋 评估详情 - ' + (item.visitor_name || '匿名');
+      title.textContent = type === 'counselors' ? '👨‍⚕️ 咨询师详情 - ' + (item.name || '') : '📋 评估详情 - ' + (item.visitor_name || '匿名');
 
-      let html = '<div class="detail-grid">';
+      let html = '';
+
+      // 加深审核警告横幅
+      if (type === 'counselors' && item.needs_deep_review) {
+        html += '<div style="background:#FFF3CD;border:1px solid #FFC107;border-radius:8px;padding:12px 16px;margin-bottom:16px;display:flex;gap:10px;align-items:flex-start">'
+          + '<span style="font-size:18px;flex-shrink:0">⚠️</span>'
+          + '<div>'
+          + '<p style="font-size:13px;font-weight:600;color:#856404;margin:0 0 4px">此咨询师档案需加深审核</p>'
+          + '<p style="font-size:12px;color:#856404;margin:0">该咨询师在诚信声明中申报了违法记录或咨询事故/投诉记录，请在审核时重点核查以下内容并谨慎评估。</p>'
+          + '</div></div>';
+        // 单独展示诚信声明区块
+        html += '<div style="background:#FEF9EC;border:1px solid #FFC107;border-radius:8px;padding:14px 16px;margin-bottom:16px">'
+          + '<p style="font-size:12px;font-weight:600;color:#856404;margin:0 0 10px">📋 诚信声明申报内容</p>';
+        if (item.has_violation === '是') {
+          html += '<div style="margin-bottom:10px">'
+            + '<p style="font-size:12px;color:#856404;margin:0 0 4px">违法记录 / 纪律处分：<strong>是</strong></p>'
+            + '<p style="font-size:13px;color:#333;background:#fff;padding:8px 10px;border-radius:6px;margin:0;white-space:pre-wrap">' + (item.violation_detail || '（未填写说明）') + '</p>'
+            + '</div>';
+        } else {
+          html += '<p style="font-size:12px;color:#6c757d;margin:0 0 6px">违法记录 / 纪律处分：无</p>';
+        }
+        if (item.has_incident === '是') {
+          html += '<div>'
+            + '<p style="font-size:12px;color:#856404;margin:0 0 4px">咨询事故 / 正式投诉：<strong>是</strong></p>'
+            + '<p style="font-size:13px;color:#333;background:#fff;padding:8px 10px;border-radius:6px;margin:0;white-space:pre-wrap">' + (item.incident_detail || '（未填写说明）') + '</p>'
+            + '</div>';
+        } else {
+          html += '<p style="font-size:12px;color:#6c757d;margin:0">咨询事故 / 正式投诉：无</p>';
+        }
+        html += '</div>';
+      }
+
+      html += '<div class="detail-grid">';
+      const skipKeys = ['has_violation','violation_detail','has_incident','incident_detail','needs_deep_review'];
       Object.keys(item).forEach(key => {
         if (key === 'id') return;
+        if (type === 'counselors' && skipKeys.includes(key)) return;
         let value = item[key];
         if (Array.isArray(value)) value = value.join(', ');
         if (key === 'created_at' || key === 'updated_at') value = formatTime(value);
@@ -1221,6 +1258,8 @@
         bio_short: '简介', bio_full: '详细介绍', is_active: '是否激活',
         review_status: '审核状态', review_note: '拒绝原因', reviewed_at: '审核时间', reviewed_by: '审核人',
         contact_wechat: '微信', contact_phone: '电话',
+        has_violation: '违法/纪律记录', violation_detail: '违法/纪律说明',
+        has_incident: '咨询事故/投诉记录', incident_detail: '事故/投诉说明',
         visitor_name: '姓名', visitor_age: '年龄', visitor_gender: '性别',
         visitor_occupation: '职业', prev_counseling: '既往咨询',
         budget: '预算', preferred_formats: '偏好方式', expects: '预期目标',

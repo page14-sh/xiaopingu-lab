@@ -307,8 +307,53 @@
         <input type="text" id="c_license" placeholder="心理咨询师注册号或医师执业证号（选填）" autocomplete="off">
       </div>
 
+      <!-- ===== 诚信声明 ===== -->
+      <div class="form-row" style="margin-top:24px;padding-top:20px;border-top:1px solid #E8E3DC">
+        <p style="font-size:13px;font-weight:600;color:#2C2C2A;margin-bottom:4px">诚信声明</p>
+        <p style="font-size:12px;color:#8A8279;margin-bottom:16px">以下信息将作为内部审核依据，不会对外公开展示。如实填写有助于建立专业信任，隐瞒情节严重者将永久禁止入驻。</p>
+
+        <div class="form-row" style="margin-bottom:0">
+          <label class="required">是否存在违法记录或执业纪律处分？</label>
+          <div style="display:flex;gap:16px;margin-top:8px;flex-wrap:wrap">
+            <label style="display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer">
+              <input type="radio" name="has_violation" value="否" onchange="toggleViolationDetail()" checked> 否，从无相关记录
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer">
+              <input type="radio" name="has_violation" value="是" onchange="toggleViolationDetail()"> 是，需要说明
+            </label>
+          </div>
+          <div id="violation_detail_wrap" style="display:none;margin-top:10px">
+            <p style="font-size:12px;color:#C4654A;margin-bottom:6px">⚠ 请如实填写情况说明（违法/纪律处分类型、时间、处理结果等），审核团队会进行综合评估</p>
+            <textarea id="c_violation_detail" placeholder="请填写违法或纪律处分的具体情况、发生时间、最终处理结果…" style="min-height:80px;font-size:13px" oninput="autoResize(this)"></textarea>
+          </div>
+        </div>
+
+        <div class="form-row" style="margin-top:16px;margin-bottom:0">
+          <label class="required">是否存在咨询事故或正式投诉记录？</label>
+          <div style="display:flex;gap:16px;margin-top:8px;flex-wrap:wrap">
+            <label style="display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer">
+              <input type="radio" name="has_incident" value="否" onchange="toggleIncidentDetail()" checked> 否，从无相关记录
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer">
+              <input type="radio" name="has_incident" value="是" onchange="toggleIncidentDetail()"> 是，需要说明
+            </label>
+          </div>
+          <div id="incident_detail_wrap" style="display:none;margin-top:10px">
+            <p style="font-size:12px;color:#C4654A;margin-bottom:6px">⚠ 请如实填写情况说明（事故/投诉性质、发生时间、处理结果及当前状态等），审核团队会进行综合评估</p>
+            <textarea id="c_incident_detail" placeholder="请填写咨询事故或投诉的具体情况、发生时间、处理结果及当前状态…" style="min-height:80px;font-size:13px" oninput="autoResize(this)"></textarea>
+          </div>
+        </div>
+
+        <div style="margin-top:16px;padding:12px 14px;background:#F5F2ED;border-radius:8px;border:1px solid #E0D8CE">
+          <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-size:13px;color:#4A453F;line-height:1.6">
+            <input type="checkbox" id="integrity_confirm" style="margin-top:3px;flex-shrink:0">
+            <span>本人确认上述声明内容真实有效，同意小平菇平台根据声明内容对本档案进行评估与审核，如有虚假陈述，接受账号停用及相关责任追究。</span>
+          </label>
+        </div>
+      </div>
+
       <div class="action-bar">
-        <button class="btn btn-primary" onclick="goStep(2)">下一步 →</button>
+        <button class="btn btn-primary" onclick="goStep2WithIntegrityCheck()">下一步 →</button>
       </div>
     </div>
   </div>
@@ -833,6 +878,41 @@ function goStep(n) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
+function goStep2WithIntegrityCheck() {
+  if (!document.getElementById('integrity_confirm').checked) {
+    showToast('请阅读并勾选诚信声明后继续');
+    return;
+  }
+  goStep(2);
+}
+
+function toggleViolationDetail() {
+  var val = document.querySelector('input[name="has_violation"]:checked');
+  var wrap = document.getElementById('violation_detail_wrap');
+  if (val && val.value === '是') {
+    wrap.style.display = 'block';
+  } else {
+    wrap.style.display = 'none';
+    document.getElementById('c_violation_detail').value = '';
+  }
+}
+
+function toggleIncidentDetail() {
+  var val = document.querySelector('input[name="has_incident"]:checked');
+  var wrap = document.getElementById('incident_detail_wrap');
+  if (val && val.value === '是') {
+    wrap.style.display = 'block';
+  } else {
+    wrap.style.display = 'none';
+    document.getElementById('c_incident_detail').value = '';
+  }
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = (el.scrollHeight) + 'px';
+}
+
 function toggleOpt(el) {
   el.classList.toggle('selected');
   var cb = el.querySelector('input[type="checkbox"]');
@@ -1137,7 +1217,16 @@ function collectData() {
     contact_email_public: document.getElementById('c_email_public').checked,
     public_welfare: document.getElementById('c_public_welfare').checked,
     bio_short: document.getElementById('c_bio_short').value.trim(),
-    bio_full: document.getElementById('c_bio_full').value.trim()
+    bio_full: document.getElementById('c_bio_full').value.trim(),
+    has_violation: (function() { var el = document.querySelector('input[name="has_violation"]:checked'); return el ? el.value : '否'; })(),
+    violation_detail: document.getElementById('c_violation_detail').value.trim(),
+    has_incident: (function() { var el = document.querySelector('input[name="has_incident"]:checked'); return el ? el.value : '否'; })(),
+    incident_detail: document.getElementById('c_incident_detail').value.trim(),
+    needs_deep_review: (function() {
+      var v = document.querySelector('input[name="has_violation"]:checked');
+      var i = document.querySelector('input[name="has_incident"]:checked');
+      return (v && v.value === '是') || (i && i.value === '是');
+    })()
   };
 }
 
