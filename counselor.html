@@ -213,7 +213,7 @@
   </div>
 </div>
 
-<div class="main">
+<div class="main" id="main-app" style="display:none">
 
   <div id="form_area">
 
@@ -1416,10 +1416,6 @@ function collectData() {
 }
 
 function previewAndSubmit() {
-  if (!puzzleVerified) {
-    showPuzzle(function() { previewAndSubmit(); });
-    return;
-  }
   var d = collectData();
   if (!d.name) { showToast('请填写真实姓名'); goStep(1); return; }
   if (!/^[\u4e00-\u9fa5]{2,4}$/.test(d.name) && !/^[A-Za-z\s·]{2,30}$/.test(d.name)) { showToast('请填写真实姓名（中文2-4字或英文全名）'); goStep(1); return; }
@@ -1663,6 +1659,18 @@ function submitProfile() {
     onSuccess('档案已成功提交！');
   }
 }
+
+// 页面初始化：先验证，再显示
+(function initCounselorApp() {
+  if (puzzleVerified) {
+    document.getElementById('main-app').style.display = 'block';
+    return; // 已验证，直接显示
+  }
+  showPuzzle(function() {
+    puzzleVerified = true;
+    document.getElementById('main-app').style.display = 'block';
+  });
+})();
 
 // 检查 URL 中的编辑令牌
 (function() {

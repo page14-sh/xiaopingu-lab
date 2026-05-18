@@ -954,6 +954,11 @@ var puzzleVerified = false; // 拼图验证码状态
 })();
 
 function initApp() {
+  if (!puzzleVerified) {
+    document.getElementById('main-app').style.display = 'block';
+    showPuzzle(function() { initApp(); });
+    return;
+  }
   try {
     var saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
@@ -1217,10 +1222,6 @@ function exportToPDF(){
 }
 
 function generateResult() {
-  if (!puzzleVerified) {
-    showPuzzle(function() { generateResult(); });
-    return;
-  }
   if(!currentViewToken) saveDraft();
   var name=document.getElementById('name').value||'来访者',age=document.getElementById('age').value||'—';
   var gender=document.getElementById('gender'),genderText=gender.options[gender.selectedIndex].text;
