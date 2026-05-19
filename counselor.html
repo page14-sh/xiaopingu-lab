@@ -1664,9 +1664,15 @@ function submitProfile() {
   if (typeof saveCounselor === 'function' && SUPABASE_CONFIG.enableDataCollection && SUPABASE_CONFIG.url) {
     saveCounselor(d).then(function(result) {
       var token = '';
-      if (result && result[0]) {
+      if (result && Array.isArray(result) && result[0]) {
+        // 旧模式：return=representation 返回数组
         localStorage.setItem('xiaopingu_counselor_id', result[0].id);
-        token = result[0].edit_token || d.edit_token || '';
+        token = result[0].edit_token || '';
+      } else if (result && result.edit_token) {
+        // 新模式：返回输入数据对象
+        token = result.edit_token;
+      } else {
+        token = d.edit_token || '';
       }
       onSuccess('档案已成功提交！', token);
     }).catch(function(err) {

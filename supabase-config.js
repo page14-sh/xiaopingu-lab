@@ -167,6 +167,15 @@ function getSupabaseHeaders() {
   };
 }
 
+// 写操作 header（不含 return=representation，避免 INSERT/PATCH 后 SELECT 被 RLS 拦截）
+function getSupabaseWriteHeaders() {
+  return {
+    'Content-Type': 'application/json',
+    'apikey': SUPABASE_CONFIG.anonKey,
+    'Authorization': 'Bearer ' + SUPABASE_CONFIG.anonKey
+  };
+}
+
 // 保存评估数据
 function saveAssessment(data) {
   if (!SUPABASE_CONFIG.enableDataCollection || !SUPABASE_CONFIG.url) return Promise.resolve(null);
@@ -180,28 +189,28 @@ function saveAssessment(data) {
   }).catch(function(e) { console.warn('[小平菇] 网络错误:', e); return null; });
 }
 
-// 保存咨询师档案
+// 保存咨询师档案（不含 return=representation，避免 pending 记录被 RLS 拦截）
 function saveCounselor(data) {
-  if (!SUPABASE_CONFIG.enableDataCollection || !SUPABASE_CONFIG.url) return Promise.resolve();
+  if (!SUPABASE_CONFIG.enableDataCollection || !SUPABASE_CONFIG.url) return Promise.resolve(data);
   return fetch(SUPABASE_CONFIG.url + '/rest/v1/counselors', {
     method: 'POST',
-    headers: getSupabaseHeaders(),
+    headers: getSupabaseWriteHeaders(),
     body: JSON.stringify(data)
   }).then(function(r) {
-    if (r.ok) return r.json();
+    if (r.ok) return data; // 返回输入数据，供调用方取 edit_token
     else throw new Error('HTTP ' + r.status);
   });
 }
 
-// 更新咨询师档案
+// 更新咨询师档案（不含 return=representation）
 function updateCounselor(id, data) {
   if (!SUPABASE_CONFIG.enableDataCollection || !SUPABASE_CONFIG.url) return Promise.resolve();
   return fetch(SUPABASE_CONFIG.url + '/rest/v1/counselors?id=eq.' + id, {
     method: 'PATCH',
-    headers: getSupabaseHeaders(),
+    headers: getSupabaseWriteHeaders(),
     body: JSON.stringify({ ...data, updated_at: new Date().toISOString() })
   }).then(function(r) {
-    if (r.ok) return r.json();
+    if (r.ok) return true;
     else throw new Error('HTTP ' + r.status);
   }).catch(function(e) { console.warn('[小平菇] 更新失败:', e); });
 }
