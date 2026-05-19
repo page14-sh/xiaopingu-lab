@@ -3,3 +3,6 @@ node_modules/
 .netlify/
 .env*
 .DS_Store
+*.rtf
+*.xlsx
+*.csv

@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+  <script src="supabase-config.js"></script>
   <title>小平菇 · 数据管理后台</title>
   <style>
     * { box-sizing: border-box; margin:0; padding:0; }
@@ -712,9 +713,9 @@
     // ========== 密码配置（修改这里可更改默认密码）==========
     let ADMIN_PASSWORD = localStorage.getItem('xiaopingu_admin_pwd') || 'xiaopingu2026';
 
-    // ========== Supabase 配置 ==========
-    const SUPABASE_URL = 'https://csvhikdiliwqoacitlag.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_atXq0SmWEiEY6UMouG4dLw_ouXN2U6B';
+    // ========== Supabase 配置（引用共享配置） ==========
+    const SUPABASE_URL = SUPABASE_CONFIG.url;
+    const SUPABASE_ANON_KEY = SUPABASE_CONFIG.anonKey;
 
     // ========== 全局状态 ==========
     let currentTab = 'dashboard';

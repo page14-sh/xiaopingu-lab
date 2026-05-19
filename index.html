@@ -237,7 +237,7 @@
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
   /* Puzzle CAPTCHA */
-  .puzzle-overlay { position:fixed;inset:0;background:rgba(61,56,49,0.45);z-index:998;display:none;align-items:center;justify-content:center; }
+  .puzzle-overlay { position:fixed;inset:0;background:rgba(61,56,49,0.45);z-index:999999;display:none;align-items:center;justify-content:center; }
   .puzzle-overlay.open { display:flex; }
   .puzzle-box { background:#fff;border-radius:16px;padding:24px 20px;box-shadow:0 8px 30px rgba(0,0,0,0.12);width:340px;max-width:90vw;text-align:center; }
   .puzzle-title { font-size:16px;font-weight:600;color:#3D3831;margin-bottom:14px; }
@@ -727,6 +727,7 @@
 </div>
 
 <div class="toast" id="toast"></div>
+<script src="supabase-config.js"></script>
 <script>
 var scores = { mood:0, anxiety:0, sleep:0, function:0, relation:0 };
 var currentStep = 1;
@@ -942,21 +943,25 @@ var puzzleVerified = false; // 拼图验证码状态
     enterViewMode(viewToken);
     return;
   }
-  // Check if consent was already given in this session
+  // 第一步：先验证码，再知情同意
+  if (!puzzleVerified) {
+    showPuzzle(afterPuzzle);
+    return;
+  }
+  afterPuzzle();
+})();
+
+function afterPuzzle() {
+  // 验证码通过后，进入知情同意流程
   if (sessionStorage.getItem('xiaopingu_consent') === 'given') {
     document.getElementById('consent-overlay').classList.add('hidden');
     document.getElementById('main-app').style.display = 'block';
     initApp();
   }
   // Otherwise: consent overlay is visible, main-app is hidden → wait for user to agree
-})();
+}
 
 function initApp() {
-  if (!puzzleVerified) {
-    document.getElementById('main-app').style.display = 'block';
-    showPuzzle(function() { initApp(); });
-    return;
-  }
   try {
     var saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
@@ -1678,7 +1683,7 @@ function submitMatchApply(){
       method:'PATCH',
       headers:{'Content-Type':'application/json','apikey':SUPABASE_CONFIG.anonKey,'Authorization':'Bearer '+SUPABASE_CONFIG.anonKey,'Prefer':'return=representation'},
       body:JSON.stringify({match_request_name:name,match_request_contact:contact,match_request_cid:document.getElementById('apply-cid').value,updated_at:new Date().toISOString()})
-    }).then(function(r){if(r.ok)console.log('[小平菇] 匹配申请已保存');});
+    }).then(function(r){if(r.ok){}});
   }
   document.getElementById('apply-form').classList.remove('show');
   document.getElementById('apply-success').classList.add('show');
