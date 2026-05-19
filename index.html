@@ -744,7 +744,7 @@ var puzzleVerified = false; // 拼图验证码状态
   var pieceSize = 42, pieceY = 60;
   var targetX = 0, startX = 0, dragging = false, puzzleCallback = null;
   var tolerance = 5;
-  var bgImageData = null;
+  var bgCanvas = null; // 离屏背景 canvas，用于 drawImage（避免 putImageData 忽略 clip 的问题）
 
   function showPuzzle(cb) {
     puzzleCallback = cb;
@@ -794,15 +794,12 @@ var puzzleVerified = false; // 拼图验证码状态
     for (var i = 0; i < 6; i++) {
       drawFlower(ctx, 20 + i * 50, H - 15, 5 + Math.random()*3);
     }
-    // 保存背景
-    bgImageData = ctx.getImageData(0, 0, W, H);
-    // 绘制缺口（半透明暗色 + 内阴影）
-    drawPiecePath(ctx, targetX, pieceY, pieceSize);
-    ctx.fillStyle = 'rgba(0,0,0,0.35)';
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(255,255,255,0.6)';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
+    // 保存背景到离屏 canvas（用于 drawImage，支持 clip）
+    bgCanvas = document.createElement('canvas');
+    bgCanvas.width = W; bgCanvas.height = H;
+    bgCanvas.getContext('2d').drawImage(canvas, 0, 0);
+    // 绘制初始状态（缺口 + 拼图块在左侧）
+    drawSliderPiece(0);
   }
 
   function drawCloud(ctx, x, y, r) {
@@ -843,27 +840,28 @@ var puzzleVerified = false; // 拼图验证码状态
   }
 
   function drawSliderPiece(sx) {
-    // 先还原背景
-    if (bgImageData) ctx.putImageData(bgImageData, 0, 0);
-    // 重新绘制缺口
+    if (!bgCanvas) return;
+    // 还原背景
+    ctx.drawImage(bgCanvas, 0, 0);
+    // 绘制缺口暗影
     drawPiecePath(ctx, targetX, pieceY, pieceSize);
     ctx.fillStyle = 'rgba(0,0,0,0.35)';
     ctx.fill();
     ctx.strokeStyle = 'rgba(255,255,255,0.6)';
     ctx.lineWidth = 1.5;
     ctx.stroke();
-    // 绘制拼图块（从背景取色）
-    drawPiecePath(ctx, sx, pieceY, pieceSize);
+    // 绘制拼图块：clip 后从离屏背景 drawImage，clip 正常工作
     ctx.save();
+    drawPiecePath(ctx, sx, pieceY, pieceSize);
     ctx.clip();
-    if (bgImageData) ctx.putImageData(bgImageData, 0, 0);
+    ctx.drawImage(bgCanvas, 0, 0); // drawImage 遵守 clip，putImageData 不遵守
     ctx.restore();
     // 拼图块边框
     drawPiecePath(ctx, sx, pieceY, pieceSize);
-    ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+    ctx.strokeStyle = 'rgba(255,255,255,0.85)';
     ctx.lineWidth = 2;
     ctx.stroke();
-    ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+    ctx.strokeStyle = 'rgba(0,0,0,0.12)';
     ctx.lineWidth = 1;
     ctx.stroke();
   }
