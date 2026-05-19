@@ -1523,6 +1523,17 @@ function previewAndSubmit() {
 // ========== 防重复提交锁 ==========
 var _isSubmitting = false;
 
+// 兼容生成 UUID（部分浏览器/协议不支持 crypto.randomUUID）
+function generateToken() {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    try { return crypto.randomUUID(); } catch(e) {}
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
 function submitProfile() {
   // 防重复提交：如果正在提交，直接返回
   if (_isSubmitting) return;
@@ -1532,7 +1543,7 @@ function submitProfile() {
   // 审核状态处理
   if (!currentEditToken) {
     d.review_status = 'pending';
-    d.edit_token = crypto.randomUUID();
+    d.edit_token = generateToken();
   } else if (currentReviewStatus === 'rejected') {
     d.review_status = 'pending'; // 被拒绝后重新提交，重置为待审核
   }
