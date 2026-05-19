@@ -75,7 +75,7 @@ CREATE TABLE counselors (
   city TEXT,
   -- 咨询取向
   approaches TEXT[],              -- ['CBT','ACT','DBT','EMDR'...]
-  approach_primary TEXT,          -- 首选取向
+  service_settings TEXT[],         -- ['个体咨询','伴侣咨询','家庭治疗','团体咨询']
   training_background TEXT,       -- 受训背景
   supervision_hours INTEGER DEFAULT 0,
   personal_therapy_hours INTEGER DEFAULT 0,

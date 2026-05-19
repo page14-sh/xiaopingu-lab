@@ -44,7 +44,7 @@ CREATE TABLE counselors (
   city TEXT,
   -- 咨询取向
   approaches TEXT[],
-  approach_primary TEXT,
+  service_settings TEXT[],         -- ['个体咨询','伴侣咨询','家庭治疗','团体咨询']
   training_background TEXT,
   supervision_hours INTEGER DEFAULT 0,
   personal_therapy_hours INTEGER DEFAULT 0,

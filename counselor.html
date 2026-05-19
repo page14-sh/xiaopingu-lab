@@ -412,23 +412,17 @@
 
       <div class="form-grid">
         <div class="form-row">
-          <label>首选取向</label>
-          <select id="c_approach_primary">
-            <option value="">请选择您最擅长的取向</option>
-            <option value="CBT">CBT</option>
-            <option value="ACT">ACT</option>
-            <option value="DBT">DBT</option>
-            <option value="EMDR">EMDR</option>
-            <option value="精神动力学">精神动力学</option>
-            <option value="人本主义">人本主义</option>
-            <option value="家庭治疗">家庭治疗</option>
-            <option value="EFT">EFT</option>
-            <option value="叙事治疗">叙事治疗</option>
-            <option value="沙盘游戏">沙盘游戏</option>
-          </select>
+          <label class="required">服务设置类型（可多选）</label>
+          <p style="font-size:12px;color:#A09889;margin:4px 0 8px">请选择您可提供咨询的设置类型</p>
+          <div class="option-grid" id="service_setting_grid" style="grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));">
+            <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="service_setting" value="个体咨询"><div class="opt-label">个体咨询</div></div>
+            <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="service_setting" value="伴侣咨询"><div class="opt-label">伴侣咨询</div></div>
+            <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="service_setting" value="家庭治疗"><div class="opt-label">家庭治疗</div></div>
+            <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="service_setting" value="团体咨询"><div class="opt-label">团体咨询</div></div>
+          </div>
         </div>
         <div class="form-row">
-          <label>累计督导时长</label>
+          <label>累计接受督导时长</label>
           <input type="number" id="c_supervision" placeholder="小时" min="0" inputmode="numeric">
         </div>
       </div>
@@ -1231,7 +1225,6 @@ function restoreFromData(d) {
   if (d.education) document.getElementById('c_education').value = d.education;
   if (d.city) document.getElementById('c_city').value = d.city;
   if (d.license_number) document.getElementById('c_license').value = d.license_number;
-  if (d.approach_primary) document.getElementById('c_approach_primary').value = d.approach_primary;
   if (d.supervision_hours) document.getElementById('c_supervision').value = d.supervision_hours;
   if (d.personal_therapy_hours) document.getElementById('c_personal_therapy').value = d.personal_therapy_hours;
   ['personal_therapy_status', 'therapy_cert', 'ethics_training'].forEach(function(name) {
@@ -1284,7 +1277,7 @@ function restoreFromData(d) {
   renderOtherTags('extra_credential');
   renderOtherTags('population');
 
-  ['approach','cert','specialty','population','severity','format','extra_credential','client_age_pref','orientation_friendly','gender_identity_friendly','comm_style','cnip_styles','cnip_emotion','cnip_time','cnip_stance','cnip_homework','cnip_relational'].forEach(function(group) {
+  ['approach','cert','specialty','population','severity','format','extra_credential','client_age_pref','orientation_friendly','gender_identity_friendly','comm_style','cnip_styles','cnip_emotion','cnip_time','cnip_stance','cnip_homework','cnip_relational','service_setting'].forEach(function(group) {
     var keyMap = {
       approach: 'approaches', cert: 'certifications', specialty: 'specialties',
       population: 'populations', sever: 'severity_levels', format: 'session_formats',
@@ -1292,7 +1285,7 @@ function restoreFromData(d) {
       orientation_friendly: 'orientation_friendly', gender_identity_friendly: 'gender_identity_friendly',
       comm_style: 'comm_styles', cnip_styles: 'cnip_styles', cnip_emotion: 'cnip_emotion_focus',
       cnip_time: 'cnip_time', cnip_stance: 'cnip_stance', cnip_homework: 'cnip_homework',
-      cnip_relational: 'cnip_relational'
+      cnip_relational: 'cnip_relational', service_setting: 'service_settings'
     };
     var key = keyMap[group] || group + 's';
     var vals = d[key] || [];
@@ -1374,7 +1367,7 @@ function collectData() {
     license_number: document.getElementById('c_license').value.trim(),
     approaches: getMultiChecked('approach'),
     approaches_other: otherApproaches.slice(),
-    approach_primary: document.getElementById('c_approach_primary').value,
+    service_settings: getMultiChecked('service_setting'),
     supervision_hours: parseInt(document.getElementById('c_supervision').value) || 0,
     personal_therapy_hours: parseInt(document.getElementById('c_personal_therapy').value) || 0,
     personal_therapy_status: (function() { var el = document.querySelector('input[name="personal_therapy_status"]:checked'); return el ? el.value : ''; })(),
@@ -1452,11 +1445,11 @@ function previewAndSubmit() {
   d.approaches.forEach(function(s) { html += '<span class="preview-tag">' + s + '</span> '; });
   d.approaches_other.forEach(function(s) { html += '<span class="preview-tag" style="background:#FFF3E6;color:#B8860B;border:1px solid #F0D9A8">' + s + '</span> '; });
   html += (d.approaches.length + d.approaches_other.length === 0 ? '—' : '') + '</span></div>';
-  if (d.approach_primary) html += '<div class="preview-row"><span class="preview-label">首选取向</span><span class="preview-val">' + d.approach_primary + '</span></div>';
+  if (d.service_settings && d.service_settings.length) html += '<div class="preview-row"><span class="preview-label">服务设置</span><span class="preview-val">' + d.service_settings.join('、') + '</span></div>';
   if (d.certifications.length) html += '<div class="preview-row"><span class="preview-label">专项认证</span><span class="preview-val">' + d.certifications.join('、');
   d.certifications_other.forEach(function(s) { html += '<span class="preview-tag" style="background:#FFF3E6;color:#B8860B;border:1px solid #F0D9A8">' + s + '</span> '; });
   html += '</span></div>';
-  if (d.supervision_hours) html += '<div class="preview-row"><span class="preview-label">督导时长</span><span class="preview-val">' + d.supervision_hours + '小时</span></div>';
+  if (d.supervision_hours) html += '<div class="preview-row"><span class="preview-label">接受督导时长</span><span class="preview-val">' + d.supervision_hours + '小时</span></div>';
   if (d.personal_therapy_status) {
     var ptInfo = d.personal_therapy_status + (d.personal_therapy_hours ? '（' + d.personal_therapy_hours + '小时）' : '');
     if (d.therapy_cert === '是') ptInfo += ' · 可开证明';
@@ -1721,7 +1714,6 @@ function submitProfile() {
     if (d.education) document.getElementById('c_education').value = d.education;
     if (d.city) document.getElementById('c_city').value = d.city;
     if (d.license_number) document.getElementById('c_license').value = d.license_number;
-    if (d.approach_primary) document.getElementById('c_approach_primary').value = d.approach_primary;
     if (d.supervision_hours) document.getElementById('c_supervision').value = d.supervision_hours;
     if (d.personal_therapy_hours) document.getElementById('c_personal_therapy').value = d.personal_therapy_hours;
     if (d.personal_therapy_status) {
@@ -1788,13 +1780,13 @@ function submitProfile() {
     renderOtherTags('extra_credential');
     renderOtherTags('population');
 
-    ['approach','cert','specialty','population','severity','format','extra_credential','client_age_pref','orientation_friendly','gender_identity_friendly','comm_style'].forEach(function(group) {
+    ['approach','cert','specialty','population','severity','format','extra_credential','client_age_pref','orientation_friendly','gender_identity_friendly','comm_style','service_setting'].forEach(function(group) {
       var keyMap = {
         approach: 'approaches', cert: 'certifications', specialty: 'specialties',
         population: 'populations', severity: 'severity_levels', format: 'session_formats',
         extra_credential: 'extra_credentials', client_age_pref: 'client_age_prefs',
         orientation_friendly: 'orientation_friendly', gender_identity_friendly: 'gender_identity_friendly',
-        comm_style: 'comm_styles'
+        comm_style: 'comm_styles', service_setting: 'service_settings'
       };
       var vals = d[keyMap[group]] || [];
       if (!vals.length) return;
