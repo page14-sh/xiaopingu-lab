@@ -42,7 +42,23 @@ CREATE TABLE assessments (
   severity TEXT,
   specials TEXT[],
   crisis_level TEXT,
-  user_agent TEXT
+  user_agent TEXT,
+  -- 偏好与扩展字段
+  filled_by TEXT,                     -- 本人/家长/监护人/其他
+  is_minor BOOLEAN DEFAULT false,
+  visitor_city TEXT,
+  gender_pref TEXT,                   -- male/female/any
+  age_pref TEXT,                      -- senior/mid/peer
+  orientation_pref TEXT,              -- friendly/experienced/any
+  comm_style TEXT,                    -- warm/direct/professional
+  view_token TEXT UNIQUE,
+  -- C-NIP 偏好
+  cnip_structure TEXT,                -- structured/balanced/open
+  cnip_emotion TEXT,                  -- emotional/balanced/rational
+  cnip_timefocus TEXT,                -- past/balanced/present
+  cnip_warmth TEXT,                   -- warm/balanced/direct
+  cnip_homework TEXT,                 -- yes/neutral/no
+  cnip_relational TEXT                -- discuss/neutral/skip
 );
 
 -- 2. 咨询师档案表
@@ -86,7 +102,26 @@ CREATE TABLE counselors (
   reviewed_by TEXT,
   -- 联系（可选）
   contact_wechat TEXT,
-  contact_phone TEXT
+  contact_phone TEXT,
+  -- 编辑与诚信
+  edit_token TEXT UNIQUE,
+  orientation_friendly TEXT[],       -- ['LGBTQ+友善','跨性别友善'...]
+  client_gender_pref TEXT,           -- male_only/female_only/空
+  client_age_prefs TEXT[],           -- ['6-12岁','12-18岁','成人','老年']
+  comm_styles TEXT[],                -- ['温暖共情','直接高效','专业客观']
+  has_violation BOOLEAN DEFAULT false,
+  violation_detail TEXT,
+  has_incident BOOLEAN DEFAULT false,
+  incident_detail TEXT,
+  integrity_confirm BOOLEAN DEFAULT false,
+  deep_review BOOLEAN DEFAULT false, -- 加深审核标记
+  -- C-NIP 偏好（多选）
+  cnip_styles TEXT[],                -- {structured, balanced, open}
+  cnip_emotion_focus TEXT[],         -- {emotional, balanced, rational}
+  cnip_time TEXT[],                  -- {past, balanced, present}
+  cnip_stance TEXT[],                -- {warm, balanced, challenging}
+  cnip_homework TEXT[],              -- {yes, neutral, no}
+  cnip_relational TEXT[]             -- {discuss, neutral, skip}
 );
 
 -- 3. RLS 策略
