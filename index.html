@@ -505,6 +505,18 @@
 
   <div class="landing-cta">
     <button id="btn-start" class="landing-btn landing-btn-primary">开始心理评估</button>
+    <!-- 数学验证码（内联在按钮下方） -->
+    <div id="captcha-inline" style="display:none;max-width:480px;margin:12px auto 0;padding:16px 20px;background:#fff;border-radius:12px;border:1.5px solid #E8E4DC;">
+      <p style="font-size:15px;color:#3D3831;margin:0 0 14px;text-align:center;">安全验证：<span id="captcha-question" style="font-weight:bold;"></span></p>
+      <div style="display:flex;gap:10px;justify-content:center;margin-bottom:10px;">
+        <input type="text" id="captcha-input" inputmode="numeric" autocomplete="off" placeholder="请输入答案"
+          style="width:120px;padding:10px 14px;border:1.5px solid #E8E4DC;border-radius:10px;font-size:16px;text-align:center;outline:none;transition:border-color 0.2s;"
+          onfocus="this.style.borderColor='#5C7A52'" onblur="this.style.borderColor='#E8E4DC'" />
+        <button onclick="verifyCaptcha()" style="padding:10px 20px;background:#5C7A52;color:#fff;border:none;border-radius:10px;font-size:15px;cursor:pointer;transition:background 0.2s;" onmouseover="this.style.background='#4a6542'" onmouseout="this.style.background='#5C7A52'">验证</button>
+      </div>
+      <p style="font-size:12px;color:#A09889;text-align:center;" id="captcha-hint">计算结果并输入</p>
+      <p style="text-align:center;margin-top:6px;"><a href="javascript:void(0)" onclick="generateCaptcha()" style="font-size:12px;color:#5C7A52;text-decoration:underline;">换一题</a></p>
+    </div>
     <a href="counselor.html" class="landing-btn landing-btn-secondary">咨询师入驻 →</a>
   </div>
 
@@ -859,22 +871,6 @@
   本系统为心理自助评估工具，评估结果<strong>不构成专业医学诊断、精神障碍诊断或治疗建议</strong>。如您正在经历严重心理困扰，请及时联系持证心理咨询师、精神科医生或拨打心理援助热线。如遇紧急危险，请立即拨打 110 或 120。
 </div>
 
-<!-- 数学验证码 -->
-<div class="puzzle-overlay" id="captcha-overlay">
-  <div class="puzzle-box" style="width:300px;">
-    <p class="puzzle-title">安全验证</p>
-    <p style="font-size:15px;color:#3D3831;margin:12px 0 16px;" id="captcha-question"></p>
-    <div style="display:flex;gap:10px;justify-content:center;margin-bottom:10px;">
-      <input type="text" id="captcha-input" inputmode="numeric" autocomplete="off" placeholder="请输入答案"
-        style="width:120px;padding:10px 14px;border:1.5px solid #E8E4DC;border-radius:10px;font-size:16px;text-align:center;outline:none;transition:border-color 0.2s;"
-        onfocus="this.style.borderColor='#5C7A52'" onblur="this.style.borderColor='#E8E4DC'" />
-      <button onclick="verifyCaptcha()" style="padding:10px 20px;background:#5C7A52;color:#fff;border:none;border-radius:10px;font-size:15px;cursor:pointer;transition:background 0.2s;" onmouseover="this.style.background='#4a6542'" onmouseout="this.style.background='#5C7A52'">验证</button>
-    </div>
-    <p style="font-size:12px;color:#A09889;" id="captcha-hint">计算结果并输入</p>
-    <a href="javascript:void(0)" onclick="generateCaptcha()" style="font-size:12px;color:#5C7A52;text-decoration:underline;margin-top:8px;display:inline-block;">换一题</a>
-  </div>
-</div>
-
 <div class="toast" id="toast"></div>
 <script src="supabase-config.js?v=20260520"></script>
 <script>
@@ -921,23 +917,15 @@ function showCaptcha(cb) {
   try {
     window._captchaCallback = cb;
     generateCaptcha();
-    var overlay = document.getElementById('captcha-overlay');
-    if (overlay) {
-      overlay.style.display = 'flex';
-      overlay.style.position = 'fixed';
-      overlay.style.top = '0';
-      overlay.style.left = '0';
-      overlay.style.width = '100%';
-      overlay.style.height = '100%';
-      overlay.style.background = 'rgba(61,56,49,0.45)';
-      overlay.style.zIndex = '999999';
-      overlay.style.alignItems = 'center';
-      overlay.style.justifyContent = 'center';
-    }
+    var box = document.getElementById('captcha-inline');
+    if (box) box.style.display = 'block';
+    // 隐藏按钮防止重复点击
+    var btn = document.querySelector('.landing-btn-primary');
+    if (btn) btn.style.display = 'none';
     setTimeout(function() {
       var input = document.getElementById('captcha-input');
       if (input) input.focus();
-    }, 200);
+    }, 100);
   } catch(e) {
     console.error('[小平菇] 验证码初始化失败:', e);
     puzzleVerified = true;
@@ -957,8 +945,8 @@ function verifyCaptcha() {
   if (val === _captchaAnswer) {
     // 成功
     puzzleVerified = true;
-    var overlay = document.getElementById('captcha-overlay');
-    if (overlay) overlay.style.display = 'none';
+    var box = document.getElementById('captcha-inline');
+    if (box) box.style.display = 'none';
     showToast('验证成功');
     if (window._captchaCallback) {
       try { window._captchaCallback(); } catch(e) { console.error('[小平菇] 验证回调失败:', e); }
