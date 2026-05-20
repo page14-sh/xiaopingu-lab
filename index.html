@@ -919,25 +919,16 @@ function generateCaptcha() {
 
 function showCaptcha(cb) {
   try {
-    document.title = '[DEBUG]3a-showCaptcha-enter';
     window._captchaCallback = cb;
     generateCaptcha();
-    document.title = '[DEBUG]3b-generateOk';
     var overlay = document.getElementById('captcha-overlay');
-    document.title = '[DEBUG]3c-overlay=' + (overlay ? 'found' : 'NOT_FOUND');
-    if (overlay) {
-      overlay.classList.add('open');
-      document.title = '[DEBUG]3d-overlayOpen,display=' + getComputedStyle(overlay).display;
-    }
-    // 自动聚焦输入框
+    if (overlay) overlay.classList.add('open');
     setTimeout(function() {
       var input = document.getElementById('captcha-input');
       if (input) input.focus();
-      document.title = '[DEBUG]3e-inputFocus,display=' + getComputedStyle(document.getElementById('captcha-overlay')).display;
-    }, 300);
+    }, 100);
   } catch(e) {
     console.error('[小平菇] 验证码初始化失败:', e);
-    document.title = '[DEBUG]3-err:' + e.message;
     puzzleVerified = true;
     if (cb) cb();
   }
@@ -977,8 +968,6 @@ document.addEventListener('keydown', function(e) {
     verifyCaptcha();
   }
 });
-
-window.showPuzzle = showCaptcha;
 
 (function init() {
   var params = new URLSearchParams(window.location.search);
@@ -1045,23 +1034,7 @@ function afterPuzzle() {
 }
 
 function startVisitorFlow() {
-  try {
-    document.title = '[DEBUG]1-startVisitorFlow';
-    showToast('请完成安全验证');
-    document.title = '[DEBUG]2-toastOk';
-  } catch(e) {
-    document.title = '[DEBUG]1-err:' + e.message;
-  }
-  try {
-    document.title = '[DEBUG]3-beforeShowCaptcha';
-    showCaptcha(function() {
-      document.title = '[DEBUG]5-captchaCallback';
-      afterPuzzle();
-    });
-    document.title = '[DEBUG]4-showCaptchaReturned';
-  } catch(e) {
-    document.title = '[DEBUG]3-err:' + e.message;
-  }
+  afterPuzzle();
 }
 
 function initApp() {
