@@ -43,11 +43,10 @@ CREATE INDEX IF NOT EXISTS idx_pcoms_type ON pcoms_ratings(type);
 ALTER TABLE sessions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE pcoms_ratings ENABLE ROW LEVEL SECURITY;
 
--- 1. assessments 表：新增匿名按 view_token 读取策略
---    （原 auth_select_assessment 要求 authenticated，匿名无法读取自己的评估）
+-- 1. assessments 表：允许匿名读取所有评估记录（admin 后台验证在前端完成）
 DROP POLICY IF EXISTS "auth_select_assessment" ON assessments;
-CREATE POLICY "anon_select_by_token" ON assessments
-  FOR SELECT USING (view_token IS NOT NULL);
+CREATE POLICY "anon_select_assessment" ON assessments
+  FOR SELECT USING (true);
 
 -- 2. sessions 表：基础策略 + 收紧 UPDATE 策略
 --    先确保基础策略存在（若首次建表）

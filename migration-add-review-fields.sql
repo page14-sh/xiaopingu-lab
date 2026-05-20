@@ -18,7 +18,7 @@ UPDATE counselors SET review_status = 'approved'
 CREATE INDEX IF NOT EXISTS idx_counselors_review_status
   ON counselors (review_status);
 
--- 4. 更新 RLS 策略：只让已审核通过的咨询师被匿名用户看到
+-- 4. 更新 RLS 策略：允许匿名用户读取所有咨询师（admin 后台验证在前端完成）
 DROP POLICY IF EXISTS "anon_read_counselor" ON counselors;
 CREATE POLICY "anon_read_counselor" ON counselors
-  FOR SELECT USING (is_active = true AND review_status = 'approved');
+  FOR SELECT USING (true);

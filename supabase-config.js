@@ -273,7 +273,7 @@ function getAssessmentByToken(token) {
       'Authorization': 'Bearer ' + SUPABASE_CONFIG.anonKey
     }
   }).then(function(r) { return r.json(); })
-    .then(function(data) { return data && data[0] || null; })
+    .then(function(data) { return Array.isArray(data) && data.length > 0 ? data[0] : null; })
     .catch(function(e) { console.warn('[小平菇] 获取评估记录失败:', e); return null; });
 }
 
@@ -286,7 +286,7 @@ function getCounselorByToken(token) {
       'Authorization': 'Bearer ' + SUPABASE_CONFIG.anonKey
     }
   }).then(function(r) { return r.json(); })
-    .then(function(data) { return data && data[0] || null; })
+    .then(function(data) { return Array.isArray(data) && data.length > 0 ? data[0] : null; })
     .catch(function(e) { console.warn('[小平菇] 获取咨询师失败:', e); return null; });
 }
 
@@ -302,6 +302,7 @@ function matchCounselors(assessment) {
     }
   }).then(function(r) { return r.json(); })
   .then(function(counselors) {
+    if (!Array.isArray(counselors)) return [];
     return counselors.map(function(c) {
       var score = 0;
       var details = [];
@@ -609,6 +610,7 @@ function getSessionsByAssessment(assessmentId) {
       'Authorization': 'Bearer ' + SUPABASE_CONFIG.anonKey
     }
   }).then(function(r) { return r.json(); })
+    .then(function(data) { return Array.isArray(data) ? data : []; })
     .catch(function(e) { console.warn('[小平菇] 获取会话列表失败:', e); return []; });
 }
 
@@ -621,6 +623,7 @@ function getPcomsRatingsBySession(sessionId) {
       'Authorization': 'Bearer ' + SUPABASE_CONFIG.anonKey
     }
   }).then(function(r) { return r.json(); })
+    .then(function(data) { return Array.isArray(data) ? data : []; })
     .catch(function(e) { console.warn('[小平菇] 获取PCOMS评分失败:', e); return []; });
 }
 
@@ -636,7 +639,8 @@ function getPcomsTrend(assessmentId) {
         'apikey': SUPABASE_CONFIG.anonKey,
         'Authorization': 'Bearer ' + SUPABASE_CONFIG.anonKey
       }
-    }).then(function(r) { return r.json(); });
+    }).then(function(r) { return r.json(); })
+    .then(function(data) { return Array.isArray(data) ? data : []; });
   }).catch(function(e) { console.warn('[小平菇] 获取PCOMS趋势失败:', e); return []; });
 }
 
