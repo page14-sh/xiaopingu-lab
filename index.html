@@ -1019,8 +1019,9 @@ var puzzleVerified = false; // 拼图验证码状态
         setTimeout(function() {
           overlay.classList.remove('open');
           puzzleVerified = true;
+          showToast('验证成功');
           if (puzzleCallback) {
-            try { puzzleCallback(); } catch(e) { console.error('[小平菇] 验证回调失败:', e); }
+            try { puzzleCallback(); } catch(e) { console.error('[小平菇] 验证回调失败:', e); showToast('跳转失败: ' + e.message); }
           }
           puzzleCallback = null;
         }, 300);
@@ -1070,26 +1071,37 @@ var puzzleVerified = false; // 拼图验证码状态
 })();
 
 function afterPuzzle() {
-  // 验证码通过后
-  var consentGiven = false;
   try {
-    consentGiven = sessionStorage.getItem('xiaopingu_consent') === 'given';
+    var consentGiven = false;
+    try {
+      consentGiven = sessionStorage.getItem('xiaopingu_consent') === 'given';
+    } catch(e) {
+      console.warn('[小平菇] sessionStorage 不可用:', e);
+    }
+    showToast(consentGiven ? '正在加载评估...' : '请阅读知情同意书');
+    if (consentGiven) {
+      // 已同意，直接进入评估
+      document.getElementById('landing').classList.add('hidden');
+      document.getElementById('main-app').style.display = 'block';
+      initApp();
+    } else {
+      // 未同意，显示知情同意
+      document.getElementById('landing').classList.add('hidden');
+      document.getElementById('consent-overlay').classList.remove('hidden');
+    }
   } catch(e) {
-    console.warn('[小平菇] sessionStorage 不可用:', e);
-  }
-  if (consentGiven) {
-    // 已同意，直接进入评估
-    document.getElementById('landing').classList.add('hidden');
-    document.getElementById('main-app').style.display = 'block';
-    initApp();
-  } else {
-    // 未同意，显示知情同意
-    document.getElementById('landing').classList.add('hidden');
-    document.getElementById('consent-overlay').classList.remove('hidden');
+    console.error('[小平菇] afterPuzzle 失败:', e);
+    showToast('加载失败: ' + e.message);
+    // 最终兜底：强制显示知情同意
+    try {
+      document.getElementById('landing').classList.add('hidden');
+      document.getElementById('consent-overlay').classList.remove('hidden');
+    } catch(e2) { console.error('[小平菇] 兜底也失败:', e2); }
   }
 }
 
 function startVisitorFlow() {
+  showToast('正在启动...');
   try {
     if (!puzzleVerified) {
       showPuzzle(afterPuzzle);
@@ -1098,8 +1110,7 @@ function startVisitorFlow() {
     }
   } catch(e) {
     console.error('[小平菇] 启动评估失败:', e);
-    showToast('启动失败，请刷新页面重试 (' + e.message + ')');
-    // 降级：自动跳过验证直接进入
+    showToast('启动失败: ' + e.message);
     puzzleVerified = true;
     afterPuzzle();
   }
