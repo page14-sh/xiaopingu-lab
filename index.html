@@ -848,7 +848,6 @@ var puzzleVerified = false; // 拼图验证码状态
   var bgCanvas = null; // 离屏背景 canvas，用于 drawImage（避免 putImageData 忽略 clip 的问题）
 
   function showPuzzle(cb) {
-    document.title = '[SP1]showPuzzle入口';
     try {
       puzzleCallback = cb;
       overlay = document.getElementById('puzzle-overlay');
@@ -856,32 +855,23 @@ var puzzleVerified = false; // 拼图验证码状态
       slider = document.getElementById('puzzle-slider');
       track = document.getElementById('puzzle-track');
       progress = document.getElementById('puzzle-progress');
-      document.title = '[SP2]元素获取完毕';
       if (!canvas || !slider || !track || !progress || !overlay) {
-        document.title = '[SP3E]拼图元素缺失';
         throw new Error('拼图元素缺失');
       }
       ctx = canvas.getContext('2d');
       if (!ctx) {
-        document.title = '[SP3E]Canvas不可用';
         throw new Error('Canvas 2D 上下文不可用');
       }
-      document.title = '[SP3]Canvas就绪';
       // 随机缺口 x（偏右区域）
       targetX = 180 + Math.floor(Math.random() * 80);
       // 重置滑块
       slider.style.left = '0px';
       slider.className = 'puzzle-slider';
       progress.style.width = '0px';
-      document.title = '[SP4]准备显示弹窗';
       overlay.classList.add('open');
-      document.title = '[SP5]弹窗已显示';
       initPuzzle();
-      document.title = '[SP6]initPuzzle完成';
       bindDrag();
-      document.title = '[SP7]bindDrag完成';
     } catch(e) {
-      document.title = '[SPE]异常:' + e.message;
       console.error('[小平菇] 拼图验证初始化失败:', e);
       try { showToast('验证组件加载失败，已自动跳过'); } catch(e2) {}
       puzzleVerified = true;
@@ -890,13 +880,10 @@ var puzzleVerified = false; // 拼图验证码状态
   }
 
   function initPuzzle() {
-    document.title = '[IP1]initPuzzle入口';
     try {
       var W = canvas.width, H = canvas.height;
-      document.title = '[IP2]尺寸' + W + 'x' + H;
       // 绘制渐变背景 + 装饰图形
       ctx.clearRect(0, 0, W, H);
-      document.title = '[IP3]已清除';
       // 天空渐变
       var skyGrad = ctx.createLinearGradient(0, 0, W, H);
       skyGrad.addColorStop(0, '#87CEEB');
@@ -904,7 +891,6 @@ var puzzleVerified = false; // 拼图验证码状态
       skyGrad.addColorStop(1, '#E8F5E9');
       ctx.fillStyle = skyGrad;
       ctx.fillRect(0, 0, W, H);
-      document.title = '[IP4]背景绘制完毕';
       // 远山
       ctx.fillStyle = '#A5C9A0';
       ctx.beginPath(); ctx.moveTo(0, H); ctx.lineTo(60, H-50); ctx.lineTo(140, H-30); ctx.lineTo(W, H-60); ctx.lineTo(W, H); ctx.closePath(); ctx.fill();
@@ -919,24 +905,18 @@ var puzzleVerified = false; // 拼图验证码状态
       ctx.beginPath(); ctx.arc(260, 30, 18, 0, Math.PI*2); ctx.fill();
       ctx.fillStyle = '#FFF9C4';
       ctx.beginPath(); ctx.arc(260, 30, 12, 0, Math.PI*2); ctx.fill();
-      document.title = '[IP5]装饰绘制完毕';
       // 花朵
       for (var i = 0; i < 6; i++) {
         drawFlower(ctx, 20 + i * 50, H - 15, 5 + Math.random()*3);
       }
-      // 保存背景到离屏 canvas（用于 drawImage，支持 clip）
+      // 保存背景到离屏 canvas
       bgCanvas = document.createElement('canvas');
       bgCanvas.width = W; bgCanvas.height = H;
-      document.title = '[IP6]离屏canvas创建';
       bgCanvas.getContext('2d').drawImage(canvas, 0, 0);
-      document.title = '[IP7]背景已保存';
-      // 绘制初始状态（缺口 + 拼图块在左侧）
+      // 绘制初始状态
       drawSliderPiece(0);
-      document.title = '[IP8]拼图块已绘制';
     } catch(e) {
-      document.title = '[IPE]异常:' + e.message;
       console.error('[小平菇] initPuzzle 绘制失败:', e);
-      // 绘制失败时跳过验证
       if (overlay) overlay.classList.remove('open');
       puzzleVerified = true;
       if (puzzleCallback) { puzzleCallback(); puzzleCallback = null; }
@@ -1079,69 +1059,31 @@ var puzzleVerified = false; // 拼图验证码状态
 })();
 
 (function init() {
-  // Check view mode first
   var params = new URLSearchParams(window.location.search);
   var viewToken = params.get('view');
   if (viewToken) {
     enterViewMode(viewToken);
     return;
   }
-  // 首页默认显示，无需自动触发验证码
 
-  // 调试：检测按钮是否被覆盖
+  // 绑定按钮事件
   var btn = document.querySelector('.landing-btn-primary');
   if (btn) {
-    // 300ms 后检查按钮是否在视口中且可点击
-    setTimeout(function() {
-      var rect = btn.getBoundingClientRect();
-      var el = document.elementFromPoint(rect.left + rect.width/2, rect.top + rect.height/2);
-      var isBlocked = el !== btn && !btn.contains(el);
-      document.title = isBlocked ? '[被' + el.tagName + '#' + (el.id||'') + '覆盖]' : '[按钮可点击]';
-      console.log('[小平菇] 按钮检查:', {
-        visible: rect.width > 0 && rect.height > 0,
-        inViewport: rect.top < window.innerHeight && rect.bottom > 0,
-        topElement: el ? el.tagName + '#' + el.id + '.' + el.className : 'null',
-        isBlocked: isBlocked
-      });
-      if (isBlocked) {
-        // 强制给覆盖元素加 pointer-events:none
-        var blocker = el;
-        var depth = 0;
-        while (blocker && depth < 5) {
-          blocker.style.pointerEvents = 'none';
-          console.log('[小平菇] 已禁用覆盖层:', blocker.tagName + '#' + blocker.id);
-          blocker = blocker.parentElement;
-          depth++;
-        }
-      }
-    }, 500);
-  }
-
-  // 绑定按钮事件（不用 inline onclick）
-  if (btn) {
-    function handleStart(e) {
-      document.title = '[H1]handleStart入口';
+    btn.addEventListener('click', function(e) {
       e.preventDefault();
       e.stopPropagation();
-      document.title = '[H2]preventDefault完成';
       btn.textContent = '正在启动...';
-      document.title = '[H3]文字已变';
-      setTimeout(function() {
-        document.title = '[H4]setTimeout回调';
-        startVisitorFlow();
-        document.title = '[H5]startVisitorFlow已返回';
-      }, 50);
-    }
-    btn.addEventListener('click', handleStart, true); // capture phase
+      setTimeout(function() { startVisitorFlow(); }, 50);
+    }, true);
     btn.addEventListener('touchend', function(e) {
       e.preventDefault();
-      handleStart(e);
+      btn.textContent = '正在启动...';
+      setTimeout(function() { startVisitorFlow(); }, 50);
     }, false);
   }
 })();
 
 function afterPuzzle() {
-  document.title = '[AP1]afterPuzzle入口';
   try {
     var consentGiven = false;
     try {
@@ -1149,28 +1091,21 @@ function afterPuzzle() {
     } catch(e) {
       console.warn('[小平菇] sessionStorage 不可用:', e);
     }
-    document.title = '[AP2]consent=' + consentGiven;
     try { showToast(consentGiven ? '正在加载评估...' : '请阅读知情同意书'); } catch(e) {}
     var landing = document.getElementById('landing');
     var mainApp = document.getElementById('main-app');
     var consentOverlay = document.getElementById('consent-overlay');
-    document.title = '[AP3]DOM获取 L=' + !!landing + ' M=' + !!mainApp + ' C=' + !!consentOverlay;
     if (consentGiven) {
-      document.title = '[AP4]进入评估';
       if (landing) landing.classList.add('hidden');
       if (mainApp) mainApp.style.display = 'block';
       initApp();
     } else {
-      document.title = '[AP4]显示同意书';
       if (landing) landing.classList.add('hidden');
       if (consentOverlay) consentOverlay.classList.remove('hidden');
-      document.title = '[AP5]同意书已显示';
     }
   } catch(e) {
-    document.title = '[APE]异常:' + e.message;
     console.error('[小平菇] afterPuzzle 失败:', e);
     try { showToast('加载失败: ' + e.message); } catch(e2) {}
-    // 最终兜底：强制显示知情同意
     try {
       var landing2 = document.getElementById('landing');
       var consent2 = document.getElementById('consent-overlay');
@@ -1181,8 +1116,9 @@ function afterPuzzle() {
 }
 
 function startVisitorFlow() {
-  // DEBUG: 临时强制跳过拼图验证码，直接显示知情同意书
-  document.title = '[DEBUG]强制跳过拼图';
+  try {
+    showToast('正在启动...');
+  } catch(e) {}
   afterPuzzle();
 }
 
