@@ -281,6 +281,9 @@ function loadDashboard(aid) {
     });
 
     renderDashboard();
+  }).catch(function(e) {
+    console.error('[小平菇] 加载追踪数据失败:', e);
+    showEmpty('数据加载失败，请检查网络连接后刷新页面');
   });
 }
 

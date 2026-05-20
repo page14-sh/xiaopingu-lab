@@ -597,13 +597,17 @@ function getPcomsRatingsBySession(sessionId) {
 // 获取某次评估的所有 PCOMS 评分（含会话信息，用于趋势分析）
 function getPcomsTrend(assessmentId) {
   if (!SUPABASE_CONFIG.enableDataCollection || !SUPABASE_CONFIG.url) return Promise.resolve([]);
-  return fetch(SUPABASE_CONFIG.url + '/rest/v1/pcoms_ratings?session_id=in.(select id from sessions where assessment_id=eq.' + assessmentId + ')&select=session_id,type,item_individual,item_interpersonal,item_social,item_overall,total_score,clinical_change,created_at&order=created_at.asc', {
-    headers: {
-      'apikey': SUPABASE_CONFIG.anonKey,
-      'Authorization': 'Bearer ' + SUPABASE_CONFIG.anonKey
-    }
-  }).then(function(r) { return r.json(); })
-    .catch(function(e) { console.warn('[小平菇] 获取PCOMS趋势失败:', e); return []; });
+  // 两步查询：先获取该评估的所有 session ID，再查询 ratings（避免嵌套子查询不兼容）
+  return getSessionsByAssessment(assessmentId).then(function(sessions) {
+    if (!sessions || sessions.length === 0) return [];
+    var ids = sessions.map(function(s) { return s.id; }).join(',');
+    return fetch(SUPABASE_CONFIG.url + '/rest/v1/pcoms_ratings?session_id=in.(' + ids + ')&select=session_id,type,item_individual,item_interpersonal,item_social,item_overall,total_score,clinical_change,created_at&order=created_at.asc', {
+      headers: {
+        'apikey': SUPABASE_CONFIG.anonKey,
+        'Authorization': 'Bearer ' + SUPABASE_CONFIG.anonKey
+      }
+    }).then(function(r) { return r.json(); });
+  }).catch(function(e) { console.warn('[小平菇] 获取PCOMS趋势失败:', e); return []; });
 }
 
 /*
