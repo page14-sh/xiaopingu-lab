@@ -1019,7 +1019,9 @@ var puzzleVerified = false; // 拼图验证码状态
         setTimeout(function() {
           overlay.classList.remove('open');
           puzzleVerified = true;
-          if (puzzleCallback) puzzleCallback();
+          if (puzzleCallback) {
+            try { puzzleCallback(); } catch(e) { console.error('[小平菇] 验证回调失败:', e); }
+          }
           puzzleCallback = null;
         }, 300);
       } else {
@@ -1069,7 +1071,13 @@ var puzzleVerified = false; // 拼图验证码状态
 
 function afterPuzzle() {
   // 验证码通过后
-  if (sessionStorage.getItem('xiaopingu_consent') === 'given') {
+  var consentGiven = false;
+  try {
+    consentGiven = sessionStorage.getItem('xiaopingu_consent') === 'given';
+  } catch(e) {
+    console.warn('[小平菇] sessionStorage 不可用:', e);
+  }
+  if (consentGiven) {
     // 已同意，直接进入评估
     document.getElementById('landing').classList.add('hidden');
     document.getElementById('main-app').style.display = 'block';
@@ -1159,7 +1167,11 @@ function toggleConsentBtn() {
 function handleConsent() {
   var cb = document.getElementById('consent-checkbox');
   if (!cb.checked) return;
-  sessionStorage.setItem('xiaopingu_consent', 'given');
+  try {
+    sessionStorage.setItem('xiaopingu_consent', 'given');
+  } catch(e) {
+    console.warn('[小平菇] sessionStorage 写入失败:', e);
+  }
   document.getElementById('consent-overlay').classList.add('hidden');
   document.getElementById('main-app').style.display = 'block';
   initApp();
