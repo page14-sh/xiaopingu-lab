@@ -176,6 +176,23 @@ function getSupabaseWriteHeaders() {
   };
 }
 
+// 轻量 toast 通知（当页面无 showToast 时使用）
+var _xpg_toast_timer = null;
+function _xpg_toast(msg, type) {
+  var el = document.getElementById('_xpg_toast_el');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = '_xpg_toast_el';
+    el.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:99999;padding:10px 20px;border-radius:10px;font-size:13px;color:#fff;opacity:0;transition:opacity 0.3s;pointer-events:none;max-width:90%;text-align:center';
+    document.body.appendChild(el);
+  }
+  clearTimeout(_xpg_toast_timer);
+  el.textContent = msg;
+  el.style.background = type === 'error' ? '#E24B4A' : '#5C7A52';
+  el.style.opacity = '1';
+  _xpg_toast_timer = setTimeout(function() { el.style.opacity = '0'; }, 3500);
+}
+
 // 保存评估数据
 function saveAssessment(data) {
   if (!SUPABASE_CONFIG.enableDataCollection || !SUPABASE_CONFIG.url) return Promise.resolve(null);
@@ -185,8 +202,8 @@ function saveAssessment(data) {
     body: JSON.stringify(data)
   }).then(function(r) {
     if (r.ok) { console.log('[小平菇] 评估数据已保存'); return r.json(); }
-    else { console.warn('[小平菇] 保存失败:', r.status, r.statusText); return null; }
-  }).catch(function(e) { console.warn('[小平菇] 网络错误:', e); return null; });
+    else { console.warn('[小平菇] 保存失败:', r.status, r.statusText); (typeof showToast==='function'?showToast:_xpg_toast)('评估数据保存失败，请检查网络后重试','error'); return null; }
+  }).catch(function(e) { console.warn('[小平菇] 网络错误:', e); (typeof showToast==='function'?showToast:_xpg_toast)('网络异常，评估数据未保存','error'); return null; });
 }
 
 // 保存咨询师档案（不含 return=representation，避免 pending 记录被 RLS 拦截）
@@ -212,7 +229,7 @@ function updateCounselor(id, data) {
   }).then(function(r) {
     if (r.ok) return true;
     else throw new Error('HTTP ' + r.status);
-  }).catch(function(e) { console.warn('[小平菇] 更新失败:', e); });
+  }).catch(function(e) { console.warn('[小平菇] 更新失败:', e); (typeof showToast==='function'?showToast:_xpg_toast)('档案更新失败，请重试','error'); });
 }
 
 // 审核咨询师档案
@@ -231,7 +248,7 @@ function reviewCounselor(id, status, note, reviewer) {
   }).then(function(r) {
     if (r.ok) return r.json();
     else throw new Error('HTTP ' + r.status);
-  }).catch(function(e) { console.warn('[小平菇] 审核失败:', e); });
+  }).catch(function(e) { console.warn('[小平菇] 审核失败:', e); (typeof showToast==='function'?showToast:_xpg_toast)('审核操作失败','error'); });
 }
 
 // 按 view_token 获取评估记录（用于查看模式）
@@ -553,7 +570,7 @@ function createSession(data) {
     if (r.ok) return r.json();
     else throw new Error('HTTP ' + r.status);
   }).then(function(data) { return data[0] || null; })
-    .catch(function(e) { console.warn('[小平菇] 创建会话失败:', e); return null; });
+    .catch(function(e) { console.warn('[小平菇] 创建会话失败:', e); (typeof showToast==='function'?showToast:_xpg_toast)('会话创建失败，评分可能未保存','error'); return null; });
 }
 
 // 保存 PCOMS 评分（ORS 或 SRS）
@@ -567,7 +584,7 @@ function savePcomsRating(data) {
     if (r.ok) return r.json();
     else throw new Error('HTTP ' + r.status);
   }).then(function(data) { return data[0] || null; })
-    .catch(function(e) { console.warn('[小平菇] 保存PCOMS评分失败:', e); return null; });
+    .catch(function(e) { console.warn('[小平菇] 保存PCOMS评分失败:', e); (typeof showToast==='function'?showToast:_xpg_toast)('评分保存失败，请重试','error'); return null; });
 }
 
 // 获取某次评估的所有会话

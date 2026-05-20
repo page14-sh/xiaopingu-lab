@@ -85,6 +85,17 @@
       margin-bottom: 12px;
     }
 
+    /* 咨询师只读模式 */
+    .counselor-readonly .vas-slider { cursor: default; opacity: 0.7; pointer-events: none; }
+    .counselor-readonly .vas-item { background: #f9fafb; border-color: #e8e8e8; }
+    .counselor-readonly .vas-item:hover { border-color: #e8e8e8; }
+    .counselor-readonly .btn-primary { display: none; }
+    .counselor-banner {
+      background: #F0F7EC; border: 1px solid #C8DCC0; border-radius: 12px;
+      padding: 12px 16px; margin-bottom: 20px; text-align: center;
+      font-size: 13px; color: #5C7A52;
+    }
+
     /* 步骤指示器 */
     .step-indicator {
       display: flex;
@@ -437,8 +448,8 @@
         </div>
       </div>
       <div class="flex gap-3 justify-center flex-wrap">
-        <button class="btn-secondary" onclick="location.reload()">填写新评分</button>
-        <a id="dashboard_link" href="#" class="btn-secondary inline-block no-underline">📊 查看追踪面板</a>
+        <button class="btn-secondary" id="btn-new-rating" onclick="location.reload()">填写新评分</button>
+        <a id="dashboard_link" href="#" class="btn-secondary inline-block no-underline">查看追踪面板</a>
         <a href="index.html" class="btn-primary inline-block no-underline">返回首页</a>
       </div>
     </div>
@@ -542,7 +553,17 @@
           renderCounselorBar(ratings || []);
         }
 
-        goToStep('ors');
+        // 咨询师只读模式：展示历史数据，禁用交互
+        if (isCounselorMode && ratings && ratings.length > 0) {
+          showCounselorReadOnlyView(ratings);
+        } else if (isCounselorMode) {
+          document.getElementById('step-loading').innerHTML =
+            '<div class="text-4xl mb-4">📋</div><p class="text-gray-500">来访者尚未提交任何评分数据</p>' +
+            '<p class="text-xs text-gray-400 mt-2">请在来访者完成首次 PCOMS 评分后再查看</p>' +
+            '<a href="index.html" class="btn-secondary inline-block no-underline mt-6">返回首页</a>';
+        } else {
+          goToStep('ors');
+        }
       }).catch(function(e) {
         console.error('初始化失败:', e);
         showError('加载失败，请刷新重试。');
@@ -715,6 +736,7 @@
 
     // ========== 视觉模拟滑块交互 ==========
     function startSlide(e) {
+      if (isCounselorMode) { e.preventDefault(); return; }
       e.preventDefault();
       activeSlider = e.currentTarget;
       moveSlider(e);
@@ -759,6 +781,95 @@
       document.removeEventListener('pointermove', moveSlider);
       document.removeEventListener('pointerup', stopSlide);
       document.removeEventListener('pointercancel', stopSlide);
+    }
+
+    // ========== 咨询师只读视图 ==========
+    function showCounselorReadOnlyView(ratings) {
+      var container = document.getElementById('step-loading');
+      // 隐藏 loading
+      document.getElementById('step-loading').classList.add('hidden');
+
+      // 添加只读模式 class
+      document.body.classList.add('counselor-readonly');
+
+      // 渲染历史评分摘要
+      var latestOrs = null, latestSrs = null, prevOrs = null, prevSrs = null;
+      for (var i = ratings.length - 1; i >= 0; i--) {
+        if (ratings[i].type === 'ORS' && !latestOrs) latestOrs = ratings[i];
+        if (ratings[i].type === 'SRS' && !latestSrs) latestSrs = ratings[i];
+        if (ratings[i].type === 'ORS' && latestOrs && ratings[i].id !== latestOrs.id && !prevOrs) prevOrs = ratings[i];
+        if (ratings[i].type === 'SRS' && latestSrs && ratings[i].id !== latestSrs.id && !prevSrs) prevSrs = ratings[i];
+      }
+
+      var orsDelta = (latestOrs && prevOrs) ? (latestOrs.total_score - prevOrs.total_score).toFixed(1) : null;
+      var srsDelta = (latestSrs && prevSrs) ? (latestSrs.total_score - prevSrs.total_score).toFixed(1) : null;
+
+      var html = '<div class="counselor-banner">咨询师视角 · 来访者评分记录（只读）</div>';
+      html += '<div class="bg-white rounded-2xl p-6 shadow-sm mb-4">';
+      html += '<h2 class="text-base font-bold text-gray-700 mb-4">来访 ' + esc(visitorName) + ' 的评分记录</h2>';
+      html += '<p class="text-sm text-gray-500 mb-6">第 ' + sessionNumber + ' 次咨询 · 共 ' + ratings.length + ' 条评分</p>';
+
+      // 最近 ORS
+      if (latestOrs) {
+        html += '<div class="mb-4"><h3 class="text-sm font-medium text-gray-600 mb-2">最近 ORS 结果评分</h3>';
+        html += '<div class="flex items-center gap-4">';
+        html += '<div class="text-3xl font-bold" style="color:#5C7A52">' + latestOrs.total_score + '<span class="text-base font-normal text-gray-400">/40</span></div>';
+        if (orsDelta !== null) {
+          var cls = parseFloat(orsDelta) >= 0 ? 'color:#16a34a' : 'color:#dc2626';
+          var sign = parseFloat(orsDelta) >= 0 ? '+' : '';
+          html += '<span class="text-sm" style="' + cls + '">' + sign + orsDelta + ' vs 上次</span>';
+        }
+        html += '</div></div>';
+      }
+
+      // 最近 SRS
+      if (latestSrs) {
+        html += '<div class="mb-4"><h3 class="text-sm font-medium text-gray-600 mb-2">最近 SRS 联盟评分</h3>';
+        html += '<div class="flex items-center gap-4">';
+        html += '<div class="text-3xl font-bold" style="color:#5C7A52">' + latestSrs.total_score + '<span class="text-base font-normal text-gray-400">/40</span></div>';
+        if (srsDelta !== null) {
+          var cls2 = parseFloat(srsDelta) >= 0 ? 'color:#16a34a' : 'color:#dc2626';
+          var sign2 = parseFloat(srsDelta) >= 0 ? '+' : '';
+          html += '<span class="text-sm" style="' + cls2 + '">' + sign2 + srsDelta + ' vs 上次</span>';
+        }
+        if (latestSrs.total_score < 36) {
+          html += '<span style="background:#FEE2E2;color:#DC2626;font-size:11px;padding:2px 8px;border-radius:4px;margin-left:8px">联盟风险</span>';
+        }
+        html += '</div></div>';
+      }
+
+      // 预警提示
+      var alerts = [];
+      if (latestOrs && prevOrs && latestOrs.total_score - prevOrs.total_score <= -5) alerts.push('ORS 下降超过 5 分，建议关注');
+      if (latestSrs && latestSrs.total_score < 36) alerts.push('SRS 低于 36，治疗联盟可能存在风险');
+      if (alerts.length > 0) {
+        html += '<div style="background:#FFF7ED;border:1px solid #FED7AA;border-radius:8px;padding:10px 14px;margin-top:12px">';
+        html += '<div style="font-size:12px;font-weight:500;color:#C2410C;margin-bottom:4px">预警提醒</div>';
+        alerts.forEach(function(a) { html += '<div style="font-size:12px;color:#9A3412">· ' + a + '</div>'; });
+        html += '</div>';
+      }
+
+      html += '</div>';
+
+      // 底部操作
+      var dashUrl = 'session-dashboard.html?aid=' + assessmentId + (counselorId ? '&cid=' + counselorId : '') + '&name=' + encodeURIComponent(visitorName) + '&sn=' + sessionNumber + '&role=counselor';
+      html += '<div class="flex gap-3 justify-center flex-wrap">';
+      html += '<a href="' + dashUrl + '" class="btn-primary inline-block no-underline">查看完整追踪面板</a>';
+      html += '<a href="index.html" class="btn-secondary inline-block no-underline">返回首页</a>';
+      html += '</div>';
+
+      // 插入到页面
+      document.getElementById('step-ors').classList.remove('hidden');
+      document.getElementById('step-ors').innerHTML = html;
+      document.getElementById('session-info').textContent =
+        '第 ' + sessionNumber + ' 次咨询 · ' + visitorName + ' · 咨询师视角';
+    }
+
+    function esc(s) {
+      if (!s) return '';
+      var d = document.createElement('div');
+      d.textContent = s;
+      return d.innerHTML;
     }
 
     // ========== 步骤切换 ==========

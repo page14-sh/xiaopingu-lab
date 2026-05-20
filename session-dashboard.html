@@ -250,10 +250,18 @@ var currentTab = 'timeline';
 (function() {
   var params = new URLSearchParams(window.location.search);
   currentAssessmentId = params.get('aid') || sessionStorage.getItem('xiaopingu_assessment_id');
+  window._dashRole = params.get('role') || 'visitor'; // visitor | counselor
+  window._dashCid = params.get('cid') || '';
+  window._dashVisitorName = params.get('name') || '';
 
   if (!currentAssessmentId) {
     showEmpty('请通过评估结果页的「开始咨询效果追踪」进入，或提供有效的评估 ID');
     return;
+  }
+
+  // 咨询师模式：更新 header 标题
+  if (window._dashRole === 'counselor') {
+    document.querySelector('header h1').textContent = '小平菇 · 咨询师追踪面板';
   }
 
   loadDashboard(currentAssessmentId);
@@ -300,8 +308,12 @@ function renderDashboard() {
 
   // Client info
   var firstSession = allSessions[0];
-  var name = firstSession.visitor_name || '来访者';
+  var name = firstSession.visitor_name || window._dashVisitorName || '来访者';
   document.getElementById('client_name').textContent = name;
+  document.getElementById('client_meta').textContent =
+    window._dashRole === 'counselor'
+      ? '咨询师视角 · 来访者追踪数据'
+      : '咨询效果追踪';
   document.getElementById('client_avatar').textContent = name.charAt(0);
   document.getElementById('client_meta').textContent = '评估 ID: ' + currentAssessmentId.slice(0, 8) + '… · 共 ' + allSessions.length + ' 次会话';
 
