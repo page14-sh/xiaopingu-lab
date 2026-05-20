@@ -977,20 +977,27 @@ window.showPuzzle = showCaptcha;
     return;
   }
 
-  // 绑定按钮事件
+  // 绑定按钮事件（防抖：避免 touch+click 双发，防止重复点击）
   var btn = document.querySelector('.landing-btn-primary');
   if (btn) {
-    btn.addEventListener('click', function(e) {
+    var btnLocked = false;
+    function onBtnTap(e) {
       e.preventDefault();
-      e.stopPropagation();
+      if (btnLocked) return;
+      btnLocked = true;
+      btn.disabled = true;
       btn.textContent = '正在启动...';
-      setTimeout(function() { startVisitorFlow(); }, 50);
-    }, true);
-    btn.addEventListener('touchend', function(e) {
-      e.preventDefault();
-      btn.textContent = '正在启动...';
-      setTimeout(function() { startVisitorFlow(); }, 50);
-    }, false);
+      setTimeout(function() {
+        try { startVisitorFlow(); }
+        catch(err) {
+          console.error('[小平菇] 启动失败:', err);
+          btn.textContent = '开始评估';
+          btn.disabled = false;
+          btnLocked = false;
+        }
+      }, 50);
+    }
+    btn.addEventListener('click', onBtnTap, false);
   }
 })();
 
