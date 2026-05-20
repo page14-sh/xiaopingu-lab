@@ -858,7 +858,7 @@
         });
         if (!res.ok) throw new Error('HTTP ' + res.status);
         const data = await res.json();
-        allData[type] = data;
+        allData[type] = Array.isArray(data) ? data : [];
         filteredData[type] = [...data];
         renderTable(type);
         _loadCount++;
