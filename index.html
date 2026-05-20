@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="小平菇">
-<title>小平菇 · 心理咨询自助评估</title>
+<title>小平菇 · 心理咨询自助评估 v2</title>
 <link rel="manifest" href="manifest.json">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -922,11 +922,22 @@ function showCaptcha(cb) {
     window._captchaCallback = cb;
     generateCaptcha();
     var overlay = document.getElementById('captcha-overlay');
-    if (overlay) overlay.classList.add('open');
+    if (overlay) {
+      overlay.style.display = 'flex';
+      overlay.style.position = 'fixed';
+      overlay.style.top = '0';
+      overlay.style.left = '0';
+      overlay.style.width = '100%';
+      overlay.style.height = '100%';
+      overlay.style.background = 'rgba(61,56,49,0.45)';
+      overlay.style.zIndex = '999999';
+      overlay.style.alignItems = 'center';
+      overlay.style.justifyContent = 'center';
+    }
     setTimeout(function() {
       var input = document.getElementById('captcha-input');
       if (input) input.focus();
-    }, 100);
+    }, 200);
   } catch(e) {
     console.error('[小平菇] 验证码初始化失败:', e);
     puzzleVerified = true;
@@ -947,7 +958,7 @@ function verifyCaptcha() {
     // 成功
     puzzleVerified = true;
     var overlay = document.getElementById('captcha-overlay');
-    if (overlay) overlay.classList.remove('open');
+    if (overlay) overlay.style.display = 'none';
     showToast('验证成功');
     if (window._captchaCallback) {
       try { window._captchaCallback(); } catch(e) { console.error('[小平菇] 验证回调失败:', e); }
