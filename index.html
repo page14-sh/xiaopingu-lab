@@ -197,6 +197,50 @@
     background: #5C7A52; color: #fff; font-size: 12px; font-weight: 500; cursor: pointer;
   }
   .btn-match-apply:active { background: #4A6342; }
+
+  /* 我的咨询师卡片 */
+  .my-counselor-card {
+    background: linear-gradient(135deg, #F0F7EC 0%, #E8F0E4 100%);
+    border: 1.5px solid #5C7A52; border-radius: 16px;
+    padding: 20px; margin-bottom: 16px; position: relative;
+  }
+  .my-counselor-card .mc-header {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
+  }
+  .my-counselor-card .mc-badge {
+    font-size: 11px; font-weight: 600; padding: 2px 10px; border-radius: 12px;
+    background: #5C7A52; color: #fff;
+  }
+  .my-counselor-card .mc-name { font-size: 17px; font-weight: 700; color: #3D3831; }
+  .my-counselor-card .mc-score { font-size: 12px; font-weight: 600; color: #5C7A52; margin-left: auto; }
+  .my-counselor-card .mc-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .my-counselor-card .mc-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+  .my-counselor-card .mc-btn {
+    padding: 8px 16px; border-radius: 10px; font-size: 13px; font-weight: 500;
+    cursor: pointer; border: 1.5px solid #C8DCC0; background: #fff; color: #5C7A52;
+    transition: all 0.2s; text-decoration: none;
+  }
+  .my-counselor-card .mc-btn:hover { background: #5C7A52; color: #fff; border-color: #5C7A52; }
+  .my-counselor-card .mc-btn-primary { background: #5C7A52; color: #fff; border-color: #5C7A52; }
+  .my-counselor-card .mc-btn-primary:hover { background: #4A6342; }
+  .my-counselor-card .mc-change {
+    font-size: 12px; color: #7A8B72; cursor: pointer; margin-top: 10px;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .my-counselor-card .mc-change:hover { color: #5C7A52; }
+
+  /* 选择咨询师按钮 */
+  .btn-select-counselor {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 5px 12px; border-radius: 8px; font-size: 12px; font-weight: 500;
+    cursor: pointer; border: 1.5px solid #5C7A52; background: transparent; color: #5C7A52;
+    transition: all 0.2s; margin-top: 8px;
+  }
+  .btn-select-counselor:hover { background: #5C7A52; color: #fff; }
+  .btn-select-counselor.selected {
+    background: #5C7A52; color: #fff; cursor: default; border-color: #5C7A52;
+  }
+  .counselor-card.is-selected { border-color: #5C7A52; background: #FAFDF8; box-shadow: 0 2px 12px rgba(92,122,82,0.12); }
   .counselor-expand-btn {
     display: inline-flex; align-items: center; gap: 4px;
     margin-top: 10px; font-size: 12px; color: #5C7A52; cursor: pointer;
@@ -777,6 +821,7 @@
         <hr class="divider">
         <div class="result-section"><h3>转介匹配建议</h3><div id="referral_cards"></div></div>
         <hr class="divider">
+        <div class="result-section" id="my_counselor_section" style="display:none"><h3>我的咨询师</h3><div id="my_counselor_card"></div></div>
         <div class="result-section" id="counselor_match_section" style="display:none"><h3>推荐咨询师</h3><div id="counselor_match_list"></div></div>
         <div id="counselor_loading" style="display:none"><div class="loading-hint"><div class="spinner"></div><br>正在匹配咨询师…</div></div>
         <hr class="divider">
@@ -1658,10 +1703,17 @@ function generateResult() {
             chtml+='</div>';
           }
 
+          // 选为我的咨询师按钮
+          var selMeta = { credential: c.credential_level, city: c.city, fee: c.fee_min ? c.fee_min+'元/次' : '' };
+          chtml+='<button class="btn-select-counselor" data-cid="'+c.id+'" onclick="selectCounselor(\''+asid+'\',\''+c.id+'\',\''+esc(c.name).replace(/'/g,"\\'")+'\',\''+r.matchScore+'\',\''+JSON.stringify(selMeta).replace(/'/g,"\\'")+'\')">✓ 选为我的咨询师</button>';
+
           chtml+='</div>';
         });
         document.getElementById('counselor_match_list').innerHTML=chtml;
         document.getElementById('counselor_match_section').scrollIntoView({behavior:'smooth'});
+        // 恢复已选咨询师状态
+        refreshCounselorButtons(asid);
+        renderMyCounselorCard(asid);
       } else {
         document.getElementById('counselor_match_section').style.display='block';
         document.getElementById('counselor_match_list').innerHTML='<div style="text-align:center;padding:24px;color:#A09889;font-size:14px;background:#F7F4EF;border-radius:12px">暂无匹配的咨询师<br><span style="font-size:12px;margin-top:6px;display:inline-block">系统正在招募更多咨询师，请稍后再试</span></div>';
@@ -1817,6 +1869,7 @@ function restoreResultPanel(){
     '<div class="result-section"><h3>主诉议题分析</h3><div id="issue_summary"></div></div><hr class="divider">'+
     '<div class="result-section"><h3>症状程度评分</h3><div class="info-grid" id="score_summary"></div></div><hr class="divider">'+
     '<div class="result-section"><h3>转介匹配建议</h3><div id="referral_cards"></div></div><hr class="divider">'+
+    '<div class="result-section" id="my_counselor_section" style="display:none"><h3>我的咨询师</h3><div id="my_counselor_card"></div></div>'+
     '<div class="result-section" id="counselor_match_section" style="display:none"><h3>推荐咨询师</h3><div id="counselor_match_list"></div></div>'+
     '<div id="counselor_loading" style="display:none"><div class="loading-hint"><div class="spinner"></div><br>正在匹配咨询师…</div></div><hr class="divider">'+
     '<div class="result-section"><h3>咨询前注意事项</h3><div id="notes_section"></div></div>'+
@@ -1838,6 +1891,99 @@ function closeMatchApply(){
   document.getElementById('apply-name').value='';
   document.getElementById('apply-contact').value='';
 }
+
+/* ===== 我的咨询师 ===== */
+var SELECTED_COUNSELOR_KEY = 'xiaopingu_selected_counselor';
+
+function getSelectedCounselor(aid) {
+  try {
+    var data = JSON.parse(localStorage.getItem(SELECTED_COUNSELOR_KEY) || '{}');
+    return aid && data[aid] ? data[aid] : null;
+  } catch(e) { return null; }
+}
+
+function selectCounselor(aid, cId, cName, cScore, cMeta) {
+  var data = JSON.parse(localStorage.getItem(SELECTED_COUNSELOR_KEY) || '{}');
+  data[aid] = { id: cId, name: cName, score: cScore, meta: cMeta };
+  localStorage.setItem(SELECTED_COUNSELOR_KEY, JSON.stringify(data));
+  renderMyCounselorCard(aid);
+  // 刷新列表中的按钮状态
+  refreshCounselorButtons(aid);
+  showToast('已选择 ' + cName + ' 为您的咨询师');
+}
+
+function deselectCounselor(aid) {
+  var data = JSON.parse(localStorage.getItem(SELECTED_COUNSELOR_KEY) || '{}');
+  delete data[aid];
+  localStorage.setItem(SELECTED_COUNSELOR_KEY, JSON.stringify(data));
+  document.getElementById('my_counselor_section').style.display = 'none';
+  refreshCounselorButtons(aid);
+}
+
+// 全局 XSS 转义函数（闭包内也有同名版本，功能一致）
+function esc(s) { if (!s) return ''; var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+function renderMyCounselorCard(aid) {
+  var sel = getSelectedCounselor(aid);
+  if (!sel) { document.getElementById('my_counselor_section').style.display = 'none'; return; }
+
+  document.getElementById('my_counselor_section').style.display = 'block';
+  var asid = sessionStorage.getItem('xiaopingu_assessment_id') || aid;
+  var visitorName = document.getElementById('name') ? document.getElementById('name').value : '来访者';
+  var trackUrl = 'session.html?aid=' + asid + '&cid=' + sel.id + '&name=' + encodeURIComponent(visitorName) + '&sn=1';
+  var counselorUrl = trackUrl + '&role=counselor';
+  var dashboardUrl = 'session-dashboard.html?aid=' + asid;
+
+  var metaHtml = '';
+  if (sel.meta) {
+    if (sel.meta.credential) metaHtml += '<span class="meta-item">🎓 ' + esc(sel.meta.credential) + '</span>';
+    if (sel.meta.city) metaHtml += '<span class="meta-item">📍 ' + esc(sel.meta.city) + '</span>';
+    if (sel.meta.fee) metaHtml += '<span class="meta-item">💰 ' + esc(sel.meta.fee) + '</span>';
+  }
+
+  var html = '<div class="my-counselor-card">';
+  html += '<div class="mc-header"><span class="mc-badge">✓ 已选择</span><span class="mc-name">' + esc(sel.name) + '</span><span class="mc-score">匹配度 ' + sel.score + '%</span></div>';
+  html += '<div class="mc-meta">' + metaHtml + '</div>';
+  html += '<div class="mc-actions">';
+  html += '<a href="' + trackUrl + '" class="mc-btn mc-btn-primary">📊 开始追踪评分</a>';
+  html += '<a href="' + dashboardUrl + '" class="mc-btn">📈 查看追踪面板</a>';
+  html += '<button class="mc-btn" onclick="copyCounselorLink(\'' + counselorUrl + '\')">📋 分享给咨询师</button>';
+  html += '</div>';
+  html += '<span class="mc-change" onclick="deselectCounselor(\'' + aid + '\')">✕ 更换咨询师</span>';
+  html += '</div>';
+
+  document.getElementById('my_counselor_card').innerHTML = html;
+}
+
+function copyCounselorLink(url) {
+  var fullUrl = location.origin + '/' + url;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(fullUrl).then(function() { showToast('链接已复制，可发送给咨询师'); });
+  } else {
+    var ta = document.createElement('textarea');
+    ta.value = fullUrl; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    showToast('链接已复制');
+  }
+}
+
+function refreshCounselorButtons(aid) {
+  var sel = getSelectedCounselor(aid);
+  var btns = document.querySelectorAll('.btn-select-counselor');
+  btns.forEach(function(btn) {
+    var btnCid = btn.getAttribute('data-cid');
+    if (sel && sel.id === btnCid) {
+      btn.classList.add('selected');
+      btn.textContent = '✓ 已选择';
+      btn.closest('.counselor-card') && btn.closest('.counselor-card').classList.add('is-selected');
+    } else {
+      btn.classList.remove('selected');
+      btn.textContent = '✓ 选为我的咨询师';
+      btn.closest('.counselor-card') && btn.closest('.counselor-card').classList.remove('is-selected');
+    }
+  });
+}
+
 function submitMatchApply(){
   var name=document.getElementById('apply-name').value.trim();
   var contact=document.getElementById('apply-contact').value.trim();

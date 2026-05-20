@@ -427,6 +427,15 @@
       <h2 class="text-xl font-bold text-gray-800 mb-2" id="success-title">评分已提交</h2>
       <p class="text-gray-500 mb-8" id="success-desc">感谢你的反馈，这些数据将帮助你和咨询师更好地了解咨询进展。</p>
       <div id="success-summary" class="text-left mb-8"></div>
+      <!-- 分享给咨询师 -->
+      <div id="share-counselor-section" class="mb-6 p-4 rounded-xl" style="background:#F0F7EC;border:1px solid #C8DCC0">
+        <p class="text-sm text-gray-600 mb-2">📋 <strong>分享给咨询师</strong></p>
+        <p class="text-xs text-gray-500 mb-3">将下方链接发送给您的咨询师，咨询师打开后可查看您的追踪评分</p>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <input type="text" id="counselor-share-link" readonly style="flex:1;padding:8px 12px;font-size:12px;border:1px solid #C8DCC0;border-radius:8px;background:#fff;color:#5A6B52;min-width:0" />
+          <button class="btn-secondary" style="padding:8px 16px;font-size:13px;white-space:nowrap" onclick="copyCounselorShareLink()">复制链接</button>
+        </div>
+      </div>
       <div class="flex gap-3 justify-center flex-wrap">
         <button class="btn-secondary" onclick="location.reload()">填写新评分</button>
         <a id="dashboard_link" href="#" class="btn-secondary inline-block no-underline">📊 查看追踪面板</a>
@@ -863,6 +872,21 @@
       });
     }
 
+    // ========== 复制分享链接 ==========
+    function copyCounselorShareLink() {
+      var link = document.getElementById('counselor-share-link').value;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(link).then(function() {
+          var btn = event.target; btn.textContent = '已复制 ✓'; setTimeout(function() { btn.textContent = '复制链接'; }, 2000);
+        });
+      } else {
+        var ta = document.createElement('textarea'); ta.value = link;
+        document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+        document.body.removeChild(ta);
+        var btn = event.target; btn.textContent = '已复制 ✓'; setTimeout(function() { btn.textContent = '复制链接'; }, 2000);
+      }
+    }
+
     // ========== 提交评分 ==========
     function submitRatings() {
       var btn = document.getElementById('btn-submit');
@@ -943,6 +967,13 @@
 
         // 设置追踪面板链接
         document.getElementById('dashboard_link').href = 'session-dashboard.html?aid=' + assessmentId;
+
+        // 设置分享给咨询师的链接
+        var counselorShareUrl = location.pathname + '?aid=' + assessmentId +
+          (counselorId ? '&cid=' + counselorId : '') +
+          '&name=' + encodeURIComponent(visitorName) +
+          '&sn=' + sessionNumber + '&role=counselor';
+        document.getElementById('counselor-share-link').value = location.origin + counselorShareUrl;
       }).catch(function(e) {
         console.error('提交失败:', e);
         btn.disabled = false;
