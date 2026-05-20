@@ -151,6 +151,48 @@
       transition: all 0.3s;
     }
     .btn-secondary:hover { background: #f0f7ee; }
+
+    /* 咨询师速览条 */
+    .counselor-bar {
+      background: linear-gradient(135deg, #2C3E50 0%, #34495E 100%);
+      border-radius: 14px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      color: #fff;
+    }
+    .counselor-bar-toggle {
+      display: flex; align-items: center; justify-content: space-between;
+      cursor: pointer; user-select: none;
+    }
+    .counselor-bar-body {
+      max-height: 0; overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+    .counselor-bar-body.open { max-height: 400px; }
+    .counselor-bar .bar-tag {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: rgba(255,255,255,0.15); border-radius: 6px;
+      padding: 2px 8px; font-size: 11px; font-weight: 500;
+    }
+    .counselor-metric {
+      background: rgba(255,255,255,0.1); border-radius: 10px;
+      padding: 10px 14px; text-align: center;
+    }
+    .counselor-metric .metric-val { font-size: 22px; font-weight: 700; }
+    .counselor-metric .metric-label { font-size: 11px; opacity: 0.7; margin-top: 2px; }
+    .counselor-metric .metric-delta { font-size: 12px; margin-top: 2px; }
+    .delta-up { color: #81C784; }
+    .delta-down { color: #EF9A9A; }
+    .delta-flat { color: #FFE082; }
+    .delta-risk { color: #EF9A9A; font-weight: 600; }
+    .counselor-alert {
+      background: rgba(255,255,255,0.1); border-radius: 8px;
+      padding: 8px 12px; font-size: 12px; margin-top: 8px;
+      border-left: 3px solid;
+    }
+    .alert-danger { border-color: #EF5350; }
+    .alert-warning { border-color: #FFB74D; }
+    .alert-success { border-color: #81C784; }
   </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -161,6 +203,47 @@
       <div class="text-4xl mb-2">🍄</div>
       <h1 class="text-xl font-bold text-gray-800">咨询效果追踪</h1>
       <p class="text-sm text-gray-500 mt-1" id="session-info">正在加载...</p>
+    </div>
+
+    <!-- 咨询师速览条（role=counselor 时显示） -->
+    <div id="counselor-bar" class="counselor-bar hidden">
+      <div class="counselor-bar-toggle" onclick="toggleCounselorBar()">
+        <div class="flex items-center gap-2">
+          <span style="font-size:16px">📋</span>
+          <span class="text-sm font-medium">咨询师速览</span>
+          <span class="bar-tag" id="bar-session-tag">—</span>
+        </div>
+        <span id="bar-toggle-icon" style="font-size:12px;opacity:0.6;transition:transform 0.3s">▼</span>
+      </div>
+      <div class="counselor-bar-body" id="counselor-bar-body">
+        <!-- 来访者信息 -->
+        <div class="flex items-center gap-3 mt-3 mb-3">
+          <div class="w-8 h-8 rounded-full bg-white bg-opacity-20 flex items-center justify-center text-sm" id="bar-avatar">👤</div>
+          <div>
+            <div class="text-sm font-medium" id="bar-name">—</div>
+            <div class="text-xs opacity-60" id="bar-meta">—</div>
+          </div>
+        </div>
+        <!-- 上次评分 -->
+        <div class="grid grid-cols-2 gap-2 mb-2">
+          <div class="counselor-metric">
+            <div class="metric-label">上次 ORS</div>
+            <div class="metric-val" id="bar-ors">—</div>
+            <div class="metric-delta" id="bar-ors-delta"></div>
+          </div>
+          <div class="counselor-metric">
+            <div class="metric-label">上次 SRS</div>
+            <div class="metric-val" id="bar-srs">—</div>
+            <div class="metric-delta" id="bar-srs-delta"></div>
+          </div>
+        </div>
+        <!-- 历史趋势摘要 -->
+        <div class="text-xs opacity-60 mt-1 mb-1" id="bar-history-summary"></div>
+        <!-- 预警 -->
+        <div id="bar-alerts"></div>
+        <!-- 提示 -->
+        <div class="text-center text-xs opacity-40 mt-3">来访者填分时可将此条收起</div>
+      </div>
     </div>
 
     <!-- 步骤 1: ORS 结果评分 -->
@@ -372,6 +455,7 @@
     var previousSrs = null;
     var allOrsHistory = [];
     var activeSlider = null;
+    var isCounselorMode = false;
 
     // ========== 初始化 ==========
     window.addEventListener('load', function() {
@@ -380,6 +464,7 @@
       counselorId = params.get('cid');
       visitorName = params.get('name') || '来访者';
       sessionNumber = parseInt(params.get('sn')) || 1;
+      isCounselorMode = params.get('role') === 'counselor';
 
       if (!assessmentId) {
         showError('缺少评估信息，请从评估结果页进入。');
@@ -442,6 +527,12 @@
         document.getElementById('session-info').textContent =
           '第 ' + sessionNumber + ' 次咨询 · ' + visitorName +
           (previousOrs ? ' · 上次ORS: ' + previousOrs.total_score + '分' : ' · 首次评估');
+
+        // 咨询师速览条
+        if (isCounselorMode) {
+          renderCounselorBar(ratings || []);
+        }
+
         goToStep('ors');
       }).catch(function(e) {
         console.error('初始化失败:', e);
@@ -453,6 +544,164 @@
       document.getElementById('step-loading').innerHTML =
         '<div class="text-4xl mb-4">😔</div><p class="text-gray-500">' + msg + '</p>' +
         '<a href="index.html" class="btn-primary inline-block mt-4 no-underline">返回首页</a>';
+    }
+
+    // ========== 咨询师速览条 ==========
+    function renderCounselorBar(allRatings) {
+      var bar = document.getElementById('counselor-bar');
+      bar.classList.remove('hidden');
+
+      // 基本信息
+      document.getElementById('bar-avatar').textContent = visitorName.charAt(0);
+      document.getElementById('bar-name').textContent = visitorName;
+      document.getElementById('bar-session-tag').textContent = '第 ' + sessionNumber + ' 次';
+      document.getElementById('bar-meta').textContent =
+        '评估ID: ' + (assessmentId || '').slice(0, 8) + '…';
+
+      // 计算历史数据
+      var orsList = allRatings.filter(function(r) { return r.type === 'ORS'; });
+      var srsList = allRatings.filter(function(r) { return r.type === 'SRS'; });
+      var totalSessions = Math.max(orsList.length, srsList.length, 1);
+
+      document.getElementById('bar-meta').textContent =
+        '已追踪 ' + totalSessions + ' 次评分';
+
+      // 上次 ORS
+      var lastOrs = previousOrs;
+      var orsEl = document.getElementById('bar-ors');
+      var orsDeltaEl = document.getElementById('bar-ors-delta');
+      if (lastOrs) {
+        orsEl.textContent = lastOrs.total_score.toFixed(1);
+        if (orsList.length >= 2) {
+          var prevOrs = orsList[orsList.length - 2];
+          var orsDiff = lastOrs.total_score - prevOrs.total_score;
+          if (orsDiff >= 5) {
+            orsDeltaEl.innerHTML = '<span class="delta-up">↑ +' + orsDiff.toFixed(1) + ' 显著改善</span>';
+          } else if (orsDiff <= -5) {
+            orsDeltaEl.innerHTML = '<span class="delta-down">↓ ' + orsDiff.toFixed(1) + ' 需关注</span>';
+          } else {
+            orsDeltaEl.innerHTML = '<span class="delta-flat">→ ' + (orsDiff >= 0 ? '+' : '') + orsDiff.toFixed(1) + ' 稳定</span>';
+          }
+        } else {
+          orsDeltaEl.innerHTML = '<span class="delta-flat">首次评分</span>';
+        }
+      } else {
+        orsEl.textContent = '—';
+        orsDeltaEl.innerHTML = '<span class="delta-flat">暂无数据</span>';
+      }
+
+      // 上次 SRS
+      var lastSrs = previousSrs;
+      var srsEl = document.getElementById('bar-srs');
+      var srsDeltaEl = document.getElementById('bar-srs-delta');
+      if (lastSrs) {
+        srsEl.textContent = lastSrs.total_score.toFixed(1);
+        if (lastSrs.total_score < 36) {
+          srsDeltaEl.innerHTML = '<span class="delta-risk">⚠ 低于风险线(36)</span>';
+        } else if (srsList.length >= 2) {
+          var prevSrs = srsList[srsList.length - 2];
+          var srsDiff = lastSrs.total_score - prevSrs.total_score;
+          if (srsDiff >= 0) {
+            srsDeltaEl.innerHTML = '<span class="delta-up">→ ' + (srsDiff > 0 ? '+' : '') + srsDiff.toFixed(1) + ' 稳定</span>';
+          } else {
+            srsDeltaEl.innerHTML = '<span class="delta-down">↓ ' + srsDiff.toFixed(1) + ' 下降</span>';
+          }
+        } else {
+          srsDeltaEl.innerHTML = '<span class="delta-flat">首次评分</span>';
+        }
+      } else {
+        srsEl.textContent = '—';
+        srsDeltaEl.innerHTML = '<span class="delta-flat">暂无数据</span>';
+      }
+
+      // 历史趋势摘要
+      var historyEl = document.getElementById('bar-history-summary');
+      if (orsList.length >= 3) {
+        var firstOrs = orsList[0].total_score;
+        var lastOrsVal = orsList[orsList.length - 1].total_score;
+        var totalChange = lastOrsVal - firstOrs;
+        var arrow = totalChange >= 5 ? '📈' : totalChange <= -5 ? '📉' : '➡️';
+        historyEl.textContent = arrow + ' 累计 ' + (totalChange >= 0 ? '+' : '') + totalChange.toFixed(1) + ' 分（第1次 ' + firstOrs.toFixed(1) + ' → 最近 ' + lastOrsVal.toFixed(1) + '）';
+      } else if (orsList.length === 0) {
+        historyEl.textContent = '本次为首次评估';
+      }
+
+      // 预警
+      var alertsEl = document.getElementById('bar-alerts');
+      var alerts = generateAlerts(orsList, srsList);
+      if (alerts.length > 0) {
+        var alertHtml = '';
+        alerts.forEach(function(a) {
+          alertHtml += '<div class="counselor-alert alert-' + a.type + '">' +
+            '<strong>' + a.icon + ' ' + a.title + '</strong><br>' +
+            '<span style="opacity:0.85">' + a.detail + '</span></div>';
+        });
+        alertsEl.innerHTML = alertHtml;
+      } else {
+        alertsEl.innerHTML = '<div class="text-center text-xs opacity-40 py-1">✅ 无预警</div>';
+      }
+
+      // 默认展开
+      toggleCounselorBar();
+    }
+
+    function generateAlerts(orsList, srsList) {
+      var alerts = [];
+      // ORS 连续下降
+      if (orsList.length >= 2) {
+        var last2 = orsList.slice(-2);
+        var diff = last2[1].total_score - last2[0].total_score;
+        if (diff <= -5) {
+          alerts.push({
+            type: 'danger', icon: '📉',
+            title: 'ORS 显著下降',
+            detail: '最近评分下降 ' + Math.abs(diff).toFixed(1) + ' 分（' + last2[0].total_score.toFixed(1) + ' → ' + last2[1].total_score.toFixed(1) + '），建议讨论变化'
+          });
+        }
+      }
+      // SRS 低于风险线
+      if (srsList.length > 0) {
+        var lastSrs = srsList[srsList.length - 1];
+        if (lastSrs.total_score < 36) {
+          var consecutive = srsList.length >= 2 && srsList[srsList.length - 2].total_score < 36;
+          alerts.push({
+            type: 'danger', icon: '⚠️',
+            title: 'SRS 联盟风险' + (consecutive ? '（连续）' : ''),
+            detail: '总分 ' + lastSrs.total_score.toFixed(1) + '/40' + (consecutive ? '，连续 2 次低于 36，建议讨论咨访关系' : '')
+          });
+        }
+      }
+      // ORS 持续低分
+      if (orsList.length >= 3) {
+        var recent3 = orsList.slice(-3);
+        if (recent3.every(function(r) { return r.total_score < 25; })) {
+          alerts.push({
+            type: 'warning', icon: '🔍',
+            title: 'ORS 持续偏低',
+            detail: '最近 3 次均低于临床人群中位线(25)，建议与督导讨论'
+          });
+        }
+      }
+      // 正向里程碑
+      if (orsList.length >= 3) {
+        var first = orsList[0].total_score;
+        var last = orsList[orsList.length - 1].total_score;
+        if (last - first >= 10) {
+          alerts.push({
+            type: 'success', icon: '🎉',
+            title: '显著改善',
+            detail: '累计提升 ' + (last - first).toFixed(1) + ' 分，当前方向有效'
+          });
+        }
+      }
+      return alerts;
+    }
+
+    function toggleCounselorBar() {
+      var body = document.getElementById('counselor-bar-body');
+      var icon = document.getElementById('bar-toggle-icon');
+      body.classList.toggle('open');
+      icon.style.transform = body.classList.contains('open') ? 'rotate(180deg)' : '';
     }
 
     // ========== 视觉模拟滑块交互 ==========
@@ -681,10 +930,11 @@
           '</div></div>';
 
         // 构建下一次链接
+        var roleParam = isCounselorMode ? '&role=counselor' : '';
         var nextUrl = location.pathname + '?aid=' + assessmentId +
           (counselorId ? '&cid=' + counselorId : '') +
           '&name=' + encodeURIComponent(visitorName) +
-          '&sn=' + (sessionNumber + 1);
+          '&sn=' + (sessionNumber + 1) + roleParam;
         summaryEl.innerHTML +=
           '<div class="result-card text-center">' +
             '<p class="text-sm text-gray-500 mb-3">下次咨询后，可继续在此填写追踪评分</p>' +
