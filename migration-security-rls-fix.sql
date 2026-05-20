@@ -16,10 +16,8 @@ DROP POLICY IF EXISTS "anon_update_sessions" ON sessions;
 CREATE POLICY "anon_no_update_sessions" ON sessions
   FOR UPDATE USING (false) WITH CHECK (false);
 
--- 3. pcoms_ratings 表：收紧 UPDATE 策略
---    禁止匿名修改已有评分（评分一旦提交不可篡改）
-DROP POLICY IF EXISTS "anon_update_pcoms" ON pcoms_ratings
-  ON pcoms_ratings; -- 防止不存在时报错的无害写法
+-- 3. pcoms_ratings 表：无 UPDATE 策略需处理
+--    原表未创建 anon UPDATE 策略，确认无需操作
 
 -- 4. counselors 表：确认无匿名 UPDATE 漏洞
 --    原 update_own_counselor USING(true) 允许修改任意咨询师记录
