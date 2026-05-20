@@ -404,8 +404,8 @@
       <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <radialGradient id="capGrad2" cx="50%" cy="40%" r="60%">
-            <stop offset="0%" stop-color="#A5C69A"/>
-            <stop offset="100%" stop-color="#6E9A60"/>
+            <stop offset="0%" stop-color="#7EB3E8"/>
+            <stop offset="100%" stop-color="#4A7DB5"/>
           </radialGradient>
           <linearGradient id="stemGrad2" x1="0" y1="0" x2="1" y2="0">
             <stop offset="0%" stop-color="#F5EDE0"/>
@@ -418,7 +418,7 @@
         <circle cx="32" cy="22" r="3" fill="#fff" opacity="0.35"/>
         <circle cx="20" cy="25" r="2" fill="#fff" opacity="0.3"/>
         <path d="M18 24 Q18 38 20 42 L28 42 Q30 38 30 24" fill="url(#stemGrad2)"/>
-        <ellipse cx="24" cy="43" rx="12" ry="2" fill="#8AAF7D" opacity="0.15"/>
+        <ellipse cx="24" cy="43" rx="12" ry="2" fill="#5B8FC9" opacity="0.15"/>
       </svg>
     </div>
     <h1>小平菇</h1>
@@ -542,17 +542,17 @@
 <div class="page-header">
   <div class="logo-wrap">
     <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <ellipse cx="24" cy="22" rx="18" ry="14" fill="#8AAF7D"/>
+      <ellipse cx="24" cy="22" rx="18" ry="14" fill="#5B8FC9"/>
       <circle cx="16" cy="17" r="3.5" fill="#fff" opacity="0.5"/>
       <circle cx="28" cy="14" r="2.5" fill="#fff" opacity="0.4"/>
       <circle cx="32" cy="22" r="3" fill="#fff" opacity="0.35"/>
       <circle cx="20" cy="25" r="2" fill="#fff" opacity="0.3"/>
       <path d="M18 24 Q18 38 20 42 L28 42 Q30 38 30 24" fill="#F5EDE0"/>
-      <ellipse cx="24" cy="43" rx="12" ry="2" fill="#8AAF7D" opacity="0.15"/>
+      <ellipse cx="24" cy="43" rx="12" ry="2" fill="#5B8FC9" opacity="0.15"/>
       <defs>
         <radialGradient id="capGrad" cx="50%" cy="40%" r="60%">
-          <stop offset="0%" stop-color="#A5C69A"/>
-          <stop offset="100%" stop-color="#6E9A60"/>
+          <stop offset="0%" stop-color="#7EB3E8"/>
+          <stop offset="100%" stop-color="#4A7DB5"/>
         </radialGradient>
         <linearGradient id="stemGrad" x1="0" y1="0" x2="1" y2="0">
           <stop offset="0%" stop-color="#F5EDE0"/>
@@ -804,7 +804,7 @@
 </div>
 
 <div style="text-align:center;padding:24px 20px 12px;color:#B8AFA3;font-size:11px;">
-  <svg width="22" height="22" viewBox="0 0 48 48" fill="none" style="vertical-align:middle;margin-right:4px;"><ellipse cx="24" cy="22" rx="18" ry="14" fill="#B8AFA3"/><circle cx="16" cy="17" r="3" fill="#fff" opacity="0.3"/><circle cx="28" cy="15" r="2" fill="#fff" opacity="0.25"/><path d="M19 24 Q19 36 21 40 L27 40 Q29 36 29 24" fill="#D5CFC5"/></svg>
+  <svg width="22" height="22" viewBox="0 0 48 48" fill="none" style="vertical-align:middle;margin-right:4px;"><ellipse cx="24" cy="22" rx="18" ry="14" fill="#5B8FC9"/><circle cx="16" cy="17" r="3" fill="#fff" opacity="0.3"/><circle cx="28" cy="15" r="2" fill="#fff" opacity="0.25"/><path d="M19 24 Q19 36 21 40 L27 40 Q29 36 29 24" fill="#F5EDE0"/></svg>
   小平菇心理 · 用心倾听，自然疗愈
 </div>
 <div style="text-align:center;padding:0 20px 32px;color:#C5BEB3;font-size:10px;line-height:1.6;">
@@ -848,59 +848,80 @@ var puzzleVerified = false; // 拼图验证码状态
   var bgCanvas = null; // 离屏背景 canvas，用于 drawImage（避免 putImageData 忽略 clip 的问题）
 
   function showPuzzle(cb) {
-    puzzleCallback = cb;
-    overlay = document.getElementById('puzzle-overlay');
-    canvas = document.getElementById('puzzle-canvas');
-    slider = document.getElementById('puzzle-slider');
-    track = document.getElementById('puzzle-track');
-    progress = document.getElementById('puzzle-progress');
-    ctx = canvas.getContext('2d');
-    // 随机缺口 x（偏右区域）
-    targetX = 180 + Math.floor(Math.random() * 80);
-    // 重置滑块
-    slider.style.left = '0px';
-    slider.className = 'puzzle-slider';
-    progress.style.width = '0px';
-    overlay.classList.add('open');
-    initPuzzle();
-    bindDrag();
+    try {
+      puzzleCallback = cb;
+      overlay = document.getElementById('puzzle-overlay');
+      canvas = document.getElementById('puzzle-canvas');
+      slider = document.getElementById('puzzle-slider');
+      track = document.getElementById('puzzle-track');
+      progress = document.getElementById('puzzle-progress');
+      if (!canvas || !slider || !track || !progress || !overlay) {
+        throw new Error('拼图元素缺失');
+      }
+      ctx = canvas.getContext('2d');
+      if (!ctx) {
+        throw new Error('Canvas 2D 上下文不可用');
+      }
+      // 随机缺口 x（偏右区域）
+      targetX = 180 + Math.floor(Math.random() * 80);
+      // 重置滑块
+      slider.style.left = '0px';
+      slider.className = 'puzzle-slider';
+      progress.style.width = '0px';
+      overlay.classList.add('open');
+      initPuzzle();
+      bindDrag();
+    } catch(e) {
+      console.error('[小平菇] 拼图验证初始化失败:', e);
+      showToast('验证组件加载失败，已自动跳过');
+      puzzleVerified = true;
+      if (cb) cb();
+    }
   }
 
   function initPuzzle() {
-    var W = canvas.width, H = canvas.height;
-    // 绘制渐变背景 + 装饰图形
-    ctx.clearRect(0, 0, W, H);
-    // 天空渐变
-    var skyGrad = ctx.createLinearGradient(0, 0, W, H);
-    skyGrad.addColorStop(0, '#87CEEB');
-    skyGrad.addColorStop(0.5, '#B8E0F0');
-    skyGrad.addColorStop(1, '#E8F5E9');
-    ctx.fillStyle = skyGrad;
-    ctx.fillRect(0, 0, W, H);
-    // 远山
-    ctx.fillStyle = '#A5C9A0';
-    ctx.beginPath(); ctx.moveTo(0, H); ctx.lineTo(60, H-50); ctx.lineTo(140, H-30); ctx.lineTo(W, H-60); ctx.lineTo(W, H); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = '#8BB585';
-    ctx.beginPath(); ctx.moveTo(0, H); ctx.lineTo(100, H-35); ctx.lineTo(200, H-55); ctx.lineTo(W, H-25); ctx.lineTo(W, H); ctx.closePath(); ctx.fill();
-    // 云朵
-    drawCloud(ctx, 40, 30, 25);
-    drawCloud(ctx, 200, 20, 20);
-    drawCloud(ctx, 130, 50, 18);
-    // 小太阳
-    ctx.fillStyle = '#FFE082';
-    ctx.beginPath(); ctx.arc(260, 30, 18, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = '#FFF9C4';
-    ctx.beginPath(); ctx.arc(260, 30, 12, 0, Math.PI*2); ctx.fill();
+    try {
+      var W = canvas.width, H = canvas.height;
+      // 绘制渐变背景 + 装饰图形
+      ctx.clearRect(0, 0, W, H);
+      // 天空渐变
+      var skyGrad = ctx.createLinearGradient(0, 0, W, H);
+      skyGrad.addColorStop(0, '#87CEEB');
+      skyGrad.addColorStop(0.5, '#B8E0F0');
+      skyGrad.addColorStop(1, '#E8F5E9');
+      ctx.fillStyle = skyGrad;
+      ctx.fillRect(0, 0, W, H);
+      // 远山
+      ctx.fillStyle = '#A5C9A0';
+      ctx.beginPath(); ctx.moveTo(0, H); ctx.lineTo(60, H-50); ctx.lineTo(140, H-30); ctx.lineTo(W, H-60); ctx.lineTo(W, H); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#8BB585';
+      ctx.beginPath(); ctx.moveTo(0, H); ctx.lineTo(100, H-35); ctx.lineTo(200, H-55); ctx.lineTo(W, H-25); ctx.lineTo(W, H); ctx.closePath(); ctx.fill();
+      // 云朵
+      drawCloud(ctx, 40, 30, 25);
+      drawCloud(ctx, 200, 20, 20);
+      drawCloud(ctx, 130, 50, 18);
+      // 小太阳
+      ctx.fillStyle = '#FFE082';
+      ctx.beginPath(); ctx.arc(260, 30, 18, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#FFF9C4';
+      ctx.beginPath(); ctx.arc(260, 30, 12, 0, Math.PI*2); ctx.fill();
     // 花朵
     for (var i = 0; i < 6; i++) {
       drawFlower(ctx, 20 + i * 50, H - 15, 5 + Math.random()*3);
     }
-    // 保存背景到离屏 canvas（用于 drawImage，支持 clip）
-    bgCanvas = document.createElement('canvas');
-    bgCanvas.width = W; bgCanvas.height = H;
-    bgCanvas.getContext('2d').drawImage(canvas, 0, 0);
-    // 绘制初始状态（缺口 + 拼图块在左侧）
-    drawSliderPiece(0);
+      // 保存背景到离屏 canvas（用于 drawImage，支持 clip）
+      bgCanvas = document.createElement('canvas');
+      bgCanvas.width = W; bgCanvas.height = H;
+      bgCanvas.getContext('2d').drawImage(canvas, 0, 0);
+      // 绘制初始状态（缺口 + 拼图块在左侧）
+      drawSliderPiece(0);
+    } catch(e) {
+      console.error('[小平菇] initPuzzle 绘制失败:', e);
+      // 绘制失败时跳过验证
+      overlay.classList.remove('open');
+      puzzleVerified = true;
+      if (puzzleCallback) { puzzleCallback(); puzzleCallback = null; }
+    }
   }
 
   function drawCloud(ctx, x, y, r) {
@@ -1061,9 +1082,17 @@ function afterPuzzle() {
 }
 
 function startVisitorFlow() {
-  if (!puzzleVerified) {
-    showPuzzle(afterPuzzle);
-  } else {
+  try {
+    if (!puzzleVerified) {
+      showPuzzle(afterPuzzle);
+    } else {
+      afterPuzzle();
+    }
+  } catch(e) {
+    console.error('[小平菇] 启动评估失败:', e);
+    showToast('启动失败，请刷新页面重试 (' + e.message + ')');
+    // 降级：自动跳过验证直接进入
+    puzzleVerified = true;
     afterPuzzle();
   }
 }
