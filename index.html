@@ -856,18 +856,19 @@
   本系统为心理自助评估工具，评估结果<strong>不构成专业医学诊断、精神障碍诊断或治疗建议</strong>。如您正在经历严重心理困扰，请及时联系持证心理咨询师、精神科医生或拨打心理援助热线。如遇紧急危险，请立即拨打 110 或 120。
 </div>
 
-<!-- Puzzle CAPTCHA -->
-<div class="puzzle-overlay" id="puzzle-overlay">
-  <div class="puzzle-box">
+<!-- 数学验证码 -->
+<div class="puzzle-overlay" id="captcha-overlay">
+  <div class="puzzle-box" style="width:300px;">
     <p class="puzzle-title">安全验证</p>
-    <canvas class="puzzle-canvas" id="puzzle-canvas" width="300" height="160"></canvas>
-    <div class="puzzle-track" id="puzzle-track">
-      <div class="puzzle-progress" id="puzzle-progress"></div>
-      <div class="puzzle-slider" id="puzzle-slider">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
-      </div>
+    <p style="font-size:15px;color:#3D3831;margin:12px 0 16px;" id="captcha-question"></p>
+    <div style="display:flex;gap:10px;justify-content:center;margin-bottom:10px;">
+      <input type="text" id="captcha-input" inputmode="numeric" autocomplete="off" placeholder="请输入答案"
+        style="width:120px;padding:10px 14px;border:1.5px solid #E8E4DC;border-radius:10px;font-size:16px;text-align:center;outline:none;transition:border-color 0.2s;"
+        onfocus="this.style.borderColor='#5C7A52'" onblur="this.style.borderColor='#E8E4DC'" />
+      <button onclick="verifyCaptcha()" style="padding:10px 20px;background:#5C7A52;color:#fff;border:none;border-radius:10px;font-size:15px;cursor:pointer;transition:background 0.2s;" onmouseover="this.style.background='#4a6542'" onmouseout="this.style.background='#5C7A52'">验证</button>
     </div>
-    <p class="puzzle-hint">向右滑动完成拼图</p>
+    <p style="font-size:12px;color:#A09889;" id="captcha-hint">计算结果并输入</p>
+    <a href="javascript:void(0)" onclick="generateCaptcha()" style="font-size:12px;color:#5C7A52;text-decoration:underline;margin-top:8px;display:inline-block;">换一题</a>
   </div>
 </div>
 
@@ -882,226 +883,91 @@ var currentRecommendedApproaches = [];
 var currentMinYears = 1;
 var currentMinCredential = '二级';
 var lastResultData = null; // 用于导出
-var puzzleVerified = false; // 拼图验证码状态
+var puzzleVerified = false; // 验证码状态
+var _captchaAnswer = 0;
 
-/* ===== 滑动拼图验证码 ===== */
-(function(){
-  var canvas, ctx, slider, track, progress, overlay;
-  var pieceSize = 42, pieceY = 60;
-  var targetX = 0, startX = 0, dragging = false, puzzleCallback = null;
-  var tolerance = 5;
-  var bgCanvas = null; // 离屏背景 canvas，用于 drawImage（避免 putImageData 忽略 clip 的问题）
+/* ===== 数学验证码 ===== */
+function generateCaptcha() {
+  var ops = ['+', '-', '×'];
+  var op = ops[Math.floor(Math.random() * ops.length)];
+  var a, b, answer;
+  if (op === '+') {
+    a = Math.floor(Math.random() * 50) + 1;
+    b = Math.floor(Math.random() * 50) + 1;
+    answer = a + b;
+  } else if (op === '-') {
+    a = Math.floor(Math.random() * 50) + 10;
+    b = Math.floor(Math.random() * a) + 1;
+    answer = a - b;
+  } else {
+    a = Math.floor(Math.random() * 12) + 2;
+    b = Math.floor(Math.random() * 12) + 2;
+    answer = a * b;
+  }
+  _captchaAnswer = answer;
+  var qEl = document.getElementById('captcha-question');
+  if (qEl) qEl.textContent = a + ' ' + op + ' ' + b + ' = ?';
+  var input = document.getElementById('captcha-input');
+  if (input) { input.value = ''; }
+  var hint = document.getElementById('captcha-hint');
+  if (hint) hint.textContent = '计算结果并输入';
+  hint && (hint.style.color = '#A09889');
+}
 
-  function showPuzzle(cb) {
-    try {
-      puzzleCallback = cb;
-      overlay = document.getElementById('puzzle-overlay');
-      canvas = document.getElementById('puzzle-canvas');
-      slider = document.getElementById('puzzle-slider');
-      track = document.getElementById('puzzle-track');
-      progress = document.getElementById('puzzle-progress');
-      if (!canvas || !slider || !track || !progress || !overlay) {
-        throw new Error('拼图元素缺失');
-      }
-      ctx = canvas.getContext('2d');
-      if (!ctx) {
-        throw new Error('Canvas 2D 上下文不可用');
-      }
-      // 随机缺口 x（偏右区域）
-      targetX = 180 + Math.floor(Math.random() * 80);
-      // 重置滑块
-      slider.style.left = '0px';
-      slider.className = 'puzzle-slider';
-      progress.style.width = '0px';
-      overlay.classList.add('open');
-      initPuzzle();
-      bindDrag();
-    } catch(e) {
-      console.error('[小平菇] 拼图验证初始化失败:', e);
-      try { showToast('验证组件加载失败，已自动跳过'); } catch(e2) {}
-      puzzleVerified = true;
-      if (cb) cb();
+function showCaptcha(cb) {
+  try {
+    window._captchaCallback = cb;
+    generateCaptcha();
+    var overlay = document.getElementById('captcha-overlay');
+    if (overlay) overlay.classList.add('open');
+    // 自动聚焦输入框
+    setTimeout(function() {
+      var input = document.getElementById('captcha-input');
+      if (input) input.focus();
+    }, 100);
+  } catch(e) {
+    console.error('[小平菇] 验证码初始化失败:', e);
+    puzzleVerified = true;
+    if (cb) cb();
+  }
+}
+
+function verifyCaptcha() {
+  var input = document.getElementById('captcha-input');
+  var hint = document.getElementById('captcha-hint');
+  if (!input) return;
+  var val = parseInt(input.value);
+  if (isNaN(val)) {
+    if (hint) { hint.textContent = '请输入数字'; hint.style.color = '#E24B4A'; }
+    return;
+  }
+  if (val === _captchaAnswer) {
+    // 成功
+    puzzleVerified = true;
+    var overlay = document.getElementById('captcha-overlay');
+    if (overlay) overlay.classList.remove('open');
+    showToast('验证成功');
+    if (window._captchaCallback) {
+      try { window._captchaCallback(); } catch(e) { console.error('[小平菇] 验证回调失败:', e); }
     }
+    window._captchaCallback = null;
+  } else {
+    // 失败
+    if (hint) { hint.textContent = '答案不正确，请重试'; hint.style.color = '#E24B4A'; }
+    generateCaptcha();
+    var newInput = document.getElementById('captcha-input');
+    if (newInput) newInput.focus();
   }
+}
 
-  function initPuzzle() {
-    try {
-      var W = canvas.width, H = canvas.height;
-      // 绘制渐变背景 + 装饰图形
-      ctx.clearRect(0, 0, W, H);
-      // 天空渐变
-      var skyGrad = ctx.createLinearGradient(0, 0, W, H);
-      skyGrad.addColorStop(0, '#87CEEB');
-      skyGrad.addColorStop(0.5, '#B8E0F0');
-      skyGrad.addColorStop(1, '#E8F5E9');
-      ctx.fillStyle = skyGrad;
-      ctx.fillRect(0, 0, W, H);
-      // 远山
-      ctx.fillStyle = '#A5C9A0';
-      ctx.beginPath(); ctx.moveTo(0, H); ctx.lineTo(60, H-50); ctx.lineTo(140, H-30); ctx.lineTo(W, H-60); ctx.lineTo(W, H); ctx.closePath(); ctx.fill();
-      ctx.fillStyle = '#8BB585';
-      ctx.beginPath(); ctx.moveTo(0, H); ctx.lineTo(100, H-35); ctx.lineTo(200, H-55); ctx.lineTo(W, H-25); ctx.lineTo(W, H); ctx.closePath(); ctx.fill();
-      // 云朵
-      drawCloud(ctx, 40, 30, 25);
-      drawCloud(ctx, 200, 20, 20);
-      drawCloud(ctx, 130, 50, 18);
-      // 小太阳
-      ctx.fillStyle = '#FFE082';
-      ctx.beginPath(); ctx.arc(260, 30, 18, 0, Math.PI*2); ctx.fill();
-      ctx.fillStyle = '#FFF9C4';
-      ctx.beginPath(); ctx.arc(260, 30, 12, 0, Math.PI*2); ctx.fill();
-      // 花朵
-      for (var i = 0; i < 6; i++) {
-        drawFlower(ctx, 20 + i * 50, H - 15, 5 + Math.random()*3);
-      }
-      // 保存背景到离屏 canvas
-      bgCanvas = document.createElement('canvas');
-      bgCanvas.width = W; bgCanvas.height = H;
-      bgCanvas.getContext('2d').drawImage(canvas, 0, 0);
-      // 绘制初始状态
-      drawSliderPiece(0);
-    } catch(e) {
-      console.error('[小平菇] initPuzzle 绘制失败:', e);
-      if (overlay) overlay.classList.remove('open');
-      puzzleVerified = true;
-      if (puzzleCallback) { puzzleCallback(); puzzleCallback = null; }
-    }
+// 回车键提交验证码
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && document.getElementById('captcha-overlay') && document.getElementById('captcha-overlay').classList.contains('open')) {
+    verifyCaptcha();
   }
+});
 
-  function drawCloud(ctx, x, y, r) {
-    ctx.fillStyle = 'rgba(255,255,255,0.85)';
-    ctx.beginPath();
-    ctx.arc(x, y, r, 0, Math.PI*2);
-    ctx.arc(x + r*0.8, y - r*0.3, r*0.7, 0, Math.PI*2);
-    ctx.arc(x + r*1.5, y, r*0.6, 0, Math.PI*2);
-    ctx.fill();
-  }
-
-  function drawFlower(ctx, x, y, r) {
-    var colors = ['#F48FB1','#CE93D8','#FFAB91','#FFF176','#80DEEA'];
-    ctx.fillStyle = colors[Math.floor(Math.random()*colors.length)];
-    for (var i = 0; i < 5; i++) {
-      var a = (i / 5) * Math.PI * 2;
-      ctx.beginPath(); ctx.arc(x + Math.cos(a)*r*0.5, y + Math.sin(a)*r*0.5, r*0.4, 0, Math.PI*2); ctx.fill();
-    }
-    ctx.fillStyle = '#FFF176';
-    ctx.beginPath(); ctx.arc(x, y, r*0.25, 0, Math.PI*2); ctx.fill();
-  }
-
-  function drawPiecePath(ctx, x, y, s) {
-    var r = s * 0.2;
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    ctx.lineTo(x + s - r, y);
-    ctx.arc(x + s - r, y + r, r, -Math.PI/2, 0);
-    ctx.lineTo(x + s, y + s/2 - r);
-    ctx.arc(x + s - r, y + s/2 - r, r, 0, Math.PI/2);
-    ctx.lineTo(x + s - r, y + s/2);
-    ctx.lineTo(x + s - r, y + s - r);
-    ctx.arc(x + s - r, y + s - r, r, -Math.PI/2, Math.PI);
-    ctx.lineTo(x + r, y + s);
-    ctx.arc(x + r, y + s - r, r, Math.PI/2, Math.PI*3/2);
-    ctx.lineTo(x, y);
-    ctx.closePath();
-  }
-
-  function drawSliderPiece(sx) {
-    if (!bgCanvas) return;
-    // 还原背景
-    ctx.drawImage(bgCanvas, 0, 0);
-    // 绘制缺口暗影
-    drawPiecePath(ctx, targetX, pieceY, pieceSize);
-    ctx.fillStyle = 'rgba(0,0,0,0.35)';
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(255,255,255,0.6)';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-    // 绘制拼图块：clip 后从离屏背景 drawImage，clip 正常工作
-    ctx.save();
-    drawPiecePath(ctx, sx, pieceY, pieceSize);
-    ctx.clip();
-    ctx.drawImage(bgCanvas, 0, 0); // drawImage 遵守 clip，putImageData 不遵守
-    ctx.restore();
-    // 拼图块边框
-    drawPiecePath(ctx, sx, pieceY, pieceSize);
-    ctx.strokeStyle = 'rgba(255,255,255,0.85)';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    ctx.strokeStyle = 'rgba(0,0,0,0.12)';
-    ctx.lineWidth = 1;
-    ctx.stroke();
-  }
-
-  function bindDrag() {
-    var maxSlide = 300 - 40;
-    function onStart(e) {
-      e.preventDefault();
-      dragging = true;
-      startX = (e.touches ? e.touches[0].clientX : e.clientX) - slider.getBoundingClientRect().left;
-      slider.style.cursor = 'grabbing';
-    }
-    function onMove(e) {
-      if (!dragging) return;
-      e.preventDefault();
-      var cx = (e.touches ? e.touches[0].clientX : e.clientX) - track.getBoundingClientRect().left;
-      var dx = cx - startX;
-      dx = Math.max(0, Math.min(dx, maxSlide));
-      slider.style.left = dx + 'px';
-      progress.style.width = dx + 'px';
-      drawSliderPiece(dx);
-    }
-    function onEnd() {
-      if (!dragging) return;
-      dragging = false;
-      slider.style.cursor = 'grab';
-      var curX = parseInt(slider.style.left) || 0;
-      if (Math.abs(curX - targetX) < tolerance) {
-        // 成功
-        slider.classList.add('success');
-        progress.style.width = targetX + 'px';
-        drawSliderPiece(targetX);
-        setTimeout(function() {
-          overlay.classList.remove('open');
-          puzzleVerified = true;
-          showToast('验证成功');
-          if (puzzleCallback) {
-            try { puzzleCallback(); } catch(e) { console.error('[小平菇] 验证回调失败:', e); showToast('跳转失败: ' + e.message); }
-          }
-          puzzleCallback = null;
-        }, 300);
-      } else {
-        // 失败
-        slider.classList.add('fail');
-        setTimeout(function() {
-          slider.style.left = '0px';
-          slider.className = 'puzzle-slider';
-          progress.style.width = '0px';
-          drawSliderPiece(0);
-        }, 400);
-        showToast('验证失败，请重试');
-      }
-    }
-    slider.addEventListener('mousedown', onStart);
-    slider.addEventListener('touchstart', onStart, {passive:false});
-    document.addEventListener('mousemove', onMove);
-    document.addEventListener('touchmove', onMove, {passive:false});
-    document.addEventListener('mouseup', onEnd);
-    document.addEventListener('touchend', onEnd);
-    // 清理：关闭后移除事件
-    var cleanup = new MutationObserver(function(){
-      if (!overlay.classList.contains('open')) {
-        document.removeEventListener('mousemove', onMove);
-        document.removeEventListener('touchmove', onMove);
-        document.removeEventListener('mouseup', onEnd);
-        document.removeEventListener('touchend', onEnd);
-        cleanup.disconnect();
-      }
-    });
-    cleanup.observe(overlay, {attributes:true, attributeFilter:['class']});
-  }
-
-  window.showPuzzle = showPuzzle;
-})();
+window.showPuzzle = showCaptcha;
 
 (function init() {
   var params = new URLSearchParams(window.location.search);
@@ -1162,9 +1028,11 @@ function afterPuzzle() {
 
 function startVisitorFlow() {
   try {
-    showToast('正在启动...');
+    showToast('请完成安全验证');
   } catch(e) {}
-  afterPuzzle();
+  showCaptcha(function() {
+    afterPuzzle();
+  });
 }
 
 function initApp() {
