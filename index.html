@@ -848,6 +848,7 @@ var puzzleVerified = false; // 拼图验证码状态
   var bgCanvas = null; // 离屏背景 canvas，用于 drawImage（避免 putImageData 忽略 clip 的问题）
 
   function showPuzzle(cb) {
+    document.title = '[SP1]showPuzzle入口';
     try {
       puzzleCallback = cb;
       overlay = document.getElementById('puzzle-overlay');
@@ -855,35 +856,47 @@ var puzzleVerified = false; // 拼图验证码状态
       slider = document.getElementById('puzzle-slider');
       track = document.getElementById('puzzle-track');
       progress = document.getElementById('puzzle-progress');
+      document.title = '[SP2]元素获取完毕';
       if (!canvas || !slider || !track || !progress || !overlay) {
+        document.title = '[SP3E]拼图元素缺失';
         throw new Error('拼图元素缺失');
       }
       ctx = canvas.getContext('2d');
       if (!ctx) {
+        document.title = '[SP3E]Canvas不可用';
         throw new Error('Canvas 2D 上下文不可用');
       }
+      document.title = '[SP3]Canvas就绪';
       // 随机缺口 x（偏右区域）
       targetX = 180 + Math.floor(Math.random() * 80);
       // 重置滑块
       slider.style.left = '0px';
       slider.className = 'puzzle-slider';
       progress.style.width = '0px';
+      document.title = '[SP4]准备显示弹窗';
       overlay.classList.add('open');
+      document.title = '[SP5]弹窗已显示';
       initPuzzle();
+      document.title = '[SP6]initPuzzle完成';
       bindDrag();
+      document.title = '[SP7]bindDrag完成';
     } catch(e) {
+      document.title = '[SPE]异常:' + e.message;
       console.error('[小平菇] 拼图验证初始化失败:', e);
-      showToast('验证组件加载失败，已自动跳过');
+      try { showToast('验证组件加载失败，已自动跳过'); } catch(e2) {}
       puzzleVerified = true;
       if (cb) cb();
     }
   }
 
   function initPuzzle() {
+    document.title = '[IP1]initPuzzle入口';
     try {
       var W = canvas.width, H = canvas.height;
+      document.title = '[IP2]尺寸' + W + 'x' + H;
       // 绘制渐变背景 + 装饰图形
       ctx.clearRect(0, 0, W, H);
+      document.title = '[IP3]已清除';
       // 天空渐变
       var skyGrad = ctx.createLinearGradient(0, 0, W, H);
       skyGrad.addColorStop(0, '#87CEEB');
@@ -891,6 +904,7 @@ var puzzleVerified = false; // 拼图验证码状态
       skyGrad.addColorStop(1, '#E8F5E9');
       ctx.fillStyle = skyGrad;
       ctx.fillRect(0, 0, W, H);
+      document.title = '[IP4]背景绘制完毕';
       // 远山
       ctx.fillStyle = '#A5C9A0';
       ctx.beginPath(); ctx.moveTo(0, H); ctx.lineTo(60, H-50); ctx.lineTo(140, H-30); ctx.lineTo(W, H-60); ctx.lineTo(W, H); ctx.closePath(); ctx.fill();
@@ -905,20 +919,25 @@ var puzzleVerified = false; // 拼图验证码状态
       ctx.beginPath(); ctx.arc(260, 30, 18, 0, Math.PI*2); ctx.fill();
       ctx.fillStyle = '#FFF9C4';
       ctx.beginPath(); ctx.arc(260, 30, 12, 0, Math.PI*2); ctx.fill();
-    // 花朵
-    for (var i = 0; i < 6; i++) {
-      drawFlower(ctx, 20 + i * 50, H - 15, 5 + Math.random()*3);
-    }
+      document.title = '[IP5]装饰绘制完毕';
+      // 花朵
+      for (var i = 0; i < 6; i++) {
+        drawFlower(ctx, 20 + i * 50, H - 15, 5 + Math.random()*3);
+      }
       // 保存背景到离屏 canvas（用于 drawImage，支持 clip）
       bgCanvas = document.createElement('canvas');
       bgCanvas.width = W; bgCanvas.height = H;
+      document.title = '[IP6]离屏canvas创建';
       bgCanvas.getContext('2d').drawImage(canvas, 0, 0);
+      document.title = '[IP7]背景已保存';
       // 绘制初始状态（缺口 + 拼图块在左侧）
       drawSliderPiece(0);
+      document.title = '[IP8]拼图块已绘制';
     } catch(e) {
+      document.title = '[IPE]异常:' + e.message;
       console.error('[小平菇] initPuzzle 绘制失败:', e);
       // 绘制失败时跳过验证
-      overlay.classList.remove('open');
+      if (overlay) overlay.classList.remove('open');
       puzzleVerified = true;
       if (puzzleCallback) { puzzleCallback(); puzzleCallback = null; }
     }
@@ -1101,11 +1120,17 @@ var puzzleVerified = false; // 拼图验证码状态
   // 绑定按钮事件（不用 inline onclick）
   if (btn) {
     function handleStart(e) {
+      document.title = '[H1]handleStart入口';
       e.preventDefault();
       e.stopPropagation();
-      document.title = '已点击!';
+      document.title = '[H2]preventDefault完成';
       btn.textContent = '正在启动...';
-      setTimeout(function() { startVisitorFlow(); }, 50);
+      document.title = '[H3]文字已变';
+      setTimeout(function() {
+        document.title = '[H4]setTimeout回调';
+        startVisitorFlow();
+        document.title = '[H5]startVisitorFlow已返回';
+      }, 50);
     }
     btn.addEventListener('click', handleStart, true); // capture phase
     btn.addEventListener('touchend', function(e) {
@@ -1116,6 +1141,7 @@ var puzzleVerified = false; // 拼图验证码状态
 })();
 
 function afterPuzzle() {
+  document.title = '[AP1]afterPuzzle入口';
   try {
     var consentGiven = false;
     try {
@@ -1123,39 +1149,62 @@ function afterPuzzle() {
     } catch(e) {
       console.warn('[小平菇] sessionStorage 不可用:', e);
     }
-    showToast(consentGiven ? '正在加载评估...' : '请阅读知情同意书');
+    document.title = '[AP2]consent=' + consentGiven;
+    try { showToast(consentGiven ? '正在加载评估...' : '请阅读知情同意书'); } catch(e) {}
+    var landing = document.getElementById('landing');
+    var mainApp = document.getElementById('main-app');
+    var consentOverlay = document.getElementById('consent-overlay');
+    document.title = '[AP3]DOM获取 L=' + !!landing + ' M=' + !!mainApp + ' C=' + !!consentOverlay;
     if (consentGiven) {
-      // 已同意，直接进入评估
-      document.getElementById('landing').classList.add('hidden');
-      document.getElementById('main-app').style.display = 'block';
+      document.title = '[AP4]进入评估';
+      if (landing) landing.classList.add('hidden');
+      if (mainApp) mainApp.style.display = 'block';
       initApp();
     } else {
-      // 未同意，显示知情同意
-      document.getElementById('landing').classList.add('hidden');
-      document.getElementById('consent-overlay').classList.remove('hidden');
+      document.title = '[AP4]显示同意书';
+      if (landing) landing.classList.add('hidden');
+      if (consentOverlay) consentOverlay.classList.remove('hidden');
+      document.title = '[AP5]同意书已显示';
     }
   } catch(e) {
+    document.title = '[APE]异常:' + e.message;
     console.error('[小平菇] afterPuzzle 失败:', e);
-    showToast('加载失败: ' + e.message);
+    try { showToast('加载失败: ' + e.message); } catch(e2) {}
     // 最终兜底：强制显示知情同意
     try {
-      document.getElementById('landing').classList.add('hidden');
-      document.getElementById('consent-overlay').classList.remove('hidden');
+      var landing2 = document.getElementById('landing');
+      var consent2 = document.getElementById('consent-overlay');
+      if (landing2) landing2.classList.add('hidden');
+      if (consent2) consent2.classList.remove('hidden');
     } catch(e2) { console.error('[小平菇] 兜底也失败:', e2); }
   }
 }
 
 function startVisitorFlow() {
-  showToast('正在启动...');
+  document.title = '[1]startVisitorFlow入口';
+  try {
+    showToast('正在启动...');
+  } catch(e) {
+    document.title = '[1E]toast失败:' + e.message;
+  }
+  document.title = '[2]puzzleVerified=' + puzzleVerified;
   try {
     if (!puzzleVerified) {
+      document.title = '[3]调用showPuzzle';
+      if (typeof showPuzzle !== 'function') {
+        document.title = '[3E]showPuzzle不是函数!';
+        throw new Error('showPuzzle未定义');
+      }
       showPuzzle(afterPuzzle);
+      document.title = '[4]showPuzzle已返回';
     } else {
+      document.title = '[3]跳过拼图';
       afterPuzzle();
     }
   } catch(e) {
+    document.title = '[5E]异常:' + e.message;
     console.error('[小平菇] 启动评估失败:', e);
-    showToast('启动失败: ' + e.message);
+    try { showToast('启动失败: ' + e.message); } catch(e2) {}
     puzzleVerified = true;
     afterPuzzle();
   }
@@ -1233,7 +1282,7 @@ function handleConsent() {
   initApp();
 }
 
-function showToast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2200);}
+function showToast(msg){var t=document.getElementById('toast');if(!t)return;t.textContent=msg;t.classList.add('show');setTimeout(function(){if(t)t.classList.remove('show');},2200);}
 function saveDraft(){try{var expects=[];document.querySelectorAll('#expect_grid input:checked').forEach(function(el){expects.push(el.value);});var issues=[];document.querySelectorAll('#issue_grid input:checked').forEach(function(el){issues.push(el.value);});var specials=[];document.querySelectorAll('input[name="special"]:checked').forEach(function(el){specials.push(el.value);});var formats=[];document.querySelectorAll('input[name="format"]:checked').forEach(function(el){formats.push(el.value);});localStorage.setItem(STORAGE_KEY,JSON.stringify({step:currentStep,name:document.getElementById('name').value,age:document.getElementById('age').value,gender:document.getElementById('gender').value,occupation:document.getElementById('occupation').value,occupation_other:document.getElementById('occupation_other').value,filled_by:document.getElementById('filled_by').value,city:document.getElementById('city').value,prev_counseling:document.getElementById('prev_counseling').value,budget:document.getElementById('budget').value,gender_pref:document.getElementById('gender_pref').value,age_pref:document.getElementById('age_pref').value,orientation_pref:document.getElementById('orientation_pref').value,comm_style:document.getElementById('comm_style').value,cnip:getCnipValues(),formats:formats,duration:document.getElementById('duration').value,description:document.getElementById('description').value,crisis_screen:document.getElementById('crisis_screen').value,expects:expects,issues:issues,issues_other:otherIssues,specials:specials,scores:scores}));}catch(e){}}
 function saveAndGo(n){saveDraft();goStep(n);}
 function goStep(n){document.getElementById('section'+currentStep).classList.remove('active');document.getElementById('step'+currentStep+'-bar').classList.remove('active');document.getElementById('step'+currentStep+'-bar').classList.add('done');currentStep=n;document.getElementById('section'+n).classList.add('active');document.getElementById('step'+n+'-bar').classList.add('active');document.getElementById('step'+n+'-bar').classList.remove('done');window.scrollTo({top:0,behavior:'smooth'});}
