@@ -958,8 +958,11 @@ function verifyCaptcha() {
 
 // 回车键提交验证码
 document.addEventListener('keydown', function(e) {
-  if (e.key === 'Enter' && document.getElementById('captcha-overlay') && document.getElementById('captcha-overlay').classList.contains('open')) {
-    verifyCaptcha();
+  if (e.key === 'Enter') {
+    var box = document.getElementById('captcha-inline');
+    if (box && box.style.display === 'block') {
+      verifyCaptcha();
+    }
   }
 });
 
@@ -1075,7 +1078,7 @@ function initApp() {
       document.getElementById('section1').classList.add('active');
       document.getElementById('step1-bar').classList.add('active');
     }
-  } catch(e) {}
+  } catch(e) { console.warn('[小平菇] initApp:', e); }
 }
 
 function toggleConsentBtn() {
@@ -1300,6 +1303,27 @@ function exportToPDF(){
   showToast('PDF 报告窗口已打开，请保存或打印');
 }
 
+// ===== 未成年人提示 =====
+function toggleMinorNotice(){
+  var age=parseInt(document.getElementById('age').value);
+  var notice=document.getElementById('minor_notice');
+  if(notice)notice.style.display=(age>0&&age<18)?'block':'none';
+}
+
+// ===== 职业身份"其他"输入框 =====
+function toggleOccupationOther(){
+  var sel=document.getElementById('occupation');
+  var inp=document.getElementById('occupation_other');
+  inp.style.display=(sel.value==='other')?'block':'none';
+  if(sel.value!=='other')inp.value='';
+}
+
+// 辅助函数：安全获取 DOM 属性（兼容 iOS 13-，替代可选链 ?.）
+function _attr(sel, attr) {
+  var el = document.querySelector(sel);
+  return el && el.getAttribute ? el.getAttribute(attr) : null;
+}
+
 function generateResult() {
   if(!currentViewToken) saveDraft();
   var name=document.getElementById('name').value||'来访者',age=document.getElementById('age').value||'—';
@@ -1360,21 +1384,6 @@ function generateResult() {
     '<div class="info-item"><div class="info-label">功能受损</div><div class="info-val">'+scores.function+'/5</div></div>'+
     '<div class="info-item"><div class="info-label">人际紧张</div><div class="info-val">'+scores.relation+'/5</div></div>'+
     '<div class="info-item"><div class="info-label">总分</div><div class="info-val" style="color:'+(totalScore>=15?'#C4654A':totalScore>=8?'#854F0B':'#5C7A52')+'">'+totalScore+'/25</div></div>';
-
-  // ===== 未成年人提示 =====
-  function toggleMinorNotice(){
-    var age=parseInt(document.getElementById('age').value);
-    var notice=document.getElementById('minor_notice');
-    if(notice)notice.style.display=(age>0&&age<18)?'block':'none';
-  }
-
-  // ===== 职业身份"其他"输入框 =====
-  function toggleOccupationOther(){
-    var sel=document.getElementById('occupation');
-    var inp=document.getElementById('occupation_other');
-    inp.style.display=(sel.value==='other')?'block':'none';
-    if(sel.value!=='other')inp.value='';
-  }
 
   // ===== Referral logic =====
   var cards=[];
@@ -1590,7 +1599,7 @@ function generateResult() {
 
   // Save assessment data (skip in view mode)
   if(typeof saveAssessment==='function'&&!currentViewToken){
-    var viewToken = crypto.randomUUID();
+    var viewToken = (crypto.randomUUID || function(){return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,function(c){var r=Math.random()*16|0;return(c==='x'?r:(r&0x3|0x8)).toString(16);});})();
     saveAssessment({
       view_token:viewToken,
       visitor_name:name,visitor_age:parseInt(age)||null,visitor_gender:genderText,
@@ -1599,12 +1608,12 @@ function generateResult() {
       age_pref:document.getElementById('age_pref').value,
       orientation_pref:document.getElementById('orientation_pref').value,
       comm_style:document.getElementById('comm_style').value,
-      cnip_structure:document.querySelector('[data-field="cnip_structure"] .cnip-btn.active')?.getAttribute('data-value')||null,
-      cnip_emotion:document.querySelector('[data-field="cnip_emotion"] .cnip-btn.active')?.getAttribute('data-value')||null,
-      cnip_timefocus:document.querySelector('[data-field="cnip_timefocus"] .cnip-btn.active')?.getAttribute('data-value')||null,
-      cnip_warmth:document.querySelector('[data-field="cnip_warmth"] .cnip-btn.active')?.getAttribute('data-value')||null,
-      cnip_homework:document.querySelector('[data-field="cnip_homework"] .cnip-btn.active')?.getAttribute('data-value')||null,
-      cnip_relational:document.querySelector('[data-field="cnip_relational"] .cnip-btn.active')?.getAttribute('data-value')||null,
+      cnip_structure:_attr('[data-field="cnip_structure"] .cnip-btn.active','data-value'),
+      cnip_emotion:_attr('[data-field="cnip_emotion"] .cnip-btn.active','data-value'),
+      cnip_timefocus:_attr('[data-field="cnip_timefocus"] .cnip-btn.active','data-value'),
+      cnip_warmth:_attr('[data-field="cnip_warmth"] .cnip-btn.active','data-value'),
+      cnip_homework:_attr('[data-field="cnip_homework"] .cnip-btn.active','data-value'),
+      cnip_relational:_attr('[data-field="cnip_relational"] .cnip-btn.active','data-value'),
       expects:Array.from(document.querySelectorAll('#expect_grid input:checked')).map(function(e){return e.value;}),
       issues:issues,description:description,duration:durationText,
       score_mood:scores.mood,score_anxiety:scores.anxiety,score_sleep:scores.sleep,
@@ -1854,17 +1863,27 @@ function submitMatchApply(){
   var name=document.getElementById('apply-name').value.trim();
   var contact=document.getElementById('apply-contact').value.trim();
   if(!name||!contact){alert('请填写姓名和联系方式');return;}
-  // 保存到 assessments 表（需要 match_request_name 和 match_request_contact 字段）
   var asid=sessionStorage.getItem('xiaopingu_assessment_id');
   if(asid){
     fetch(SUPABASE_CONFIG.url+'/rest/v1/assessments?id=eq.'+asid,{
       method:'PATCH',
       headers:{'Content-Type':'application/json','apikey':SUPABASE_CONFIG.anonKey,'Authorization':'Bearer '+SUPABASE_CONFIG.anonKey,'Prefer':'return=representation'},
       body:JSON.stringify({match_request_name:name,match_request_contact:contact,match_request_cid:document.getElementById('apply-cid').value,updated_at:new Date().toISOString()})
-    }).then(function(r){if(r.ok){}});
+    }).then(function(r){
+      if(r.ok){
+        document.getElementById('apply-form').classList.remove('show');
+        document.getElementById('apply-success').classList.add('show');
+      } else {
+        alert('提交失败，请稍后重试');
+      }
+    }).catch(function(e){
+      console.error('[小平菇] 申请提交失败:', e);
+      alert('网络错误，请检查连接后重试');
+    });
+  } else {
+    document.getElementById('apply-form').classList.remove('show');
+    document.getElementById('apply-success').classList.add('show');
   }
-  document.getElementById('apply-form').classList.remove('show');
-  document.getElementById('apply-success').classList.add('show');
 }
 </script>
 </div>
