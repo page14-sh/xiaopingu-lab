@@ -457,7 +457,7 @@
   </div>
 
   <div class="landing-cta">
-    <button class="landing-btn landing-btn-primary" onclick="startVisitorFlow()">开始心理评估</button>
+    <button id="btn-start" class="landing-btn landing-btn-primary">开始心理评估</button>
     <a href="counselor.html" class="landing-btn landing-btn-secondary">咨询师入驻 →</a>
   </div>
 
@@ -1068,6 +1068,51 @@ var puzzleVerified = false; // 拼图验证码状态
     return;
   }
   // 首页默认显示，无需自动触发验证码
+
+  // 调试：检测按钮是否被覆盖
+  var btn = document.querySelector('.landing-btn-primary');
+  if (btn) {
+    // 300ms 后检查按钮是否在视口中且可点击
+    setTimeout(function() {
+      var rect = btn.getBoundingClientRect();
+      var el = document.elementFromPoint(rect.left + rect.width/2, rect.top + rect.height/2);
+      var isBlocked = el !== btn && !btn.contains(el);
+      document.title = isBlocked ? '[被' + el.tagName + '#' + (el.id||'') + '覆盖]' : '[按钮可点击]';
+      console.log('[小平菇] 按钮检查:', {
+        visible: rect.width > 0 && rect.height > 0,
+        inViewport: rect.top < window.innerHeight && rect.bottom > 0,
+        topElement: el ? el.tagName + '#' + el.id + '.' + el.className : 'null',
+        isBlocked: isBlocked
+      });
+      if (isBlocked) {
+        // 强制给覆盖元素加 pointer-events:none
+        var blocker = el;
+        var depth = 0;
+        while (blocker && depth < 5) {
+          blocker.style.pointerEvents = 'none';
+          console.log('[小平菇] 已禁用覆盖层:', blocker.tagName + '#' + blocker.id);
+          blocker = blocker.parentElement;
+          depth++;
+        }
+      }
+    }, 500);
+  }
+
+  // 绑定按钮事件（不用 inline onclick）
+  if (btn) {
+    function handleStart(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      document.title = '已点击!';
+      btn.textContent = '正在启动...';
+      setTimeout(function() { startVisitorFlow(); }, 50);
+    }
+    btn.addEventListener('click', handleStart, true); // capture phase
+    btn.addEventListener('touchend', function(e) {
+      e.preventDefault();
+      handleStart(e);
+    }, false);
+  }
 })();
 
 function afterPuzzle() {
