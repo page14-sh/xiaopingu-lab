@@ -254,8 +254,8 @@ var currentTab = 'timeline';
   window._dashCid = params.get('cid') || '';
   window._dashVisitorName = params.get('name') || '';
 
-  if (!currentAssessmentId) {
-    showEmpty('请通过评估结果页的「开始咨询效果追踪」进入，或提供有效的评估 ID');
+  if (!currentAssessmentId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(currentAssessmentId)) {
+    showEmpty('链接格式有误，请通过评估结果页的「开始咨询效果追踪」进入');
     return;
   }
 

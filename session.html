@@ -486,8 +486,8 @@
       sessionNumber = parseInt(params.get('sn')) || 1;
       isCounselorMode = params.get('role') === 'counselor';
 
-      if (!assessmentId) {
-        showError('缺少评估信息，请从评估结果页进入。');
+      if (!assessmentId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(assessmentId)) {
+        showError('链接格式有误，请从评估结果页重新进入。');
         return;
       }
 

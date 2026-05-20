@@ -158,6 +158,19 @@ CREATE INDEX idx_counselors_budget ON counselors(fee_budget_level);
 
 // ========== API 封装 ==========
 
+// 通用请求函数（含自动重试）
+function _xpg_fetch(url, options, retries) {
+  retries = retries || 1;
+  return fetch(url, options).then(function(r) { return r; }).catch(function(e) {
+    if (retries > 0) {
+      console.warn('[小平菇] 请求失败，' + retries + '秒后重试:', url);
+      return new Promise(function(resolve) { setTimeout(resolve, retries * 1000); })
+        .then(function() { return _xpg_fetch(url, options, retries - 1); });
+    }
+    throw e;
+  });
+}
+
 function getSupabaseHeaders() {
   return {
     'Content-Type': 'application/json',
@@ -196,7 +209,7 @@ function _xpg_toast(msg, type) {
 // 保存评估数据
 function saveAssessment(data) {
   if (!SUPABASE_CONFIG.enableDataCollection || !SUPABASE_CONFIG.url) return Promise.resolve(null);
-  return fetch(SUPABASE_CONFIG.url + '/rest/v1/assessments', {
+  return _xpg_fetch(SUPABASE_CONFIG.url + '/rest/v1/assessments', {
     method: 'POST',
     headers: getSupabaseHeaders(),
     body: JSON.stringify(data)
@@ -209,7 +222,7 @@ function saveAssessment(data) {
 // 保存咨询师档案（不含 return=representation，避免 pending 记录被 RLS 拦截）
 function saveCounselor(data) {
   if (!SUPABASE_CONFIG.enableDataCollection || !SUPABASE_CONFIG.url) return Promise.resolve(data);
-  return fetch(SUPABASE_CONFIG.url + '/rest/v1/counselors', {
+  return _xpg_fetch(SUPABASE_CONFIG.url + '/rest/v1/counselors', {
     method: 'POST',
     headers: getSupabaseWriteHeaders(),
     body: JSON.stringify(data)
@@ -222,7 +235,7 @@ function saveCounselor(data) {
 // 更新咨询师档案（不含 return=representation）
 function updateCounselor(id, data) {
   if (!SUPABASE_CONFIG.enableDataCollection || !SUPABASE_CONFIG.url) return Promise.resolve();
-  return fetch(SUPABASE_CONFIG.url + '/rest/v1/counselors?id=eq.' + id, {
+  return _xpg_fetch(SUPABASE_CONFIG.url + '/rest/v1/counselors?id=eq.' + id, {
     method: 'PATCH',
     headers: getSupabaseWriteHeaders(),
     body: JSON.stringify({ ...data, updated_at: new Date().toISOString() })
@@ -235,7 +248,7 @@ function updateCounselor(id, data) {
 // 审核咨询师档案
 function reviewCounselor(id, status, note, reviewer) {
   if (!SUPABASE_CONFIG.enableDataCollection || !SUPABASE_CONFIG.url) return Promise.resolve();
-  return fetch(SUPABASE_CONFIG.url + '/rest/v1/counselors?id=eq.' + id, {
+  return _xpg_fetch(SUPABASE_CONFIG.url + '/rest/v1/counselors?id=eq.' + id, {
     method: 'PATCH',
     headers: getSupabaseHeaders(),
     body: JSON.stringify({
@@ -562,7 +575,7 @@ function matchCounselors(assessment) {
 // 创建会话
 function createSession(data) {
   if (!SUPABASE_CONFIG.enableDataCollection || !SUPABASE_CONFIG.url) return Promise.resolve(null);
-  return fetch(SUPABASE_CONFIG.url + '/rest/v1/sessions', {
+  return _xpg_fetch(SUPABASE_CONFIG.url + '/rest/v1/sessions', {
     method: 'POST',
     headers: getSupabaseHeaders(),
     body: JSON.stringify(data)
@@ -576,7 +589,7 @@ function createSession(data) {
 // 保存 PCOMS 评分（ORS 或 SRS）
 function savePcomsRating(data) {
   if (!SUPABASE_CONFIG.enableDataCollection || !SUPABASE_CONFIG.url) return Promise.resolve(null);
-  return fetch(SUPABASE_CONFIG.url + '/rest/v1/pcoms_ratings', {
+  return _xpg_fetch(SUPABASE_CONFIG.url + '/rest/v1/pcoms_ratings', {
     method: 'POST',
     headers: getSupabaseHeaders(),
     body: JSON.stringify(data)
