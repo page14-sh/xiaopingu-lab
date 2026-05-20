@@ -876,7 +876,7 @@
 </div>
 
 <div class="toast" id="toast"></div>
-<script src="supabase-config.js"></script>
+<script src="supabase-config.js?v=20260520"></script>
 <script>
 var scores = { mood:0, anxiety:0, sleep:0, function:0, relation:0 };
 var currentStep = 1;
@@ -1034,7 +1034,9 @@ function afterPuzzle() {
 }
 
 function startVisitorFlow() {
-  afterPuzzle();
+  showCaptcha(function() {
+    afterPuzzle();
+  });
 }
 
 function initApp() {
