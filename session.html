@@ -272,7 +272,7 @@
         <div class="vas-item">
           <div class="vas-item-title">个人 (Individual)</div>
           <p class="text-xs text-gray-400 mb-3">独自一人时的状态：情绪、身体、精神</p>
-          <div class="vas-slider" data-key="individual" onpointerdown="startSlide(event)" ontouchstart="startSlide(event)">
+          <div class="vas-slider" data-key="individual" onpointerdown="startSlide(event)">
             <div class="vas-score" style="left:0">0</div>
             <div class="vas-track"></div>
             <div class="vas-fill" style="width:0"></div>
@@ -285,7 +285,7 @@
         <div class="vas-item">
           <div class="vas-item-title">人际 (Interpersonal)</div>
           <p class="text-xs text-gray-400 mb-3">与亲密伴侣、家人、朋友的关系</p>
-          <div class="vas-slider" data-key="interpersonal" onpointerdown="startSlide(event)" ontouchstart="startSlide(event)">
+          <div class="vas-slider" data-key="srs_goals" onpointerdown="startSlide(event)">
             <div class="vas-score" style="left:0">0</div>
             <div class="vas-track"></div>
             <div class="vas-fill" style="width:0"></div>
@@ -298,7 +298,7 @@
         <div class="vas-item">
           <div class="vas-item-title">社会角色 (Social)</div>
           <p class="text-xs text-gray-400 mb-3">在工作、学习、社区等社会角色中的表现</p>
-          <div class="vas-slider" data-key="social" onpointerdown="startSlide(event)" ontouchstart="startSlide(event)">
+          <div class="vas-slider" data-key="social" onpointerdown="startSlide(event)">
             <div class="vas-score" style="left:0">0</div>
             <div class="vas-track"></div>
             <div class="vas-fill" style="width:0"></div>
@@ -311,7 +311,7 @@
         <div class="vas-item">
           <div class="vas-item-title">总体 (Overall)</div>
           <p class="text-xs text-gray-400 mb-3">综合考虑，你对自己整体状态的感受</p>
-          <div class="vas-slider" data-key="overall" onpointerdown="startSlide(event)" ontouchstart="startSlide(event)">
+          <div class="vas-slider" data-key="overall" onpointerdown="startSlide(event)">
             <div class="vas-score" style="left:0">0</div>
             <div class="vas-track"></div>
             <div class="vas-fill" style="width:0"></div>
@@ -339,19 +339,7 @@
         <div class="vas-item">
           <div class="vas-item-title">关系 (Relationship)</div>
           <p class="text-xs text-gray-400 mb-3">你和咨询师之间感觉如何？</p>
-          <div class="vas-slider" data-key="individual" onpointerdown="startSlide(event)" ontouchstart="startSlide(event)">
-            <div class="vas-score" style="left:0">0</div>
-            <div class="vas-track"></div>
-            <div class="vas-fill" style="width:0"></div>
-            <div class="vas-marker" style="left:0"></div>
-            <div class="vas-labels"><span>完全不同意</span><span>一般</span><span>非常同意</span></div>
-          </div>
-        </div>
-
-        <div class="vas-item">
-          <div class="vas-item-title">目标与话题 (Goals & Topics)</div>
-          <p class="text-xs text-gray-400 mb-3">你们是否在讨论对你重要的事情？</p>
-          <div class="vas-slider" data-key="interpersonal" onpointerdown="startSlide(event)" ontouchstart="startSlide(event)">
+          <div class="vas-slider" data-key="srs_relationship" onpointerdown="startSlide(event)">
             <div class="vas-score" style="left:0">0</div>
             <div class="vas-track"></div>
             <div class="vas-fill" style="width:0"></div>
@@ -363,7 +351,7 @@
         <div class="vas-item">
           <div class="vas-item-title">方法与途径 (Approach)</div>
           <p class="text-xs text-gray-400 mb-3">咨询师的方式是否适合你？</p>
-          <div class="vas-slider" data-key="social" onpointerdown="startSlide(event)" ontouchstart="startSlide(event)">
+          <div class="vas-slider" data-key="srs_approach" onpointerdown="startSlide(event)">
             <div class="vas-score" style="left:0">0</div>
             <div class="vas-track"></div>
             <div class="vas-fill" style="width:0"></div>
@@ -375,7 +363,7 @@
         <div class="vas-item">
           <div class="vas-item-title">总体联盟 (Overall)</div>
           <p class="text-xs text-gray-400 mb-3">综合来看，这次咨询对你有帮助吗？</p>
-          <div class="vas-slider" data-key="overall" onpointerdown="startSlide(event)" ontouchstart="startSlide(event)">
+          <div class="vas-slider" data-key="srs_overall" onpointerdown="startSlide(event)">
             <div class="vas-score" style="left:0">0</div>
             <div class="vas-track"></div>
             <div class="vas-fill" style="width:0"></div>
@@ -444,7 +432,7 @@
         <p class="text-xs text-gray-500 mb-3">将下方链接发送给您的咨询师，咨询师打开后可查看您的追踪评分</p>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <input type="text" id="counselor-share-link" readonly style="flex:1;padding:8px 12px;font-size:12px;border:1px solid #C8DCC0;border-radius:8px;background:#fff;color:#5A6B52;min-width:0" />
-          <button class="btn-secondary" style="padding:8px 16px;font-size:13px;white-space:nowrap" onclick="copyCounselorShareLink()">复制链接</button>
+          <button class="btn-secondary" style="padding:8px 16px;font-size:13px;white-space:nowrap" onclick="copyCounselorShareLink(event)">复制链接</button>
         </div>
       </div>
       <div class="flex gap-3 justify-center flex-wrap">
@@ -464,7 +452,7 @@
   <script>
     // ========== 全局状态 ==========
     var orsValues = { individual: null, interpersonal: null, social: null, overall: null };
-    var srsValues = { individual: null, interpersonal: null, social: null, overall: null };
+    var srsValues = { srs_relationship: null, srs_goals: null, srs_approach: null, srs_overall: null };
     var currentStep = 'ors';
     var sessionId = null;
     var assessmentId = null;
@@ -519,7 +507,12 @@
             visitor_name: visitorName,
             session_number: sessionNumber
           }).then(function(s) {
-            if (s) sessionId = s.id;
+            if (s) {
+              sessionId = s.id;
+            } else {
+              alert('会话创建失败，请刷新重试');
+              return Promise.reject(new Error('会话创建失败'));
+            }
           });
         }
       }).then(function() {
@@ -769,8 +762,8 @@
         }
       } else if (currentStep === 'srs') {
         srsValues[key] = val;
-        if (srsValues.individual !== null && srsValues.interpersonal !== null &&
-            srsValues.social !== null && srsValues.overall !== null) {
+        if (srsValues.srs_relationship !== null && srsValues.srs_goals !== null &&
+            srsValues.srs_approach !== null && srsValues.srs_overall !== null) {
           document.getElementById('btn-srs-next').disabled = false;
         }
       }
@@ -889,8 +882,8 @@
     function buildReview() {
       var orsTotal = (orsValues.individual || 0) + (orsValues.interpersonal || 0) +
                      (orsValues.social || 0) + (orsValues.overall || 0);
-      var srsTotal = (srsValues.individual || 0) + (srsValues.interpersonal || 0) +
-                     (srsValues.social || 0) + (srsValues.overall || 0);
+      var srsTotal = (srsValues.srs_relationship || 0) + (srsValues.srs_goals || 0) +
+                     (srsValues.srs_approach || 0) + (srsValues.srs_overall || 0);
 
       // ORS 摘要
       document.getElementById('review-ors-total').textContent = orsTotal.toFixed(1);
@@ -903,10 +896,10 @@
       // SRS 摘要
       document.getElementById('review-srs-total').textContent = srsTotal.toFixed(1);
       document.getElementById('review-srs-items').innerHTML =
-        buildItemHTML('关系', srsValues.individual) +
-        buildItemHTML('目标', srsValues.interpersonal) +
-        buildItemHTML('方法', srsValues.social) +
-        buildItemHTML('总体', srsValues.overall);
+        buildItemHTML('关系', srsValues.srs_relationship) +
+        buildItemHTML('目标', srsValues.srs_goals) +
+        buildItemHTML('方法', srsValues.srs_approach) +
+        buildItemHTML('总体', srsValues.srs_overall);
 
       // 变化趋势
       var changeDiv = document.getElementById('change-summary');
@@ -984,17 +977,17 @@
     }
 
     // ========== 复制分享链接 ==========
-    function copyCounselorShareLink() {
+    function copyCounselorShareLink(e) {
       var link = document.getElementById('counselor-share-link').value;
       if (navigator.clipboard) {
         navigator.clipboard.writeText(link).then(function() {
-          var btn = event.target; btn.textContent = '已复制 ✓'; setTimeout(function() { btn.textContent = '复制链接'; }, 2000);
+          var btn = e.target; btn.textContent = '已复制 ✓'; setTimeout(function() { btn.textContent = '复制链接'; }, 2000);
         });
       } else {
         var ta = document.createElement('textarea'); ta.value = link;
         document.body.appendChild(ta); ta.select(); document.execCommand('copy');
         document.body.removeChild(ta);
-        var btn = event.target; btn.textContent = '已复制 ✓'; setTimeout(function() { btn.textContent = '复制链接'; }, 2000);
+        var btn = e.target; btn.textContent = '已复制 ✓'; setTimeout(function() { btn.textContent = '复制链接'; }, 2000);
       }
     }
 
@@ -1006,8 +999,8 @@
 
       var orsTotal = (orsValues.individual || 0) + (orsValues.interpersonal || 0) +
                      (orsValues.social || 0) + (orsValues.overall || 0);
-      var srsTotal = (srsValues.individual || 0) + (srsValues.interpersonal || 0) +
-                     (srsValues.social || 0) + (srsValues.overall || 0);
+      var srsTotal = (srsValues.srs_relationship || 0) + (srsValues.srs_goals || 0) +
+                     (srsValues.srs_approach || 0) + (srsValues.srs_overall || 0);
 
       // 计算 ORS 临床变化
       var orsClinicalChange = null;
@@ -1033,10 +1026,10 @@
       var p2 = savePcomsRating({
         session_id: sessionId,
         type: 'SRS',
-        item_individual: srsValues.individual,
-        item_interpersonal: srsValues.interpersonal,
-        item_social: srsValues.social,
-        item_overall: srsValues.overall
+        item_individual: srsValues.srs_relationship,
+        item_interpersonal: srsValues.srs_goals,
+        item_social: srsValues.srs_approach,
+        item_overall: srsValues.srs_overall
       });
 
       Promise.all([p1, p2]).then(function() {
