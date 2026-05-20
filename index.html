@@ -1181,33 +1181,9 @@ function afterPuzzle() {
 }
 
 function startVisitorFlow() {
-  document.title = '[1]startVisitorFlow入口';
-  try {
-    showToast('正在启动...');
-  } catch(e) {
-    document.title = '[1E]toast失败:' + e.message;
-  }
-  document.title = '[2]puzzleVerified=' + puzzleVerified;
-  try {
-    if (!puzzleVerified) {
-      document.title = '[3]调用showPuzzle';
-      if (typeof showPuzzle !== 'function') {
-        document.title = '[3E]showPuzzle不是函数!';
-        throw new Error('showPuzzle未定义');
-      }
-      showPuzzle(afterPuzzle);
-      document.title = '[4]showPuzzle已返回';
-    } else {
-      document.title = '[3]跳过拼图';
-      afterPuzzle();
-    }
-  } catch(e) {
-    document.title = '[5E]异常:' + e.message;
-    console.error('[小平菇] 启动评估失败:', e);
-    try { showToast('启动失败: ' + e.message); } catch(e2) {}
-    puzzleVerified = true;
-    afterPuzzle();
-  }
+  // DEBUG: 临时强制跳过拼图验证码，直接显示知情同意书
+  document.title = '[DEBUG]强制跳过拼图';
+  afterPuzzle();
 }
 
 function initApp() {
