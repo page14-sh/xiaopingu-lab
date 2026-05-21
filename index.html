@@ -1621,10 +1621,12 @@ function generateResult() {
       total_score:totalScore,severity:severity,specials:specials,crisis_level:crisisVal,
       user_agent:navigator.userAgent.substring(0,200)
     };
-    // 本地备份评估数据，供匹配申请时回退 POST 重试
+    // 前置写入回退 ID 和备份数据，确保即使 saveAssessment 链路异常也不会丢失
+    try { sessionStorage.setItem('xiaopingu_assessment_id', viewToken); localStorage.setItem('xiaopingu_assessment_id', viewToken); } catch(e) {}
     try { localStorage.setItem('xiaopingu_assessment_backup', JSON.stringify(assessmentPayload)); } catch(e) {}
     saveAssessment(assessmentPayload).then(function(result){
       if(result&&result[0]&&result[0].id){
+        // 用真实 DB ID 覆盖前置回退 ID
         sessionStorage.setItem('xiaopingu_assessment_id', result[0].id);
         localStorage.setItem('xiaopingu_assessment_id', result[0].id);
       } else {
