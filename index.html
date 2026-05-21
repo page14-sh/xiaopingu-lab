@@ -872,6 +872,7 @@
 var scores = { mood:0, anxiety:0, sleep:0, function:0, relation:0 };
 var currentStep = 1;
 var currentViewToken = null;
+window.xiaopinguAsid = null;
 var STORAGE_KEY = 'xiaopingu_draft';
 var currentRecommendedApproaches = [];
 var currentMinYears = 1;
@@ -1621,12 +1622,15 @@ function generateResult() {
       total_score:totalScore,severity:severity,specials:specials,crisis_level:crisisVal,
       user_agent:navigator.userAgent.substring(0,200)
     };
-    // 前置写入回退 ID 和备份数据，确保即使 saveAssessment 链路异常也不会丢失
+    // 前置写入回退 ID（三层：内存→sessionStorage→localStorage）
+    window.xiaopinguAsid = viewToken;
+    console.log('[小平菇] 前置写入评估ID:', viewToken);
     try { sessionStorage.setItem('xiaopingu_assessment_id', viewToken); localStorage.setItem('xiaopingu_assessment_id', viewToken); } catch(e) {}
     try { localStorage.setItem('xiaopingu_assessment_backup', JSON.stringify(assessmentPayload)); } catch(e) {}
     saveAssessment(assessmentPayload).then(function(result){
       if(result&&result[0]&&result[0].id){
-        // 用真实 DB ID 覆盖前置回退 ID
+        // 用真实 DB ID 覆盖回退 ID
+        window.xiaopinguAsid = result[0].id;
         sessionStorage.setItem('xiaopingu_assessment_id', result[0].id);
         localStorage.setItem('xiaopingu_assessment_id', result[0].id);
       } else {
@@ -1762,11 +1766,13 @@ function restoreResultPanel(){
     '</div>';
 }
 
-function resetForm(){if(confirm('确认重新填写问卷？当前数据将被清除。')){localStorage.removeItem(STORAGE_KEY);currentViewToken=null;window.history.replaceState(null,'',window.location.pathname);location.reload();}}
+function resetForm(){if(confirm('确认重新填写问卷？当前数据将被清除。')){localStorage.removeItem(STORAGE_KEY);currentViewToken=null;window.xiaopinguAsid=null;window.history.replaceState(null,'',window.location.pathname);location.reload();}}
 
-// ===== 获取评估ID（双存储回退） =====
+// ===== 获取评估ID（三层回退：内存→sessionStorage→localStorage） =====
 function getAsid() {
-  return sessionStorage.getItem('xiaopingu_assessment_id') || localStorage.getItem('xiaopingu_assessment_id');
+  var asid = window.xiaopinguAsid || sessionStorage.getItem('xiaopingu_assessment_id') || localStorage.getItem('xiaopingu_assessment_id');
+  if(!asid) console.error('[小平菇] getAsid 三层都为空！window:',window.xiaopinguAsid,'sessionStorage:',sessionStorage.getItem('xiaopingu_assessment_id'),'localStorage:',localStorage.getItem('xiaopingu_assessment_id'));
+  return asid;
 }
 
 // ===== 申请匹配弹窗 =====
