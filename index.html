@@ -1908,26 +1908,29 @@ function submitMatchApply(){
   var contact=document.getElementById('apply-contact').value.trim();
   if(!name||!contact){alert('请填写姓名和联系方式');return;}
   var asid=sessionStorage.getItem('xiaopingu_assessment_id');
-  if(asid){
-    fetch(SUPABASE_CONFIG.url+'/rest/v1/assessments?id=eq.'+asid,{
-      method:'PATCH',
-      headers:{'Content-Type':'application/json','apikey':SUPABASE_CONFIG.anonKey,'Authorization':'Bearer '+SUPABASE_CONFIG.anonKey,'Prefer':'return=representation'},
-      body:JSON.stringify({match_request_name:name,match_request_contact:contact,match_request_cid:document.getElementById('apply-cid').value,updated_at:new Date().toISOString()})
-    }).then(function(r){
-      if(r.ok){
-        document.getElementById('apply-form').classList.remove('show');
-        document.getElementById('apply-success').classList.add('show');
-      } else {
-        alert('提交失败，请稍后重试');
-      }
-    }).catch(function(e){
-      console.error('[小平菇] 申请提交失败:', e);
-      alert('网络错误，请检查连接后重试');
-    });
-  } else {
-    document.getElementById('apply-form').classList.remove('show');
-    document.getElementById('apply-success').classList.add('show');
-  }
+  if(!asid){alert('评估记录未找到，请刷新页面后重试');return;}
+  var applyBtn=document.querySelector('#apply-form .btn-primary');
+  if(applyBtn){applyBtn.disabled=true;applyBtn.textContent='提交中...';}
+  fetch(SUPABASE_CONFIG.url+'/rest/v1/assessments?id=eq.'+asid,{
+    method:'PATCH',
+    headers:{'Content-Type':'application/json','apikey':SUPABASE_CONFIG.anonKey,'Authorization':'Bearer '+SUPABASE_CONFIG.anonKey,'Prefer':'return=representation'},
+    body:JSON.stringify({match_request_name:name,match_request_contact:contact,match_request_cid:document.getElementById('apply-cid').value,updated_at:new Date().toISOString()})
+  }).then(function(r){
+    if(!r.ok){throw new Error('HTTP '+r.status);}
+    return r.json();
+  }).then(function(data){
+    if(Array.isArray(data)&&data.length>0){
+      document.getElementById('apply-form').classList.remove('show');
+      document.getElementById('apply-success').classList.add('show');
+    } else {
+      alert('提交失败：记录未更新，请检查评估是否已完成');
+    }
+  }).catch(function(e){
+    console.error('[小平菇] 申请提交失败:', e);
+    alert('提交失败，请稍后重试（'+(e.message||'网络错误')+'）');
+  }).finally(function(){
+    if(applyBtn){applyBtn.disabled=false;applyBtn.textContent='提交申请';}
+  });
 }
 </script>
 </div>
