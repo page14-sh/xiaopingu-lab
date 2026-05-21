@@ -794,21 +794,21 @@
       renderDashboard();
     }
 
+    // ========== 危机等级映射（数据库存英文，显示用中文） ==========
+    function crisisLabel(en) {
+      const map = { 'safe': '无', 'passive': '低', 'active': '中', 'action': '高' };
+      return map[en] || '无';
+    }
+    function crisisValue(cn) {
+      const map = { '无': 'safe', '低': 'passive', '中': 'active', '高': 'action' };
+      return map[cn] || '';
+    }
+
     // ========== 设置面板 ==========
     function openSettings() {
       document.getElementById('current-pwd-display').value = ADMIN_PASSWORD;
       document.getElementById('new-password').value = '';
       document.getElementById('confirm-password').value = '';
-      // 危机等级映射（数据库存英文，显示用中文）
-      function crisisLabel(en) {
-        const map = { 'safe': '无', 'passive': '低', 'active': '中', 'action': '高' };
-        return map[en] || '无';
-      }
-      function crisisValue(cn) {
-        const map = { '无': 'safe', '低': 'passive', '中': 'active', '高': 'action' };
-        return map[cn] || '';
-      }
-
       document.getElementById('modal-settings').classList.add('active');
     }
 
