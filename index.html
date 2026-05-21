@@ -1613,48 +1613,46 @@ function generateResult() {
   }
 
   // Save assessment data (skip in view mode)
+  var viewToken = (crypto.randomUUID || function(){return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,function(c){var r=Math.random()*16|0;return(c==='x'?r:(r&0x3|0x8)).toString(16);});})();
+  var assessmentPayload = {
+    view_token:viewToken,
+    visitor_name:name,visitor_age:parseInt(age)||null,visitor_gender:genderText,
+    visitor_occupation:occText,visitor_city:cityVal,filled_by:filledBy,prev_counseling:prevText,budget:budgetVal,preferred_formats:formats,
+    gender_pref:document.getElementById('gender_pref').value,
+    age_pref:document.getElementById('age_pref').value,
+    orientation_pref:document.getElementById('orientation_pref').value,
+    comm_style:document.getElementById('comm_style').value,
+    cnip_structure:_attr('[data-field="cnip_structure"] .cnip-btn.active','data-value'),
+    cnip_emotion:_attr('[data-field="cnip_emotion"] .cnip-btn.active','data-value'),
+    cnip_timefocus:_attr('[data-field="cnip_timefocus"] .cnip-btn.active','data-value'),
+    cnip_warmth:_attr('[data-field="cnip_warmth"] .cnip-btn.active','data-value'),
+    cnip_homework:_attr('[data-field="cnip_homework"] .cnip-btn.active','data-value'),
+    cnip_relational:_attr('[data-field="cnip_relational"] .cnip-btn.active','data-value'),
+    expects:Array.from(document.querySelectorAll('#expect_grid input:checked')).map(function(e){return e.value;}),
+    issues:issues,description:description,duration:durationText,
+    score_mood:scores.mood,score_anxiety:scores.anxiety,score_sleep:scores.sleep,
+    score_function:scores.function,score_relation:scores.relation,
+    total_score:totalScore,severity:severity,specials:specials,crisis_level:crisisVal,
+    user_agent:navigator.userAgent.substring(0,200)
+  };
+  // 无条件写入评估ID（三层：内存→sessionStorage→localStorage），确保后续匹配申请始终可用
+  window.xiaopinguAsid = viewToken;
+  console.log('[小平菇] 前置写入评估ID:', viewToken);
+  try { sessionStorage.setItem('xiaopingu_assessment_id', viewToken); localStorage.setItem('xiaopingu_assessment_id', viewToken); } catch(e) {}
+  try { localStorage.setItem('xiaopingu_assessment_backup', JSON.stringify(assessmentPayload)); } catch(e) {}
   if(typeof saveAssessment==='function'&&!currentViewToken){
-    var viewToken = (crypto.randomUUID || function(){return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,function(c){var r=Math.random()*16|0;return(c==='x'?r:(r&0x3|0x8)).toString(16);});})();
-    var assessmentPayload = {
-      view_token:viewToken,
-      visitor_name:name,visitor_age:parseInt(age)||null,visitor_gender:genderText,
-      visitor_occupation:occText,visitor_city:cityVal,filled_by:filledBy,prev_counseling:prevText,budget:budgetVal,preferred_formats:formats,
-      gender_pref:document.getElementById('gender_pref').value,
-      age_pref:document.getElementById('age_pref').value,
-      orientation_pref:document.getElementById('orientation_pref').value,
-      comm_style:document.getElementById('comm_style').value,
-      cnip_structure:_attr('[data-field="cnip_structure"] .cnip-btn.active','data-value'),
-      cnip_emotion:_attr('[data-field="cnip_emotion"] .cnip-btn.active','data-value'),
-      cnip_timefocus:_attr('[data-field="cnip_timefocus"] .cnip-btn.active','data-value'),
-      cnip_warmth:_attr('[data-field="cnip_warmth"] .cnip-btn.active','data-value'),
-      cnip_homework:_attr('[data-field="cnip_homework"] .cnip-btn.active','data-value'),
-      cnip_relational:_attr('[data-field="cnip_relational"] .cnip-btn.active','data-value'),
-      expects:Array.from(document.querySelectorAll('#expect_grid input:checked')).map(function(e){return e.value;}),
-      issues:issues,description:description,duration:durationText,
-      score_mood:scores.mood,score_anxiety:scores.anxiety,score_sleep:scores.sleep,
-      score_function:scores.function,score_relation:scores.relation,
-      total_score:totalScore,severity:severity,specials:specials,crisis_level:crisisVal,
-      user_agent:navigator.userAgent.substring(0,200)
-    };
-    // 前置写入回退 ID（三层：内存→sessionStorage→localStorage）
-    window.xiaopinguAsid = viewToken;
-    console.log('[小平菇] 前置写入评估ID:', viewToken);
-    try { sessionStorage.setItem('xiaopingu_assessment_id', viewToken); localStorage.setItem('xiaopingu_assessment_id', viewToken); } catch(e) {}
-    try { localStorage.setItem('xiaopingu_assessment_backup', JSON.stringify(assessmentPayload)); } catch(e) {}
     saveAssessment(assessmentPayload).then(function(result){
       if(result&&result[0]&&result[0].id){
-        // 用真实 DB ID 覆盖回退 ID
         window.xiaopinguAsid = result[0].id;
         sessionStorage.setItem('xiaopingu_assessment_id', result[0].id);
         localStorage.setItem('xiaopingu_assessment_id', result[0].id);
       } else {
-        // DB 保存失败时用本地 viewToken 作为回退 ID，确保后续匹配申请可用
-        sessionStorage.setItem('xiaopingu_assessment_id', viewToken);
-        localStorage.setItem('xiaopingu_assessment_id', viewToken);
         console.warn('[小平菇] DB保存失败，使用本地ID回退:', viewToken);
       }
       showViewLink(result&&result[0]&&result[0].view_token ? result[0].view_token : viewToken);
     });
+  } else {
+    showViewLink(viewToken);
   }
 }
 
