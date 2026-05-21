@@ -1938,29 +1938,19 @@ function refreshCounselorButtons(aid) {
 }
 
 function submitMatchApply(){
+  console.log('[小平菇] submitMatchApply 被调用了');
   var name=document.getElementById('apply-name').value.trim();
   var contact=document.getElementById('apply-contact').value.trim();
   if(!name||!contact){alert('请填写姓名和联系方式');return;}
   var asid=getAsid();
-  // 诊断日志：输出三层来源的实际值
-  console.log('[小平菇] submitMatchApply getAsid:',asid,'| window:',window.xiaopinguAsid,'| session:',sessionStorage.getItem('xiaopingu_assessment_id'),'| local:',localStorage.getItem('xiaopingu_assessment_id'),'| backup:',(function(){try{return JSON.parse(localStorage.getItem('xiaopingu_assessment_backup')||'{}');}catch(e){return{};}})());
   if(!asid){
-    // 兜底1：从备份数据提取 view_token
-    try {
-      var fb = JSON.parse(localStorage.getItem('xiaopingu_assessment_backup')||'{}');
-      if(fb.view_token) asid = fb.view_token;
-    } catch(e) {}
+    try { var fb = JSON.parse(localStorage.getItem('xiaopingu_assessment_backup')||'{}'); if(fb.view_token) asid = fb.view_token; } catch(e) {}
   }
+  if(!asid && currentViewToken) asid = currentViewToken;
   if(!asid){
-    // 兜底2：检查当前页面是否在查看模式 (currentViewToken)
-    if(currentViewToken) asid = currentViewToken;
-  }
-  if(!asid){
-    // 兜底3：即时生成新UUID，写入存储，不依赖任何前置状态
     asid = (crypto.randomUUID || function(){return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,function(c){var r=Math.random()*16|0;return(c==='x'?r:(r&0x3|0x8)).toString(16);});})();
     window.xiaopinguAsid = asid;
-    try { sessionStorage.setItem('xiaopingu_assessment_id', asid); localStorage.setItem('xiaopingu_assessment_id', asid); } catch(e) {}
-    console.warn('[小平菇] 所有来源均空，即时生成fallback ID:', asid);
+    console.warn('[小平菇] 即时生成fallback ID:', asid);
   }
   var applyBtn=document.querySelector('#apply-form .btn-primary');
   if(applyBtn){applyBtn.disabled=true;applyBtn.textContent='提交中...';}
