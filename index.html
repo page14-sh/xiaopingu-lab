@@ -1595,6 +1595,11 @@ function generateResult() {
         document.getElementById('counselor_match_list').innerHTML='<div style="text-align:center;padding:24px;color:#A09889;font-size:14px;background:#F7F4EF;border-radius:12px">暂无匹配的咨询师<br><span style="font-size:12px;margin-top:6px;display:inline-block">系统正在招募更多咨询师，请稍后再试</span></div>';
         document.getElementById('counselor_match_section').scrollIntoView({behavior:'smooth'});
       }
+    }).catch(function(e){
+      console.error('[小平菇] 咨询师匹配失败:', e);
+      document.getElementById('counselor_loading').style.display='none';
+      document.getElementById('counselor_match_section').style.display='block';
+      document.getElementById('counselor_match_list').innerHTML='<div style="text-align:center;padding:24px;color:#C4654A;font-size:14px;background:#FFF5F0;border-radius:12px">⚠ 咨询师匹配暂不可用<br><span style="font-size:12px;margin-top:6px;display:inline-block">网络连接异常，请稍后刷新重试</span></div>';
     });
   }
 

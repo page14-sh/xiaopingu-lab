@@ -295,12 +295,12 @@ function getCounselorByToken(token) {
 function matchCounselors(assessment) {
   if (!SUPABASE_CONFIG.enableDataCollection || !SUPABASE_CONFIG.url) return Promise.resolve([]);
 
-  return fetch(SUPABASE_CONFIG.url + '/rest/v1/counselors?is_active=eq.true&review_status=eq.approved&select=*', {
-    headers: {
-      'apikey': SUPABASE_CONFIG.anonKey,
-      'Authorization': 'Bearer ' + SUPABASE_CONFIG.anonKey
-    }
-  }).then(function(r) { return r.json(); })
+  return _xpg_fetch(SUPABASE_CONFIG.url + '/rest/v1/counselors?is_active=eq.true&review_status=eq.approved&select=*', {
+    headers: getSupabaseHeaders()
+  }).then(function(r) {
+    if (!r.ok) { console.warn('[小平菇] 咨询师查询失败:', r.status); return []; }
+    return r.json();
+  })
   .then(function(counselors) {
     if (!Array.isArray(counselors)) return [];
     return counselors.map(function(c) {
