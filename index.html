@@ -1794,6 +1794,23 @@ function openMatchApply(cid,cname){
   document.getElementById('apply-form').classList.add('show');
   document.getElementById('apply-success').classList.remove('show');
   document.getElementById('match-apply-overlay').classList.remove('hidden');
+  // 动态绑定提交按钮事件（移动端兼容）
+  var btn = document.getElementById('btn-submit-match');
+  if(btn){
+    btn.onclick = null;
+    btn.addEventListener('click', function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      submitMatchApply();
+    });
+    btn.addEventListener('touchend', function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      submitMatchApply();
+    });
+    btn.disabled = false;
+    btn.textContent = '提交申请';
+  }
 }
 function closeMatchApply(){
   document.getElementById('match-apply-overlay').classList.add('hidden');
@@ -1938,6 +1955,7 @@ function refreshCounselorButtons(aid) {
 }
 
 function submitMatchApply(){
+  alert('点击生效！提交申请中...');
   console.log('[小平菇] submitMatchApply 被调用了');
   var name=document.getElementById('apply-name').value.trim();
   var contact=document.getElementById('apply-contact').value.trim();
@@ -2024,7 +2042,7 @@ function submitMatchApply(){
         <input type="text" id="apply-contact" placeholder="微信号或手机号码" autocomplete="off">
       </div>
       <input type="hidden" id="apply-cid" value="">
-      <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="submitMatchApply()">提交申请</button>
+      <button id="btn-submit-match" class="btn btn-primary" style="width:100%;margin-top:8px;pointer-events:auto;position:relative;z-index:100000">提交申请</button>
     </div>
     <div id="apply-success" class="apply-success">
       <div style="font-size:28px;margin-bottom:8px">✅</div>
