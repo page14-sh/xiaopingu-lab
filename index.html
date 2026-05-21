@@ -1588,8 +1588,9 @@ function generateResult() {
         document.getElementById('counselor_match_list').innerHTML=chtml;
         document.getElementById('counselor_match_section').scrollIntoView({behavior:'smooth'});
         // 恢复已选咨询师状态
-        refreshCounselorButtons(asid);
-        renderMyCounselorCard(asid);
+        var _asid = getAsid();
+        refreshCounselorButtons(_asid);
+        renderMyCounselorCard(_asid);
       } else {
         document.getElementById('counselor_match_section').style.display='block';
         document.getElementById('counselor_match_list').innerHTML='<div style="text-align:center;padding:24px;color:#A09889;font-size:14px;background:#F7F4EF;border-radius:12px">暂无匹配的咨询师<br><span style="font-size:12px;margin-top:6px;display:inline-block">系统正在招募更多咨询师，请稍后再试</span></div>';
