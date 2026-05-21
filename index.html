@@ -1599,7 +1599,15 @@ function generateResult() {
       console.error('[小平菇] 咨询师匹配失败:', e);
       document.getElementById('counselor_loading').style.display='none';
       document.getElementById('counselor_match_section').style.display='block';
-      document.getElementById('counselor_match_list').innerHTML='<div style="text-align:center;padding:24px;color:#C4654A;font-size:14px;background:#FFF5F0;border-radius:12px">⚠ 咨询师匹配暂不可用<br><span style="font-size:12px;margin-top:6px;display:inline-block">网络连接异常，请稍后刷新重试</span></div>';
+      var isFileProtocol = window.location.protocol === 'file:';
+      document.getElementById('counselor_match_list').innerHTML=
+        '<div style="text-align:center;padding:24px;color:#C4654A;font-size:14px;background:#FFF5F0;border-radius:12px">' +
+        '⚠ 咨询师匹配加载失败<br>' +
+        '<span style="font-size:12px;margin:8px 0;display:inline-block;color:#999">' + (isFileProtocol
+          ? '检测到你正在用 file:// 打开<br>请改用 localhost 访问：<br><code style="background:#f5f5f5;padding:2px 8px;border-radius:4px;font-size:13px">http://localhost:8765/index.html</code>'
+          : '网络连接异常: ' + (e.message || '未知错误')) + '</span><br>' +
+        '<button onclick="location.reload()" style="padding:8px 24px;border:1px solid #C4654A;background:#fff;color:#C4654A;border-radius:8px;cursor:pointer;font-size:14px;margin-top:8px">🔄 重试</button>' +
+        '</div>';
     });
   }
 
