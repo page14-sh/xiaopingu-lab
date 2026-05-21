@@ -875,10 +875,11 @@
         if (_loadCount >= 2) { _loadCount = 0; onDataLoaded(); }
       } catch (e) {
         console.error('加载数据失败:', e);
+        const msg = (e && e.message) ? e.message : '未知错误';
         // 隐藏 loading spinner，显示错误提示
         const tbody = document.getElementById('tbody-' + type);
         if (tbody) {
-          tbody.innerHTML = '<tr><td colspan="12" class="loading" style="color:#E24B4A;">数据加载失败，请检查网络后刷新页面重试</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="12" class="loading" style="color:#E24B4A;">数据加载失败：' + msg + '<br>请检查网络后刷新页面重试</td></tr>';
         }
         _loadCount++;
         if (_loadCount >= 2) { _loadCount = 0; onDataLoaded(); }
