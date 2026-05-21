@@ -556,10 +556,10 @@
       </select>
       <select class="filter-select" id="filter-crisis" onchange="filterData()">
         <option value="">全部危机等级</option>
-        <option value="无">无</option>
-        <option value="低">低</option>
-        <option value="中">中</option>
-        <option value="高">高</option>
+        <option value="safe">无</option>
+        <option value="passive">低</option>
+        <option value="active">中</option>
+        <option value="action">高</option>
       </select>
       <button class="btn btn-success readonly-hide" onclick="exportCSV('assessments')">📥 导出CSV</button>
       <button class="btn btn-danger readonly-hide" onclick="deleteSelected('assessments')">🗑️ 删除选中</button>
@@ -799,6 +799,16 @@
       document.getElementById('current-pwd-display').value = ADMIN_PASSWORD;
       document.getElementById('new-password').value = '';
       document.getElementById('confirm-password').value = '';
+      // 危机等级映射（数据库存英文，显示用中文）
+      function crisisLabel(en) {
+        const map = { 'safe': '无', 'passive': '低', 'active': '中', 'action': '高' };
+        return map[en] || '无';
+      }
+      function crisisValue(cn) {
+        const map = { '无': 'safe', '低': 'passive', '中': 'active', '高': 'action' };
+        return map[cn] || '';
+      }
+
       document.getElementById('modal-settings').classList.add('active');
     }
 
@@ -1099,9 +1109,10 @@
         : a.severity === '中度' ? '<span class="tag tag-yellow">' + a.severity + '</span>'
         : '<span class="tag tag-green">' + (a.severity || '-') + '</span>';
 
-      const crisisTag = a.crisis_level === '高' ? '<span class="tag tag-red">高</span>'
-        : a.crisis_level === '中' ? '<span class="tag tag-yellow">中</span>'
-        : '<span class="tag tag-green">' + (a.crisis_level || '无') + '</span>';
+      const cl = a.crisis_level || 'safe';
+      const crisisTag = cl === 'action' ? '<span class="tag tag-red">' + crisisLabel(cl) + '</span>'
+        : cl === 'active' ? '<span class="tag tag-yellow">' + crisisLabel(cl) + '</span>'
+        : '<span class="tag tag-green">' + crisisLabel(cl) + '</span>';
 
       const selectCell = READONLY_MODE ? '<td style="display:none"></td>' : '<td><input type="checkbox" ' + checked + ' onchange="toggleSelect(\'assessments\', \'' + a.id + '\', this.checked)"></td>';
       const deleteBtn = READONLY_MODE ? '' : '<button class="action-btn delete" onclick="deleteItem(\'assessments\', \'' + a.id + '\')">删除</button>';
@@ -1251,6 +1262,7 @@
         let value = item[key];
         if (Array.isArray(value)) value = value.join(', ');
         if (key === 'created_at' || key === 'updated_at') value = formatTime(value);
+        if (key === 'crisis_level') value = crisisLabel(value);
         html += '<div class="detail-item">' +
           '<div class="detail-label">' + formatLabel(key) + '</div>' +
           '<div class="detail-value">' + (value || '-') + '</div>' +
@@ -1379,7 +1391,7 @@
         const avgScore = (a.reduce((s, x) => s + (x.total_score || 0), 0) / a.length).toFixed(1);
         document.getElementById('dash-avg-score').textContent = avgScore;
         document.getElementById('dash-severe').textContent = a.filter(x => x.severity === '重度').length;
-        document.getElementById('dash-crisis').textContent = a.filter(x => x.crisis_level === '中' || x.crisis_level === '高').length;
+        document.getElementById('dash-crisis').textContent = a.filter(x => x.crisis_level === 'active' || x.crisis_level === 'action').length;
       } else {
         document.getElementById('dash-avg-score').textContent = '-';
         document.getElementById('dash-severe').textContent = '0';
@@ -1401,11 +1413,14 @@
 
       // 2. 危机等级分布
       renderChart('chart-crisis', 'doughnut', function() {
-        const counts = { '无': 0, '低': 0, '中': 0, '高': 0 };
+        const order = ['safe', 'passive', 'active', 'action'];
+        const labels = order.map(crisisLabel);
+        const counts = {};
+        order.forEach(k => counts[k] = 0);
         a.forEach(x => { if (counts[x.crisis_level] !== undefined) counts[x.crisis_level]++; });
         return {
-          labels: Object.keys(counts),
-          datasets: [{ data: Object.values(counts), backgroundColor: ['#74C476','#FEE08B','#F0A35E','#D65F5F'], borderWidth: 2, borderColor: '#fff' }]
+          labels: labels,
+          datasets: [{ data: order.map(k => counts[k]), backgroundColor: ['#74C476','#FEE08B','#F0A35E','#D65F5F'], borderWidth: 2, borderColor: '#fff' }]
         };
       }, { plugins: { legend: { position: 'bottom' } } });
 
