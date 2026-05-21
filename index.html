@@ -1778,11 +1778,34 @@ function getSelectedCounselor(aid) {
 }
 
 function selectCounselor(aid, cId, cName, cScore, cMeta) {
+  // 本地缓存（快速访问）
   var data = JSON.parse(localStorage.getItem(SELECTED_COUNSELOR_KEY) || '{}');
   data[aid] = { id: cId, name: cName, score: cScore, meta: cMeta };
   localStorage.setItem(SELECTED_COUNSELOR_KEY, JSON.stringify(data));
+
+  // 同步到数据库
+  if (aid && cId) {
+    fetch(SUPABASE_CONFIG.url + '/rest/v1/assessments?id=eq.' + aid, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_CONFIG.anonKey,
+        'Authorization': 'Bearer ' + SUPABASE_CONFIG.anonKey,
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify({
+        selected_counselor_id: cId,
+        selected_counselor_name: cName,
+        selected_at: new Date().toISOString()
+      })
+    }).then(function(r) {
+      if (!r.ok) console.warn('[小平菇] 选咨询师同步失败:', r.status);
+    }).catch(function(e) {
+      console.warn('[小平菇] 选咨询师网络错误:', e);
+    });
+  }
+
   renderMyCounselorCard(aid);
-  // 刷新列表中的按钮状态
   refreshCounselorButtons(aid);
   showToast('已选择 ' + cName + ' 为您的咨询师');
 }
@@ -1791,6 +1814,27 @@ function deselectCounselor(aid) {
   var data = JSON.parse(localStorage.getItem(SELECTED_COUNSELOR_KEY) || '{}');
   delete data[aid];
   localStorage.setItem(SELECTED_COUNSELOR_KEY, JSON.stringify(data));
+
+  // 同步清除数据库中的选择
+  if (aid) {
+    fetch(SUPABASE_CONFIG.url + '/rest/v1/assessments?id=eq.' + aid, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_CONFIG.anonKey,
+        'Authorization': 'Bearer ' + SUPABASE_CONFIG.anonKey,
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify({
+        selected_counselor_id: null,
+        selected_counselor_name: null,
+        selected_at: null
+      })
+    }).catch(function(e) {
+      console.warn('[小平菇] 取消选择同步失败:', e);
+    });
+  }
+
   document.getElementById('my_counselor_section').style.display = 'none';
   refreshCounselorButtons(aid);
 }

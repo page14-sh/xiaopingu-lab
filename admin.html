@@ -682,6 +682,7 @@
                 <th>申请者</th>
                 <th>联系方式</th>
                 <th>申请咨询师</th>
+                <th>已选咨询师</th>
                 <th>来访总分</th>
                 <th>严重程度</th>
                 <th>危机等级</th>
@@ -690,7 +691,7 @@
               </tr>
             </thead>
             <tbody id="tbody-match-applications">
-              <tr><td colspan="8" class="loading"><div class="spinner"></div></td></tr>
+              <tr><td colspan="9" class="loading"><div class="spinner"></div></td></tr>
             </tbody>
           </table>
           <div class="empty-state" id="empty-match-applications" style="display:none;">
@@ -1212,6 +1213,12 @@
         if (found) cName = found.name || '未知';
       }
 
+      // 已选咨询师
+      var selectedName = '-';
+      if (a.selected_counselor_name) {
+        selectedName = '<span class="tag tag-green">✓ ' + a.selected_counselor_name + '</span>';
+      }
+
       var severityTag = a.severity === '重度' ? '<span class="tag tag-red">' + a.severity + '</span>'
         : a.severity === '中度' ? '<span class="tag tag-yellow">' + a.severity + '</span>'
         : '<span class="tag tag-green">' + (a.severity || '-') + '</span>';
@@ -1225,6 +1232,7 @@
         '<td><strong>' + (a.match_request_name || a.visitor_name || '匿名') + '</strong></td>' +
         '<td>' + (a.match_request_contact || '-') + '</td>' +
         '<td><span class="tag tag-blue">' + cName + '</span></td>' +
+        '<td>' + selectedName + '</td>' +
         '<td><strong>' + (a.total_score || 0) + '</strong></td>' +
         '<td>' + severityTag + '</td>' +
         '<td>' + crisisTag + '</td>' +
@@ -1397,7 +1405,8 @@
         total_score: '总分', severity: '严重程度', specials: '特殊情况',
         crisis_level: '危机等级', user_agent: '用户代理',
         match_request_name: '申请者姓名', match_request_contact: '申请者联系方式',
-        match_request_cid: '申请咨询师ID'
+        match_request_cid: '申请咨询师ID',
+        selected_counselor_id: '已选咨询师ID', selected_counselor_name: '已选咨询师', selected_at: '选定时间'
       };
       return labels[key] || key;
     }
