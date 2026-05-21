@@ -1559,7 +1559,7 @@ function generateResult() {
           }
 
           // PCOMS 效果追踪入口
-          var asid=sessionStorage.getItem('xiaopingu_assessment_id');
+          var asid=getAsid();
           if(asid){
             var trackUrl='session.html?aid='+asid+'&cid='+c.id+'&name='+encodeURIComponent(name||'来访者')+'&sn=1';
             chtml+='<div class="counselor-contact" style="margin-top:8px"><a href="'+trackUrl+'" style="color:#5C7A52;text-decoration:none;font-size:13px">📊 开始咨询效果追踪（PCOMS）</a></div>';
@@ -1623,6 +1623,7 @@ function generateResult() {
     }).then(function(result){
       if(result&&result[0]&&result[0].id){
         sessionStorage.setItem('xiaopingu_assessment_id', result[0].id);
+        localStorage.setItem('xiaopingu_assessment_id', result[0].id);
       }
       showViewLink(result&&result[0]&&result[0].view_token ? result[0].view_token : viewToken);
     });
@@ -1753,6 +1754,11 @@ function restoreResultPanel(){
 
 function resetForm(){if(confirm('确认重新填写问卷？当前数据将被清除。')){localStorage.removeItem(STORAGE_KEY);currentViewToken=null;window.history.replaceState(null,'',window.location.pathname);location.reload();}}
 
+// ===== 获取评估ID（双存储回退） =====
+function getAsid() {
+  return sessionStorage.getItem('xiaopingu_assessment_id') || localStorage.getItem('xiaopingu_assessment_id');
+}
+
 // ===== 申请匹配弹窗 =====
 function openMatchApply(cid,cname){
   document.getElementById('apply-cname').textContent=cname||'';
@@ -1847,7 +1853,7 @@ function renderMyCounselorCard(aid) {
   if (!sel) { document.getElementById('my_counselor_section').style.display = 'none'; return; }
 
   document.getElementById('my_counselor_section').style.display = 'block';
-  var asid = sessionStorage.getItem('xiaopingu_assessment_id') || aid;
+  var asid = getAsid() || aid;
   var visitorName = document.getElementById('name') ? document.getElementById('name').value : '来访者';
   var trackUrl = 'session.html?aid=' + asid + '&cid=' + sel.id + '&name=' + encodeURIComponent(visitorName) + '&sn=1';
   var counselorUrl = trackUrl + '&role=counselor';
@@ -1907,7 +1913,7 @@ function submitMatchApply(){
   var name=document.getElementById('apply-name').value.trim();
   var contact=document.getElementById('apply-contact').value.trim();
   if(!name||!contact){alert('请填写姓名和联系方式');return;}
-  var asid=sessionStorage.getItem('xiaopingu_assessment_id');
+  var asid=getAsid();
   if(!asid){alert('评估记录未找到，请刷新页面后重试');return;}
   var applyBtn=document.querySelector('#apply-form .btn-primary');
   if(applyBtn){applyBtn.disabled=true;applyBtn.textContent='提交中...';}
