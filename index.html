@@ -1600,7 +1600,7 @@ function generateResult() {
   // Save assessment data (skip in view mode)
   if(typeof saveAssessment==='function'&&!currentViewToken){
     var viewToken = (crypto.randomUUID || function(){return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,function(c){var r=Math.random()*16|0;return(c==='x'?r:(r&0x3|0x8)).toString(16);});})();
-    saveAssessment({
+    var assessmentPayload = {
       view_token:viewToken,
       visitor_name:name,visitor_age:parseInt(age)||null,visitor_gender:genderText,
       visitor_occupation:occText,visitor_city:cityVal,filled_by:filledBy,prev_counseling:prevText,budget:budgetVal,preferred_formats:formats,
@@ -1620,10 +1620,18 @@ function generateResult() {
       score_function:scores.function,score_relation:scores.relation,
       total_score:totalScore,severity:severity,specials:specials,crisis_level:crisisVal,
       user_agent:navigator.userAgent.substring(0,200)
-    }).then(function(result){
+    };
+    // 本地备份评估数据，供匹配申请时回退 POST 重试
+    try { localStorage.setItem('xiaopingu_assessment_backup', JSON.stringify(assessmentPayload)); } catch(e) {}
+    saveAssessment(assessmentPayload).then(function(result){
       if(result&&result[0]&&result[0].id){
         sessionStorage.setItem('xiaopingu_assessment_id', result[0].id);
         localStorage.setItem('xiaopingu_assessment_id', result[0].id);
+      } else {
+        // DB 保存失败时用本地 viewToken 作为回退 ID，确保后续匹配申请可用
+        sessionStorage.setItem('xiaopingu_assessment_id', viewToken);
+        localStorage.setItem('xiaopingu_assessment_id', viewToken);
+        console.warn('[小平菇] DB保存失败，使用本地ID回退:', viewToken);
       }
       showViewLink(result&&result[0]&&result[0].view_token ? result[0].view_token : viewToken);
     });
@@ -1917,21 +1925,48 @@ function submitMatchApply(){
   if(!asid){alert('评估记录未找到，请刷新页面后重试');return;}
   var applyBtn=document.querySelector('#apply-form .btn-primary');
   if(applyBtn){applyBtn.disabled=true;applyBtn.textContent='提交中...';}
-  fetch(SUPABASE_CONFIG.url+'/rest/v1/assessments?id=eq.'+asid,{
-    method:'PATCH',
-    headers:{'Content-Type':'application/json','apikey':SUPABASE_CONFIG.anonKey,'Authorization':'Bearer '+SUPABASE_CONFIG.anonKey,'Prefer':'return=representation'},
-    body:JSON.stringify({match_request_name:name,match_request_contact:contact,match_request_cid:document.getElementById('apply-cid').value,updated_at:new Date().toISOString()})
-  }).then(function(r){
-    if(!r.ok){throw new Error('HTTP '+r.status);}
-    return r.json();
-  }).then(function(data){
-    if(Array.isArray(data)&&data.length>0){
-      document.getElementById('apply-form').classList.remove('show');
-      document.getElementById('apply-success').classList.add('show');
-    } else {
-      alert('提交失败：记录未更新，请检查评估是否已完成');
+  var patchBody={match_request_name:name,match_request_contact:contact,match_request_cid:document.getElementById('apply-cid').value,updated_at:new Date().toISOString()};
+  function onSuccess(){
+    document.getElementById('apply-form').classList.remove('show');
+    document.getElementById('apply-success').classList.add('show');
+  }
+  function doPatch(){
+    return fetch(SUPABASE_CONFIG.url+'/rest/v1/assessments?id=eq.'+asid,{
+      method:'PATCH',
+      headers:{'Content-Type':'application/json','apikey':SUPABASE_CONFIG.anonKey,'Authorization':'Bearer '+SUPABASE_CONFIG.anonKey,'Prefer':'return=representation'},
+      body:JSON.stringify(patchBody)
+    }).then(function(r){
+      if(!r.ok){throw new Error('HTTP '+r.status);}
+      return r.json();
+    }).then(function(data){
+      if(Array.isArray(data)&&data.length>0) return onSuccess();
+      return doPostFallback();
+    }).catch(function(e){ throw e; });
+  }
+  function doPostFallback(){
+    console.warn('[小平菇] PATCH无返回，尝试POST回退');
+    var backup = {};
+    try { var raw = localStorage.getItem('xiaopingu_assessment_backup'); if(raw) backup = JSON.parse(raw); } catch(e) {}
+    if(!backup.view_token){
+      alert('提交失败：评估数据丢失，请重新完成评估');
+      return;
     }
-  }).catch(function(e){
+    return fetch(SUPABASE_CONFIG.url+'/rest/v1/assessments',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':SUPABASE_CONFIG.anonKey,'Authorization':'Bearer '+SUPABASE_CONFIG.anonKey,'Prefer':'return=representation'},
+      body:JSON.stringify(Object.assign({id:asid},backup,patchBody))
+    }).then(function(r2){
+      if(!r2.ok) throw new Error('HTTP '+r2.status);
+      return r2.json();
+    }).then(function(d2){
+      if(Array.isArray(d2)&&d2.length>0){
+        onSuccess();
+      } else {
+        alert('提交失败：无法创建申请记录，请联系管理员');
+      }
+    });
+  }
+  doPatch().catch(function(e){
     console.error('[小平菇] 申请提交失败:', e);
     alert('提交失败，请稍后重试（'+(e.message||'网络错误')+'）');
   }).finally(function(){
