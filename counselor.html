@@ -192,6 +192,25 @@
     .action-bar, .toast, .progress-bar-wrap { display: none !important; }
     .page-header { position: static; background: #fff; }
   }
+  /* 咨询师面板 */
+  .counselor-panel { margin-top: 24px; }
+  .panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .panel-header h3 { font-size: 16px; color: #3D3831; }
+  .panel-badge { background: #FFF3CD; color: #856404; padding: 3px 10px; border-radius: 10px; font-size: 12px; font-weight: 500; }
+  .request-card { background: #FAF8F5; border: 1px solid #E8E4DC; border-radius: 10px; padding: 14px; margin-bottom: 10px; }
+  .request-card .req-name { font-size: 15px; font-weight: 600; color: #3D3831; }
+  .request-card .req-meta { font-size: 12px; color: #6B635A; margin-top: 4px; line-height: 1.6; }
+  .request-card .req-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .req-btn { padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer; border: none; text-decoration: none; display: inline-block; }
+  .req-btn-primary { background: #5C7A52; color: #fff; }
+  .req-btn-outline { background: #fff; color: #5C7A52; border: 1px solid #5C7A52; }
+  .req-btn-blue { background: #CFE2FF; color: #0A58CA; }
+  .panel-empty { text-align: center; padding: 24px; color: #A09889; font-size: 13px; }
+  .panel-loading { text-align: center; padding: 24px; color: #A09889; }
+  .spinner { display: inline-block; width: 24px; height: 24px; border: 3px solid #E8E4DC; border-top-color: #5C7A52; border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .panel-login { text-align: center; padding: 20px; }
+  .panel-login input { padding: 10px 14px; border: 1px solid #D8D2C8; border-radius: 8px; font-size: 14px; width: 100%; max-width: 300px; margin-bottom: 10px; }
 </style>
 </head>
 <body>
@@ -873,6 +892,22 @@
     </div>
   </div>
   </div><!-- end form_area -->
+
+  <!-- 咨询师匹配面板 -->
+  <div class="main" id="panel-area" style="display:none;">
+    <div class="card counselor-panel">
+      <div class="panel-header">
+        <h3>📩 我的来访申请</h3>
+        <span class="panel-badge" id="panel-badge" style="display:none"></span>
+      </div>
+      <div id="panel-content"><div class="panel-loading">加载中...</div></div>
+      <div class="panel-login" id="panel-login" style="display:none;">
+        <p style="font-size:13px;color:#6B635A;margin-bottom:10px;">输入你的咨询师 ID 查看匹配申请</p>
+        <input type="text" id="panel-cid-input" placeholder="咨询师 ID（UUID）">
+        <button class="req-btn req-btn-primary" onclick="loadPanelByInput()">查询</button>
+      </div>
+    </div>
+  </div>
 
 </div>
 
@@ -1743,6 +1778,125 @@ document.getElementById('c_specialty_other').addEventListener('keydown', functio
 document.getElementById('c_population_other').addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); addOtherPopulation(); } });
 document.getElementById('c_cert_other').addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); addOtherCert(); } });
 document.getElementById('c_extra_credential_other').addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); addOtherExtraCredential(); } });
+
+/* ===== 咨询师面板 ===== */
+var SUPABASE_URL = 'https://csvhikdiliwqoacitlag.supabase.co';
+var SUPABASE_ANON_KEY = 'sb_publishable_atXq0SmWEiEY6UMouG4dLw_ouXN2U6B';
+var panelCid = null;
+
+// 初始化面板：URL 参数 or localStorage
+(function initPanel() {
+  var params = new URLSearchParams(location.search);
+  var cid = params.get('cid') || params.get('panel');
+  if (cid) {
+    panelCid = cid;
+    showPanel();
+    loadPanelRequests();
+    return;
+  }
+  // 如果在编辑模式，尝试从 localStorage 获取
+  if (currentEditToken) {
+    var stored = localStorage.getItem('xiaopingu_counselor_id');
+    if (stored) {
+      panelCid = stored;
+      showPanel();
+      loadPanelRequests();
+      return;
+    }
+  }
+  // 如果有 ?panel=1 但无 cid，显示输入框
+  if (params.get('panel') === '1') {
+    showPanelLogin();
+  }
+})();
+
+function showPanel() {
+  document.getElementById('panel-area').style.display = 'block';
+}
+function showPanelLogin() {
+  document.getElementById('panel-area').style.display = 'block';
+  document.getElementById('panel-content').style.display = 'none';
+  document.getElementById('panel-login').style.display = 'block';
+}
+
+function loadPanelByInput() {
+  var input = document.getElementById('panel-cid-input').value.trim();
+  if (!input) return;
+  panelCid = input;
+  localStorage.setItem('xiaopingu_counselor_id', input);
+  document.getElementById('panel-login').style.display = 'none';
+  document.getElementById('panel-content').style.display = 'block';
+  loadPanelRequests();
+}
+
+function loadPanelRequests() {
+  var content = document.getElementById('panel-content');
+  content.innerHTML = '<div class="panel-loading"><div class="spinner"></div><p style="margin-top:8px">查询中...</p></div>';
+
+  fetch(SUPABASE_URL + '/rest/v1/assessments?match_request_cid=eq.' + encodeURIComponent(panelCid) + '&select=*&order=created_at.desc', {
+    headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(records) {
+    if (!records || records.length === 0) {
+      content.innerHTML = '<div class="panel-empty">📭 暂无匹配申请<br><span style="font-size:12px;display:inline-block;margin-top:4px">当来访者向你提交匹配申请时，会显示在这里</span></div>';
+      document.getElementById('panel-badge').style.display = 'none';
+      return;
+    }
+
+    var pendingCount = records.filter(function(r) { return r.match_request_status === 'pending' || r.match_request_status === 'approved'; }).length;
+    var badge = document.getElementById('panel-badge');
+    if (pendingCount > 0) {
+      badge.style.display = 'inline';
+      badge.textContent = pendingCount + ' 条待处理';
+    } else {
+      badge.style.display = 'none';
+    }
+
+    var html = '';
+    records.forEach(function(a) {
+      var status = a.match_request_status || 'pending';
+      var statusLabel = status === 'approved' ? '<span style="color:#155724;background:#D4EDDA;padding:2px 8px;border-radius:4px;font-size:11px">✅ 已通过</span>'
+        : status === 'rejected' ? '<span style="color:#721C24;background:#F8D7DA;padding:2px 8px;border-radius:4px;font-size:11px">❌ 已拒绝</span>'
+        : status === 'contacted' ? '<span style="color:#0A58CA;background:#CFE2FF;padding:2px 8px;border-radius:4px;font-size:11px">📞 已联系</span>'
+        : '<span style="color:#856404;background:#FFF3CD;padding:2px 8px;border-radius:4px;font-size:11px">⏳ 待处理</span>';
+
+      html += '<div class="request-card">';
+      html += '<div class="req-name">' + esc(a.match_request_name || a.visitor_name || '匿名') + ' ' + statusLabel + '</div>';
+      html += '<div class="req-meta">';
+      html += '📞 ' + esc(a.match_request_contact || '-') + ' · ';
+      html += '📊 评分 ' + (a.total_score || 0) + ' · ';
+      html += '🏷 ' + (a.severity || '-') + ' · ';
+      html += '🕐 ' + formatTime(a.created_at);
+      html += '</div>';
+      html += '<div class="req-actions">';
+      html += '<a href="session-dashboard.html?aid=' + a.id + '" class="req-btn req-btn-blue" target="_blank">📈 追踪面板</a>';
+      html += '<button class="req-btn req-btn-outline" onclick="copyContact(\'' + esc(a.match_request_contact || '') + '\')">📋 复制联系方式</button>';
+      html += '</div>';
+      html += '</div>';
+    });
+    content.innerHTML = html;
+  })
+  .catch(function(e) {
+    content.innerHTML = '<div class="panel-empty">❌ 查询失败<br><span style="font-size:12px;display:inline-block;margin-top:4px">请检查网络连接</span></div>';
+  });
+}
+
+function copyContact(text) {
+  if (!text) return;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(function() { alert('已复制：' + text); });
+  } else {
+    var ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    alert('已复制');
+  }
+}
+
+function esc(s) { return s ? String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') : ''; }
+function formatTime(ts) { if (!ts) return '-'; var d = new Date(ts); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+' '+pad(d.getHours())+':'+pad(d.getMinutes()); }
+function pad(n) { return n<10?'0'+n:n; }
 </script>
 </body>
 </html>

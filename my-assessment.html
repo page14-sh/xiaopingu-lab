@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#5C7A52">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="我的评估">
+<title>我的评估 · 小平菇</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+    background: #F7F4EF; color: #3D3831; font-size: 15px; line-height: 1.65;
+    -webkit-font-smoothing: antialiased; min-height: 100vh;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+  .page-header {
+    background: rgba(255,255,255,0.95); border-bottom: 1px solid #E8E4DC;
+    padding: 16px 20px; display: flex; align-items: center; gap: 12px;
+    position: sticky; top: 0; z-index: 100;
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  }
+  .logo-wrap { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; background: linear-gradient(135deg, #E8F0E4 0%, #D4E4CC 100%); border-radius: 12px; flex-shrink: 0; }
+  .brand-name { font-size: 18px; font-weight: 600; color: #5C7A52; letter-spacing: 1px; }
+  .page-header p { font-size: 11px; color: #A09889; margin-top: 1px; }
+  .main { max-width: 680px; margin: 0 auto; padding: 24px 16px 48px; }
+  .card {
+    background: #fff; border: 1px solid #E8E4DC; border-radius: 14px;
+    padding: 24px 20px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .card-title { font-size: 16px; font-weight: 600; margin-bottom: 4px; color: #3D3831; }
+  .card-sub { font-size: 13px; color: #A09889; margin-bottom: 16px; }
+
+  /* 查询区 */
+  .query-section { text-align: center; padding: 32px 20px; }
+  .query-section h2 { font-size: 20px; color: #5C7A52; margin-bottom: 8px; }
+  .query-section .hint { font-size: 13px; color: #A09889; margin-bottom: 24px; line-height: 1.6; }
+  .input-group { display: flex; gap: 10px; max-width: 400px; margin: 0 auto; }
+  .input-group input {
+    flex: 1; padding: 12px 16px; border: 1px solid #D8D2C8; border-radius: 10px;
+    font-size: 15px; background: #FAF8F5; outline: none; transition: border 0.2s;
+  }
+  .input-group input:focus { border-color: #5C7A52; background: #fff; }
+  .btn { padding: 10px 20px; border-radius: 10px; border: none; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+  .btn-primary { background: #5C7A52; color: #fff; }
+  .btn-primary:hover { background: #4A6842; }
+  .btn-primary:disabled { background: #A8B89C; cursor: not-allowed; }
+  .btn-outline { background: #fff; color: #5C7A52; border: 1.5px solid #5C7A52; }
+  .btn-outline:hover { background: #F0F7ED; }
+
+  /* 状态标签 */
+  .tag { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 500; }
+  .tag-green { background: #D4EDDA; color: #155724; }
+  .tag-red { background: #F8D7DA; color: #721C24; }
+  .tag-yellow { background: #FFF3CD; color: #856404; }
+  .tag-blue { background: #CFE2FF; color: #0A58CA; }
+  .tag-gray { background: #E9ECEF; color: #495057; }
+
+  /* 结果区 */
+  .status-banner {
+    padding: 16px; border-radius: 10px; text-align: center; margin-bottom: 20px;
+  }
+  .status-banner.pending { background: #FFF8E1; border: 1px solid #FFE082; }
+  .status-banner.approved { background: #E8F5E9; border: 1px solid #A5D6A7; }
+  .status-banner.rejected { background: #FFEBEE; border: 1px solid #EF9A9A; }
+  .status-banner.contacted { background: #E3F2FD; border: 1px solid #90CAF9; }
+  .status-banner .icon { font-size: 36px; margin-bottom: 8px; }
+  .status-banner .text { font-size: 16px; font-weight: 600; }
+  .status-banner .sub { font-size: 13px; color: #6B635A; margin-top: 4px; }
+
+  /* 得分网格 */
+  .score-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .score-item { text-align: center; padding: 12px 8px; background: #FAF8F5; border-radius: 10px; }
+  .score-item .val { font-size: 22px; font-weight: 700; color: #5C7A52; }
+  .score-item .lbl { font-size: 11px; color: #A09889; margin-top: 2px; }
+  .score-item.total { grid-column: 1 / -1; background: linear-gradient(135deg, #E8F0E4, #D4E4CC); }
+  .score-item.total .val { font-size: 28px; }
+
+  /* 咨询师卡片 */
+  .counselor-card {
+    background: #FAF8F5; border: 1px solid #E8E4DC; border-radius: 12px; padding: 16px;
+  }
+  .counselor-card .name { font-size: 18px; font-weight: 600; color: #3D3831; }
+  .counselor-card .meta { font-size: 13px; color: #6B635A; margin-top: 6px; line-height: 1.6; }
+  .counselor-card .contact { margin-top: 10px; padding: 10px; background: #FFF; border-radius: 8px; font-size: 14px; }
+  .counselor-card .contact .wechat { color: #5C7A52; font-size: 16px; }
+
+  /* PCOMS 入口 */
+  .pcms-links { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+  .pcms-link {
+    display: block; padding: 14px 16px; background: #E8F0E4; border-radius: 10px;
+    text-decoration: none; color: #3D3831; font-size: 14px; font-weight: 500;
+    transition: background 0.2s;
+  }
+  .pcms-link:hover { background: #D4E4CC; }
+  .pcms-link .arrow { float: right; color: #5C7A52; }
+
+  /* 占位 */
+  .empty-state { text-align: center; padding: 32px 16px; color: #A09889; }
+  .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+  .loading { text-align: center; padding: 40px; color: #A09889; }
+  .spinner { display: inline-block; width: 28px; height: 28px; border: 3px solid #E8E4DC; border-top-color: #5C7A52; border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .divider { border: none; border-top: 1px solid #F0ECE5; margin: 16px 0; }
+
+  /* Toast */
+  .toast {
+    position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999;
+    padding: 12px 24px; border-radius: 10px; font-size: 14px; font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15); animation: fadeIn 0.3s;
+  }
+  .toast.error { background: #F8D7DA; color: #721C24; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateX(-50%) translateY(-10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+</style>
+</head>
+<body>
+<div class="page-header">
+  <div class="logo-wrap">
+    <svg width="32" height="32" viewBox="0 0 64 64" fill="none"><circle cx="32" cy="32" r="28" stroke="#5C7A52" stroke-width="3"/><ellipse cx="24" cy="24" rx="10" ry="6" fill="#5C7A52"/><ellipse cx="40" cy="24" rx="10" ry="6" fill="#5C7A52"/><ellipse cx="32" cy="38" rx="8" ry="10" fill="#7A9B6F"/></svg>
+  </div>
+  <div>
+    <div class="brand-name">小平菇</div>
+    <p>我的评估 · 状态查询</p>
+  </div>
+</div>
+
+<div class="main" id="main-content">
+  <!-- 查询区 -->
+  <div class="card query-section" id="query-area">
+    <h2>📋 查看我的评估</h2>
+    <p class="hint">输入你的评估编号，即可查看申请状态、匹配的咨询师和循证追踪记录。<br>评估编号可在评估完成页面或地址栏中找到。</p>
+    <div class="input-group">
+      <input type="text" id="aid-input" placeholder="输入评估编号（ASID）" autocomplete="off">
+      <button class="btn btn-primary" id="btn-query" onclick="doQuery()">查询</button>
+    </div>
+  </div>
+
+  <!-- 结果区（初始隐藏） -->
+  <div id="result-area" style="display:none;"></div>
+</div>
+
+<script src="supabase-config.js"></script>
+<script>
+  var SUPABASE_URL = SUPABASE_CONFIG.url;
+  var SUPABASE_ANON_KEY = SUPABASE_CONFIG.anonKey;
+
+  // 页面初始化：检查 URL 参数或 localStorage 缓存
+  window.addEventListener('DOMContentLoaded', function() {
+    var params = new URLSearchParams(location.search);
+    var aid = params.get('aid') || params.get('asid') || params.get('token') || '';
+    if (aid) {
+      document.getElementById('aid-input').value = aid;
+      doQuery();
+    } else {
+      // 尝试从 localStorage 读取上次的 ASID
+      var cached = localStorage.getItem('xiaopingu_my_asid');
+      if (cached) {
+        document.getElementById('aid-input').value = cached;
+      }
+    }
+    // 回车键触发查询
+    document.getElementById('aid-input').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') doQuery();
+    });
+  });
+
+  function showToast(msg) {
+    var t = document.createElement('div');
+    t.className = 'toast error';
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(function() { t.remove(); }, 3000);
+  }
+
+  function doQuery() {
+    var aid = document.getElementById('aid-input').value.trim();
+    if (!aid) { showToast('请输入评估编号'); return; }
+
+    // 基本 UUID 格式校验
+    if (!/^[a-f0-9-]{36}$/i.test(aid) && !/^[a-f0-9]{32}$/i.test(aid)) {
+      showToast('评估编号格式不正确');
+      return;
+    }
+
+    var btn = document.getElementById('btn-query');
+    btn.disabled = true;
+    btn.textContent = '查询中...';
+
+    var resultArea = document.getElementById('result-area');
+    resultArea.style.display = 'block';
+    resultArea.innerHTML = '<div class="loading"><div class="spinner"></div><p style="margin-top:12px">正在查询...</p></div>';
+
+    // 同时查询评估记录和咨询师列表
+    Promise.all([
+      fetch(SUPABASE_URL + '/rest/v1/assessments?id=eq.' + encodeURIComponent(aid) + '&select=*', {
+        headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY }
+      }).then(function(r) { return r.json(); }),
+      fetch(SUPABASE_URL + '/rest/v1/counselors?select=*&is_active=eq.true', {
+        headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY }
+      }).then(function(r) { return r.json(); })
+    ])
+    .then(function(results) {
+      var records = results[0];
+      var counselors = results[1];
+      btn.disabled = false;
+      btn.textContent = '查询';
+
+      if (!records || records.length === 0) {
+        resultArea.innerHTML = '<div class="card empty-state"><div class="icon">🔍</div><p>未找到此评估记录</p><p style="font-size:12px;color:#A09889;margin-top:4px">请检查评估编号是否正确</p></div>';
+        return;
+      }
+
+      var a = records[0];
+      localStorage.setItem('xiaopingu_my_asid', aid);
+      renderResult(a, counselors);
+    })
+    .catch(function(e) {
+      btn.disabled = false;
+      btn.textContent = '查询';
+      resultArea.innerHTML = '<div class="card empty-state"><div class="icon">❌</div><p>查询失败</p><p style="font-size:12px;color:#A09889;margin-top:4px">网络错误，请稍后重试</p></div>';
+    });
+  }
+
+  function renderResult(a, counselors) {
+    var resultArea = document.getElementById('result-area');
+    var html = '';
+
+    // === 状态横幅 ===
+    var status = a.match_request_status || 'pending';
+    var statusConfig = {
+      pending: { icon: '⏳', text: '申请处理中', sub: '你的匹配申请已提交，平台正在处理', cls: 'pending' },
+      approved: { icon: '✅', text: '申请已通过', sub: '咨询师将尽快联系你', cls: 'approved' },
+      rejected: { icon: '❌', text: '申请未通过', sub: '请考虑其他咨询师或重新评估', cls: 'rejected' },
+      contacted: { icon: '📞', text: '已取得联系', sub: '咨询师已与你建立联系', cls: 'contacted' }
+    };
+    var sc = statusConfig[status] || statusConfig.pending;
+
+    if (a.match_request_name) {
+      html += '<div class="card"><div class="status-banner ' + sc.cls + '"><div class="icon">' + sc.icon + '</div><div class="text">' + sc.text + '</div><div class="sub">' + sc.sub + '</div></div></div>';
+    }
+
+    // === 评估概要 ===
+    html += '<div class="card"><div class="card-title">📊 评估概要</div><div class="card-sub">' + (a.visitor_name || '来访者') + ' · ' + formatTime(a.created_at) + '</div>';
+    html += '<div class="score-grid">';
+    html += '<div class="score-item"><div class="val">' + (a.score_mood || 0) + '</div><div class="lbl">😔 情绪</div></div>';
+    html += '<div class="score-item"><div class="val">' + (a.score_anxiety || 0) + '</div><div class="lbl">😰 焦虑</div></div>';
+    html += '<div class="score-item"><div class="val">' + (a.score_sleep || 0) + '</div><div class="lbl">😴 睡眠</div></div>';
+    html += '<div class="score-item"><div class="val">' + (a.score_function || 0) + '</div><div class="lbl">⚙️ 功能</div></div>';
+    html += '<div class="score-item"><div class="val">' + (a.score_relation || 0) + '</div><div class="lbl">🤝 关系</div></div>';
+    html += '<div class="score-item total"><div class="val">' + (a.total_score || 0) + ' 分</div><div class="lbl">📋 总分 · ' + (a.severity || '-') + '</div></div>';
+    html += '</div></div>';
+
+    // === 匹配的咨询师 ===
+    var counselor = null;
+    if (a.selected_counselor_id && counselors) {
+      counselor = counselors.find(function(c) { return c.id === a.selected_counselor_id; });
+    } else if (a.match_request_cid && counselors) {
+      counselor = counselors.find(function(c) { return c.id === a.match_request_cid; });
+    }
+
+    if (counselor) {
+      html += '<div class="card"><div class="card-title">🧑‍⚕️ 我的咨询师</div>';
+      html += '<div class="counselor-card">';
+      html += '<div class="name">' + esc(counselor.name) + '</div>';
+      html += '<div class="meta">';
+      if (counselor.credential_level) html += '🏅 ' + esc(counselor.credential_level) + ' · ';
+      if (counselor.city) html += '📍 ' + esc(counselor.city) + ' · ';
+      if (counselor.years_experience) html += '📅 ' + counselor.years_experience + '年经验';
+      html += '</div>';
+
+      // 联系方式
+      if (counselor.contact_wechat && counselor.contact_wechat_public !== false) {
+        html += '<div class="contact"><div class="wechat">💬 微信：' + esc(counselor.contact_wechat) + '</div></div>';
+      }
+      if (counselor.contact_phone) {
+        html += '<div class="contact" style="margin-top:4px"><div>📱 电话：' + esc(counselor.contact_phone) + '</div></div>';
+      }
+
+      // PCOMS 入口
+      html += '<div class="pcms-links">';
+      html += '<a class="pcms-link" href="session.html?aid=' + a.id + '&cid=' + counselor.id + '&name=' + encodeURIComponent(a.visitor_name || '来访者') + '&sn=1">📊 开始咨询效果追踪（PCOMS）<span class="arrow">→</span></a>';
+      html += '<a class="pcms-link" href="session-dashboard.html?aid=' + a.id + '" style="background:#F0ECE5">📈 查看追踪面板<span class="arrow">→</span></a>';
+      html += '</div>';
+      html += '</div></div>';
+    } else if (a.match_request_name) {
+      // 有匹配申请但未选定咨询师
+      html += '<div class="card"><div class="card-title">🧑‍⚕️ 咨询师匹配</div>';
+      html += '<div class="empty-state"><p style="font-size:14px">等待平台匹配咨询师</p><p style="font-size:12px;color:#A09889;margin-top:4px">你的申请正在处理中，通过后将为你匹配合适的咨询师</p></div></div>';
+    }
+
+    // === PCOMS 入口（无咨询师时仍可访问） ===
+    if (!counselor) {
+      html += '<div class="card"><div class="card-title">📊 咨询效果追踪</div>';
+      html += '<div class="pcms-links">';
+      html += '<a class="pcms-link" href="session-dashboard.html?aid=' + a.id + '">📈 查看追踪面板<span class="arrow">→</span></a>';
+      html += '</div>';
+      html += '<p style="font-size:12px;color:#A09889;margin-top:8px">选择咨询师后可以开始完整的 PCOMS 循证追踪</p>';
+      html += '</div>';
+    }
+
+    // === 操作建议 ===
+    html += '<div class="card" style="text-align:center">';
+    if (status === 'pending') {
+      html += '<p style="color:#6B635A;margin-bottom:12px">你的申请正在处理中，请耐心等待</p>';
+    } else if (status === 'approved') {
+      html += '<p style="color:#6B635A;margin-bottom:12px">申请已通过！咨询师将联系你开始咨询</p>';
+      html += '<a href="index.html" class="btn btn-outline" style="display:inline-block;text-decoration:none">重新评估</a>';
+    } else if (status === 'rejected') {
+      html += '<p style="color:#6B635A;margin-bottom:12px">本次申请未通过，可以尝试其他咨询师</p>';
+      html += '<a href="index.html" class="btn btn-primary" style="display:inline-block;text-decoration:none">去首页查看推荐咨询师</a>';
+    } else {
+      html += '<a href="index.html" class="btn btn-outline" style="display:inline-block;text-decoration:none">返回首页</a>';
+    }
+    html += '</div>';
+
+    resultArea.innerHTML = html;
+  }
+
+  function esc(s) {
+    if (!s) return '';
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function formatTime(ts) {
+    if (!ts) return '-';
+    var d = new Date(ts);
+    return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }
+  function pad(n) { return n < 10 ? '0' + n : n; }
+</script>
+</body>
+</html>

@@ -580,6 +580,8 @@
       <select class="filter-select" id="filter-ma-status" onchange="filterData()">
         <option value="">全部状态</option>
         <option value="pending">待处理</option>
+        <option value="approved">已通过</option>
+        <option value="rejected">已拒绝</option>
         <option value="contacted">已联系</option>
       </select>
       <button class="btn btn-success readonly-hide" onclick="exportCSV('match-applications')">📥 导出CSV</button>
@@ -687,11 +689,12 @@
                 <th>严重程度</th>
                 <th>危机等级</th>
                 <th>申请时间</th>
+                <th>状态</th>
                 <th>操作</th>
               </tr>
             </thead>
             <tbody id="tbody-match-applications">
-              <tr><td colspan="9" class="loading"><div class="spinner"></div></td></tr>
+              <tr><td colspan="10" class="loading"><div class="spinner"></div></td></tr>
             </tbody>
           </table>
           <div class="empty-state" id="empty-match-applications" style="display:none;">
@@ -1228,6 +1231,22 @@
         : cl === 'active' ? '<span class="tag tag-yellow">' + crisisLabel(cl) + '</span>'
         : '<span class="tag tag-green">' + crisisLabel(cl) + '</span>';
 
+      // 申请状态
+      var status = a.match_request_status || 'pending';
+      var statusTag = status === 'approved' ? '<span class="tag tag-green">✅ 已通过</span>'
+        : status === 'rejected' ? '<span class="tag tag-red">❌ 已拒绝</span>'
+        : status === 'contacted' ? '<span class="tag tag-blue">📞 已联系</span>'
+        : '<span class="tag tag-yellow">⏳ 待处理</span>';
+
+      // 操作按钮
+      var actionBtns = '<button class="action-btn view" onclick="viewDetail(\'assessments\', \'' + a.id + '\')">查看</button>';
+      if (status === 'pending') {
+        actionBtns += '<button class="action-btn approve" onclick="approveMatchApplication(\'' + a.id + '\')">✅ 通过</button>';
+        actionBtns += '<button class="action-btn reject" onclick="rejectMatchApplication(\'' + a.id + '\')">❌ 拒绝</button>';
+      } else if (status === 'approved') {
+        actionBtns += '<button class="action-btn approve" onclick="markContacted(\'' + a.id + '\')">📞 标记已联系</button>';
+      }
+
       return '<tr>' +
         '<td><strong>' + (a.match_request_name || a.visitor_name || '匿名') + '</strong></td>' +
         '<td>' + (a.match_request_contact || '-') + '</td>' +
@@ -1237,10 +1256,70 @@
         '<td>' + severityTag + '</td>' +
         '<td>' + crisisTag + '</td>' +
         '<td>' + formatTime(a.updated_at || a.created_at) + '</td>' +
-        '<td><div class="action-btns">' +
-          '<button class="action-btn view" onclick="viewDetail(\'assessments\', \'' + a.id + '\')">查看</button>' +
-        '</div></td>' +
+        '<td>' + statusTag + '</td>' +
+        '<td><div class="action-btns">' + actionBtns + '</div></td>' +
       '</tr>';
+    }
+
+    // ========== 匹配申请审批 ==========
+    function updateMatchStatus(id, status) {
+      return fetch(SUPABASE_URL + '/rest/v1/assessments?id=eq.' + id, {
+        method: 'PATCH',
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({
+          match_request_status: status,
+          match_request_reviewed_at: new Date().toISOString(),
+          match_request_reviewed_by: 'admin',
+          updated_at: new Date().toISOString()
+        })
+      });
+    }
+
+    function approveMatchApplication(id) {
+      if (!confirm('确认通过此匹配申请？通过后咨询师将收到通知。')) return;
+      updateMatchStatus(id, 'approved').then(function(r) {
+        if (r.ok) {
+          showToast('✅ 已通过该申请', 'success');
+          loadData('assessments');
+        } else {
+          showToast('操作失败，请重试', 'error');
+        }
+      }).catch(function() {
+        showToast('网络错误，请重试', 'error');
+      });
+    }
+
+    function rejectMatchApplication(id) {
+      if (!confirm('确认拒绝此匹配申请？')) return;
+      updateMatchStatus(id, 'rejected').then(function(r) {
+        if (r.ok) {
+          showToast('已拒绝该申请', 'success');
+          loadData('assessments');
+        } else {
+          showToast('操作失败，请重试', 'error');
+        }
+      }).catch(function() {
+        showToast('网络错误，请重试', 'error');
+      });
+    }
+
+    function markContacted(id) {
+      if (!confirm('确认标记为"已联系"？')) return;
+      updateMatchStatus(id, 'contacted').then(function(r) {
+        if (r.ok) {
+          showToast('📞 已标记为已联系', 'success');
+          loadData('assessments');
+        } else {
+          showToast('操作失败，请重试', 'error');
+        }
+      }).catch(function() {
+        showToast('网络错误，请重试', 'error');
+      });
     }
 
     // ========== 格式化数组 ==========
@@ -1374,6 +1453,7 @@
           + '<strong>申请者：</strong>' + (item.match_request_name || '-') + '<br>'
           + '<strong>联系方式：</strong>' + (item.match_request_contact || '-') + '<br>'
           + '<strong>意向咨询师：</strong>' + mcName + '<br>'
+          + '<strong>申请状态：</strong>' + (item.match_request_status === 'approved' ? '✅ 已通过' : item.match_request_status === 'rejected' ? '❌ 已拒绝' : item.match_request_status === 'contacted' ? '📞 已联系' : '⏳ 待处理') + '<br>'
           + '<strong>申请时间：</strong>' + formatTime(item.updated_at || item.created_at)
           + '</div></div></div>';
       }

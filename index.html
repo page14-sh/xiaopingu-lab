@@ -1977,6 +1977,7 @@ function renderMyCounselorCard(aid) {
   html += '<div class="mc-actions">';
   html += '<a href="' + trackUrl + '" class="mc-btn mc-btn-primary">📊 开始追踪评分</a>';
   html += '<a href="' + dashboardUrl + '" class="mc-btn">📈 查看追踪面板</a>';
+  html += '<a href="my-assessment.html?aid=' + aid + '" class="mc-btn">📋 查看申请状态</a>';
   html += '<button class="mc-btn" onclick="copyCounselorLink(\'' + counselorUrl + '\')">📋 分享给咨询师</button>';
   html += '</div>';
   html += '<span class="mc-change" onclick="deselectCounselor(\'' + aid + '\')">✕ 更换咨询师</span>';
@@ -2283,7 +2284,8 @@ function submitMatchApply(){
       <div style="font-size:28px;margin-bottom:8px">✅</div>
       <div style="font-size:14px;color:#5C7A52;font-weight:500">申请已提交</div>
       <div style="font-size:12px;color:#A09889;margin-top:4px">咨询师会尽快通过系统联系您</div>
-      <button class="btn btn-outline" style="width:100%;margin-top:16px" onclick="closeMatchApply()">关闭</button>
+      <button class="btn btn-outline" style="width:100%;margin-top:12px" onclick="window.open('my-assessment.html?aid='+getAsid())">📋 查看申请状态</button>
+      <button class="btn btn-outline" style="width:100%;margin-top:8px;background:#F7F4EF" onclick="closeMatchApply()">关闭</button>
     </div>
     <button id="btn-submit-match" class="btn btn-primary" style="width:100%;margin-top:8px" onclick="submitMatchApply()">提交申请</button>
   </div>
