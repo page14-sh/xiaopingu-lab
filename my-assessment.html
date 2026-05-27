@@ -194,24 +194,37 @@
     resultArea.style.display = 'block';
     resultArea.innerHTML = '<div class="loading"><div class="spinner"></div><p style="margin-top:12px">正在查询...</p></div>';
 
-    // 支持完整 UUID 精确匹配 或 短前缀模糊匹配
+    // 支持完整 UUID 精确匹配 或 短前缀范围匹配
     var isFullId = cleanId.length >= 32;
     var url = SUPABASE_URL + '/rest/v1/assessments?select=*&';
     if (isFullId) {
       url += 'id=eq.' + cleanId;
     } else {
-      // 前缀匹配：先尝试 like，失败则回退到范围查询
-      url += 'or=(id.like.' + cleanId + '-*)&order=created_at.desc&limit=10';
+      // UUID 前缀范围查询（like 对 UUID 列不生效，改用 gte/lt）
+      var lowerHex = cleanId.padEnd(32, '0');
+      var lowerUuid = lowerHex.slice(0,8) + '-' + lowerHex.slice(8,12) + '-' + lowerHex.slice(12,16) + '-' + lowerHex.slice(16,20) + '-' + lowerHex.slice(20,32);
+      // upper bound: 前缀末位 hex+1，其余补 0
+      var lastChar = cleanId.charAt(cleanId.length - 1);
+      var nextChar = (parseInt(lastChar, 16) + 1).toString(16);
+      var upperHex = cleanId.slice(0, -1) + nextChar + '00000000000000000000000000000000'.slice(cleanId.length);
+      var upperUuid = upperHex.slice(0,8) + '-' + upperHex.slice(8,12) + '-' + upperHex.slice(12,16) + '-' + upperHex.slice(16,20) + '-' + upperHex.slice(20,32);
+      url += 'id=gte.' + lowerUuid + '&id=lt.' + upperUuid + '&order=created_at.desc&limit=10';
     }
 
     // 同时查询评估记录和咨询师列表
     Promise.all([
       fetch(url, {
         headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY }
-      }).then(function(r) { return r.json(); }),
+      }).then(function(r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status + ': ' + r.statusText);
+        return r.json();
+      }),
       fetch(SUPABASE_URL + '/rest/v1/counselors?select=*&is_active=eq.true', {
         headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY }
-      }).then(function(r) { return r.json(); })
+      }).then(function(r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status + ': ' + r.statusText);
+        return r.json();
+      })
     ])
     .then(function(results) {
       var records = results[0];
