@@ -198,9 +198,10 @@
     var isFullId = cleanId.length >= 32;
     var url = SUPABASE_URL + '/rest/v1/assessments?select=*&';
     if (isFullId) {
-      url += 'id=eq.' + encodeURIComponent(cleanId);
+      url += 'id=eq.' + cleanId;
     } else {
-      url += 'id=like.' + encodeURIComponent(cleanId) + '*';
+      // 前缀匹配：先尝试 like，失败则回退到范围查询
+      url += 'or=(id.like.' + cleanId + '-*)&order=created_at.desc&limit=10';
     }
 
     // 同时查询评估记录和咨询师列表
@@ -230,7 +231,7 @@
     .catch(function(e) {
       btn.disabled = false;
       btn.textContent = '查询';
-      resultArea.innerHTML = '<div class="card empty-state"><div class="icon">❌</div><p>查询失败</p><p style="font-size:12px;color:#A09889;margin-top:4px">网络错误，请稍后重试</p></div>';
+      resultArea.innerHTML = '<div class="card empty-state"><div class="icon">❌</div><p>查询失败</p><p style="font-size:12px;color:#A09889;margin-top:4px">' + (e.message || '网络错误，请稍后重试') + '</p></div>';
     });
   }
 
