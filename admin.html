@@ -632,7 +632,7 @@
               </tr>
             </thead>
             <tbody id="tbody-counselors">
-              <tr><td colspan="12" class="loading"><div class="spinner"></div></td></tr>
+              <tr><td colspan="13" class="loading"><div class="spinner"></div></td></tr>
             </tbody>
           </table>
           <div class="empty-state" id="empty-counselors" style="display:none;">
@@ -650,6 +650,7 @@
             <thead>
               <tr>
                 <th><input type="checkbox" id="select-all-assessments" onchange="toggleSelectAll('assessments')"></th>
+                <th>评估号</th>
                 <th>姓名</th>
                 <th>性别</th>
                 <th>年龄</th>
@@ -664,7 +665,7 @@
               </tr>
             </thead>
             <tbody id="tbody-assessments">
-              <tr><td colspan="12" class="loading"><div class="spinner"></div></td></tr>
+              <tr><td colspan="13" class="loading"><div class="spinner"></div></td></tr>
             </tbody>
           </table>
           <div class="empty-state" id="empty-assessments" style="display:none;">
@@ -681,6 +682,7 @@
           <table>
             <thead>
               <tr>
+                <th>评估号</th>
                 <th>申请者</th>
                 <th>联系方式</th>
                 <th>申请咨询师</th>
@@ -694,7 +696,7 @@
               </tr>
             </thead>
             <tbody id="tbody-match-applications">
-              <tr><td colspan="10" class="loading"><div class="spinner"></div></td></tr>
+              <tr><td colspan="11" class="loading"><div class="spinner"></div></td></tr>
             </tbody>
           </table>
           <div class="empty-state" id="empty-match-applications" style="display:none;">
@@ -1190,6 +1192,7 @@
 
       return '<tr>' +
         selectCell +
+        '<td><code style="font-size:11px;color:#6B635A">' + (a.id ? a.id.substring(0,8) : '-') + '</code></td>' +
         '<td><strong>' + (a.visitor_name || '匿名') + '</strong></td>' +
         '<td>' + (a.visitor_gender || '-') + '</td>' +
         '<td>' + (a.visitor_age || '-') + '</td>' +
@@ -1248,6 +1251,7 @@
       }
 
       return '<tr>' +
+        '<td><code style="font-size:11px;color:#6B635A">' + (a.id ? a.id.substring(0,8) : '-') + '</code></td>' +
         '<td><strong>' + (a.match_request_name || a.visitor_name || '匿名') + '</strong></td>' +
         '<td>' + (a.match_request_contact || '-') + '</td>' +
         '<td><span class="tag tag-blue">' + cName + '</span></td>' +
