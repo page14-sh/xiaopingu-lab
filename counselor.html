@@ -1870,7 +1870,7 @@ function loadPanelRequests() {
       html += '🕐 ' + formatTime(a.created_at);
       html += '</div>';
       html += '<div class="req-actions">';
-      html += '<a href="session-dashboard.html?aid=' + a.id + '" class="req-btn req-btn-blue" target="_blank">📈 追踪面板</a>';
+      html += '<a href="session-dashboard.html?aid=' + a.id + '&role=counselor&cid=' + panelCid + '&name=' + encodeURIComponent(a.match_request_name || a.visitor_name || '') + '" class="req-btn req-btn-blue" target="_blank">📈 追踪面板</a>';
       html += '<button class="req-btn req-btn-outline" onclick="copyContact(\'' + esc(a.match_request_contact || '') + '\')">📋 复制联系方式</button>';
       html += '</div>';
       html += '</div>';
