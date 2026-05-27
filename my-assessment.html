@@ -133,7 +133,7 @@
     <h2>📋 查看我的评估</h2>
     <p class="hint">输入你的评估编号，即可查看申请状态、匹配的咨询师和循证追踪记录。<br>评估编号可在评估完成页面或地址栏中找到。</p>
     <div class="input-group">
-      <input type="text" id="aid-input" placeholder="输入评估编号（ASID）" autocomplete="off">
+      <input type="text" id="aid-input" placeholder="输入评估编号（可从后台复制前8位）" autocomplete="off">
       <button class="btn btn-primary" id="btn-query" onclick="doQuery()">查询</button>
     </div>
   </div>
@@ -179,9 +179,10 @@
     var aid = document.getElementById('aid-input').value.trim();
     if (!aid) { showToast('请输入评估编号'); return; }
 
-    // 基本 UUID 格式校验
-    if (!/^[a-f0-9-]{36}$/i.test(aid) && !/^[a-f0-9]{32}$/i.test(aid)) {
-      showToast('评估编号格式不正确');
+    // 基本格式校验（支持完整UUID或最短8位前缀）
+    var cleanId = aid.replace(/-/g, '');
+    if (!/^[a-f0-9]{8,32}$/i.test(cleanId)) {
+      showToast('评估编号格式不正确（至少8位十六进制字符）');
       return;
     }
 
@@ -193,9 +194,18 @@
     resultArea.style.display = 'block';
     resultArea.innerHTML = '<div class="loading"><div class="spinner"></div><p style="margin-top:12px">正在查询...</p></div>';
 
+    // 支持完整 UUID 精确匹配 或 短前缀模糊匹配
+    var isFullId = cleanId.length >= 32;
+    var url = SUPABASE_URL + '/rest/v1/assessments?select=*&';
+    if (isFullId) {
+      url += 'id=eq.' + encodeURIComponent(cleanId);
+    } else {
+      url += 'id=like.' + encodeURIComponent(cleanId) + '*';
+    }
+
     // 同时查询评估记录和咨询师列表
     Promise.all([
-      fetch(SUPABASE_URL + '/rest/v1/assessments?id=eq.' + encodeURIComponent(aid) + '&select=*', {
+      fetch(url, {
         headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY }
       }).then(function(r) { return r.json(); }),
       fetch(SUPABASE_URL + '/rest/v1/counselors?select=*&is_active=eq.true', {
