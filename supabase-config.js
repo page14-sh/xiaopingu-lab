@@ -132,9 +132,9 @@ ALTER TABLE counselors ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "anon_insert_assessment" ON assessments
   FOR INSERT WITH CHECK (true);
 
--- 评估：认证用户可查询
-CREATE POLICY "auth_select_assessment" ON assessments
-  FOR SELECT USING (auth.role() = 'authenticated');
+-- 评估：匿名可查询（admin 后台通过 anon key 读取）
+CREATE POLICY "anon_select_assessment" ON assessments
+  FOR SELECT USING (true);
 
 -- 咨询师：匿名可读（用于匹配展示）
 CREATE POLICY "anon_read_counselor" ON counselors
@@ -206,15 +206,16 @@ function _xpg_toast(msg, type) {
   _xpg_toast_timer = setTimeout(function() { el.style.opacity = '0'; }, 3500);
 }
 
-// 保存评估数据
+// 保存评估数据（含客户端 UUID 作为记录 id，无需 return=representation）
 function saveAssessment(data) {
   if (!SUPABASE_CONFIG.enableDataCollection || !SUPABASE_CONFIG.url) return Promise.resolve(null);
   return _xpg_fetch(SUPABASE_CONFIG.url + '/rest/v1/assessments', {
     method: 'POST',
-    headers: getSupabaseHeaders(),
+    headers: getSupabaseWriteHeaders(),  // 不含 return=representation，避免 RLS 干扰
     body: JSON.stringify(data)
   }).then(function(r) {
-    if (r.ok) { console.log('[小平菇] 评估数据已保存'); return r.json(); }
+    if (r.ok) { console.log('[小平菇] 评估数据已保存 (id=' + (data.id || 'auto') + ')'); return data; }
+    else if (r.status === 409) { console.warn('[小平菇] 评估记录已存在 (409)，跳过'); return data; }
     else { console.warn('[小平菇] 保存失败:', r.status, r.statusText); (typeof showToast==='function'?showToast:_xpg_toast)('评估数据保存失败，请检查网络后重试','error'); return null; }
   }).catch(function(e) { console.warn('[小平菇] 网络错误:', e); (typeof showToast==='function'?showToast:_xpg_toast)('网络异常，评估数据未保存','error'); return null; });
 }

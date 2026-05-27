@@ -999,6 +999,39 @@ document.addEventListener('keydown', function(e) {
   }
 })();
 
+// ===== 页面可见性恢复时自动重试保存 =====
+// 移动端 Safari 在切后台时会中止未完成的 fetch，等切回前台时重试
+(function setupSaveRetry() {
+  var retried = false;
+  document.addEventListener('visibilitychange', function() {
+    if (document.hidden) return;
+    if (retried) return;
+    if (!window._xpg_save_pending) return;
+    var data = window._xiaopinguAssessmentData;
+    if (!data || Object.keys(data).length <= 3) {
+      // 尝试从 sessionStorage 恢复
+      try {
+        var ss = sessionStorage.getItem('xiaopingu_assessment_data');
+        if (ss) data = JSON.parse(ss);
+      } catch(e) {}
+    }
+    if (!data || Object.keys(data).length <= 3) return;
+    retried = true;
+    console.log('[小平菇] 页面恢复可见，重试保存评估记录...');
+    if (typeof saveAssessment === 'function') {
+      saveAssessment(data).then(function(r) {
+        if (r) {
+          console.log('[小平菇] 重试保存成功');
+          window._xpg_save_pending = false;
+        } else {
+          console.warn('[小平菇] 重试保存仍失败');
+          retried = false; // 允许再次重试
+        }
+      });
+    }
+  });
+})();
+
 function afterPuzzle() {
   try {
     var consentGiven = false;
@@ -1384,7 +1417,9 @@ function generateResult() {
     '<div class="info-item"><div class="info-label">睡眠困难</div><div class="info-val">'+scores.sleep+'/5</div></div>'+
     '<div class="info-item"><div class="info-label">功能受损</div><div class="info-val">'+scores.function+'/5</div></div>'+
     '<div class="info-item"><div class="info-label">人际紧张</div><div class="info-val">'+scores.relation+'/5</div></div>'+
-    '<div class="info-item"><div class="info-label">总分</div><div class="info-val" style="color:'+(totalScore>=15?'#C4654A':totalScore>=8?'#854F0B':'#5C7A52')+'">'+totalScore+'/25</div></div>';
+    '<div class="info-item"><div class="info-label">总分</div><div class="info-val" style="color:'+(totalScore>=15?'#C4654A':totalScore>=8?'#854F0B':'#5C7A52')+'">'+totalScore+'/25</div></div>'+
+    // DOM 分数存档（页刷后仍可恢复，作为 rebuildAssessmentFromDOM 的首选数据源）
+    '<div id="scores-archive" style="display:none" data-mood="'+scores.mood+'" data-anxiety="'+scores.anxiety+'" data-sleep="'+scores.sleep+'" data-function="'+scores.function+'" data-relation="'+scores.relation+'" data-total="'+totalScore+'" data-severity="'+severity+'" data-severity-standard="'+severityStandard+'"></div>';
 
   // ===== Referral logic =====
   var cards=[];
@@ -1580,8 +1615,18 @@ function generateResult() {
           }
 
           // 选为我的咨询师按钮
+          var asid=getAsid();
+          if(!asid && currentViewToken) asid = currentViewToken;
+          if(!asid){
+            if(crypto && crypto.randomUUID){ asid = crypto.randomUUID(); }
+            else { asid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,function(c){var r=Math.random()*16|0;return(c==='x'?r:(r&0x3|0x8)).toString(16);}); }
+            window.xiaopinguAsid = asid;
+            sessionStorage.setItem('xiaopingu_assessment_id', asid);
+            localStorage.setItem('xiaopingu_assessment_id', asid);
+          }
           var selMeta = { credential: c.credential_level, city: c.city, fee: c.fee_min ? c.fee_min+'元/次' : '' };
-          chtml+='<button class="btn-select-counselor" data-cid="'+c.id+'" onclick="selectCounselor(\''+asid+'\',\''+c.id+'\',\''+esc(c.name).replace(/'/g,"\\'")+'\',\''+r.matchScore+'\',\''+JSON.stringify(selMeta).replace(/'/g,"\\'")+'\')">✓ 选为我的咨询师</button>';
+          var metaStr=JSON.stringify(selMeta).replace(/"/g,'&quot;').replace(/'/g,"\\'");
+          chtml+='<button class="btn-select-counselor" data-cid="'+c.id+'" onclick="selectCounselor(\''+asid+'\',\''+c.id+'\',\''+esc(c.name).replace(/'/g,"\\'")+'\',\''+r.matchScore+'\',\''+metaStr+'\')">✓ 选为我的咨询师</button>';
 
           chtml+='</div>';
         });
@@ -1615,6 +1660,7 @@ function generateResult() {
   // Save assessment data (skip in view mode)
   var viewToken = (crypto.randomUUID || function(){return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,function(c){var r=Math.random()*16|0;return(c==='x'?r:(r&0x3|0x8)).toString(16);});})();
   var assessmentPayload = {
+    id:viewToken,
     view_token:viewToken,
     visitor_name:name,visitor_age:parseInt(age)||null,visitor_gender:genderText,
     visitor_occupation:occText,visitor_city:cityVal,filled_by:filledBy,prev_counseling:prevText,budget:budgetVal,preferred_formats:formats,
@@ -1639,17 +1685,20 @@ function generateResult() {
   window.xiaopinguAsid = viewToken;
   console.log('[小平菇] 前置写入评估ID:', viewToken);
   try { sessionStorage.setItem('xiaopingu_assessment_id', viewToken); localStorage.setItem('xiaopingu_assessment_id', viewToken); } catch(e) {}
+  try { sessionStorage.setItem('xiaopingu_assessment_data', JSON.stringify(assessmentPayload)); } catch(e) {}
   try { localStorage.setItem('xiaopingu_assessment_backup', JSON.stringify(assessmentPayload)); } catch(e) {}
+  window._xiaopinguAssessmentData = assessmentPayload; // 内存兜底，不受 localStorage 限制
   if(typeof saveAssessment==='function'&&!currentViewToken){
+    window._xpg_save_pending = true; // 标记尚未确认保存成功
     saveAssessment(assessmentPayload).then(function(result){
-      if(result&&result[0]&&result[0].id){
-        window.xiaopinguAsid = result[0].id;
-        sessionStorage.setItem('xiaopingu_assessment_id', result[0].id);
-        localStorage.setItem('xiaopingu_assessment_id', result[0].id);
+      if(result){
+        console.log('[小平菇] DB评估记录已创建，ID:', viewToken);
+        window._xpg_save_pending = false; // 确认保存成功
       } else {
         console.warn('[小平菇] DB保存失败，使用本地ID回退:', viewToken);
+        // pending 保持 true，等待页面可见性恢复时重试
       }
-      showViewLink(result&&result[0]&&result[0].view_token ? result[0].view_token : viewToken);
+      showViewLink(viewToken);
     });
   } else {
     showViewLink(viewToken);
@@ -1794,23 +1843,9 @@ function openMatchApply(cid,cname){
   document.getElementById('apply-form').classList.add('show');
   document.getElementById('apply-success').classList.remove('show');
   document.getElementById('match-apply-overlay').classList.remove('hidden');
-  // 动态绑定提交按钮事件（移动端兼容）
+  // 重置按钮状态
   var btn = document.getElementById('btn-submit-match');
-  if(btn){
-    btn.onclick = null;
-    btn.addEventListener('click', function(e){
-      e.preventDefault();
-      e.stopPropagation();
-      submitMatchApply();
-    });
-    btn.addEventListener('touchend', function(e){
-      e.preventDefault();
-      e.stopPropagation();
-      submitMatchApply();
-    });
-    btn.disabled = false;
-    btn.textContent = '提交申请';
-  }
+  if(btn){ btn.style.display=''; btn.disabled = false; btn.textContent = '提交申请'; }
 }
 function closeMatchApply(){
   document.getElementById('match-apply-overlay').classList.add('hidden');
@@ -1829,31 +1864,56 @@ function getSelectedCounselor(aid) {
 }
 
 function selectCounselor(aid, cId, cName, cScore, cMeta) {
+  if(typeof SUPABASE_CONFIG==='undefined'){ alert('配置未加载，请通过 localhost 访问'); return; }
+  // 解析 meta（从 onclick 传入时双引号被 HTML-encoded 为 &quot;）
+  var metaObj = null;
+  if(cMeta && typeof cMeta==='string'){
+    try { metaObj = JSON.parse(cMeta.replace(/&quot;/g,'"')); } catch(e){ metaObj = null; }
+  }
   // 本地缓存（快速访问）
   var data = JSON.parse(localStorage.getItem(SELECTED_COUNSELOR_KEY) || '{}');
-  data[aid] = { id: cId, name: cName, score: cScore, meta: cMeta };
+  data[aid] = { id: cId, name: cName, score: cScore, meta: metaObj || cMeta };
   localStorage.setItem(SELECTED_COUNSELOR_KEY, JSON.stringify(data));
 
-  // 同步到数据库
+  // 同步到数据库（先尝试 PATCH，若记录不存在则 POST 创建）
+  // 关键：无论记录是否存在，PATCH 都要同时写入备份分数（防止旧空壳记录覆盖）
   if (aid && cId) {
-    fetch(SUPABASE_CONFIG.url + '/rest/v1/assessments?id=eq.' + aid, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': SUPABASE_CONFIG.anonKey,
-        'Authorization': 'Bearer ' + SUPABASE_CONFIG.anonKey,
-        'Prefer': 'return=representation'
-      },
-      body: JSON.stringify({
-        selected_counselor_id: cId,
-        selected_counselor_name: cName,
-        selected_at: new Date().toISOString()
-      })
-    }).then(function(r) {
-      if (!r.ok) console.warn('[小平菇] 选咨询师同步失败:', r.status);
-    }).catch(function(e) {
-      console.warn('[小平菇] 选咨询师网络错误:', e);
-    });
+    (function doSelectSync(){
+      var backupData = (typeof getAssessmentBackupData === 'function') ? getAssessmentBackupData() : {};
+      // 合并备份分数 + 已选咨询师信息 → PATCH 时一箭双雕
+      var body = Object.assign(
+        { selected_counselor_id: cId, selected_counselor_name: cName, selected_at: new Date().toISOString() },
+        backupData.total_score ? {
+          visitor_name: backupData.visitor_name,
+          score_mood: backupData.score_mood,
+          score_anxiety: backupData.score_anxiety,
+          score_sleep: backupData.score_sleep,
+          score_function: backupData.score_function,
+          score_relation: backupData.score_relation,
+          total_score: backupData.total_score,
+          severity: backupData.severity
+        } : {}
+      );
+      console.log('[小平菇] selectCounselor PATCH: total_score=', body.total_score, 'mood=', body.score_mood);
+      fetch(SUPABASE_CONFIG.url + '/rest/v1/assessments?id=eq.' + aid, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_CONFIG.anonKey, 'Authorization': 'Bearer ' + SUPABASE_CONFIG.anonKey, 'Prefer': 'return=representation' },
+        body: JSON.stringify(body)
+      }).then(function(r){
+        return r.ok ? r.json() : null;
+      }).then(function(d){
+        if (Array.isArray(d) && d.length === 0) {
+          // 记录不存在 → POST 创建（带完整备份数据）
+          var createBody = Object.assign({ id: aid }, backupData, body, { updated_at: new Date().toISOString() });
+          console.log('[小平菇] selectCounselor fallback POST: total_score=', createBody.total_score);
+          return fetch(SUPABASE_CONFIG.url + '/rest/v1/assessments', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_CONFIG.anonKey, 'Authorization': 'Bearer ' + SUPABASE_CONFIG.anonKey, 'Prefer': 'return=minimal' },
+            body: JSON.stringify(createBody)
+          });
+        }
+      }).catch(function(e){ console.warn('[小平菇] 选咨询师同步:', e.message); });
+    })();
   }
 
   renderMyCounselorCard(aid);
@@ -1954,67 +2014,244 @@ function refreshCounselorButtons(aid) {
   });
 }
 
+function getAssessmentBackupData(){
+  // 第1层：内存变量（最新，同一页面会话）
+  var backup = window._xiaopinguAssessmentData;
+  if(backup && Object.keys(backup).length > 3){ console.log('[小平菇] backup from window._xiaopinguAssessmentData'); return backup; }
+
+  // 第2层：sessionStorage（页面刷新后仍存在）
+  try {
+    var ssRaw = sessionStorage.getItem('xiaopingu_assessment_data');
+    if(ssRaw){
+      var ssData = JSON.parse(ssRaw);
+      if(ssData && Object.keys(ssData).length > 3){ console.log('[小平菇] backup from sessionStorage'); return ssData; }
+    }
+  } catch(e) {}
+
+  // 第3层：localStorage
+  try {
+    var lsRaw = localStorage.getItem('xiaopingu_assessment_backup');
+    if(lsRaw){
+      var lsData = JSON.parse(lsRaw);
+      if(lsData && Object.keys(lsData).length > 3){ console.log('[小平菇] backup from localStorage'); return lsData; }
+    }
+  } catch(e) {}
+
+  // 第4层（最后兜底）：从当前页面 DOM 元素重建评估数据
+  console.warn('[小平菇] 所有存储备份均失效，从页面DOM重建评估数据');
+  return rebuildAssessmentFromDOM();
+}
+
+function rebuildAssessmentFromDOM(){
+  try {
+    var name = document.getElementById('name');
+    var nameVal = name ? (name.value || '来访者') : '来访者';
+    var ageEl = document.getElementById('age');
+    var age = ageEl ? (parseInt(ageEl.value) || null) : null;
+    var gender = document.getElementById('gender');
+    var genderText = gender ? gender.options[gender.selectedIndex].text : '';
+    var occupation = document.getElementById('occupation');
+    var occText = occupation ? (occupation.value === 'other' ? (document.getElementById('occupation_other')?.value?.trim() || '其他') : occupation.options[occupation.selectedIndex].text) : '';
+    var cityVal = document.getElementById('city') ? document.getElementById('city').value.trim() : '';
+    var filledBy = document.getElementById('filled_by') ? document.getElementById('filled_by').value : 'self';
+    var prev = document.getElementById('prev_counseling');
+    var prevText = prev ? prev.options[prev.selectedIndex].text : '';
+    var budgetEl = document.getElementById('budget');
+    var budgetVal = budgetEl ? budgetEl.value : '';
+    var durationEl = document.getElementById('duration');
+    var durationText = durationEl ? durationEl.options[durationEl.selectedIndex].text : '';
+    var descEl = document.getElementById('description');
+    var description = descEl ? descEl.value : '';
+    var crisisEl = document.getElementById('crisis_screen');
+    var crisisVal = crisisEl ? crisisEl.value : 'none';
+
+    var formats = [];
+    document.querySelectorAll('input[name=\"format\"]:checked').forEach(function(el){ formats.push(el.value); });
+    var issues = [];
+    document.querySelectorAll('#issue_grid input:checked').forEach(function(el){ issues.push(el.value); });
+    var specials = [];
+    document.querySelectorAll('input[name=\"special\"]:checked').forEach(function(el){ specials.push(el.value); });
+
+    // 从 result 区域读取分数（优先 DOM 存档 → 全局变量 → 结果面板文本解析）
+    var moodScore = 0, anxietyScore = 0, sleepScore = 0, funcScore = 0, relScore = 0, totalScore = 0, severity = '一般心理困扰';
+    // 第1优先：DOM 隐藏存档（generateResult 写入，页刷后仍存在）
+    var archiveEl = document.getElementById('scores-archive');
+    if (archiveEl) {
+      moodScore = parseInt(archiveEl.getAttribute('data-mood')) || 0;
+      anxietyScore = parseInt(archiveEl.getAttribute('data-anxiety')) || 0;
+      sleepScore = parseInt(archiveEl.getAttribute('data-sleep')) || 0;
+      funcScore = parseInt(archiveEl.getAttribute('data-function')) || 0;
+      relScore = parseInt(archiveEl.getAttribute('data-relation')) || 0;
+      totalScore = parseInt(archiveEl.getAttribute('data-total')) || 0;
+      severity = archiveEl.getAttribute('data-severity') || severity;
+      console.log('[小平菇] DOM重建：从分数存档恢复 scores='+moodScore+','+anxietyScore+','+sleepScore);
+    }
+    // 第2优先：全局 scores 变量
+    else if(typeof scores !== 'undefined' && scores){
+      moodScore = scores.mood || 0;
+      anxietyScore = scores.anxiety || 0;
+      sleepScore = scores.sleep || 0;
+      funcScore = scores.function || 0;
+      relScore = scores.relation || 0;
+      totalScore = moodScore + anxietyScore + sleepScore + funcScore + relScore;
+      if(totalScore >= 20) severity = '需精神科就医';
+      else if(totalScore >= 15) severity = '需要心理治疗介入';
+      else if(totalScore >= 8) severity = '需要外力介入';
+    }
+    // 第3优先：从结果面板 HTML 文本解析（兜底）
+    else {
+      var resultBox = document.getElementById('score_summary');
+      if (resultBox) {
+        var txt = resultBox.textContent || '';
+        var moodMatch = txt.match(/情绪低落\s*(\d+)/);
+        var anxietyMatch = txt.match(/焦虑紧张\s*(\d+)/);
+        var sleepMatch = txt.match(/睡眠困难\s*(\d+)/);
+        var funcMatch = txt.match(/功能受损\s*(\d+)/);
+        var relMatch = txt.match(/人际紧张\s*(\d+)/);
+        if (moodMatch) moodScore = parseInt(moodMatch[1]) || 0;
+        if (anxietyMatch) anxietyScore = parseInt(anxietyMatch[1]) || 0;
+        if (sleepMatch) sleepScore = parseInt(sleepMatch[1]) || 0;
+        if (funcMatch) funcScore = parseInt(funcMatch[1]) || 0;
+        if (relMatch) relScore = parseInt(relMatch[1]) || 0;
+        totalScore = moodScore + anxietyScore + sleepScore + funcScore + relScore;
+        if(totalScore >= 20) severity = '需精神科就医';
+        else if(totalScore >= 15) severity = '需要心理治疗介入';
+        else if(totalScore >= 8) severity = '需要外力介入';
+        console.log('[小平菇] DOM重建：从结果面板文本解析 scores='+moodScore+','+anxietyScore+','+sleepScore);
+      }
+    }
+
+    console.log('[小平菇] DOM重建成功: name='+nameVal+' scores='+moodScore+','+anxietyScore+','+sleepScore);
+
+    return {
+      visitor_name: nameVal,
+      visitor_age: age,
+      visitor_gender: genderText,
+      visitor_occupation: occText,
+      visitor_city: cityVal,
+      filled_by: filledBy,
+      prev_counseling: prevText,
+      budget: budgetVal,
+      preferred_formats: formats,
+      issues: issues,
+      specials: specials,
+      description: description,
+      duration: durationText,
+      crisis_level: crisisVal,
+      score_mood: moodScore,
+      score_anxiety: anxietyScore,
+      score_sleep: sleepScore,
+      score_function: funcScore,
+      score_relation: relScore,
+      total_score: totalScore,
+      severity: severity,
+      gender_pref: (document.getElementById('gender_pref') || {}).value || 'any',
+      age_pref: (document.getElementById('age_pref') || {}).value || '',
+      orientation_pref: (document.getElementById('orientation_pref') || {}).value || 'any',
+      comm_style: (document.getElementById('comm_style') || {}).value || '',
+      cnip_structure: _attr('[data-field=\"cnip_structure\"] .cnip-btn.active','data-value') || 'balanced',
+      cnip_emotion: _attr('[data-field=\"cnip_emotion\"] .cnip-btn.active','data-value') || 'balanced',
+      cnip_timefocus: _attr('[data-field=\"cnip_timefocus\"] .cnip-btn.active','data-value') || 'balanced',
+      cnip_warmth: _attr('[data-field=\"cnip_warmth\"] .cnip-btn.active','data-value') || 'warm',
+      cnip_homework: _attr('[data-field=\"cnip_homework\"] .cnip-btn.active','data-value') || 'neutral',
+      cnip_relational: _attr('[data-field=\"cnip_relational\"] .cnip-btn.active','data-value') || 'neutral',
+      expects: Array.from(document.querySelectorAll('#expect_grid input:checked') || []).map(function(e){ return e.value; }),
+      user_agent: navigator.userAgent.substring(0,200)
+    };
+  } catch(e) {
+    console.error('[小平菇] DOM重建失败:', e);
+    return {};
+  }
+}
+
 function submitMatchApply(){
-  console.log('[小平菇] submitMatchApply 被调用了');
-  var name=document.getElementById('apply-name').value.trim();
-  var contact=document.getElementById('apply-contact').value.trim();
+  console.log('[小平菇] submitMatchApply');
+  var nameEl=document.getElementById('apply-name');
+  var name=nameEl?nameEl.value.trim():'';
+  var contactEl=document.getElementById('apply-contact');
+  var contact=contactEl?contactEl.value.trim():'';
   if(!name||!contact){alert('请填写姓名和联系方式');return;}
   var asid=getAsid();
+  var isFallbackAsid = false;
   if(!asid){
     try { var fb = JSON.parse(localStorage.getItem('xiaopingu_assessment_backup')||'{}'); if(fb.view_token) asid = fb.view_token; } catch(e) {}
   }
   if(!asid && currentViewToken) asid = currentViewToken;
   if(!asid){
-    asid = (crypto.randomUUID || function(){return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,function(c){var r=Math.random()*16|0;return(c==='x'?r:(r&0x3|0x8)).toString(16);});})();
+    isFallbackAsid = true;
+    if(crypto && crypto.randomUUID){
+      asid = crypto.randomUUID();
+    } else {
+      asid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,function(c){var r=Math.random()*16|0;return(c==='x'?r:(r&0x3|0x8)).toString(16);});
+    }
     window.xiaopinguAsid = asid;
-    console.warn('[小平菇] 即时生成fallback ID:', asid);
+    console.warn('[小平菇] fallback ASID:', asid);
   }
-  var applyBtn=document.querySelector('#apply-form .btn-primary');
+  if(typeof SUPABASE_CONFIG==='undefined'){ console.error('SUPABASE_CONFIG 未加载'); alert('系统异常，请刷新重试'); return; }
+  var applyBtn=document.getElementById('btn-submit-match');
   if(applyBtn){applyBtn.disabled=true;applyBtn.textContent='提交中...';}
-  var patchBody={match_request_name:name,match_request_contact:contact,match_request_cid:document.getElementById('apply-cid').value,updated_at:new Date().toISOString()};
+  var applyCid = document.getElementById('apply-cid').value;
+  var patchBody={match_request_name:name,match_request_contact:contact,match_request_cid:applyCid,updated_at:new Date().toISOString()};
   function onSuccess(){
     document.getElementById('apply-form').classList.remove('show');
     document.getElementById('apply-success').classList.add('show');
+    document.getElementById('btn-submit-match').style.display='none';
   }
   function doPatch(){
+    // 始终带备份分数 PATCH（防止旧空壳记录覆盖）
+    var backup = typeof getAssessmentBackupData === 'function' ? getAssessmentBackupData() : {};
+    var fullPatchBody = Object.assign({}, patchBody);
+    if (backup.total_score) {
+      fullPatchBody = Object.assign(fullPatchBody, {
+        visitor_name: backup.visitor_name,
+        score_mood: backup.score_mood,
+        score_anxiety: backup.score_anxiety,
+        score_sleep: backup.score_sleep,
+        score_function: backup.score_function,
+        score_relation: backup.score_relation,
+        total_score: backup.total_score,
+        severity: backup.severity
+      });
+      console.log('[小平菇] submitMatchApply PATCH 含备份分数: total=', backup.total_score);
+    }
     return fetch(SUPABASE_CONFIG.url+'/rest/v1/assessments?id=eq.'+asid,{
       method:'PATCH',
       headers:{'Content-Type':'application/json','apikey':SUPABASE_CONFIG.anonKey,'Authorization':'Bearer '+SUPABASE_CONFIG.anonKey,'Prefer':'return=representation'},
-      body:JSON.stringify(patchBody)
+      body:JSON.stringify(fullPatchBody)
     }).then(function(r){
       if(!r.ok){throw new Error('HTTP '+r.status);}
       return r.json();
-    }).then(function(data){
-      if(Array.isArray(data)&&data.length>0) return onSuccess();
-      return doPostFallback();
-    }).catch(function(e){ throw e; });
-  }
-  function doPostFallback(){
-    console.warn('[小平菇] PATCH无返回，尝试POST回退');
-    var backup = {};
-    try { var raw = localStorage.getItem('xiaopingu_assessment_backup'); if(raw) backup = JSON.parse(raw); } catch(e) {}
-    if(!backup.view_token){
-      alert('提交失败：评估数据丢失，请重新完成评估');
-      return;
-    }
-    return fetch(SUPABASE_CONFIG.url+'/rest/v1/assessments',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','apikey':SUPABASE_CONFIG.anonKey,'Authorization':'Bearer '+SUPABASE_CONFIG.anonKey,'Prefer':'return=representation'},
-      body:JSON.stringify(Object.assign({id:asid},backup,patchBody))
-    }).then(function(r2){
-      if(!r2.ok) throw new Error('HTTP '+r2.status);
-      return r2.json();
-    }).then(function(d2){
-      if(Array.isArray(d2)&&d2.length>0){
-        onSuccess();
-      } else {
-        alert('提交失败：无法创建申请记录，请联系管理员');
+    }).then(function(d){
+      // PATCH 成功但返回空 → 记录不存在（saveAssessment 可能没执行成功）
+      // 回退：用完整备份数据创建记录
+      if(Array.isArray(d) && d.length === 0){
+        console.warn('[小平菇] PATCH 未找到记录 (id='+asid+')，回退创建');
+        // 三层数据恢复：内存变量 → sessionStorage → localStorage → DOM回退
+        var backup = getAssessmentBackupData();
+        console.log('[小平菇] 回退创建使用 backup keys:', Object.keys(backup).join(','));
+        // 分数安全检查：记录是否为 0
+        var bScores = {m:backup.score_mood, a:backup.score_anxiety, s:backup.score_sleep, f:backup.score_function, r:backup.score_relation};
+        console.log('[小平菇] 回退分数:', JSON.stringify(bScores), '总分:', backup.total_score);
+        if (!backup.total_score) { console.error('[小平菇] ⚠ 回退数据无有效分数！mood='+backup.score_mood+' anxiety='+backup.score_anxiety+' sleep='+backup.score_sleep); }
+        var createBody = Object.assign({id:asid}, backup, patchBody, {created_at: new Date().toISOString(),view_token:asid});
+        console.log('[小平菇] 回退创建体 total_score:', createBody.total_score);
+        return fetch(SUPABASE_CONFIG.url+'/rest/v1/assessments',{
+          method:'POST',
+          headers:{'Content-Type':'application/json','apikey':SUPABASE_CONFIG.anonKey,'Authorization':'Bearer '+SUPABASE_CONFIG.anonKey,'Prefer':'return=minimal'},
+          body:JSON.stringify(createBody)
+        }).then(function(r2){
+          if(!r2.ok && r2.status!==409){ throw new Error('创建失败 HTTP '+r2.status); }
+          onSuccess();
+        });
       }
+      onSuccess();
     });
   }
-  doPatch().catch(function(e){
+  doPatch().then(function(){
+    alert('已收到您的申请，咨询师将在1个工作日内联系您');
+  }).catch(function(e){
     console.error('[小平菇] 申请提交失败:', e);
-    alert('提交失败，请稍后重试（'+(e.message||'网络错误')+'）');
+    alert('提交失败：'+(e.message||'网络错误')+'。请确认通过 localhost 访问');
   }).finally(function(){
     if(applyBtn){applyBtn.disabled=false;applyBtn.textContent='提交申请';}
   });
@@ -2041,7 +2278,6 @@ function submitMatchApply(){
         <input type="text" id="apply-contact" placeholder="微信号或手机号码" autocomplete="off">
       </div>
       <input type="hidden" id="apply-cid" value="">
-      <button id="btn-submit-match" class="btn btn-primary" style="width:100%;margin-top:8px;pointer-events:auto;position:relative;z-index:100000">提交申请</button>
     </div>
     <div id="apply-success" class="apply-success">
       <div style="font-size:28px;margin-bottom:8px">✅</div>
@@ -2049,6 +2285,7 @@ function submitMatchApply(){
       <div style="font-size:12px;color:#A09889;margin-top:4px">咨询师会尽快通过系统联系您</div>
       <button class="btn btn-outline" style="width:100%;margin-top:16px" onclick="closeMatchApply()">关闭</button>
     </div>
+    <button id="btn-submit-match" class="btn btn-primary" style="width:100%;margin-top:8px" onclick="submitMatchApply()">提交申请</button>
   </div>
 </div>
 

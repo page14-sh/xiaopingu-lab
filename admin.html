@@ -1327,7 +1327,7 @@
       const title = document.getElementById('modal-title');
       const content = document.getElementById('modal-content');
 
-      title.textContent = type === 'counselors' ? '👨‍⚕️ 咨询师详情 - ' + (item.name || '') : '📋 评估详情 - ' + (item.visitor_name || '匿名');
+      title.textContent = type === 'counselors' ? '👨‍⚕️ 咨询师详情 - ' + (item.name || '') : (item.match_request_name ? '📞 匹配申请详情 - ' + item.match_request_name : '📋 评估详情 - ' + (item.visitor_name || '匿名'));
 
       let html = '';
 
@@ -1361,18 +1361,36 @@
         html += '</div>';
       }
 
+      // 匹配申请：显示申请信息摘要卡片
+      if (type === 'assessments' && item.match_request_name) {
+        var mcName = '-';
+        if (item.match_request_cid && allData.counselors) {
+          var mcf = allData.counselors.find(function(c) { return c.id === item.match_request_cid; });
+          if (mcf) mcName = mcf.name || '未知';
+        }
+        html += '<div class="detail-grid" style="margin-bottom:12px"><div class="detail-item">'
+          + '<div class="detail-label">📞 匹配申请信息</div>'
+          + '<div class="detail-value" style="font-size:13px;line-height:1.8">'
+          + '<strong>申请者：</strong>' + (item.match_request_name || '-') + '<br>'
+          + '<strong>联系方式：</strong>' + (item.match_request_contact || '-') + '<br>'
+          + '<strong>意向咨询师：</strong>' + mcName + '<br>'
+          + '<strong>申请时间：</strong>' + formatTime(item.updated_at || item.created_at)
+          + '</div></div></div>';
+      }
+
       html += '<div class="detail-grid">';
-      const skipKeys = ['has_violation','violation_detail','has_incident','incident_detail','needs_deep_review'];
+      const skipKeys = ['has_violation','violation_detail','has_incident','incident_detail','needs_deep_review','match_request_name','match_request_contact','match_request_cid','match_request_status'];
       Object.keys(item).forEach(key => {
         if (key === 'id') return;
         if (type === 'counselors' && skipKeys.includes(key)) return;
         let value = item[key];
-        if (Array.isArray(value)) value = value.join(', ');
+        if (value === null || value === undefined || value === '') return; // 跳过空值
+        if (Array.isArray(value)) { value = value.join(', '); if (!value) return; }
         if (key === 'created_at' || key === 'updated_at') value = formatTime(value);
         if (key === 'crisis_level') value = crisisLabel(value);
         html += '<div class="detail-item">' +
           '<div class="detail-label">' + formatLabel(key) + '</div>' +
-          '<div class="detail-value">' + (value || '-') + '</div>' +
+          '<div class="detail-value">' + value + '</div>' +
         '</div>';
       });
       html += '</div>';
