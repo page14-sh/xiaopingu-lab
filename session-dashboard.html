@@ -477,6 +477,36 @@ function destroyCharts(prefix) {
   });
 }
 
+// 确保 canvas 有合理尺寸（解决隐藏容器中 canvas 尺寸为 0 的问题）
+function ensureCanvasSize(canvasId, minW, minH) {
+  var canvas = document.getElementById(canvasId);
+  if (!canvas) return null;
+  var parent = canvas.parentElement;
+  if (!parent) return null;
+  var rect = parent.getBoundingClientRect();
+  var w = rect.width > 0 ? rect.width : minW;
+  var h = rect.height > 0 ? rect.height : minH;
+  if (canvas.width !== w || canvas.height !== h) {
+    canvas.width = w;
+    canvas.height = h;
+    canvas.style.width = w + 'px';
+    canvas.style.height = h + 'px';
+  }
+  return canvas;
+}
+
+// 安全创建 Chart 实例（捕获异常）
+function safeChart(canvasId, minW, minH, config) {
+  var canvas = ensureCanvasSize(canvasId, minW, minH);
+  if (!canvas) { console.warn('[小平菇] 找不到 canvas: ' + canvasId); return null; }
+  try {
+    return new Chart(canvas, config);
+  } catch (e) {
+    console.error('[小平菇] Chart 创建失败 (' + canvasId + '):', e);
+    return null;
+  }
+}
+
 function renderOrsCharts() {
   destroyCharts('ors_');
   var orsList = allRatings.filter(function(r) { return r.type === 'ORS'; });
@@ -485,7 +515,7 @@ function renderOrsCharts() {
 
   // ORS detail chart (4 dimensions) — 需要 ≥2 次才显示分维度
   if (orsList.length >= 2) {
-    chartInstances.ors_detail = new Chart(document.getElementById('chart_ors_detail'), {
+    chartInstances.ors_detail = safeChart('chart_ors_detail', 320, 300, {
       type: 'line',
       data: {
         labels: labels,
@@ -501,7 +531,7 @@ function renderOrsCharts() {
   }
 
   // ORS total chart — 1 次也能显示
-  chartInstances.ors_total = new Chart(document.getElementById('chart_ors_total'), {
+  chartInstances.ors_total = safeChart('chart_ors_total', 320, 240, {
     type: 'line',
     data: {
       labels: labels,
@@ -525,7 +555,7 @@ function renderSrsCharts() {
 
   // SRS detail chart (4 dimensions) — 需要 ≥2 次
   if (srsList.length >= 2) {
-    chartInstances.srs_detail = new Chart(document.getElementById('chart_srs_detail'), {
+    chartInstances.srs_detail = safeChart('chart_srs_detail', 320, 300, {
       type: 'line',
       data: {
         labels: labels,
@@ -541,7 +571,7 @@ function renderSrsCharts() {
   }
 
   // SRS total chart with risk line
-  chartInstances.srs_total = new Chart(document.getElementById('chart_srs_total'), {
+  chartInstances.srs_total = safeChart('chart_srs_total', 320, 240, {
     type: 'line',
     data: {
       labels: labels,
@@ -693,17 +723,22 @@ function switchTab(tab) {
     btn.classList.toggle('active', btn.textContent.indexOf(tabLabel(tab)) >= 0);
   });
 
-  // 懒加载图表：切换到 ORS/SRS tab 时首次渲染或强制重建（解决隐藏容器 canvas 尺寸为 0 问题）
+  // 懒加载图表：切换到 ORS/SRS tab 时强制重建（解决隐藏容器 canvas 尺寸为 0）
   if (tab === 'ors') {
-    setTimeout(function() {
-      destroyCharts('ors_');
-      renderOrsCharts();
-    }, 100);
+    destroyCharts('ors_');
+    // requestAnimationFrame 确保 DOM 已渲染，canvas 有正确尺寸后再创建图表
+    requestAnimationFrame(function() {
+      requestAnimationFrame(function() {
+        renderOrsCharts();
+      });
+    });
   } else if (tab === 'srs') {
-    setTimeout(function() {
-      destroyCharts('srs_');
-      renderSrsCharts();
-    }, 100);
+    destroyCharts('srs_');
+    requestAnimationFrame(function() {
+      requestAnimationFrame(function() {
+        renderSrsCharts();
+      });
+    });
   }
 }
 
