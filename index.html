@@ -40,6 +40,37 @@
     padding: 6px 12px; border: 1px solid #C8DCC0; border-radius: 8px;
     display: inline-block;
   }
+  /* 咨询师登录弹窗 */
+  #counselor-login-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.35);
+    z-index: 9000; align-items: center; justify-content: center;
+  }
+  #counselor-login-overlay.show { display: flex; }
+  #counselor-login-box {
+    background: #fff; border-radius: 16px; padding: 28px 24px; width: 90%; max-width: 360px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18); position: relative;
+  }
+  #counselor-login-box h3 { font-size: 16px; font-weight: 700; color: #3D3831; margin-bottom: 6px; }
+  #counselor-login-box p { font-size: 12px; color: #9B9489; margin-bottom: 16px; line-height: 1.6; }
+  #counselor-login-input {
+    width: 100%; box-sizing: border-box; padding: 10px 14px; border: 1px solid #D4CFC8;
+    border-radius: 10px; font-size: 14px; color: #3D3831; outline: none;
+    transition: border-color 0.2s;
+  }
+  #counselor-login-input:focus { border-color: #5C7A52; }
+  .counselor-login-btns { display: flex; gap: 10px; margin-top: 14px; }
+  .counselor-login-btns button {
+    flex: 1; padding: 11px; border-radius: 10px; font-size: 14px;
+    font-weight: 600; cursor: pointer; border: none; transition: background 0.2s;
+  }
+  .btn-cl-cancel { background: #F2EDE7; color: #6B635A; }
+  .btn-cl-cancel:hover { background: #E8E2DB; }
+  .btn-cl-go { background: #5C7A52; color: #fff; }
+  .btn-cl-go:hover { background: #4A6342; }
+  .btn-cl-register { width: 100%; margin-top: 10px; padding: 9px; border-radius: 10px;
+    background: none; border: 1px solid #C8DCC0; color: #5C7A52; font-size: 13px;
+    cursor: pointer; font-weight: 500; }
+  .btn-cl-register:hover { background: #F0F7EC; }
   .main { max-width: 860px; margin: 0 auto; padding: 20px 16px 40px; }
   .progress-bar-wrap { margin-bottom: 24px; }
   .progress-steps { display: flex; gap: 0; margin-bottom: 8px; }
@@ -620,10 +651,48 @@
     <h1>心理咨询自助评估</h1>
     <p>专业心理评估，帮你找到最合适的心理支持 · v1.2 Lab</p>
   </div>
-  <div class="header-right">
-    <a href="counselor.html" class="header-link">咨询师入驻 →</a>
+  <div class="header-right" style="display:flex;gap:8px;align-items:center;">
+    <button onclick="openCounselorLogin()" class="header-link" style="cursor:pointer;background:none;font-family:inherit;white-space:nowrap">咨询师登录</button>
+    <a href="counselor.html" class="header-link" style="white-space:nowrap">入驻 →</a>
   </div>
 </div>
+
+<!-- 咨询师登录弹窗 -->
+<div id="counselor-login-overlay" onclick="if(event.target===this)closeCounselorLogin()">
+  <div id="counselor-login-box">
+    <h3>🖥️ 咨询师工作台</h3>
+    <p>输入注册时收到的「咨询师 ID」或「编辑码」，进入工作台查看来访匹配申请。</p>
+    <input id="counselor-login-input" type="text" placeholder="粘贴咨询师 ID 或编辑码…" autocomplete="off"
+      onkeydown="if(event.key==='Enter')doCounselorLogin()" />
+    <div class="counselor-login-btns">
+      <button class="btn-cl-cancel" onclick="closeCounselorLogin()">取消</button>
+      <button class="btn-cl-go" onclick="doCounselorLogin()">进入工作台</button>
+    </div>
+    <button class="btn-cl-register" onclick="location.href='counselor.html'">还没注册？点此入驻 →</button>
+  </div>
+</div>
+<script>
+function openCounselorLogin() {
+  var overlay = document.getElementById('counselor-login-overlay');
+  overlay.classList.add('show');
+  setTimeout(function(){ document.getElementById('counselor-login-input').focus(); }, 100);
+}
+function closeCounselorLogin() {
+  document.getElementById('counselor-login-overlay').classList.remove('show');
+}
+function doCounselorLogin() {
+  var val = document.getElementById('counselor-login-input').value.trim();
+  if (!val) { document.getElementById('counselor-login-input').style.borderColor='#E53935'; return; }
+  // 判断是 edit token（不含 -）还是 UUID（含 -）
+  if (val.indexOf('-') >= 0) {
+    // UUID → ?cid=
+    location.href = 'counselor.html?cid=' + encodeURIComponent(val);
+  } else {
+    // 编辑码 → ?edit=
+    location.href = 'counselor.html?edit=' + encodeURIComponent(val);
+  }
+}
+</script>
 
 <div class="main">
   <div class="progress-bar-wrap">
