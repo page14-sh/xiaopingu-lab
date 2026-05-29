@@ -331,8 +331,15 @@ function renderSummary() {
   var totalSessions = allSessions.length;
   document.getElementById('stat_sessions').textContent = totalSessions;
 
+  // 构建按会话编号排序的 ORS/SRS 列表（与底部记录数据源一致，避免 allRatings 创建时间乱序）
+  var orsList = [];
+  var srsList = [];
+  allSessions.forEach(function(s) {
+    if (s.ors) orsList.push(s.ors);
+    if (s.srs) srsList.push(s.srs);
+  });
+
   // Latest ORS
-  var orsList = allRatings.filter(function(r) { return r.type === 'ORS'; });
   if (orsList.length > 0) {
     var latestOrs = orsList[orsList.length - 1];
     document.getElementById('stat_ors_latest').textContent = latestOrs.total_score.toFixed(1);
@@ -349,7 +356,6 @@ function renderSummary() {
   }
 
   // Latest SRS
-  var srsList = allRatings.filter(function(r) { return r.type === 'SRS'; });
   if (srsList.length > 0) {
     var latestSrs = srsList[srsList.length - 1];
     document.getElementById('stat_srs_latest').textContent = latestSrs.total_score.toFixed(1);
@@ -367,9 +373,8 @@ function renderSummary() {
 
   // Clinical improvement count
   var improved = orsList.filter(function(r) { return r.clinical_change === 'improved'; }).length;
-  var withChange = orsList.filter(function(r) { return r.clinical_change; }).length;
   document.getElementById('stat_improved').textContent = improved + '/' + orsList.length;
-  if (withChange > 0) {
+  if (orsList.length > 0) {
     document.getElementById('stat_improved_pct').textContent = Math.round(improved / orsList.length * 100) + '% 次评估改善';
   }
 }
@@ -509,7 +514,9 @@ function safeChart(canvasId, minW, minH, config) {
 
 function renderOrsCharts() {
   destroyCharts('ors_');
-  var orsList = allRatings.filter(function(r) { return r.type === 'ORS'; });
+  // 按会话编号排序（与底部记录一致）
+  var orsList = [];
+  allSessions.forEach(function(s) { if (s.ors) orsList.push(s.ors); });
   if (orsList.length === 0) return;
   var labels = orsList.map(function(r, i) { return '第' + (i + 1) + '次'; });
 
@@ -549,7 +556,9 @@ function renderOrsCharts() {
 
 function renderSrsCharts() {
   destroyCharts('srs_');
-  var srsList = allRatings.filter(function(r) { return r.type === 'SRS'; });
+  // 按会话编号排序（与底部记录一致）
+  var srsList = [];
+  allSessions.forEach(function(s) { if (s.srs) srsList.push(s.srs); });
   if (srsList.length === 0) return;
   var labels = srsList.map(function(r, i) { return '第' + (i + 1) + '次'; });
 
@@ -621,8 +630,13 @@ function chartOptions(title, min, max) {
 // ===== Alerts =====
 function renderAlerts() {
   var alerts = [];
-  var orsList = allRatings.filter(function(r) { return r.type === 'ORS'; });
-  var srsList = allRatings.filter(function(r) { return r.type === 'SRS'; });
+  // 按会话编号排序（与底部记录一致），避免 allRatings 创建时间乱序导致假警报
+  var orsList = [];
+  var srsList = [];
+  allSessions.forEach(function(s) {
+    if (s.ors) orsList.push(s.ors);
+    if (s.srs) srsList.push(s.srs);
+  });
 
   // Check ORS worsening
   for (var i = 1; i < orsList.length; i++) {
