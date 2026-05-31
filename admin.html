@@ -616,6 +616,8 @@
             <thead>
               <tr>
                 <th><input type="checkbox" id="select-all-counselors" onchange="toggleSelectAll('counselors')"></th>
+                <th>ID</th>
+                <th>编辑码</th>
                 <th>姓名</th>
                 <th>资质等级</th>
                 <th>从业年限</th>
@@ -632,7 +634,7 @@
               </tr>
             </thead>
             <tbody id="tbody-counselors">
-              <tr><td colspan="13" class="loading"><div class="spinner"></div></td></tr>
+              <tr><td colspan="15" class="loading"><div class="spinner"></div></td></tr>
             </tbody>
           </table>
           <div class="empty-state" id="empty-counselors" style="display:none;">
@@ -665,7 +667,7 @@
               </tr>
             </thead>
             <tbody id="tbody-assessments">
-              <tr><td colspan="13" class="loading"><div class="spinner"></div></td></tr>
+              <tr><td colspan="15" class="loading"><div class="spinner"></div></td></tr>
             </tbody>
           </table>
           <div class="empty-state" id="empty-assessments" style="display:none;">
@@ -1082,6 +1084,8 @@
 
       return '<tr>' +
         selectCell +
+        '<td style="font-size:11px;font-family:monospace;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + (c.id || '-') + '">' + ((c.id || '').substring(0, 12) + '…') + '</td>' +
+        '<td style="font-size:12px;font-family:monospace;">' + (c.edit_token || '-') + '</td>' +
         '<td><strong>' + (c.name || '-') + '</strong></td>' +
         '<td>' + (c.credential_level || '-') + '</td>' +
         '<td>' + (c.years_experience || 0) + '年</td>' +
