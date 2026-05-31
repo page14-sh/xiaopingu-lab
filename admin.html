@@ -910,6 +910,28 @@
       setTimeout(() => toast.remove(), 3000);
     }
 
+    function copyToClipboard(text, el) {
+      if (!text || text === '-') return;
+      navigator.clipboard.writeText(text).then(function() {
+        showToast('已复制', 'success');
+        if (el) {
+          var orig = el.querySelector('span').textContent;
+          el.querySelector('span').textContent = '已复制!';
+          setTimeout(function(){ el.querySelector('span').textContent = orig; }, 1500);
+        }
+      }).catch(function() {
+        // 降级方案
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showToast('已复制', 'success');
+      });
+    }
+
     // ========== 模态框关闭 ==========
     function closeModal(event, id) {
       if (event && event.target !== event.currentTarget) return;
@@ -1084,8 +1106,12 @@
 
       return '<tr>' +
         selectCell +
-        '<td style="font-size:11px;font-family:monospace;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + (c.id || '-') + '">' + ((c.id || '').substring(0, 12) + '…') + '</td>' +
-        '<td style="font-size:12px;font-family:monospace;">' + (c.edit_token || '-') + '</td>' +
+        '<td style="cursor:pointer;" title="点击复制完整 ID" onclick="copyToClipboard(\'' + (c.id || '') + '\', this)">' +
+          '<span style="font-size:11px;font-family:monospace;color:#5C7A52;">' + ((c.id || '').substring(0, 8) + '…') + '</span>' +
+          '<span style="font-size:10px;color:#999;margin-left:4px;">📋</span></td>' +
+        '<td style="cursor:pointer;" title="点击复制编辑码" onclick="copyToClipboard(\'' + (c.edit_token || '') + '\', this)">' +
+          '<span style="font-size:11px;font-family:monospace;color:#E67E22;">' + ((c.edit_token || '').substring(0, 8) + ((c.edit_token || '').length > 8 ? '…' : '')) + '</span>' +
+          '<span style="font-size:10px;color:#999;margin-left:4px;">📋</span></td>' +
         '<td><strong>' + (c.name || '-') + '</strong></td>' +
         '<td>' + (c.credential_level || '-') + '</td>' +
         '<td>' + (c.years_experience || 0) + '年</td>' +

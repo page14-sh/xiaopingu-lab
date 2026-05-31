@@ -1288,6 +1288,7 @@ function enterEditMode(token) {
     currentEditToken = token;
     currentEditId = data.id;
     currentReviewStatus = data.review_status || 'pending';
+    localStorage.setItem('xiaopingu_counselor_id', data.id);
     restoreFromData(data);
     var submitBtn = document.getElementById('submit-btn');
     if (submitBtn) submitBtn.textContent = '保存修改';
@@ -1317,6 +1318,10 @@ function enterEditMode(token) {
     }
     if (statusHtml) formArea.insertAdjacentHTML('afterbegin', statusHtml);
     showToast('档案已加载，修改后点击提交即可保存。');
+    // 同时加载咨询师工作台面板
+    panelCid = data.id;
+    showPanel();
+    loadPanelRequests();
   }).catch(function(e) {
     showToast('加载失败，请稍后重试。');
   });
