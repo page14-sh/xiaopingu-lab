@@ -1680,12 +1680,21 @@ function submitProfile() {
   });
 })();
 
-// 检查 URL 中的编辑令牌
+// 检查 URL 中的编辑令牌 → 查 ID 后跳转面板
 (function() {
   var params = new URLSearchParams(window.location.search);
   var editToken = params.get('edit');
-  if (editToken) {
-    enterEditMode(editToken);
+  if (editToken && typeof getCounselorByToken === 'function') {
+    getCounselorByToken(editToken).then(function(data) {
+      if (data && data.id) {
+        localStorage.setItem('xiaopingu_counselor_id', data.id);
+        window.location.replace('counselor.html?cid=' + encodeURIComponent(data.id));
+      } else {
+        document.getElementById('form_area').innerHTML = '<div style="text-align:center;padding:60px 20px;color:#A09889;font-size:15px;line-height:1.8">编辑链接无效或已过期。<br>请检查链接是否正确，或联系管理员。</div>';
+      }
+    }).catch(function() {
+      document.getElementById('form_area').innerHTML = '<div style="text-align:center;padding:60px 20px;color:#A09889;font-size:15px;line-height:1.8">编辑链接无效或已过期。<br>请检查链接是否正确，或联系管理员。</div>';
+    });
     return;
   }
 
@@ -1808,6 +1817,10 @@ var panelCid = null;
   var cid = params.get('cid') || params.get('panel');
   if (cid) {
     panelCid = cid;
+    // 隐藏注册表单，只显示工作台面板
+    if (document.getElementById('form_area')) document.getElementById('form_area').style.display = 'none';
+    // 页面标题改为工作台
+    document.querySelector('.page-header .brand-name').textContent = '咨询师工作台';
     showPanel();
     loadPanelRequests();
     return;
