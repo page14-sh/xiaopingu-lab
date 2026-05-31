@@ -1,0 +1,1804 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+  <script src="supabase-config.js"></script>
+  <title>小平菇 · 数据管理后台</title>
+  <style>
+    * { box-sizing: border-box; margin:0; padding:0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #F7F5F0;
+      color: #333;
+    }
+
+    /* ===== 登录界面 ===== */
+    #login-screen {
+      position: fixed;
+      top:0; left:0; right:0; bottom:0;
+      background: linear-gradient(135deg, #5C7A52, #7A9E6E);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+    .login-box {
+      background: white;
+      border-radius: 16px;
+      padding: 40px;
+      width: 380px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      text-align: center;
+    }
+    .login-box .logo { margin-bottom: 10px; }
+    .login-box .logo svg { width: 64px; height: 64px; }
+    .login-box h2 { color: #5C7A52; margin-bottom: 5px; }
+    .login-box .subtitle { color: #999; font-size: 13px; margin-bottom: 30px; }
+    .login-box input[type="password"] {
+      width: 100%;
+      padding: 12px 15px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.3s;
+      margin-bottom: 15px;
+    }
+    .login-box input[type="password"]:focus { border-color: #5C7A52; }
+    .login-box button {
+      width: 100%;
+      padding: 12px;
+      background: #5C7A52;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .login-box button:hover { background: #4a6542; }
+    .login-error { color: #dc3545; font-size: 13px; margin-top: 10px; min-height: 20px; }
+    .login-hint { color: #999; font-size: 12px; margin-top: 15px; }
+
+    /* ===== 主界面（默认隐藏） ===== */
+    #main-app { display: none; }
+
+    /* 头部 */
+    .header {
+      background: linear-gradient(135deg, #5C7A52, #7A9E6E);
+      color: white;
+      padding: 20px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .header h1 { font-size: 24px; font-weight: 600; }
+    .header .subtitle { font-size: 14px; opacity: 0.9; margin-top: 4px; }
+    .header .stats { display: flex; gap: 20px; }
+    .header .stat-item { text-align: center; }
+    .header .stat-num { font-size: 28px; font-weight: bold; }
+    .header .stat-label { font-size: 12px; opacity: 0.8; }
+    .header-right { display: flex; align-items: center; gap: 15px; }
+    .btn-settings {
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.4);
+      color: white;
+      padding: 8px 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.3s;
+    }
+    .btn-settings:hover { background: rgba(255,255,255,0.3); }
+    .btn-logout {
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.4);
+      color: white;
+      padding: 8px 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.3s;
+    }
+    .btn-logout:hover { background: rgba(255,255,255,0.3); }
+
+    /* 标签页 */
+    .tabs {
+      background: white;
+      padding: 0 30px;
+      border-bottom: 2px solid #e0e0e0;
+      display: flex;
+      gap: 0;
+    }
+    .tab {
+      padding: 15px 30px;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      font-size: 15px;
+      color: #666;
+      transition: all 0.3s;
+      user-select: none;
+    }
+    .tab:hover { color: #5C7A52; background: #f9f9f9; }
+    .tab.active {
+      color: #5C7A52;
+      border-bottom-color: #5C7A52;
+      font-weight: 600;
+    }
+
+    /* 工具栏 */
+    .toolbar {
+      padding: 20px 30px;
+      background: white;
+      border-bottom: 1px solid #e0e0e0;
+      display: flex;
+      gap: 15px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .search-box {
+      flex: 1;
+      min-width: 250px;
+      position: relative;
+    }
+    .search-box input {
+      width: 100%;
+      padding: 10px 15px 10px 40px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.3s;
+    }
+    .search-box input:focus { border-color: #5C7A52; }
+    .search-box::before {
+      content: "🔍";
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 14px;
+    }
+    .filter-select {
+      padding: 10px 15px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      cursor: pointer;
+      background: white;
+    }
+    .filter-select:focus { border-color: #5C7A52; }
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-weight: 500;
+    }
+    .btn-primary { background: #5C7A52; color: white; }
+    .btn-primary:hover { background: #4a6542; }
+    .btn-danger { background: #dc3545; color: white; }
+    .btn-danger:hover { background: #c82333; }
+    .btn-secondary { background: #6c757d; color: white; }
+    .btn-secondary:hover { background: #5a6268; }
+    .btn-success { background: #28a745; color: white; }
+    .btn-success:hover { background: #218838; }
+
+    /* 数据表格 */
+    .content { padding: 30px; }
+    .table-container {
+      background: white;
+      border-radius: 12px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    table { width: 100%; border-collapse: collapse; }
+    thead { background: #f8f9fa; position: sticky; top: 0; z-index: 10; }
+    th {
+      padding: 15px;
+      text-align: left;
+      font-size: 13px;
+      font-weight: 600;
+      color: #666;
+      border-bottom: 2px solid #dee2e6;
+      white-space: nowrap;
+    }
+    td {
+      padding: 12px 15px;
+      font-size: 14px;
+      border-bottom: 1px solid #f0f0f0;
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    tr:hover { background: #f8f9fa; }
+    tr:last-child td { border-bottom: none; }
+
+    /* 标签 */
+    .tag {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      margin: 2px;
+    }
+    .tag-green { background: #d4edda; color: #155724; }
+    .tag-blue { background: #d1ecf1; color: #0c5460; }
+    .tag-yellow { background: #fff3cd; color: #856404; }
+    .tag-red { background: #f8d7da; color: #721c24; }
+    .tag-purple { background: #e8daef; color: #6c3483; }
+
+    /* 操作按钮 */
+    .action-btns { display: flex; gap: 8px; }
+    .action-btn {
+      padding: 5px 10px;
+      border: none;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .action-btn.view { background: #e7f3ff; color: #0066cc; }
+    .action-btn.view:hover { background: #cce5ff; }
+    .action-btn.delete { background: #ffe7e7; color: #cc0000; }
+    .action-btn.delete:hover { background: #ffcccc; }
+    .action-btn.approve { background: #d4edda; color: #155724; }
+    .action-btn.approve:hover { background: #c1e2cb; }
+    .action-btn.reject { background: #f8d7da; color: #721c24; }
+    .action-btn.reject:hover { background: #f1c2c7; }
+    .action-btn.reset { background: #fff3cd; color: #856404; }
+    .action-btn.reset:hover { background: #ffeaa7; }
+
+    /* 空状态 */
+    .empty-state { text-align: center; padding: 60px 20px; color: #999; }
+    .empty-state .icon { font-size: 48px; margin-bottom: 15px; }
+    .empty-state .text { font-size: 16px; }
+
+    /* 加载动画 */
+    .loading { text-align: center; padding: 40px; color: #999; }
+    .spinner {
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #5C7A52;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    /* 模态框（详情 + 设置） */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top:0; left:0; right:0; bottom:0;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal {
+      background: white;
+      border-radius: 12px;
+      max-width: 800px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+      padding: 30px;
+      position: relative;
+    }
+    .modal-close {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #999;
+    }
+    .modal-close:hover { color: #333; }
+    .modal h2 { margin-bottom: 20px; color: #5C7A52; }
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 15px;
+    }
+    .detail-item {
+      padding: 10px;
+      background: #f8f9fa;
+      border-radius: 8px;
+    }
+    .detail-label { font-size: 12px; color: #999; margin-bottom: 5px; }
+    .detail-value { font-size: 14px; color: #333; word-break: break-all; }
+
+    /* 设置面板 */
+    .settings-form { max-width: 400px; }
+    .settings-form .form-group { margin-bottom: 20px; }
+    .settings-form label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 8px;
+    }
+    .settings-form input {
+      width: 100%;
+      padding: 10px 15px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.3s;
+    }
+    .settings-form input:focus { border-color: #5C7A52; }
+    .settings-form .hint { font-size: 12px; color: #999; margin-top: 5px; }
+    .settings-form .btn { margin-top: 10px; }
+
+    /* 分页 */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      padding: 20px;
+      background: white;
+      border-top: 1px solid #e0e0e0;
+    }
+    .page-btn {
+      padding: 8px 15px;
+      border: 1px solid #ddd;
+      background: white;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .page-btn:hover:not(:disabled) { background: #5C7A52; color: white; border-color: #5C7A52; }
+    .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .page-info { font-size: 14px; color: #666; }
+
+    /* Toast 提示 */
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 15px 20px;
+      border-radius: 8px;
+      color: white;
+      font-size: 14px;
+      z-index: 10000;
+      animation: slideIn 0.3s ease;
+    }
+    .toast.success { background: #28a745; }
+    .toast.error { background: #dc3545; }
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    /* 只读模式标识 */
+    .readonly-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,193,7,0.25);
+      border: 1px solid rgba(255,193,7,0.6);
+      color: #fff8e1;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    /* 看板卡片 */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr));
+      gap: 20px;
+      margin-top: 0;
+    }
+    .chart-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .chart-card h3 {
+      font-size: 15px;
+      color: #333;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #eee;
+    }
+    .chart-card canvas { max-height: 280px; }
+    .stat-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    .stat-card {
+      background: white;
+      border-radius: 12px;
+      padding: 18px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      text-align: center;
+    }
+    .stat-card .num { font-size: 32px; font-weight: 700; color: #5C7A52; }
+    .stat-card .label { font-size: 13px; color: #999; margin-top: 4px; }
+
+    /* 排序表头 */
+    th.sortable { cursor: pointer; user-select: none; }
+    th.sortable:hover { color: #5C7A52; }
+    th .sort-arrow { margin-left: 4px; font-size: 11px; opacity: 0.3; }
+    th.sort-asc .sort-arrow, th.sort-desc .sort-arrow { opacity: 1; color: #5C7A52; }
+
+    /* 响应式 */
+    @media (max-width: 768px) {
+      .header { flex-direction: column; gap: 15px; text-align: center; }
+      .header h1 { font-size: 20px; }
+      .tabs { padding: 0 10px; overflow-x: auto; }
+      .tab { padding: 12px 16px; font-size: 13px; white-space: nowrap; }
+      .toolbar { flex-direction: column; padding: 15px; }
+      .search-box { min-width: 100%; }
+      .content { padding: 15px; }
+      table { font-size: 12px; }
+      th, td { padding: 8px 10px; }
+      .stat-row { grid-template-columns: repeat(auto-fill, minmax(min(100%, 120px), 1fr)); }
+      .detail-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== 登录界面 ===== -->
+  <div id="login-screen">
+    <div class="login-box">
+      <div class="logo"><svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="adminCapGrad" cx="50%" cy="40%" r="60%"><stop offset="0%" stop-color="#7EB3E8"/><stop offset="100%" stop-color="#4A7DB5"/></radialGradient></defs><ellipse cx="24" cy="22" rx="18" ry="14" fill="url(#adminCapGrad)"/><circle cx="16" cy="17" r="3.5" fill="#fff" opacity="0.5"/><circle cx="28" cy="14" r="2.5" fill="#fff" opacity="0.4"/><circle cx="32" cy="22" r="3" fill="#fff" opacity="0.35"/><circle cx="20" cy="25" r="2" fill="#fff" opacity="0.3"/><path d="M18 24 Q18 38 20 42 L28 42 Q30 38 30 24" fill="#F5EDE0"/><ellipse cx="24" cy="43" rx="12" ry="2" fill="#5B8FC9" opacity="0.15"/></svg></div>
+      <h2>小平菇管理后台</h2>
+      <div class="subtitle">心理咨询自助评估转介系统</div>
+      <input type="password" id="login-password" placeholder="请输入管理密码" onkeypress="if(event.key==='Enter') doLogin()">
+      <button onclick="doLogin()">进入后台</button>
+      <div class="login-error" id="login-error"></div>
+      <div class="login-hint">首次使用默认密码请查看文件内说明</div>
+    </div>
+  </div>
+
+  <!-- ===== 主界面 ===== -->
+  <div id="main-app">
+
+    <!-- 头部统计 -->
+    <div class="header">
+      <div>
+        <h1><span style="display:inline-flex;vertical-align:middle;margin-right:6px;"><svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:28px;height:28px;"><defs><radialGradient id="hdrCapGrad" cx="50%" cy="40%" r="60%"><stop offset="0%" stop-color="#7EB3E8"/><stop offset="100%" stop-color="#4A7DB5"/></radialGradient></defs><ellipse cx="24" cy="22" rx="18" ry="14" fill="url(#hdrCapGrad)"/><circle cx="16" cy="17" r="3.5" fill="#fff" opacity="0.5"/><circle cx="28" cy="14" r="2.5" fill="#fff" opacity="0.4"/><circle cx="32" cy="22" r="3" fill="#fff" opacity="0.35"/><circle cx="20" cy="25" r="2" fill="#fff" opacity="0.3"/><path d="M18 24 Q18 38 20 42 L28 42 Q30 38 30 24" fill="#F5EDE0"/><ellipse cx="24" cy="43" rx="12" ry="2" fill="#5B8FC9" opacity="0.15"/></svg></span>小平菇 · 数据管理后台</h1>
+        <div class="subtitle">心理咨询自助评估转介系统 · 数据查看与管理</div>
+      </div>
+      <div class="header-right">
+        <div class="stats" style="margin-right:10px;">
+          <div class="stat-item">
+            <div class="stat-num" id="stat-counselors">-</div>
+            <div class="stat-label">咨询师</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-num" id="stat-pending">-</div>
+            <div class="stat-label">⏳ 待审核</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-num" id="stat-assessments">-</div>
+            <div class="stat-label">评估记录</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-num" id="stat-match-applications">-</div>
+            <div class="stat-label">📩 匹配申请</div>
+          </div>
+        </div>
+        <span id="readonly-badge" class="readonly-badge" style="display:none;">👁️ 只读模式</span>
+        <button class="btn-settings" id="btn-settings" onclick="openSettings()">⚙️ 设置</button>
+        <button class="btn-logout" id="btn-logout" onclick="doLogout()">🚪 退出</button>
+      </div>
+    </div>
+
+    <!-- 标签页 -->
+    <div class="tabs">
+      <div class="tab active" data-tab="dashboard" onclick="switchTab('dashboard')">
+        📊 数据看板
+      </div>
+      <div class="tab" data-tab="counselors" onclick="switchTab('counselors')">
+        👨⚕️ 咨询师管理
+      </div>
+      <div class="tab" data-tab="assessments" onclick="switchTab('assessments')">
+        📋 来访者评估
+      </div>
+      <div class="tab" data-tab="match-applications" onclick="switchTab('match-applications')">
+        📩 匹配申请
+      </div>
+    </div>
+
+    <!-- 咨询师工具栏 -->
+    <div class="toolbar" id="toolbar-counselors">
+      <div class="search-box">
+        <input type="text" id="search-counselors" placeholder="搜索咨询师姓名、资质、城市..." oninput="filterData()">
+      </div>
+      <select class="filter-select" id="filter-credential" onchange="filterData()">
+        <option value="">全部资质</option>
+        <option value="三级">三级心理咨询师</option>
+        <option value="二级">二级心理咨询师</option>
+        <option value="心理治疗师">心理治疗师</option>
+        <option value="精神科医生">精神科医生</option>
+      </select>
+      <select class="filter-select" id="filter-active" onchange="filterData()">
+        <option value="">全部状态</option>
+        <option value="true">激活</option>
+        <option value="false">未激活</option>
+      </select>
+      <select class="filter-select" id="filter-review" onchange="filterData()">
+        <option value="">全部审核状态</option>
+        <option value="pending">待审核</option>
+        <option value="approved">已通过</option>
+        <option value="rejected">已拒绝</option>
+      </select>
+      <button class="btn btn-success readonly-hide" onclick="exportCSV('counselors')">📥 导出CSV</button>
+      <button class="btn btn-danger readonly-hide" onclick="deleteSelected('counselors')">🗑️ 删除选中</button>
+    </div>
+
+    <!-- 评估工具栏 -->
+    <div class="toolbar" id="toolbar-assessments" style="display:none;">
+      <div class="search-box">
+        <input type="text" id="search-assessments" placeholder="搜索来访者姓名、主诉问题..." oninput="filterData()">
+      </div>
+      <select class="filter-select" id="filter-severity" onchange="filterData()">
+        <option value="">全部严重程度</option>
+        <option value="轻度">轻度</option>
+        <option value="中度">中度</option>
+        <option value="重度">重度</option>
+      </select>
+      <select class="filter-select" id="filter-crisis" onchange="filterData()">
+        <option value="">全部危机等级</option>
+        <option value="safe">无</option>
+        <option value="passive">低</option>
+        <option value="active">中</option>
+        <option value="action">高</option>
+      </select>
+      <button class="btn btn-success readonly-hide" onclick="exportCSV('assessments')">📥 导出CSV</button>
+      <button class="btn btn-danger readonly-hide" onclick="deleteSelected('assessments')">🗑️ 删除选中</button>
+    </div>
+
+    <!-- 匹配申请工具栏 -->
+    <div class="toolbar" id="toolbar-match-applications" style="display:none;">
+      <div class="search-box">
+        <input type="text" id="search-match-applications" placeholder="搜索申请者姓名、联系方式..." oninput="filterData()">
+      </div>
+      <select class="filter-select" id="filter-ma-status" onchange="filterData()">
+        <option value="">全部状态</option>
+        <option value="pending">待处理</option>
+        <option value="approved">已通过</option>
+        <option value="rejected">已拒绝</option>
+        <option value="contacted">已联系</option>
+      </select>
+      <button class="btn btn-success readonly-hide" onclick="exportCSV('match-applications')">📥 导出CSV</button>
+    </div>
+
+    <!-- 数据内容区 -->
+    <div class="content">
+      <!-- 数据看板 -->
+      <div id="content-dashboard">
+        <div class="stat-row">
+          <div class="stat-card"><div class="num" id="dash-counselors">-</div><div class="label">咨询师总数</div></div>
+          <div class="stat-card"><div class="num" id="dash-assessments">-</div><div class="label">评估总数</div></div>
+          <div class="stat-card"><div class="num" id="dash-avg-score">-</div><div class="label">平均症状评分</div></div>
+          <div class="stat-card"><div class="num" id="dash-severe">-</div><div class="label">重度评估</div></div>
+          <div class="stat-card"><div class="num" id="dash-crisis">-</div><div class="label">中/高危机</div></div>
+          <div class="stat-card"><div class="num" id="dash-match">-</div><div class="label">📩 匹配申请</div></div>
+        </div>
+        <div class="dashboard-grid">
+          <div class="chart-card"><h3>📈 严重程度分布</h3><canvas id="chart-severity"></canvas></div>
+          <div class="chart-card"><h3>🔴 危机等级分布</h3><canvas id="chart-crisis"></canvas></div>
+          <div class="chart-card"><h3>🕸️ 五维症状雷达</h3><canvas id="chart-radar"></canvas></div>
+          <div class="chart-card"><h3>🏙️ 咨询师城市分布</h3><canvas id="chart-city"></canvas></div>
+          <div class="chart-card"><h3>🧠 咨询取向分布</h3><canvas id="chart-approach"></canvas></div>
+          <div class="chart-card"><h3>💰 费用区间分布</h3><canvas id="chart-fee"></canvas></div>
+        </div>
+      </div>
+
+      <!-- 咨询师表格 -->
+      <div id="content-counselors">
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th><input type="checkbox" id="select-all-counselors" onchange="toggleSelectAll('counselors')"></th>
+                <th>姓名</th>
+                <th>资质等级</th>
+                <th>从业年限</th>
+                <th>城市</th>
+                <th>咨询取向</th>
+                <th>擅长议题</th>
+                <th>咨询方式</th>
+                <th>咨询风格</th>
+                <th>费用</th>
+                <th>状态</th>
+                <th>审核状态</th>
+                <th>创建时间</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-counselors">
+              <tr><td colspan="13" class="loading"><div class="spinner"></div></td></tr>
+            </tbody>
+          </table>
+          <div class="empty-state" id="empty-counselors" style="display:none;">
+            <div class="icon">📭</div>
+            <div class="text">暂无咨询师数据</div>
+          </div>
+          <div class="pagination" id="pagination-counselors"></div>
+        </div>
+      </div>
+
+      <!-- 评估表格 -->
+      <div id="content-assessments" style="display:none;">
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th><input type="checkbox" id="select-all-assessments" onchange="toggleSelectAll('assessments')"></th>
+                <th>评估号</th>
+                <th>姓名</th>
+                <th>性别</th>
+                <th>年龄</th>
+                <th>主诉问题</th>
+                <th>总分</th>
+                <th>严重程度</th>
+                <th>危机等级</th>
+                <th>咨询方式</th>
+                <th>预算</th>
+                <th>创建时间</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-assessments">
+              <tr><td colspan="13" class="loading"><div class="spinner"></div></td></tr>
+            </tbody>
+          </table>
+          <div class="empty-state" id="empty-assessments" style="display:none;">
+            <div class="icon">📭</div>
+            <div class="text">暂无评估数据</div>
+          </div>
+          <div class="pagination" id="pagination-assessments"></div>
+        </div>
+      </div>
+
+      <!-- 匹配申请表格 -->
+      <div id="content-match-applications" style="display:none;">
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>评估号</th>
+                <th>申请者</th>
+                <th>联系方式</th>
+                <th>申请咨询师</th>
+                <th>已选咨询师</th>
+                <th>来访总分</th>
+                <th>严重程度</th>
+                <th>危机等级</th>
+                <th>申请时间</th>
+                <th>状态</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-match-applications">
+              <tr><td colspan="11" class="loading"><div class="spinner"></div></td></tr>
+            </tbody>
+          </table>
+          <div class="empty-state" id="empty-match-applications" style="display:none;">
+            <div class="icon">📭</div>
+            <div class="text">暂无匹配申请</div>
+          </div>
+          <div class="pagination" id="pagination-match-applications"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 详情模态框 -->
+  <div class="modal-overlay" id="modal-detail" onclick="closeModal(event, 'modal-detail')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="closeModal(null, 'modal-detail')">&times;</button>
+      <h2 id="modal-title">详情</h2>
+      <div id="modal-content"></div>
+    </div>
+  </div>
+
+  <!-- 设置模态框 -->
+  <div class="modal-overlay" id="modal-settings" onclick="closeModal(event, 'modal-settings')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="closeModal(null, 'modal-settings')">&times;</button>
+      <h2>⚙️ 系统设置</h2>
+      <div class="settings-form">
+        <div class="form-group">
+          <label>当前管理密码</label>
+          <input type="text" id="current-pwd-display" readonly style="background:#f8f9fa;cursor:default;">
+          <div class="hint">这是当前正在使用的管理密码</div>
+        </div>
+        <div class="form-group">
+          <label>修改管理密码</label>
+          <input type="password" id="new-password" placeholder="输入新密码（至少4位）">
+          <div class="hint">留空表示不修改</div>
+        </div>
+        <div class="form-group">
+          <label>确认新密码</label>
+          <input type="password" id="confirm-password" placeholder="再次输入新密码">
+        </div>
+        <button class="btn btn-primary" onclick="changePassword()">保存设置</button>
+      </div>
+      <hr style="margin:30px 0;border:none;border-top:1px solid #eee;">
+      <h3 style="font-size:15px;color:#333;margin-bottom:15px;">如何查询密码</h3>
+      <div style="font-size:13px;color:#666;line-height:2;">
+        <p><strong>方法1（推荐）：</strong>登录后进入此设置面板，上方会显示当前密码</p>
+        <p><strong>方法2：</strong>打开 <code>admin.html</code> 文件，查找 <code>ADMIN_PASSWORD</code> 变量</p>
+        <p><strong>方法3（忘记密码）：</strong>删除浏览器 LocalStorage 后重启页面，使用文件中的默认密码重新登录</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 拒绝原因弹窗 -->
+  <div class="modal-overlay" id="reject-modal">
+    <div class="modal" style="max-width:500px;">
+      <button class="modal-close" onclick="closeRejectModal()">×</button>
+      <h2>❌ 拒绝咨询师申请</h2>
+      <p style="font-size:13px;color:#666;margin-bottom:15px;">
+        咨询师：<strong id="reject-counselor-name"></strong>
+      </p>
+      <div style="margin-bottom:15px;">
+        <label style="font-size:13px;color:#333;display:block;margin-bottom:5px;">拒绝原因（必填，咨询师可见）</label>
+        <textarea id="reject-note" style="width:100%;height:100px;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:14px;resize:vertical;" placeholder="请填写拒绝原因，咨询师修改后可重新提交审核..."></textarea>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button class="btn btn-secondary" onclick="closeRejectModal()">取消</button>
+        <button class="btn btn-danger" id="btn-submit-reject" onclick="submitReject()">确认拒绝</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ========== 只读模式检测 ==========
+    const READONLY_MODE = new URLSearchParams(location.search).get('mode') === 'view';
+
+    // ========== 密码配置（修改这里可更改默认密码）==========
+    let ADMIN_PASSWORD = localStorage.getItem('xiaopingu_admin_pwd') || 'xiaopingu2026';
+
+    // ========== Supabase 配置（引用共享配置） ==========
+    const SUPABASE_URL = SUPABASE_CONFIG.url;
+    const SUPABASE_ANON_KEY = SUPABASE_CONFIG.anonKey;
+
+    // ========== 全局状态 ==========
+    let currentTab = 'dashboard';
+    let allData = { counselors: [], assessments: [] };
+    let filteredData = { counselors: [], assessments: [], 'match-applications': [] };
+    let currentPage = { counselors: 1, assessments: 1, 'match-applications': 1 };
+    const PAGE_SIZE = 20;
+    let selectedIds = { counselors: new Set(), assessments: new Set() };
+    let sortState = { counselors: { key: 'created_at', dir: 'desc' }, assessments: { key: 'created_at', dir: 'desc' }, 'match-applications': { key: 'updated_at', dir: 'desc' } };
+    let chartInstances = {};
+
+    // ========== 登录逻辑 ==========
+    function doLogin() {
+      const input = document.getElementById('login-password').value;
+      const errorEl = document.getElementById('login-error');
+      if (input === ADMIN_PASSWORD) {
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('main-app').style.display = 'block';
+        // 记住登录状态（2小时）
+        sessionStorage.setItem('xiaopingu_logged_in', 'true');
+        initApp();
+      } else {
+        errorEl.textContent = '密码错误，请重新输入';
+        document.getElementById('login-password').value = '';
+      }
+    }
+
+    function doLogout() {
+      sessionStorage.removeItem('xiaopingu_logged_in');
+      document.getElementById('main-app').style.display = 'none';
+      document.getElementById('login-screen').style.display = 'flex';
+      document.getElementById('login-password').value = '';
+    }
+
+    // 页面加载时检查登录状态
+    window.addEventListener('load', function() {
+      if (READONLY_MODE) {
+        // 只读模式：直接跳过登录
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('main-app').style.display = 'block';
+        // 显示只读标识，隐藏管理按钮
+        document.getElementById('readonly-badge').style.display = 'inline-flex';
+        document.getElementById('btn-settings').style.display = 'none';
+        document.getElementById('btn-logout').style.display = 'none';
+        // 隐藏所有只读隐藏元素
+        document.querySelectorAll('.readonly-hide').forEach(el => el.style.display = 'none');
+        // 隐藏全选框列
+        document.querySelectorAll('th input[type="checkbox"]').forEach(el => {
+          el.parentElement.style.display = 'none';
+        });
+        document.title = '小平菇 · 数据查看（只读）';
+        initApp();
+      } else if (sessionStorage.getItem('xiaopingu_logged_in') === 'true') {
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('main-app').style.display = 'block';
+        initApp();
+      }
+    });
+
+    function initApp() {
+      loadData('counselors');
+      loadData('assessments');
+      updateStats();
+    }
+
+    function onDataLoaded() {
+      // 从评估数据中提取匹配申请
+      allData['match-applications'] = (allData.assessments || []).filter(function(a) {
+        return a.match_request_name;
+      });
+      updateStats();
+      renderDashboard();
+    }
+
+    // ========== 危机等级映射（数据库存英文，显示用中文） ==========
+    function crisisLabel(en) {
+      const map = { 'safe': '无', 'passive': '低', 'active': '中', 'action': '高' };
+      return map[en] || '无';
+    }
+    function crisisValue(cn) {
+      const map = { '无': 'safe', '低': 'passive', '中': 'active', '高': 'action' };
+      return map[cn] || '';
+    }
+
+    // ========== 设置面板 ==========
+    function openSettings() {
+      document.getElementById('current-pwd-display').value = ADMIN_PASSWORD;
+      document.getElementById('new-password').value = '';
+      document.getElementById('confirm-password').value = '';
+      document.getElementById('modal-settings').classList.add('active');
+    }
+
+    function changePassword() {
+      const newPwd = document.getElementById('new-password').value;
+      const confirmPwd = document.getElementById('confirm-password').value;
+
+      if (newPwd && newPwd.length < 4) {
+        showToast('密码长度至少4位', 'error');
+        return;
+      }
+      if (newPwd && newPwd !== confirmPwd) {
+        showToast('两次输入的密码不一致', 'error');
+        return;
+      }
+
+      if (newPwd) {
+        ADMIN_PASSWORD = newPwd;
+        localStorage.setItem('xiaopingu_admin_pwd', newPwd);
+        document.getElementById('current-pwd-display').value = newPwd;
+        showToast('密码修改成功！已保存到浏览器', 'success');
+      } else {
+        showToast('设置已保存', 'success');
+      }
+
+      // 同时保存到文件提示
+      setTimeout(() => {
+        alert('💡 提示：密码已保存到浏览器本地存储。\n\n如需永久修改默认密码（下次重装系统后生效），请编辑 admin.html 文件第 约297 行的：\n\n  let ADMIN_PASSWORD = ...\n\n将值改为新密码即可。');
+      }, 500);
+    }
+
+    // ========== Toast 提示 ==========
+    function showToast(msg, type) {
+      const toast = document.createElement('div');
+      toast.className = 'toast ' + type;
+      toast.textContent = msg;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    // ========== 模态框关闭 ==========
+    function closeModal(event, id) {
+      if (event && event.target !== event.currentTarget) return;
+      document.getElementById(id).classList.remove('active');
+    }
+
+    // ========== 加载数据 ==========
+    let _loadCount = 0;
+    async function loadData(type) {
+      try {
+        const url = SUPABASE_URL + '/rest/v1/' + type + '?select=*&order=created_at.desc';
+        const res = await fetch(url, {
+          headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
+          }
+        });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        allData[type] = Array.isArray(data) ? data : [];
+        filteredData[type] = [...data];
+        renderTable(type);
+        _loadCount++;
+        if (_loadCount >= 2) { _loadCount = 0; onDataLoaded(); }
+      } catch (e) {
+        console.error('加载数据失败:', e);
+        const msg = (e && e.message) ? e.message : '未知错误';
+        // 隐藏 loading spinner，显示错误提示
+        const tbody = document.getElementById('tbody-' + type);
+        if (tbody) {
+          tbody.innerHTML = '<tr><td colspan="12" class="loading" style="color:#E24B4A;">数据加载失败：' + msg + '<br>请检查网络后刷新页面重试</td></tr>';
+        }
+        _loadCount++;
+        if (_loadCount >= 2) { _loadCount = 0; onDataLoaded(); }
+      }
+    }
+
+    // ========== 更新统计 ==========
+    function updateStats() {
+      document.getElementById('stat-counselors').textContent = allData.counselors.length;
+      const pendingCount = allData.counselors.filter(c => !c.review_status || c.review_status === 'pending').length;
+      document.getElementById('stat-pending').textContent = pendingCount;
+      document.getElementById('stat-assessments').textContent = allData.assessments.length;
+      document.getElementById('stat-match-applications').textContent = allData['match-applications'] ? allData['match-applications'].length : 0;
+    }
+
+    // ========== 切换标签页 ==========
+    function switchTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelector('[data-tab="' + tab + '"]').classList.add('active');
+
+      document.getElementById('content-dashboard').style.display = tab === 'dashboard' ? 'block' : 'none';
+      document.getElementById('content-counselors').style.display = tab === 'counselors' ? 'block' : 'none';
+      document.getElementById('content-assessments').style.display = tab === 'assessments' ? 'block' : 'none';
+      document.getElementById('content-match-applications').style.display = tab === 'match-applications' ? 'block' : 'none';
+      document.getElementById('toolbar-counselors').style.display = tab === 'counselors' ? 'flex' : 'none';
+      document.getElementById('toolbar-assessments').style.display = tab === 'assessments' ? 'flex' : 'none';
+      document.getElementById('toolbar-match-applications').style.display = tab === 'match-applications' ? 'flex' : 'none';
+
+      if (tab === 'dashboard') renderDashboard();
+      else if (tab === 'match-applications') { allData['match-applications'] = (allData.assessments || []).filter(function(a) { return a.match_request_name; }); filterData(); }
+    }
+
+    // ========== 过滤数据 ==========
+    function filterData() {
+      const type = currentTab;
+      const search = document.getElementById('search-' + type).value.toLowerCase();
+
+      filteredData[type] = allData[type].filter(item => {
+        let match = true;
+
+      if (type === 'counselors') {
+        const credFilter = document.getElementById('filter-credential').value;
+        const activeFilter = document.getElementById('filter-active').value;
+        const reviewFilter = document.getElementById('filter-review').value;
+
+          if (credFilter && item.credential_level !== credFilter) match = false;
+        if (activeFilter && String(item.is_active) !== activeFilter) match = false;
+        if (reviewFilter && item.review_status !== reviewFilter) match = false;
+        if (search) {
+            const text = [item.name, item.credential_level, item.city, item.bio_short].filter(Boolean).join(' ').toLowerCase();
+            if (!text.includes(search)) match = false;
+          }
+        } else if (type === 'match-applications') {
+          const statusFilter = document.getElementById('filter-ma-status').value;
+          if (statusFilter && item.match_request_status !== statusFilter) match = false;
+          if (search) {
+            const text = [item.match_request_name, item.match_request_contact, item.visitor_name].filter(Boolean).join(' ').toLowerCase();
+            if (!text.includes(search)) match = false;
+          }
+        } else {
+          const severityFilter = document.getElementById('filter-severity').value;
+          const crisisFilter = document.getElementById('filter-crisis').value;
+
+          if (severityFilter && item.severity !== severityFilter) match = false;
+          if (crisisFilter && item.crisis_level !== crisisFilter) match = false;
+          if (search) {
+            const text = [item.visitor_name, item.issues, item.description].filter(Boolean).join(' ').toLowerCase();
+            if (!text.includes(search)) match = false;
+          }
+        }
+
+        return match;
+      });
+
+      currentPage[type] = 1;
+      renderTable(type);
+    }
+
+    // ========== 渲染表格 ==========
+    function renderTable(type) {
+      const tbody = document.getElementById('tbody-' + type);
+      const empty = document.getElementById('empty-' + type);
+      const data = filteredData[type];
+      const page = currentPage[type];
+
+      if (data.length === 0) {
+        tbody.innerHTML = '';
+        empty.style.display = 'block';
+        document.getElementById('pagination-' + type).innerHTML = '';
+        return;
+      }
+
+      empty.style.display = 'none';
+      const start = (page - 1) * PAGE_SIZE;
+      const end = Math.min(start + PAGE_SIZE, data.length);
+      const pageData = data.slice(start, end);
+
+      let html = '';
+      pageData.forEach(item => {
+        if (type === 'counselors') {
+          html += renderCounselorRow(item);
+        } else if (type === 'match-applications') {
+          html += renderMatchApplicationRow(item);
+        } else {
+          html += renderAssessmentRow(item);
+        }
+      });
+
+      tbody.innerHTML = html;
+      renderPagination(type, data.length);
+    }
+
+    // ========== 渲染咨询师行 ==========
+    function renderCounselorRow(c) {
+      const checked = selectedIds.counselors.has(c.id) ? 'checked' : '';
+      const statusTag = c.is_active
+        ? '<span class="tag tag-green">激活</span>'
+        : '<span class="tag tag-red">未激活</span>';
+      const reviewTag = c.review_status === 'approved' ? '<span class="tag tag-green">✅ 已通过</span>'
+        : c.review_status === 'rejected' ? '<span class="tag tag-red">❌ 已拒绝</span>'
+        : '<span class="tag tag-yellow">⏳ 待审核</span>';
+      const deepReviewTag = c.needs_deep_review
+        ? '<span class="tag" style="background:#FFF3CD;color:#856404;border-color:#FFC107">⚠ 加深审核</span>'
+        : '';
+
+      const selectCell = READONLY_MODE ? '<td style="display:none"></td>' : '<td><input type="checkbox" ' + checked + ' onchange="toggleSelect(\'counselors\', \'' + c.id + '\', this.checked)"></td>';
+
+      // 审核操作按钮
+      let reviewBtns = '';
+      if (!READONLY_MODE) {
+        if (!c.review_status || c.review_status === 'pending') {
+          reviewBtns = '<button class="action-btn approve" onclick="approveCounselor(\'' + c.id + '\')">✅ 通过</button>'
+                    + '<button class="action-btn reject" onclick="showRejectModal(\'' + c.id + '\', \'' + (c.name || '未知') + '\')">❌ 拒绝</button>';
+        } else if (c.review_status === 'rejected') {
+          reviewBtns = '<button class="action-btn reset" onclick="resetReview(\'' + c.id + '\')">🔄 重新审核</button>';
+        }
+      }
+
+      const deleteBtn = READONLY_MODE ? '' : '<button class="action-btn delete" onclick="deleteItem(\'counselors\', \'' + c.id + '\')">删除</button>';
+
+      return '<tr>' +
+        selectCell +
+        '<td><strong>' + (c.name || '-') + '</strong></td>' +
+        '<td>' + (c.credential_level || '-') + '</td>' +
+        '<td>' + (c.years_experience || 0) + '年</td>' +
+        '<td>' + (c.city || '-') + '</td>' +
+        '<td>' + formatArray(c.approaches, 'blue') + '</td>' +
+        '<td>' + formatArray(c.specialties, 'green') + '</td>' +
+        '<td>' + formatArray(c.session_formats, 'yellow') + '</td>' +
+        '<td>' + formatCnipStyles(c) + '</td>' +
+        '<td>¥' + (c.fee_min || 0) + '</td>' +
+        '<td>' + statusTag + '</td>' +
+        '<td>' + reviewTag + (deepReviewTag ? '<br>' + deepReviewTag : '') + '</td>' +
+        '<td>' + formatTime(c.created_at) + '</td>' +
+        '<td><div class="action-btns">' +
+          '<button class="action-btn view" onclick="viewDetail(\'counselors\', \'' + c.id + '\')">查看</button>' +
+          reviewBtns +
+          deleteBtn +
+        '</div></td>' +
+      '</tr>';
+    }
+
+    // ========== 审核相关函数 ==========
+    function reviewCounselor(id, status, note, reviewer) {
+      return fetch(SUPABASE_URL + '/rest/v1/counselors?id=eq.' + id, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify({
+          review_status: status,
+          review_note: note || null,
+          reviewed_at: new Date().toISOString(),
+          reviewed_by: reviewer || 'admin',
+          updated_at: new Date().toISOString()
+        })
+      }).then(function(r) {
+        if (r.ok) return r.json();
+        else throw new Error('HTTP ' + r.status);
+      }).catch(function(e) { console.warn('[小平菇] 审核失败:', e); throw e; });
+    }
+
+    let currentRejectId = null;
+
+    function approveCounselor(id) {
+      if (!confirm('确认通过这位咨询师的审核？')) return;
+      reviewCounselor(id, 'approved').then(function() {
+        showToast('✅ 审核已通过', 'success');
+        loadData('counselors');
+      }).catch(function() {
+        showToast('操作失败，请重试', 'error');
+      });
+    }
+
+    function showRejectModal(id, name) {
+      currentRejectId = id;
+      document.getElementById('reject-counselor-name').textContent = name;
+      document.getElementById('reject-note').value = '';
+      document.getElementById('reject-modal').classList.add('active');
+    }
+
+    function closeRejectModal() {
+      currentRejectId = null;
+      document.getElementById('reject-modal').classList.remove('active');
+    }
+
+    function submitReject() {
+      const note = document.getElementById('reject-note').value.trim();
+      if (!note) {
+        alert('请填写拒绝原因');
+        return;
+      }
+      if (!currentRejectId) return;
+      reviewCounselor(currentRejectId, 'rejected', note).then(function() {
+        showToast('❌ 已拒绝，咨询师可修改后重新提交', 'success');
+        closeRejectModal();
+        loadData('counselors');
+      }).catch(function() {
+        showToast('操作失败，请重试', 'error');
+      });
+    }
+
+    function resetReview(id) {
+      if (!confirm('确认将此咨询师状态设为「待审核」，让其重新进入审核队列？')) return;
+      reviewCounselor(id, 'pending').then(function() {
+        showToast('🔄 已设为待审核', 'success');
+        loadData('counselors');
+      }).catch(function() {
+        showToast('操作失败，请重试', 'error');
+      });
+    }
+
+    // ========== 渲染评估行 ==========
+    function renderAssessmentRow(a) {
+      const checked = selectedIds.assessments.has(a.id) ? 'checked' : '';
+      const severityTag = a.severity === '重度' ? '<span class="tag tag-red">' + a.severity + '</span>'
+        : a.severity === '中度' ? '<span class="tag tag-yellow">' + a.severity + '</span>'
+        : '<span class="tag tag-green">' + (a.severity || '-') + '</span>';
+
+      const cl = a.crisis_level || 'safe';
+      const crisisTag = cl === 'action' ? '<span class="tag tag-red">' + crisisLabel(cl) + '</span>'
+        : cl === 'active' ? '<span class="tag tag-yellow">' + crisisLabel(cl) + '</span>'
+        : '<span class="tag tag-green">' + crisisLabel(cl) + '</span>';
+
+      const selectCell = READONLY_MODE ? '<td style="display:none"></td>' : '<td><input type="checkbox" ' + checked + ' onchange="toggleSelect(\'assessments\', \'' + a.id + '\', this.checked)"></td>';
+      const deleteBtn = READONLY_MODE ? '' : '<button class="action-btn delete" onclick="deleteItem(\'assessments\', \'' + a.id + '\')">删除</button>';
+
+      return '<tr>' +
+        selectCell +
+        '<td><code style="font-size:11px;color:#6B635A">' + (a.id ? a.id.substring(0,8) : '-') + '</code></td>' +
+        '<td><strong>' + (a.visitor_name || '匿名') + '</strong></td>' +
+        '<td>' + (a.visitor_gender || '-') + '</td>' +
+        '<td>' + (a.visitor_age || '-') + '</td>' +
+        '<td>' + formatArray(a.issues, 'blue') + '</td>' +
+        '<td><strong>' + (a.total_score || 0) + '</strong></td>' +
+        '<td>' + severityTag + '</td>' +
+        '<td>' + crisisTag + '</td>' +
+        '<td>' + formatArray(a.preferred_formats, 'yellow') + '</td>' +
+        '<td>' + (a.budget || '-') + '</td>' +
+        '<td>' + formatTime(a.created_at) + '</td>' +
+        '<td><div class="action-btns">' +
+          '<button class="action-btn view" onclick="viewDetail(\'assessments\', \'' + a.id + '\')">查看</button>' +
+          deleteBtn +
+        '</div></td>' +
+      '</tr>';
+    }
+
+    // ========== 渲染匹配申请行 ==========
+    function renderMatchApplicationRow(a) {
+      // 通过CID查找咨询师姓名
+      var cName = '-';
+      if (a.match_request_cid && allData.counselors) {
+        var found = allData.counselors.find(function(c) { return c.id === a.match_request_cid; });
+        if (found) cName = found.name || '未知';
+      }
+
+      // 已选咨询师
+      var selectedName = '-';
+      if (a.selected_counselor_name) {
+        selectedName = '<span class="tag tag-green">✓ ' + a.selected_counselor_name + '</span>';
+      }
+
+      var severityTag = a.severity === '重度' ? '<span class="tag tag-red">' + a.severity + '</span>'
+        : a.severity === '中度' ? '<span class="tag tag-yellow">' + a.severity + '</span>'
+        : '<span class="tag tag-green">' + (a.severity || '-') + '</span>';
+
+      var cl = a.crisis_level || 'safe';
+      var crisisTag = cl === 'action' ? '<span class="tag tag-red">' + crisisLabel(cl) + '</span>'
+        : cl === 'active' ? '<span class="tag tag-yellow">' + crisisLabel(cl) + '</span>'
+        : '<span class="tag tag-green">' + crisisLabel(cl) + '</span>';
+
+      // 申请状态
+      var status = a.match_request_status || 'pending';
+      var statusTag = status === 'approved' ? '<span class="tag tag-green">✅ 已通过</span>'
+        : status === 'rejected' ? '<span class="tag tag-red">❌ 已拒绝</span>'
+        : status === 'contacted' ? '<span class="tag tag-blue">📞 已联系</span>'
+        : '<span class="tag tag-yellow">⏳ 待处理</span>';
+
+      // 操作按钮
+      var actionBtns = '<button class="action-btn view" onclick="viewDetail(\'assessments\', \'' + a.id + '\')">查看</button>';
+      if (status === 'pending') {
+        actionBtns += '<button class="action-btn approve" onclick="approveMatchApplication(\'' + a.id + '\')">✅ 通过</button>';
+        actionBtns += '<button class="action-btn reject" onclick="rejectMatchApplication(\'' + a.id + '\')">❌ 拒绝</button>';
+      } else if (status === 'approved') {
+        actionBtns += '<button class="action-btn approve" onclick="markContacted(\'' + a.id + '\')">📞 标记已联系</button>';
+      }
+
+      return '<tr>' +
+        '<td><code style="font-size:11px;color:#6B635A">' + (a.id ? a.id.substring(0,8) : '-') + '</code></td>' +
+        '<td><strong>' + (a.match_request_name || a.visitor_name || '匿名') + '</strong></td>' +
+        '<td>' + (a.match_request_contact || '-') + '</td>' +
+        '<td><span class="tag tag-blue">' + cName + '</span></td>' +
+        '<td>' + selectedName + '</td>' +
+        '<td><strong>' + (a.total_score || 0) + '</strong></td>' +
+        '<td>' + severityTag + '</td>' +
+        '<td>' + crisisTag + '</td>' +
+        '<td>' + formatTime(a.updated_at || a.created_at) + '</td>' +
+        '<td>' + statusTag + '</td>' +
+        '<td><div class="action-btns">' + actionBtns + '</div></td>' +
+      '</tr>';
+    }
+
+    // ========== 匹配申请审批 ==========
+    function updateMatchStatus(id, status) {
+      return fetch(SUPABASE_URL + '/rest/v1/assessments?id=eq.' + id, {
+        method: 'PATCH',
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({
+          match_request_status: status,
+          match_request_reviewed_at: new Date().toISOString(),
+          match_request_reviewed_by: 'admin',
+          updated_at: new Date().toISOString()
+        })
+      });
+    }
+
+    function approveMatchApplication(id) {
+      if (!confirm('确认通过此匹配申请？通过后咨询师将收到通知。')) return;
+      updateMatchStatus(id, 'approved').then(function(r) {
+        if (r.ok) {
+          showToast('✅ 已通过该申请', 'success');
+          loadData('assessments');
+        } else {
+          showToast('操作失败，请重试', 'error');
+        }
+      }).catch(function() {
+        showToast('网络错误，请重试', 'error');
+      });
+    }
+
+    function rejectMatchApplication(id) {
+      if (!confirm('确认拒绝此匹配申请？')) return;
+      updateMatchStatus(id, 'rejected').then(function(r) {
+        if (r.ok) {
+          showToast('已拒绝该申请', 'success');
+          loadData('assessments');
+        } else {
+          showToast('操作失败，请重试', 'error');
+        }
+      }).catch(function() {
+        showToast('网络错误，请重试', 'error');
+      });
+    }
+
+    function markContacted(id) {
+      if (!confirm('确认标记为"已联系"？')) return;
+      updateMatchStatus(id, 'contacted').then(function(r) {
+        if (r.ok) {
+          showToast('📞 已标记为已联系', 'success');
+          loadData('assessments');
+        } else {
+          showToast('操作失败，请重试', 'error');
+        }
+      }).catch(function() {
+        showToast('网络错误，请重试', 'error');
+      });
+    }
+
+    // ========== 格式化数组 ==========
+    function formatArray(arr, color) {
+      if (!arr || arr.length === 0) return '-';
+      return arr.slice(0, 2).map(item => '<span class="tag tag-' + color + '">' + item + '</span>').join('') +
+        (arr.length > 2 ? '<span class="tag tag-' + color + '">+' + (arr.length - 2) + '</span>' : '');
+    }
+
+    // ========== 格式化 C-NIP 咨询风格 ==========
+    function formatCnipStyles(c) {
+      var labelMap = {
+        structured: '🎯 结构化', balanced: '⚖️ 适度引导', open: '🌱 开放探索',
+        emotional: '💧 深入感受', rational: '🧩 聚焦解决',
+        past: '🕰️ 过去', present: '📌 当下',
+        warm: '🤗 温和支持', direct: '💡 坦诚直接',
+        yes: '📝 有作业', no: '🚫 少作业', neutral: '🤷 视情况',
+        discuss: '💬 讨论关系', skip: '➡️ 少涉及'
+      };
+      var tags = [];
+      var all = [].concat(c.cnip_styles||[], c.cnip_emotion_focus||[], c.cnip_time||[], c.cnip_stance||[], c.cnip_homework||[], c.cnip_relational||[]);
+      if (all.length === 0) return '-';
+      all.forEach(function(v) {
+        if (v === 'balanced') return; // balanced 不展示（太通用）
+        tags.push(labelMap[v] || v);
+      });
+      return tags.slice(0, 4).map(function(t){ return '<span class="tag tag-purple">' + t + '</span>'; }).join('') +
+        (tags.length > 4 ? '<span class="tag tag-purple">+' + (tags.length - 4) + '</span>' : '');
+    }
+
+    // ========== 格式化时间 ==========
+    function formatTime(iso) {
+      if (!iso) return '-';
+      const d = new Date(iso);
+      return d.toLocaleDateString('zh-CN') + ' ' + d.toLocaleTimeString('zh-CN', {hour: '2-digit', minute:'2-digit'});
+    }
+
+    // ========== 分页 ==========
+    function renderPagination(type, total) {
+      const totalPages = Math.ceil(total / PAGE_SIZE);
+      const page = currentPage[type];
+      const container = document.getElementById('pagination-' + type);
+
+      if (totalPages <= 1) { container.innerHTML = ''; return; }
+
+      let html = '<button class="page-btn" ' + (page <= 1 ? 'disabled' : '') + ' onclick="goPage(\'' + type + '\', ' + (page - 1) + ')">← 上一页</button>' +
+        '<span class="page-info">第 ' + page + ' / ' + totalPages + ' 页（共 ' + total + ' 条）</span>' +
+        '<button class="page-btn" ' + (page >= totalPages ? 'disabled' : '') + ' onclick="goPage(\'' + type + '\', ' + (page + 1) + ')">下一页 →</button>';
+
+      container.innerHTML = html;
+    }
+
+    function goPage(type, page) {
+      currentPage[type] = page;
+      renderTable(type);
+    }
+
+    // ========== 选择操作 ==========
+    function toggleSelectAll(type) {
+      const checked = document.getElementById('select-all-' + type).checked;
+      const ids = filteredData[type].map(item => item.id);
+      if (checked) {
+        ids.forEach(id => selectedIds[type].add(id));
+      } else {
+        ids.forEach(id => selectedIds[type].delete(id));
+      }
+      renderTable(type);
+    }
+
+    function toggleSelect(type, id, checked) {
+      if (checked) {
+        selectedIds[type].add(id);
+      } else {
+        selectedIds[type].delete(id);
+      }
+    }
+
+    // ========== 查看详情 ==========
+    function viewDetail(type, id) {
+      const item = allData[type].find(d => d.id === id);
+      if (!item) return;
+
+      const modal = document.getElementById('modal-detail');
+      const title = document.getElementById('modal-title');
+      const content = document.getElementById('modal-content');
+
+      title.textContent = type === 'counselors' ? '👨‍⚕️ 咨询师详情 - ' + (item.name || '') : (item.match_request_name ? '📞 匹配申请详情 - ' + item.match_request_name : '📋 评估详情 - ' + (item.visitor_name || '匿名'));
+
+      let html = '';
+
+      // 加深审核警告横幅
+      if (type === 'counselors' && item.needs_deep_review) {
+        html += '<div style="background:#FFF3CD;border:1px solid #FFC107;border-radius:8px;padding:12px 16px;margin-bottom:16px;display:flex;gap:10px;align-items:flex-start">'
+          + '<span style="font-size:18px;flex-shrink:0">⚠️</span>'
+          + '<div>'
+          + '<p style="font-size:13px;font-weight:600;color:#856404;margin:0 0 4px">此咨询师档案需加深审核</p>'
+          + '<p style="font-size:12px;color:#856404;margin:0">该咨询师在诚信声明中申报了违法记录或咨询事故/投诉记录，请在审核时重点核查以下内容并谨慎评估。</p>'
+          + '</div></div>';
+        // 单独展示诚信声明区块
+        html += '<div style="background:#FEF9EC;border:1px solid #FFC107;border-radius:8px;padding:14px 16px;margin-bottom:16px">'
+          + '<p style="font-size:12px;font-weight:600;color:#856404;margin:0 0 10px">📋 诚信声明申报内容</p>';
+        if (item.has_violation === '是') {
+          html += '<div style="margin-bottom:10px">'
+            + '<p style="font-size:12px;color:#856404;margin:0 0 4px">违法记录 / 纪律处分：<strong>是</strong></p>'
+            + '<p style="font-size:13px;color:#333;background:#fff;padding:8px 10px;border-radius:6px;margin:0;white-space:pre-wrap">' + (item.violation_detail || '（未填写说明）') + '</p>'
+            + '</div>';
+        } else {
+          html += '<p style="font-size:12px;color:#6c757d;margin:0 0 6px">违法记录 / 纪律处分：无</p>';
+        }
+        if (item.has_incident === '是') {
+          html += '<div>'
+            + '<p style="font-size:12px;color:#856404;margin:0 0 4px">咨询事故 / 正式投诉：<strong>是</strong></p>'
+            + '<p style="font-size:13px;color:#333;background:#fff;padding:8px 10px;border-radius:6px;margin:0;white-space:pre-wrap">' + (item.incident_detail || '（未填写说明）') + '</p>'
+            + '</div>';
+        } else {
+          html += '<p style="font-size:12px;color:#6c757d;margin:0">咨询事故 / 正式投诉：无</p>';
+        }
+        html += '</div>';
+      }
+
+      // 匹配申请：显示申请信息摘要卡片
+      if (type === 'assessments' && item.match_request_name) {
+        var mcName = '-';
+        if (item.match_request_cid && allData.counselors) {
+          var mcf = allData.counselors.find(function(c) { return c.id === item.match_request_cid; });
+          if (mcf) mcName = mcf.name || '未知';
+        }
+        html += '<div class="detail-grid" style="margin-bottom:12px"><div class="detail-item">'
+          + '<div class="detail-label">📞 匹配申请信息</div>'
+          + '<div class="detail-value" style="font-size:13px;line-height:1.8">'
+          + '<strong>申请者：</strong>' + (item.match_request_name || '-') + '<br>'
+          + '<strong>联系方式：</strong>' + (item.match_request_contact || '-') + '<br>'
+          + '<strong>意向咨询师：</strong>' + mcName + '<br>'
+          + '<strong>申请状态：</strong>' + (item.match_request_status === 'approved' ? '✅ 已通过' : item.match_request_status === 'rejected' ? '❌ 已拒绝' : item.match_request_status === 'contacted' ? '📞 已联系' : '⏳ 待处理') + '<br>'
+          + '<strong>申请时间：</strong>' + formatTime(item.updated_at || item.created_at)
+          + '</div></div></div>';
+      }
+
+      html += '<div class="detail-grid">';
+      const skipKeys = ['has_violation','violation_detail','has_incident','incident_detail','needs_deep_review','match_request_name','match_request_contact','match_request_cid','match_request_status'];
+      Object.keys(item).forEach(key => {
+        if (key === 'id') return;
+        if (type === 'counselors' && skipKeys.includes(key)) return;
+        let value = item[key];
+        if (value === null || value === undefined || value === '') return; // 跳过空值
+        if (Array.isArray(value)) { value = value.join(', '); if (!value) return; }
+        if (key === 'created_at' || key === 'updated_at') value = formatTime(value);
+        if (key === 'crisis_level') value = crisisLabel(value);
+        html += '<div class="detail-item">' +
+          '<div class="detail-label">' + formatLabel(key) + '</div>' +
+          '<div class="detail-value">' + value + '</div>' +
+        '</div>';
+      });
+      html += '</div>';
+
+      content.innerHTML = html;
+      modal.classList.add('active');
+    }
+
+    function formatLabel(key) {
+      const labels = {
+        name: '姓名', credential_level: '资质等级', years_experience: '从业年限',
+        education: '学历', license_number: '执照编号', city: '城市',
+        approaches: '咨询取向', service_settings: '服务设置类型', training_background: '受训背景',
+        supervision_hours: '接受督导小时数', personal_therapy_hours: '个人体验小时数',
+        ethics_training: '伦理培训', certifications: '认证',
+        specialties: '擅长议题', populations: '服务对象', severity_levels: '承接程度',
+        session_formats: '咨询方式', session_duration: '咨询时长',
+        fee_min: '最低费用', fee_budget_level: '费用等级', available_slots: '可预约时段',
+        bio_short: '简介', bio_full: '详细介绍', is_active: '是否激活',
+        review_status: '审核状态', review_note: '拒绝原因', reviewed_at: '审核时间', reviewed_by: '审核人',
+        contact_wechat: '微信', contact_phone: '电话',
+        has_violation: '违法/纪律记录', violation_detail: '违法/纪律说明',
+        has_incident: '咨询事故/投诉记录', incident_detail: '事故/投诉说明',
+        visitor_name: '姓名', visitor_age: '年龄', visitor_gender: '性别',
+        visitor_occupation: '职业', prev_counseling: '既往咨询',
+        budget: '预算', preferred_formats: '偏好方式', expects: '预期目标',
+        issues: '主诉问题', description: '详细描述', duration: '困扰时长',
+        score_mood: '情绪评分', score_anxiety: '焦虑评分', score_sleep: '睡眠评分',
+        score_function: '功能评分', score_relation: '关系评分',
+        total_score: '总分', severity: '严重程度', specials: '特殊情况',
+        crisis_level: '危机等级', user_agent: '用户代理',
+        match_request_name: '申请者姓名', match_request_contact: '申请者联系方式',
+        match_request_cid: '申请咨询师ID',
+        selected_counselor_id: '已选咨询师ID', selected_counselor_name: '已选咨询师', selected_at: '选定时间'
+      };
+      return labels[key] || key;
+    }
+
+    // ========== 删除操作 ==========
+    async function deleteItem(type, id) {
+      if (!confirm('确定要删除这条记录吗？此操作不可撤销。')) return;
+
+      try {
+        const res = await fetch(SUPABASE_URL + '/rest/v1/' + type + '?id=eq.' + id, {
+          method: 'DELETE',
+          headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
+          }
+        });
+
+        if (res.ok || res.status === 204) {
+          showToast('删除成功！', 'success');
+          loadData(type);
+        } else {
+          showToast('删除失败: ' + res.status, 'error');
+        }
+      } catch (e) {
+        showToast('删除失败: ' + e.message, 'error');
+      }
+    }
+
+    async function deleteSelected(type) {
+      const ids = Array.from(selectedIds[type]);
+      if (ids.length === 0) { showToast('请先选择要删除的记录', 'error'); return; }
+      if (!confirm('确定要删除选中的 ' + ids.length + ' 条记录吗？此操作不可撤销。')) return;
+
+      let success = 0;
+      for (const id of ids) {
+        try {
+          const res = await fetch(SUPABASE_URL + '/rest/v1/' + type + '?id=eq.' + id, {
+            method: 'DELETE',
+            headers: {
+              'apikey': SUPABASE_ANON_KEY,
+              'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
+            }
+          });
+          if (res.ok || res.status === 204) success++;
+        } catch (e) { console.error(e); }
+      }
+
+      showToast('成功删除 ' + success + ' 条记录', 'success');
+      selectedIds[type].clear();
+      loadData(type);
+    }
+
+    // ========== 导出CSV ==========
+    function exportCSV(type) {
+      const data = filteredData[type];
+      if (data.length === 0) { showToast('没有数据可导出', 'error'); return; }
+
+      const headers = Object.keys(data[0]).filter(k => k !== 'user_agent');
+      let csv = '\uFEFF';
+      csv += headers.map(h => formatLabel(h)).join(',') + '\n';
+
+      data.forEach(row => {
+        csv += headers.map(h => {
+          let val = row[h];
+          if (Array.isArray(val)) val = val.join(';');
+          if (val === null || val === undefined) val = '';
+          return '"' + String(val).replace(/"/g, '""') + '"';
+        }).join(',') + '\n';
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = (type === 'counselors' ? '咨询师数据' : type === 'match-applications' ? '匹配申请' : '评估数据') + '_' + new Date().toISOString().slice(0,10) + '.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('导出成功！', 'success');
+    }
+
+    // ========== 数据看板 ==========
+    function renderDashboard() {
+      if (typeof Chart === 'undefined') return;
+
+      const a = allData.assessments;
+      const c = allData.counselors;
+
+      // 摘要数字
+      document.getElementById('dash-counselors').textContent = c.length;
+      document.getElementById('dash-assessments').textContent = a.length;
+      if (a.length > 0) {
+        const avgScore = (a.reduce((s, x) => s + (x.total_score || 0), 0) / a.length).toFixed(1);
+        document.getElementById('dash-avg-score').textContent = avgScore;
+        document.getElementById('dash-severe').textContent = a.filter(x => x.severity === '重度').length;
+        document.getElementById('dash-crisis').textContent = a.filter(x => x.crisis_level === 'active' || x.crisis_level === 'action').length;
+        document.getElementById('dash-match').textContent = allData['match-applications'] ? allData['match-applications'].length : 0;
+      } else {
+        document.getElementById('dash-avg-score').textContent = '-';
+        document.getElementById('dash-severe').textContent = '0';
+        document.getElementById('dash-crisis').textContent = '0';
+      }
+
+      // 配色
+      const colors = ['#5C7A52','#7A9E6E','#F0A35E','#E07B54','#D65F5F','#9B8EC4','#6BAED6','#74C476','#FEE08B','#FDAE61'];
+
+      // 1. 严重程度分布
+      renderChart('chart-severity', 'bar', function() {
+        const counts = { '轻度': 0, '中度': 0, '重度': 0 };
+        a.forEach(x => { if (counts[x.severity] !== undefined) counts[x.severity]++; });
+        return {
+          labels: Object.keys(counts),
+          datasets: [{ data: Object.values(counts), backgroundColor: ['#74C476','#FEE08B','#D65F5F'], borderRadius: 6, barThickness: 50 }]
+        };
+      }, { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } });
+
+      // 2. 危机等级分布
+      renderChart('chart-crisis', 'doughnut', function() {
+        const order = ['safe', 'passive', 'active', 'action'];
+        const labels = order.map(crisisLabel);
+        const counts = {};
+        order.forEach(k => counts[k] = 0);
+        a.forEach(x => { if (counts[x.crisis_level] !== undefined) counts[x.crisis_level]++; });
+        return {
+          labels: labels,
+          datasets: [{ data: order.map(k => counts[k]), backgroundColor: ['#74C476','#FEE08B','#F0A35E','#D65F5F'], borderWidth: 2, borderColor: '#fff' }]
+        };
+      }, { plugins: { legend: { position: 'bottom' } } });
+
+      // 3. 五维症状雷达图
+      renderChart('chart-radar', 'radar', function() {
+        const dims = ['score_mood','score_anxiety','score_sleep','score_function','score_relation'];
+        const labels = ['情绪','焦虑','睡眠','功能','关系'];
+        const avg = dims.map(d => a.length ? +(a.reduce((s, x) => s + (x[d] || 0), 0) / a.length).toFixed(1) : 0);
+        return {
+          labels: labels,
+          datasets: [{
+            label: '平均分',
+            data: avg,
+            backgroundColor: 'rgba(92,122,82,0.2)',
+            borderColor: '#5C7A52',
+            borderWidth: 2,
+            pointBackgroundColor: '#5C7A52',
+            pointRadius: 4
+          }]
+        };
+      }, { scales: { r: { beginAtZero: true, max: 5, ticks: { stepSize: 1 } } }, plugins: { legend: { display: false } } });
+
+      // 4. 咨询师城市分布
+      renderChart('chart-city', 'bar', function() {
+        const cityCounts = {};
+        c.forEach(x => { const city = x.city || '未知'; cityCounts[city] = (cityCounts[city] || 0) + 1; });
+        const sorted = Object.entries(cityCounts).sort((a, b) => b[1] - a[1]).slice(0, 10);
+        return {
+          labels: sorted.map(x => x[0]),
+          datasets: [{ data: sorted.map(x => x[1]), backgroundColor: colors.slice(0, sorted.length), borderRadius: 4 }]
+        };
+      }, { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } } } });
+
+      // 5. 咨询取向分布
+      renderChart('chart-approach', 'pie', function() {
+        const approachCounts = {};
+        c.forEach(x => { (x.approaches || []).forEach(app => { approachCounts[app] = (approachCounts[app] || 0) + 1; }); });
+        const sorted = Object.entries(approachCounts).sort((a, b) => b[1] - a[1]).slice(0, 8);
+        return {
+          labels: sorted.map(x => x[0]),
+          datasets: [{ data: sorted.map(x => x[1]), backgroundColor: colors.slice(0, sorted.length), borderWidth: 2, borderColor: '#fff' }]
+        };
+      }, { plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 10, font: { size: 12 } } } } });
+
+      // 6. 费用区间分布
+      renderChart('chart-fee', 'bar', function() {
+        const ranges = ['0-200','200-400','400-600','600-800','800-1000','1000+'];
+        const labels = ['≤200','201-400','401-600','601-800','801-1000','>1000'];
+        const counts = [0,0,0,0,0,0];
+        c.forEach(x => {
+          const f = x.fee_min || 0;
+          if (f <= 200) counts[0]++;
+          else if (f <= 400) counts[1]++;
+          else if (f <= 600) counts[2]++;
+          else if (f <= 800) counts[3]++;
+          else if (f <= 1000) counts[4]++;
+          else counts[5]++;
+        });
+        return {
+          labels: labels,
+          datasets: [{ label: '咨询师数量', data: counts, backgroundColor: '#7A9E6E', borderRadius: 6 }]
+        };
+      }, { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } });
+    }
+
+    function renderChart(canvasId, type, dataFn, options) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
+      if (chartInstances[canvasId]) chartInstances[canvasId].destroy();
+      chartInstances[canvasId] = new Chart(canvas, {
+        type: type,
+        data: dataFn(),
+        options: Object.assign({ responsive: true, maintainAspectRatio: true }, options || {})
+      });
+    }
+
+    // ========== 表头排序 ==========
+    function sortData(type, key) {
+      const s = sortState[type];
+      if (s.key === key) {
+        s.dir = s.dir === 'asc' ? 'desc' : 'asc';
+      } else {
+        s.key = key;
+        s.dir = 'asc';
+      }
+
+      filteredData[type].sort(function(a, b) {
+        let va = a[key], vb = b[key];
+        if (va == null) va = '';
+        if (vb == null) vb = '';
+        if (typeof va === 'number' && typeof vb === 'number') {
+          return s.dir === 'asc' ? va - vb : vb - va;
+        }
+        va = String(va); vb = String(vb);
+        return s.dir === 'asc' ? va.localeCompare(vb, 'zh-CN') : vb.localeCompare(va, 'zh-CN');
+      });
+
+      currentPage[type] = 1;
+      renderTable(type);
+      updateSortIndicators(type);
+    }
+
+    function updateSortIndicators(type) {
+      var s = sortState[type];
+      var table = document.querySelector('#content-' + type + ' table');
+      if (!table) return;
+      table.querySelectorAll('th.sortable').forEach(function(th) {
+        th.classList.remove('sort-asc', 'sort-desc');
+        var arrow = th.querySelector('.sort-arrow');
+        if (arrow) arrow.textContent = '⇅';
+      });
+      var activeTh = table.querySelector('th.sortable[data-key="' + s.key + '"]');
+      if (activeTh) {
+        activeTh.classList.add(s.dir === 'asc' ? 'sort-asc' : 'sort-desc');
+        var arrow = activeTh.querySelector('.sort-arrow');
+        if (arrow) arrow.textContent = s.dir === 'asc' ? '↑' : '↓';
+      }
+    }
+
+    // 页面加载后给表头绑定排序
+    function initSorting() {
+      var counselorThs = [
+        { label: '姓名', key: 'name' },
+        { label: '从业年限', key: 'years_experience' },
+        { label: '城市', key: 'city' },
+        { label: '费用', key: 'fee_min' },
+        { label: '审核状态', key: 'review_status' },
+        { label: '创建时间', key: 'created_at' }
+      ];
+      var assessmentThs = [
+        { label: '姓名', key: 'visitor_name' },
+        { label: '年龄', key: 'visitor_age' },
+        { label: '总分', key: 'total_score' },
+        { label: '严重程度', key: 'severity' },
+        { label: '危机等级', key: 'crisis_level' },
+        { label: '创建时间', key: 'created_at' }
+      ];
+      var matchThs = [
+        { label: '申请者', key: 'match_request_name' },
+        { label: '来访总分', key: 'total_score' },
+        { label: '严重程度', key: 'severity' },
+        { label: '危机等级', key: 'crisis_level' },
+        { label: '申请时间', key: 'updated_at' }
+      ];
+      makeSortable('counselors', counselorThs);
+      makeSortable('assessments', assessmentThs);
+      makeSortable('match-applications', matchThs);
+    }
+
+    function makeSortable(type, mappings) {
+      var table = document.querySelector('#content-' + type + ' table');
+      if (!table) return;
+      table.querySelectorAll('th').forEach(function(th) {
+        var text = th.textContent.trim().replace(/[⇅↑↓]/g, '');
+        var found = mappings.find(function(m) { return m.label === text; });
+        if (found) {
+          th.classList.add('sortable');
+          th.setAttribute('data-key', found.key);
+          th.innerHTML = text + '<span class="sort-arrow">⇅</span>';
+          th.addEventListener('click', function() { sortData(type, found.key); });
+        }
+      });
+    }
+
+    window.addEventListener('load', function() { initSorting(); });
+  </script>
+</body>
+</html>

@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>小平菇 · 咨询效果追踪</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><ellipse cx='24' cy='22' rx='18' ry='14' fill='%235B8FC9'/><circle cx='16' cy='17' r='3.5' fill='%23fff' opacity='0.5'/><circle cx='28' cy='14' r='2.5' fill='%23fff' opacity='0.4'/><path d='M19 24 Q19 36 21 40 L27 40 Q29 36 29 24' fill='%23F5EDE0'/></svg>">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="supabase-config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+    body { font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif; }
+
+    /* 视觉模拟滑块（PCOMS核心交互） */
+    .vas-slider {
+      position: relative;
+      width: 100%;
+      height: 60px;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+    }
+    .vas-track {
+      position: absolute;
+      top: 30px;
+      left: 0; right: 0;
+      height: 4px;
+      background: #e0e0e0;
+      border-radius: 2px;
+    }
+    .vas-fill {
+      position: absolute;
+      top: 30px;
+      left: 0;
+      height: 4px;
+      background: #5C7A52;
+      border-radius: 2px;
+      transition: width 0.15s ease;
+    }
+    .vas-marker {
+      position: absolute;
+      top: 22px;
+      width: 20px;
+      height: 20px;
+      background: #5C7A52;
+      border: 3px solid white;
+      border-radius: 50%;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      transform: translateX(-50%);
+      transition: left 0.15s ease;
+      z-index: 2;
+    }
+    .vas-score {
+      position: absolute;
+      top: 4px;
+      transform: translateX(-50%);
+      font-size: 18px;
+      font-weight: 700;
+      color: #5C7A52;
+      min-width: 32px;
+      text-align: center;
+      transition: left 0.15s ease;
+    }
+    .vas-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 38px;
+      font-size: 12px;
+      color: #999;
+    }
+    .vas-item {
+      background: white;
+      border: 1px solid #e8e8e8;
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 16px;
+    }
+    .vas-item:hover { border-color: #5C7A52; }
+    .vas-item-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: #333;
+      margin-bottom: 12px;
+    }
+
+    /* 咨询师只读模式 */
+    .counselor-readonly .vas-slider { cursor: default; opacity: 0.7; pointer-events: none; }
+    .counselor-readonly .vas-item { background: #f9fafb; border-color: #e8e8e8; }
+    .counselor-readonly .vas-item:hover { border-color: #e8e8e8; }
+    .counselor-readonly .btn-primary { display: none; }
+    .counselor-banner {
+      background: #F0F7EC; border: 1px solid #C8DCC0; border-radius: 12px;
+      padding: 12px 16px; margin-bottom: 20px; text-align: center;
+      font-size: 13px; color: #5C7A52;
+    }
+
+    /* 步骤指示器 */
+    .step-indicator {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 30px;
+    }
+    .step-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #e0e0e0;
+      transition: all 0.3s;
+    }
+    .step-dot.active { background: #5C7A52; transform: scale(1.3); }
+    .step-dot.done { background: #7A9E6E; }
+
+    /* 结果卡片 */
+    .result-card {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      margin-bottom: 16px;
+    }
+    .result-score {
+      font-size: 48px;
+      font-weight: 700;
+      color: #5C7A52;
+    }
+    .change-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+    }
+    .change-badge.improved { background: #d4edda; color: #155724; }
+    .change-badge.worsening { background: #f8d7da; color: #721c24; }
+    .change-badge.no_change { background: #fff3cd; color: #856404; }
+
+    .btn-primary {
+      background: #5C7A52;
+      color: white;
+      border: none;
+      padding: 12px 32px;
+      border-radius: 10px;
+      font-size: 15px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .btn-primary:hover { background: #4a6542; }
+    .btn-primary:disabled { background: #ccc; cursor: not-allowed; }
+    .btn-secondary {
+      background: white;
+      color: #5C7A52;
+      border: 1.5px solid #5C7A52;
+      padding: 12px 32px;
+      border-radius: 10px;
+      font-size: 15px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .btn-secondary:hover { background: #f0f7ee; }
+
+    /* 咨询师速览条 */
+    .counselor-bar {
+      background: linear-gradient(135deg, #2C3E50 0%, #34495E 100%);
+      border-radius: 14px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      color: #fff;
+    }
+    .counselor-bar-toggle {
+      display: flex; align-items: center; justify-content: space-between;
+      cursor: pointer; user-select: none;
+    }
+    .counselor-bar-body {
+      max-height: 0; overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+    .counselor-bar-body.open { max-height: 400px; }
+    .counselor-bar .bar-tag {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: rgba(255,255,255,0.15); border-radius: 6px;
+      padding: 2px 8px; font-size: 11px; font-weight: 500;
+    }
+    .counselor-metric {
+      background: rgba(255,255,255,0.1); border-radius: 10px;
+      padding: 10px 14px; text-align: center;
+    }
+    .counselor-metric .metric-val { font-size: 22px; font-weight: 700; }
+    .counselor-metric .metric-label { font-size: 11px; opacity: 0.7; margin-top: 2px; }
+    .counselor-metric .metric-delta { font-size: 12px; margin-top: 2px; }
+    .delta-up { color: #81C784; }
+    .delta-down { color: #EF9A9A; }
+    .delta-flat { color: #FFE082; }
+    .delta-risk { color: #EF9A9A; font-weight: 600; }
+    .counselor-alert {
+      background: rgba(255,255,255,0.1); border-radius: 8px;
+      padding: 8px 12px; font-size: 12px; margin-top: 8px;
+      border-left: 3px solid;
+    }
+    .alert-danger { border-color: #EF5350; }
+    .alert-warning { border-color: #FFB74D; }
+    .alert-success { border-color: #81C784; }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+  <div class="max-w-lg mx-auto px-4 py-8">
+    <!-- 头部 -->
+    <div class="text-center mb-8">
+      <svg viewBox="0 0 48 48" fill="none" width="48" height="48" class="mb-2"><ellipse cx="24" cy="22" rx="18" ry="14" fill="#5B8FC9"/><circle cx="16" cy="17" r="3.5" fill="#fff" opacity="0.5"/><circle cx="28" cy="14" r="2.5" fill="#fff" opacity="0.4"/><path d="M19 24 Q19 36 21 40 L27 40 Q29 36 29 24" fill="#F5EDE0"/></svg>
+      <h1 class="text-xl font-bold text-gray-800">咨询效果追踪</h1>
+      <p class="text-sm text-gray-500 mt-1" id="session-info">正在加载...</p>
+    </div>
+
+    <!-- 咨询师速览条（role=counselor 时显示） -->
+    <div id="counselor-bar" class="counselor-bar hidden">
+      <div class="counselor-bar-toggle" onclick="toggleCounselorBar()">
+        <div class="flex items-center gap-2">
+          <span style="font-size:16px">📋</span>
+          <span class="text-sm font-medium">咨询师速览</span>
+          <span class="bar-tag" id="bar-session-tag">—</span>
+        </div>
+        <span id="bar-toggle-icon" style="font-size:12px;opacity:0.6;transition:transform 0.3s">▼</span>
+      </div>
+      <div class="counselor-bar-body" id="counselor-bar-body">
+        <!-- 来访者信息 -->
+        <div class="flex items-center gap-3 mt-3 mb-3">
+          <div class="w-8 h-8 rounded-full bg-white bg-opacity-20 flex items-center justify-center text-sm" id="bar-avatar">👤</div>
+          <div>
+            <div class="text-sm font-medium" id="bar-name">—</div>
+            <div class="text-xs opacity-60" id="bar-meta">—</div>
+          </div>
+        </div>
+        <!-- 上次评分 -->
+        <div class="grid grid-cols-2 gap-2 mb-2">
+          <div class="counselor-metric">
+            <div class="metric-label">上次 ORS</div>
+            <div class="metric-val" id="bar-ors">—</div>
+            <div class="metric-delta" id="bar-ors-delta"></div>
+          </div>
+          <div class="counselor-metric">
+            <div class="metric-label">上次 SRS</div>
+            <div class="metric-val" id="bar-srs">—</div>
+            <div class="metric-delta" id="bar-srs-delta"></div>
+          </div>
+        </div>
+        <!-- 历史趋势摘要 -->
+        <div class="text-xs opacity-60 mt-1 mb-1" id="bar-history-summary"></div>
+        <!-- 预警 -->
+        <div id="bar-alerts"></div>
+        <!-- 提示 -->
+        <div class="text-center text-xs opacity-40 mt-3">来访者填分时可将此条收起</div>
+      </div>
+    </div>
+
+    <!-- 步骤 1: ORS 结果评分 -->
+    <div id="step-ors" class="hidden">
+      <div class="step-indicator">
+        <div class="step-dot active"></div>
+        <div class="step-dot"></div>
+        <div class="step-dot"></div>
+      </div>
+      <div class="bg-white rounded-2xl p-6 shadow-sm mb-4">
+        <h2 class="text-base font-bold text-gray-700 mb-2">📊 结果评分 (ORS)</h2>
+        <p class="text-sm text-gray-500 mb-6">请在每条线上标记最能代表你当前状态的点。<br>左侧=非常不好，右侧=非常好</p>
+
+        <!-- 个人 wellbeing -->
+        <div class="vas-item">
+          <div class="vas-item-title">个人 (Individual)</div>
+          <p class="text-xs text-gray-400 mb-3">独自一人时的状态：情绪、身体、精神</p>
+          <div class="vas-slider" data-key="individual" onpointerdown="startSlide(event)">
+            <div class="vas-score" style="left:0">0</div>
+            <div class="vas-track"></div>
+            <div class="vas-fill" style="width:0"></div>
+            <div class="vas-marker" style="left:0"></div>
+            <div class="vas-labels"><span>非常不好</span><span>一般</span><span>非常好</span></div>
+          </div>
+        </div>
+
+        <!-- 人际关系 -->
+        <div class="vas-item">
+          <div class="vas-item-title">人际 (Interpersonal)</div>
+          <p class="text-xs text-gray-400 mb-3">与亲密伴侣、家人、朋友的关系</p>
+          <div class="vas-slider" data-key="interpersonal" onpointerdown="startSlide(event)">
+            <div class="vas-score" style="left:0">0</div>
+            <div class="vas-track"></div>
+            <div class="vas-fill" style="width:0"></div>
+            <div class="vas-marker" style="left:0"></div>
+            <div class="vas-labels"><span>非常不好</span><span>一般</span><span>非常好</span></div>
+          </div>
+        </div>
+
+        <!-- 社会/角色 -->
+        <div class="vas-item">
+          <div class="vas-item-title">社会角色 (Social)</div>
+          <p class="text-xs text-gray-400 mb-3">在工作、学习、社区等社会角色中的表现</p>
+          <div class="vas-slider" data-key="social" onpointerdown="startSlide(event)">
+            <div class="vas-score" style="left:0">0</div>
+            <div class="vas-track"></div>
+            <div class="vas-fill" style="width:0"></div>
+            <div class="vas-marker" style="left:0"></div>
+            <div class="vas-labels"><span>非常不好</span><span>一般</span><span>非常好</span></div>
+          </div>
+        </div>
+
+        <!-- 总体 -->
+        <div class="vas-item">
+          <div class="vas-item-title">总体 (Overall)</div>
+          <p class="text-xs text-gray-400 mb-3">综合考虑，你对自己整体状态的感受</p>
+          <div class="vas-slider" data-key="overall" onpointerdown="startSlide(event)">
+            <div class="vas-score" style="left:0">0</div>
+            <div class="vas-track"></div>
+            <div class="vas-fill" style="width:0"></div>
+            <div class="vas-marker" style="left:0"></div>
+            <div class="vas-labels"><span>非常不好</span><span>一般</span><span>非常好</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="flex gap-3">
+        <button class="btn-primary flex-1" id="btn-ors-next" onclick="goToStep('srs')" disabled>下一步：联盟评分</button>
+      </div>
+    </div>
+
+    <!-- 步骤 2: SRS 联盟评分 -->
+    <div id="step-srs" class="hidden">
+      <div class="step-indicator">
+        <div class="step-dot done"></div>
+        <div class="step-dot active"></div>
+        <div class="step-dot"></div>
+      </div>
+      <div class="bg-white rounded-2xl p-6 shadow-sm mb-4">
+        <h2 class="text-base font-bold text-gray-700 mb-2">🤝 联盟评分 (SRS)</h2>
+        <p class="text-sm text-gray-500 mb-6">评估你与咨询师在本次咨询中的合作感受。<br>左侧=完全不同意，右侧=非常同意</p>
+
+        <div class="vas-item">
+          <div class="vas-item-title">关系 (Relationship)</div>
+          <p class="text-xs text-gray-400 mb-3">你和咨询师之间感觉如何？</p>
+          <div class="vas-slider" data-key="srs_relationship" onpointerdown="startSlide(event)">
+            <div class="vas-score" style="left:0">0</div>
+            <div class="vas-track"></div>
+            <div class="vas-fill" style="width:0"></div>
+            <div class="vas-marker" style="left:0"></div>
+            <div class="vas-labels"><span>完全不同意</span><span>一般</span><span>非常同意</span></div>
+          </div>
+        </div>
+
+        <div class="vas-item">
+          <div class="vas-item-title">目标和主题 (Goals & Topics)</div>
+          <p class="text-xs text-gray-400 mb-3">你和咨询师在目标上是否一致？</p>
+          <div class="vas-slider" data-key="srs_goals" onpointerdown="startSlide(event)">
+            <div class="vas-score" style="left:0">0</div>
+            <div class="vas-track"></div>
+            <div class="vas-fill" style="width:0"></div>
+            <div class="vas-marker" style="left:0"></div>
+            <div class="vas-labels"><span>完全不同意</span><span>一般</span><span>非常同意</span></div>
+          </div>
+        </div>
+
+        <div class="vas-item">
+          <div class="vas-item-title">方法与途径 (Approach)</div>
+          <p class="text-xs text-gray-400 mb-3">咨询师的方式是否适合你？</p>
+          <div class="vas-slider" data-key="srs_approach" onpointerdown="startSlide(event)">
+            <div class="vas-score" style="left:0">0</div>
+            <div class="vas-track"></div>
+            <div class="vas-fill" style="width:0"></div>
+            <div class="vas-marker" style="left:0"></div>
+            <div class="vas-labels"><span>完全不同意</span><span>一般</span><span>非常同意</span></div>
+          </div>
+        </div>
+
+        <div class="vas-item">
+          <div class="vas-item-title">总体联盟 (Overall)</div>
+          <p class="text-xs text-gray-400 mb-3">综合来看，这次咨询对你有帮助吗？</p>
+          <div class="vas-slider" data-key="srs_overall" onpointerdown="startSlide(event)">
+            <div class="vas-score" style="left:0">0</div>
+            <div class="vas-track"></div>
+            <div class="vas-fill" style="width:0"></div>
+            <div class="vas-marker" style="left:0"></div>
+            <div class="vas-labels"><span>完全不同意</span><span>一般</span><span>非常同意</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="flex gap-3">
+        <button class="btn-secondary flex-1" onclick="goToStep('ors')">上一步</button>
+        <button class="btn-primary flex-1" id="btn-srs-next" onclick="goToStep('review')" disabled>下一步：确认提交</button>
+      </div>
+    </div>
+
+    <!-- 步骤 3: 确认提交 -->
+    <div id="step-review" class="hidden">
+      <div class="step-indicator">
+        <div class="step-dot done"></div>
+        <div class="step-dot done"></div>
+        <div class="step-dot active"></div>
+      </div>
+
+      <div id="review-content">
+        <div class="result-card">
+          <h3 class="text-base font-bold text-gray-700 mb-4">📊 本次 ORS 结果评分</h3>
+          <div class="flex items-end gap-4 mb-4">
+            <div class="result-score" id="review-ors-total">0</div>
+            <div class="text-gray-500 text-sm pb-2">/40 分</div>
+          </div>
+          <div id="review-ors-items" class="grid grid-cols-2 gap-2 text-sm"></div>
+        </div>
+
+        <div class="result-card">
+          <h3 class="text-base font-bold text-gray-700 mb-4">🤝 本次 SRS 联盟评分</h3>
+          <div class="flex items-end gap-4 mb-4">
+            <div class="result-score" id="review-srs-total" style="color:#378ADD">0</div>
+            <div class="text-gray-500 text-sm pb-2">/40 分</div>
+          </div>
+          <div id="review-srs-items" class="grid grid-cols-2 gap-2 text-sm"></div>
+        </div>
+
+        <div id="change-summary" class="result-card" style="display:none">
+          <h3 class="text-base font-bold text-gray-700 mb-4">📈 变化趋势</h3>
+          <div id="change-badges"></div>
+          <div class="mt-4" style="height:200px">
+            <canvas id="chart-trend"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex gap-3 mt-4">
+        <button class="btn-secondary flex-1" onclick="goToStep('srs')">上一步</button>
+        <button class="btn-primary flex-1" id="btn-submit" onclick="submitRatings()">提交评分</button>
+      </div>
+    </div>
+
+    <!-- 成功页 -->
+    <div id="step-success" class="hidden text-center py-12">
+      <div class="text-5xl mb-4">✅</div>
+      <h2 class="text-xl font-bold text-gray-800 mb-2" id="success-title">评分已提交</h2>
+      <p class="text-gray-500 mb-8" id="success-desc">感谢你的反馈，这些数据将帮助你和咨询师更好地了解咨询进展。</p>
+      <div id="success-summary" class="text-left mb-8"></div>
+      <!-- 分享给咨询师 -->
+      <div id="share-counselor-section" class="mb-6 p-4 rounded-xl" style="background:#F0F7EC;border:1px solid #C8DCC0">
+        <p class="text-sm text-gray-600 mb-2">📋 <strong>分享给咨询师</strong></p>
+        <p class="text-xs text-gray-500 mb-3">将下方链接发送给您的咨询师，咨询师打开后可查看您的追踪评分</p>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <input type="text" id="counselor-share-link" readonly style="flex:1;padding:8px 12px;font-size:12px;border:1px solid #C8DCC0;border-radius:8px;background:#fff;color:#5A6B52;min-width:0" />
+          <button class="btn-secondary" style="padding:8px 16px;font-size:13px;white-space:nowrap" onclick="copyCounselorShareLink(event)">复制链接</button>
+        </div>
+      </div>
+      <div class="flex gap-3 justify-center flex-wrap">
+        <button class="btn-secondary" id="btn-new-rating" onclick="location.reload()">填写新评分</button>
+        <a id="dashboard_link" href="#" class="btn-secondary inline-block no-underline">查看追踪面板</a>
+        <a href="index.html" class="btn-primary inline-block no-underline">返回首页</a>
+      </div>
+    </div>
+
+    <!-- 加载中 -->
+    <div id="step-loading" class="text-center py-20">
+      <svg viewBox="0 0 48 48" fill="none" width="48" height="48" class="mb-4 animate-pulse"><ellipse cx="24" cy="22" rx="18" ry="14" fill="#5B8FC9"/><circle cx="16" cy="17" r="3.5" fill="#fff" opacity="0.5"/><circle cx="28" cy="14" r="2.5" fill="#fff" opacity="0.4"/><path d="M19 24 Q19 36 21 40 L27 40 Q29 36 29 24" fill="#F5EDE0"/></svg>
+      <p class="text-gray-500">正在加载会话信息...</p>
+    </div>
+  </div>
+
+  <script>
+    // ========== 全局状态 ==========
+    var orsValues = { individual: null, interpersonal: null, social: null, overall: null };
+    var srsValues = { srs_relationship: null, srs_goals: null, srs_approach: null, srs_overall: null };
+    var currentStep = 'ors';
+    var sessionId = null;
+    var assessmentId = null;
+    var counselorId = null;
+    var visitorName = null;
+    var sessionNumber = 1;
+    var previousOrs = null;
+    var previousSrs = null;
+    var allOrsHistory = [];
+    var activeSlider = null;
+    var isCounselorMode = false;
+
+    // ========== 初始化 ==========
+    window.addEventListener('load', function() {
+      var params = new URLSearchParams(location.search);
+      assessmentId = params.get('aid');
+      counselorId = params.get('cid');
+      visitorName = params.get('name') || '来访者';
+      sessionNumber = parseInt(params.get('sn')) || 1;
+      isCounselorMode = params.get('role') === 'counselor';
+
+      if (!assessmentId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(assessmentId)) {
+        showError('链接格式有误，请从评估结果页重新进入。');
+        return;
+      }
+
+      initSession();
+    });
+
+    function initSession() {
+      // 先检查是否有现有会话（通过 assessment_id 查询）
+      getSessionsByAssessment(assessmentId).then(function(sessions) {
+        var existingSession = null;
+
+        // 如果指定了 session number，找到对应会话
+        if (sessions.length > 0) {
+          existingSession = sessions.find(function(s) { return s.session_number === sessionNumber; });
+          // 如果没找到指定编号的会话，检查是否应该创建新的
+          if (!existingSession) {
+            sessionNumber = sessions.length + 1;
+          }
+        }
+
+        if (existingSession) {
+          sessionId = existingSession.id;
+          sessionNumber = existingSession.session_number;
+        } else {
+          // 创建新会话
+          return createSession({
+            assessment_id: assessmentId,
+            counselor_id: counselorId || null,
+            visitor_name: visitorName,
+            session_number: sessionNumber
+          }).then(function(s) {
+            if (s) {
+              sessionId = s.id;
+            } else {
+              alert('会话创建失败，请刷新重试');
+              return Promise.reject(new Error('会话创建失败'));
+            }
+          });
+        }
+      }).then(function() {
+        // 加载历史评分用于趋势对比
+        if (assessmentId) {
+          return getPcomsTrend(assessmentId);
+        }
+        return [];
+      }).then(function(ratings) {
+        // 提取上一次的 ORS 和 SRS
+        var lastOrs = null, lastSrs = null;
+        if (ratings && ratings.length > 0) {
+          for (var i = ratings.length - 1; i >= 0; i--) {
+            if (ratings[i].type === 'ORS' && !lastOrs) lastOrs = ratings[i];
+            if (ratings[i].type === 'SRS' && !lastSrs) lastSrs = ratings[i];
+          }
+          // 收集所有 ORS 用于趋势图
+          allOrsHistory = ratings.filter(function(r) { return r.type === 'ORS'; });
+        }
+        previousOrs = lastOrs;
+        previousSrs = lastSrs;
+
+        // 显示页面
+        document.getElementById('step-loading').classList.add('hidden');
+        document.getElementById('session-info').textContent =
+          '第 ' + sessionNumber + ' 次咨询 · ' + visitorName +
+          (previousOrs ? ' · 上次ORS: ' + previousOrs.total_score + '分' : ' · 首次评估');
+
+        // 咨询师速览条
+        if (isCounselorMode) {
+          renderCounselorBar(ratings || []);
+        }
+
+        // 咨询师只读模式：展示历史数据，禁用交互
+        if (isCounselorMode && ratings && ratings.length > 0) {
+          showCounselorReadOnlyView(ratings);
+        } else if (isCounselorMode) {
+          document.getElementById('step-loading').innerHTML =
+            '<div class="text-4xl mb-4">📋</div><p class="text-gray-500">来访者尚未提交任何评分数据</p>' +
+            '<p class="text-xs text-gray-400 mt-2">请在来访者完成首次 PCOMS 评分后再查看</p>' +
+            '<a href="index.html" class="btn-secondary inline-block no-underline mt-6">返回首页</a>';
+        } else {
+          goToStep('ors');
+        }
+      }).catch(function(e) {
+        console.error('初始化失败:', e);
+        showError('加载失败，请刷新重试。');
+      });
+    }
+
+    function showError(msg) {
+      document.getElementById('step-loading').innerHTML =
+        '<div class="text-4xl mb-4">😔</div><p class="text-gray-500">' + msg + '</p>' +
+        '<a href="index.html" class="btn-primary inline-block mt-4 no-underline">返回首页</a>';
+    }
+
+    // ========== 咨询师速览条 ==========
+    function renderCounselorBar(allRatings) {
+      var bar = document.getElementById('counselor-bar');
+      bar.classList.remove('hidden');
+
+      // 基本信息
+      document.getElementById('bar-avatar').textContent = visitorName.charAt(0);
+      document.getElementById('bar-name').textContent = visitorName;
+      document.getElementById('bar-session-tag').textContent = '第 ' + sessionNumber + ' 次';
+      document.getElementById('bar-meta').textContent =
+        '评估ID: ' + (assessmentId || '').slice(0, 8) + '…';
+
+      // 计算历史数据
+      var orsList = allRatings.filter(function(r) { return r.type === 'ORS'; });
+      var srsList = allRatings.filter(function(r) { return r.type === 'SRS'; });
+      var totalSessions = Math.max(orsList.length, srsList.length, 1);
+
+      document.getElementById('bar-meta').textContent =
+        '已追踪 ' + totalSessions + ' 次评分';
+
+      // 上次 ORS
+      var lastOrs = previousOrs;
+      var orsEl = document.getElementById('bar-ors');
+      var orsDeltaEl = document.getElementById('bar-ors-delta');
+      if (lastOrs) {
+        orsEl.textContent = lastOrs.total_score.toFixed(1);
+        if (orsList.length >= 2) {
+          var prevOrs = orsList[orsList.length - 2];
+          var orsDiff = lastOrs.total_score - prevOrs.total_score;
+          if (orsDiff >= 5) {
+            orsDeltaEl.innerHTML = '<span class="delta-up">↑ +' + orsDiff.toFixed(1) + ' 显著改善</span>';
+          } else if (orsDiff <= -5) {
+            orsDeltaEl.innerHTML = '<span class="delta-down">↓ ' + orsDiff.toFixed(1) + ' 需关注</span>';
+          } else {
+            orsDeltaEl.innerHTML = '<span class="delta-flat">→ ' + (orsDiff >= 0 ? '+' : '') + orsDiff.toFixed(1) + ' 稳定</span>';
+          }
+        } else {
+          orsDeltaEl.innerHTML = '<span class="delta-flat">首次评分</span>';
+        }
+      } else {
+        orsEl.textContent = '—';
+        orsDeltaEl.innerHTML = '<span class="delta-flat">暂无数据</span>';
+      }
+
+      // 上次 SRS
+      var lastSrs = previousSrs;
+      var srsEl = document.getElementById('bar-srs');
+      var srsDeltaEl = document.getElementById('bar-srs-delta');
+      if (lastSrs) {
+        srsEl.textContent = lastSrs.total_score.toFixed(1);
+        if (lastSrs.total_score < 36) {
+          srsDeltaEl.innerHTML = '<span class="delta-risk">⚠ 低于风险线(36)</span>';
+        } else if (srsList.length >= 2) {
+          var prevSrs = srsList[srsList.length - 2];
+          var srsDiff = lastSrs.total_score - prevSrs.total_score;
+          if (srsDiff >= 0) {
+            srsDeltaEl.innerHTML = '<span class="delta-up">→ ' + (srsDiff > 0 ? '+' : '') + srsDiff.toFixed(1) + ' 稳定</span>';
+          } else {
+            srsDeltaEl.innerHTML = '<span class="delta-down">↓ ' + srsDiff.toFixed(1) + ' 下降</span>';
+          }
+        } else {
+          srsDeltaEl.innerHTML = '<span class="delta-flat">首次评分</span>';
+        }
+      } else {
+        srsEl.textContent = '—';
+        srsDeltaEl.innerHTML = '<span class="delta-flat">暂无数据</span>';
+      }
+
+      // 历史趋势摘要
+      var historyEl = document.getElementById('bar-history-summary');
+      if (orsList.length >= 3) {
+        var firstOrs = orsList[0].total_score;
+        var lastOrsVal = orsList[orsList.length - 1].total_score;
+        var totalChange = lastOrsVal - firstOrs;
+        var arrow = totalChange >= 5 ? '📈' : totalChange <= -5 ? '📉' : '➡️';
+        historyEl.textContent = arrow + ' 累计 ' + (totalChange >= 0 ? '+' : '') + totalChange.toFixed(1) + ' 分（第1次 ' + firstOrs.toFixed(1) + ' → 最近 ' + lastOrsVal.toFixed(1) + '）';
+      } else if (orsList.length === 0) {
+        historyEl.textContent = '本次为首次评估';
+      }
+
+      // 预警
+      var alertsEl = document.getElementById('bar-alerts');
+      var alerts = generateAlerts(orsList, srsList);
+      if (alerts.length > 0) {
+        var alertHtml = '';
+        alerts.forEach(function(a) {
+          alertHtml += '<div class="counselor-alert alert-' + a.type + '">' +
+            '<strong>' + a.icon + ' ' + a.title + '</strong><br>' +
+            '<span style="opacity:0.85">' + a.detail + '</span></div>';
+        });
+        alertsEl.innerHTML = alertHtml;
+      } else {
+        alertsEl.innerHTML = '<div class="text-center text-xs opacity-40 py-1">✅ 无预警</div>';
+      }
+
+      // 默认展开
+      toggleCounselorBar();
+    }
+
+    function generateAlerts(orsList, srsList) {
+      var alerts = [];
+      // ORS 连续下降
+      if (orsList.length >= 2) {
+        var last2 = orsList.slice(-2);
+        var diff = last2[1].total_score - last2[0].total_score;
+        if (diff <= -5) {
+          alerts.push({
+            type: 'danger', icon: '📉',
+            title: 'ORS 显著下降',
+            detail: '最近评分下降 ' + Math.abs(diff).toFixed(1) + ' 分（' + last2[0].total_score.toFixed(1) + ' → ' + last2[1].total_score.toFixed(1) + '），建议讨论变化'
+          });
+        }
+      }
+      // SRS 低于风险线
+      if (srsList.length > 0) {
+        var lastSrs = srsList[srsList.length - 1];
+        if (lastSrs.total_score < 36) {
+          var consecutive = srsList.length >= 2 && srsList[srsList.length - 2].total_score < 36;
+          alerts.push({
+            type: 'danger', icon: '⚠️',
+            title: 'SRS 联盟风险' + (consecutive ? '（连续）' : ''),
+            detail: '总分 ' + lastSrs.total_score.toFixed(1) + '/40' + (consecutive ? '，连续 2 次低于 36，建议讨论咨访关系' : '')
+          });
+        }
+      }
+      // ORS 持续低分
+      if (orsList.length >= 3) {
+        var recent3 = orsList.slice(-3);
+        if (recent3.every(function(r) { return r.total_score < 25; })) {
+          alerts.push({
+            type: 'warning', icon: '🔍',
+            title: 'ORS 持续偏低',
+            detail: '最近 3 次均低于临床人群中位线(25)，建议与督导讨论'
+          });
+        }
+      }
+      // 正向里程碑
+      if (orsList.length >= 3) {
+        var first = orsList[0].total_score;
+        var last = orsList[orsList.length - 1].total_score;
+        if (last - first >= 10) {
+          alerts.push({
+            type: 'success', icon: '🎉',
+            title: '显著改善',
+            detail: '累计提升 ' + (last - first).toFixed(1) + ' 分，当前方向有效'
+          });
+        }
+      }
+      return alerts;
+    }
+
+    function toggleCounselorBar() {
+      var body = document.getElementById('counselor-bar-body');
+      var icon = document.getElementById('bar-toggle-icon');
+      body.classList.toggle('open');
+      icon.style.transform = body.classList.contains('open') ? 'rotate(180deg)' : '';
+    }
+
+    // ========== 视觉模拟滑块交互 ==========
+    function startSlide(e) {
+      if (isCounselorMode) { e.preventDefault(); return; }
+      e.preventDefault();
+      activeSlider = e.currentTarget;
+      moveSlider(e);
+      document.addEventListener('pointermove', moveSlider);
+      document.addEventListener('pointerup', stopSlide);
+      document.addEventListener('pointercancel', stopSlide);
+    }
+
+    function moveSlider(e) {
+      if (!activeSlider) return;
+      e.preventDefault();
+      var rect = activeSlider.getBoundingClientRect();
+      var x = (e.clientX || (e.touches && e.touches[0] ? e.touches[0].clientX : 0)) - rect.left;
+      var pct = Math.max(0, Math.min(1, x / rect.width));
+      var val = Math.round(pct * 10 * 10) / 10; // 精确到 0.1
+      var pctLeft = pct * 100;
+
+      var key = activeSlider.getAttribute('data-key');
+      activeSlider.querySelector('.vas-score').textContent = val.toFixed(1);
+      activeSlider.querySelector('.vas-score').style.left = pctLeft + '%';
+      activeSlider.querySelector('.vas-fill').style.width = pctLeft + '%';
+      activeSlider.querySelector('.vas-marker').style.left = pctLeft + '%';
+
+      // 保存值
+      if (currentStep === 'ors') {
+        orsValues[key] = val;
+        if (orsValues.individual !== null && orsValues.interpersonal !== null &&
+            orsValues.social !== null && orsValues.overall !== null) {
+          document.getElementById('btn-ors-next').disabled = false;
+        }
+      } else if (currentStep === 'srs') {
+        srsValues[key] = val;
+        if (srsValues.srs_relationship !== null && srsValues.srs_goals !== null &&
+            srsValues.srs_approach !== null && srsValues.srs_overall !== null) {
+          document.getElementById('btn-srs-next').disabled = false;
+        }
+      }
+    }
+
+    function stopSlide() {
+      activeSlider = null;
+      document.removeEventListener('pointermove', moveSlider);
+      document.removeEventListener('pointerup', stopSlide);
+      document.removeEventListener('pointercancel', stopSlide);
+    }
+
+    // ========== 咨询师只读视图 ==========
+    function showCounselorReadOnlyView(ratings) {
+      var container = document.getElementById('step-loading');
+      // 隐藏 loading
+      document.getElementById('step-loading').classList.add('hidden');
+
+      // 添加只读模式 class
+      document.body.classList.add('counselor-readonly');
+
+      // 渲染历史评分摘要
+      var latestOrs = null, latestSrs = null, prevOrs = null, prevSrs = null;
+      for (var i = ratings.length - 1; i >= 0; i--) {
+        if (ratings[i].type === 'ORS' && !latestOrs) latestOrs = ratings[i];
+        if (ratings[i].type === 'SRS' && !latestSrs) latestSrs = ratings[i];
+        if (ratings[i].type === 'ORS' && latestOrs && ratings[i].id !== latestOrs.id && !prevOrs) prevOrs = ratings[i];
+        if (ratings[i].type === 'SRS' && latestSrs && ratings[i].id !== latestSrs.id && !prevSrs) prevSrs = ratings[i];
+      }
+
+      var orsDelta = (latestOrs && prevOrs) ? (latestOrs.total_score - prevOrs.total_score).toFixed(1) : null;
+      var srsDelta = (latestSrs && prevSrs) ? (latestSrs.total_score - prevSrs.total_score).toFixed(1) : null;
+
+      var html = '<div class="counselor-banner">咨询师视角 · 来访者评分记录（只读）</div>';
+      html += '<div class="bg-white rounded-2xl p-6 shadow-sm mb-4">';
+      html += '<h2 class="text-base font-bold text-gray-700 mb-4">来访 ' + esc(visitorName) + ' 的评分记录</h2>';
+      html += '<p class="text-sm text-gray-500 mb-6">第 ' + sessionNumber + ' 次咨询 · 共 ' + ratings.length + ' 条评分</p>';
+
+      // 最近 ORS
+      if (latestOrs) {
+        html += '<div class="mb-4"><h3 class="text-sm font-medium text-gray-600 mb-2">最近 ORS 结果评分</h3>';
+        html += '<div class="flex items-center gap-4">';
+        html += '<div class="text-3xl font-bold" style="color:#5C7A52">' + latestOrs.total_score + '<span class="text-base font-normal text-gray-400">/40</span></div>';
+        if (orsDelta !== null) {
+          var cls = parseFloat(orsDelta) >= 0 ? 'color:#16a34a' : 'color:#dc2626';
+          var sign = parseFloat(orsDelta) >= 0 ? '+' : '';
+          html += '<span class="text-sm" style="' + cls + '">' + sign + orsDelta + ' vs 上次</span>';
+        }
+        html += '</div></div>';
+      }
+
+      // 最近 SRS
+      if (latestSrs) {
+        html += '<div class="mb-4"><h3 class="text-sm font-medium text-gray-600 mb-2">最近 SRS 联盟评分</h3>';
+        html += '<div class="flex items-center gap-4">';
+        html += '<div class="text-3xl font-bold" style="color:#5C7A52">' + latestSrs.total_score + '<span class="text-base font-normal text-gray-400">/40</span></div>';
+        if (srsDelta !== null) {
+          var cls2 = parseFloat(srsDelta) >= 0 ? 'color:#16a34a' : 'color:#dc2626';
+          var sign2 = parseFloat(srsDelta) >= 0 ? '+' : '';
+          html += '<span class="text-sm" style="' + cls2 + '">' + sign2 + srsDelta + ' vs 上次</span>';
+        }
+        if (latestSrs.total_score < 36) {
+          html += '<span style="background:#FEE2E2;color:#DC2626;font-size:11px;padding:2px 8px;border-radius:4px;margin-left:8px">联盟风险</span>';
+        }
+        html += '</div></div>';
+      }
+
+      // 预警提示
+      var alerts = [];
+      if (latestOrs && prevOrs && latestOrs.total_score - prevOrs.total_score <= -5) alerts.push('ORS 下降超过 5 分，建议关注');
+      if (latestSrs && latestSrs.total_score < 36) alerts.push('SRS 低于 36，治疗联盟可能存在风险');
+      if (alerts.length > 0) {
+        html += '<div style="background:#FFF7ED;border:1px solid #FED7AA;border-radius:8px;padding:10px 14px;margin-top:12px">';
+        html += '<div style="font-size:12px;font-weight:500;color:#C2410C;margin-bottom:4px">预警提醒</div>';
+        alerts.forEach(function(a) { html += '<div style="font-size:12px;color:#9A3412">· ' + a + '</div>'; });
+        html += '</div>';
+      }
+
+      html += '</div>';
+
+      // 底部操作
+      var dashUrl = 'session-dashboard.html?aid=' + assessmentId + (counselorId ? '&cid=' + counselorId : '') + '&name=' + encodeURIComponent(visitorName) + '&sn=' + sessionNumber + '&role=counselor';
+      html += '<div class="flex gap-3 justify-center flex-wrap">';
+      html += '<a href="' + dashUrl + '" class="btn-primary inline-block no-underline">查看完整追踪面板</a>';
+      html += '<a href="index.html" class="btn-secondary inline-block no-underline">返回首页</a>';
+      html += '</div>';
+
+      // 插入到页面
+      document.getElementById('step-ors').classList.remove('hidden');
+      document.getElementById('step-ors').innerHTML = html;
+      document.getElementById('session-info').textContent =
+        '第 ' + sessionNumber + ' 次咨询 · ' + visitorName + ' · 咨询师视角';
+    }
+
+    function esc(s) {
+      if (!s) return '';
+      var d = document.createElement('div');
+      d.textContent = s;
+      return d.innerHTML;
+    }
+
+    // ========== 步骤切换 ==========
+    function goToStep(step) {
+      currentStep = step;
+      document.getElementById('step-ors').classList.add('hidden');
+      document.getElementById('step-srs').classList.add('hidden');
+      document.getElementById('step-review').classList.add('hidden');
+      document.getElementById('step-success').classList.add('hidden');
+      document.getElementById('step-' + step).classList.remove('hidden');
+
+      if (step === 'review') buildReview();
+      window.scrollTo(0, 0);
+    }
+
+    // ========== 生成回顾摘要 ==========
+    function buildReview() {
+      var orsTotal = (orsValues.individual || 0) + (orsValues.interpersonal || 0) +
+                     (orsValues.social || 0) + (orsValues.overall || 0);
+      var srsTotal = (srsValues.srs_relationship || 0) + (srsValues.srs_goals || 0) +
+                     (srsValues.srs_approach || 0) + (srsValues.srs_overall || 0);
+
+      // ORS 摘要
+      document.getElementById('review-ors-total').textContent = orsTotal.toFixed(1);
+      document.getElementById('review-ors-items').innerHTML =
+        buildItemHTML('个人', orsValues.individual) +
+        buildItemHTML('人际', orsValues.interpersonal) +
+        buildItemHTML('社会角色', orsValues.social) +
+        buildItemHTML('总体', orsValues.overall);
+
+      // SRS 摘要
+      document.getElementById('review-srs-total').textContent = srsTotal.toFixed(1);
+      document.getElementById('review-srs-items').innerHTML =
+        buildItemHTML('关系', srsValues.srs_relationship) +
+        buildItemHTML('目标', srsValues.srs_goals) +
+        buildItemHTML('方法', srsValues.srs_approach) +
+        buildItemHTML('总体', srsValues.srs_overall);
+
+      // 变化趋势
+      var changeDiv = document.getElementById('change-summary');
+      var badgesDiv = document.getElementById('change-badges');
+      if (previousOrs) {
+        changeDiv.style.display = 'block';
+        var orsChange = orsTotal - previousOrs.total_score;
+        var orsChangeType = orsChange >= 5 ? 'improved' : orsChange <= -5 ? 'worsening' : 'no_change';
+        var orsLabel = orsChangeType === 'improved' ? '显著改善 ↑' :
+                       orsChangeType === 'worsening' ? '需要关注 ↓' : '变化不大 →';
+        badgesDiv.innerHTML = '<div class="change-badge ' + orsChangeType + '">' +
+          'ORS 变化: ' + (orsChange > 0 ? '+' : '') + orsChange.toFixed(1) + ' · ' + orsLabel + '</div>';
+
+        if (previousSrs) {
+          var srsChange = srsTotal - previousSrs.total_score;
+          var srsLabel = srsChange <= -5 ? '联盟可能需要讨论' : '联盟状态稳定';
+          badgesDiv.innerHTML += '<div class="change-badge no_change" style="margin-left:8px">' +
+            'SRS 变化: ' + (srsChange > 0 ? '+' : '') + srsChange.toFixed(1) + ' · ' + srsLabel + '</div>';
+        }
+
+        // 趋势图
+        renderTrendChart();
+      } else {
+        changeDiv.style.display = 'none';
+      }
+    }
+
+    function buildItemHTML(label, val) {
+      var pct = val / 10 * 100;
+      var color = pct >= 70 ? '#5C7A52' : pct >= 40 ? '#F0A35E' : '#D65F5F';
+      return '<div class="flex justify-between items-center py-1">' +
+        '<span class="text-gray-600">' + label + '</span>' +
+        '<div class="flex items-center gap-2">' +
+          '<div style="width:60px;height:6px;background:#eee;border-radius:3px;overflow:hidden">' +
+            '<div style="width:' + pct + '%;height:100%;background:' + color + ';border-radius:3px"></div>' +
+          '</div>' +
+          '<span style="color:' + color + ';font-weight:500;min-width:32px;text-align:right">' + (val || 0).toFixed(1) + '</span>' +
+        '</div></div>';
+    }
+
+    function renderTrendChart() {
+      if (typeof Chart === 'undefined' || allOrsHistory.length === 0) return;
+
+      var canvas = document.getElementById('chart-trend');
+      // 销毁旧图表
+      if (canvas._chartInstance) canvas._chartInstance.destroy();
+
+      var labels = allOrsHistory.map(function(r, i) { return '第' + (i + 1) + '次'; });
+      labels.push('本次');
+
+      var datasets = [
+        { label: '个人', data: allOrsHistory.map(function(r) { return r.item_individual; }), borderColor: '#5C7A52' },
+        { label: '人际', data: allOrsHistory.map(function(r) { return r.item_interpersonal; }), borderColor: '#378ADD' },
+        { label: '社会', data: allOrsHistory.map(function(r) { return r.item_social; }), borderColor: '#F0A35E' },
+        { label: '总体', data: allOrsHistory.map(function(r) { return r.item_overall; }), borderColor: '#D65F5F' }
+      ];
+
+      // 添加本次数据
+      datasets[0].data.push(orsValues.individual);
+      datasets[1].data.push(orsValues.interpersonal);
+      datasets[2].data.push(orsValues.social);
+      datasets[3].data.push(orsValues.overall);
+
+      canvas._chartInstance = new Chart(canvas, {
+        type: 'line',
+        data: { labels: labels, datasets: datasets.map(function(d) {
+          return { label: d.label, data: d.data, borderColor: d.borderColor, tension: 0.3, pointRadius: 3, borderWidth: 2, fill: false };
+        })},
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          scales: { y: { min: 0, max: 10 } },
+          plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } }
+        }
+      });
+    }
+
+    // ========== 复制分享链接 ==========
+    function copyCounselorShareLink(e) {
+      var link = document.getElementById('counselor-share-link').value;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(link).then(function() {
+          var btn = e.target; btn.textContent = '已复制 ✓'; setTimeout(function() { btn.textContent = '复制链接'; }, 2000);
+        });
+      } else {
+        var ta = document.createElement('textarea'); ta.value = link;
+        document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+        document.body.removeChild(ta);
+        var btn = e.target; btn.textContent = '已复制 ✓'; setTimeout(function() { btn.textContent = '复制链接'; }, 2000);
+      }
+    }
+
+    // ========== 提交评分 ==========
+    function submitRatings() {
+      var btn = document.getElementById('btn-submit');
+      btn.disabled = true;
+      btn.textContent = '提交中...';
+
+      var orsTotal = (orsValues.individual || 0) + (orsValues.interpersonal || 0) +
+                     (orsValues.social || 0) + (orsValues.overall || 0);
+      var srsTotal = (srsValues.srs_relationship || 0) + (srsValues.srs_goals || 0) +
+                     (srsValues.srs_approach || 0) + (srsValues.srs_overall || 0);
+
+      // 计算 ORS 临床变化
+      var orsClinicalChange = null;
+      if (previousOrs) {
+        var diff = orsTotal - previousOrs.total_score;
+        if (diff >= 5) orsClinicalChange = 'improved';
+        else if (diff <= -5) orsClinicalChange = 'worsening';
+        else orsClinicalChange = 'no_change';
+      }
+
+      // 保存 ORS
+      var p1 = savePcomsRating({
+        session_id: sessionId,
+        type: 'ORS',
+        item_individual: orsValues.individual,
+        item_interpersonal: orsValues.interpersonal,
+        item_social: orsValues.social,
+        item_overall: orsValues.overall,
+        clinical_change: orsClinicalChange
+      });
+
+      // 保存 SRS
+      var p2 = savePcomsRating({
+        session_id: sessionId,
+        type: 'SRS',
+        item_individual: srsValues.srs_relationship,
+        item_interpersonal: srsValues.srs_goals,
+        item_social: srsValues.srs_approach,
+        item_overall: srsValues.srs_overall
+      });
+
+      Promise.all([p1, p2]).then(function() {
+        // 成功
+        goToStep('success');
+
+        var titleEl = document.getElementById('success-title');
+        var descEl = document.getElementById('success-desc');
+        var summaryEl = document.getElementById('success-summary');
+
+        if (orsClinicalChange === 'improved') {
+          titleEl.textContent = '有显著改善！';
+          descEl.textContent = '你的 ORS 评分相比上次提升了 5 分以上，咨询效果良好。继续保持！';
+        } else if (orsClinicalChange === 'worsening') {
+          titleEl.textContent = '评分有变化';
+          descEl.textContent = '你的评分有所下降，建议在下次咨询中与咨询师讨论这个变化。';
+        } else {
+          titleEl.textContent = '评分已提交';
+          descEl.textContent = '感谢你的反馈，这些数据将帮助你和咨询师更好地了解咨询进展。';
+        }
+
+        summaryEl.innerHTML =
+          '<div class="result-card"><div class="grid grid-cols-2 gap-4 text-center">' +
+            '<div><div class="text-2xl font-bold" style="color:#5C7A52">' + orsTotal.toFixed(1) + '</div><div class="text-xs text-gray-500">ORS 总分</div></div>' +
+            '<div><div class="text-2xl font-bold" style="color:#378ADD">' + srsTotal.toFixed(1) + '</div><div class="text-xs text-gray-500">SRS 总分</div></div>' +
+          '</div></div>';
+
+        // 构建下一次链接
+        var roleParam = isCounselorMode ? '&role=counselor' : '';
+        var nextUrl = location.pathname + '?aid=' + assessmentId +
+          (counselorId ? '&cid=' + counselorId : '') +
+          '&name=' + encodeURIComponent(visitorName) +
+          '&sn=' + (sessionNumber + 1) + roleParam;
+        summaryEl.innerHTML +=
+          '<div class="result-card text-center">' +
+            '<p class="text-sm text-gray-500 mb-3">下次咨询后，可继续在此填写追踪评分</p>' +
+            '<div class="bg-gray-50 rounded-lg p-3 text-xs text-gray-400 break-all">' + location.origin + nextUrl + '</div>' +
+          '</div>';
+
+        // 设置追踪面板链接
+        document.getElementById('dashboard_link').href = 'session-dashboard.html?aid=' + assessmentId;
+
+        // 设置分享给咨询师的链接
+        var counselorShareUrl = location.pathname + '?aid=' + assessmentId +
+          (counselorId ? '&cid=' + counselorId : '') +
+          '&name=' + encodeURIComponent(visitorName) +
+          '&sn=' + sessionNumber + '&role=counselor';
+        document.getElementById('counselor-share-link').value = location.origin + counselorShareUrl;
+      }).catch(function(e) {
+        console.error('提交失败:', e);
+        btn.disabled = false;
+        btn.textContent = '提交评分';
+        alert('提交失败，请重试。');
+      });
+    }
+  </script>
+</body>
+</html>

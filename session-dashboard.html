@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>小平菇 · 咨询追踪面板</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><ellipse cx='24' cy='22' rx='18' ry='14' fill='%235B8FC9'/><circle cx='16' cy='17' r='3.5' fill='%23fff' opacity='0.5'/><circle cx='28' cy='14' r='2.5' fill='%23fff' opacity='0.4'/><path d='M19 24 Q19 36 21 40 L27 40 Q29 36 29 24' fill='%23F5EDE0'/></svg>">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="supabase-config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+    body { font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif; background: #F7F4EF; }
+
+    .stat-card {
+      background: white; border-radius: 16px; padding: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .stat-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+
+    .chart-card {
+      background: white; border-radius: 16px; padding: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+
+    .session-row {
+      background: white; border-radius: 12px; padding: 16px 20px;
+      border: 1px solid #E8E4DC; cursor: pointer;
+      transition: all 0.2s;
+    }
+    .session-row:hover { border-color: #5C7A52; box-shadow: 0 2px 8px rgba(92,122,82,0.12); }
+    .session-row.active { border-color: #5C7A52; background: #F0F7EC; }
+
+    .alert-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 500;
+    }
+    .alert-improved { background: #E8F5E9; color: #2E7D32; }
+    .alert-worsening { background: #FFEBEE; color: #C62828; }
+    .alert-no-change { background: #FFF8E1; color: #F57F17; }
+    .alert-risk { background: #FFEBEE; color: #C62828; animation: pulse-risk 2s infinite; }
+
+    @keyframes pulse-risk {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(198,40,40,0.2); }
+      50% { box-shadow: 0 0 0 6px rgba(198,40,40,0); }
+    }
+
+    .tab-btn {
+      padding: 8px 20px; border-radius: 20px; font-size: 13px; font-weight: 500;
+      border: 1px solid #E8E4DC; background: white; color: #6B635A;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .tab-btn.active { background: #5C7A52; color: white; border-color: #5C7A52; }
+    .tab-btn:hover:not(.active) { border-color: #5C7A52; color: #5C7A52; }
+
+    .empty-state {
+      text-align: center; padding: 48px 20px; color: #A09889;
+    }
+    .empty-state svg { opacity: 0.3; }
+
+    .loading-skeleton {
+      background: linear-gradient(90deg, #E8E4DC 25%, #F0ECE4 50%, #E8E4DC 75%);
+      background-size: 200% 100%;
+      animation: skeleton-loading 1.5s infinite;
+      border-radius: 8px;
+    }
+    @keyframes skeleton-loading {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    .score-pill {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 48px; padding: 2px 10px; border-radius: 8px;
+      font-size: 14px; font-weight: 700;
+    }
+    .score-ors { background: #E8F5E9; color: #2E7D32; }
+    .score-srs { background: #E3F2FD; color: #1565C0; }
+
+    .detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+    .detail-item { background: #F7F4EF; border-radius: 10px; padding: 12px 14px; }
+    .detail-label { font-size: 11px; color: #A09889; margin-bottom: 4px; }
+    .detail-value { font-size: 20px; font-weight: 700; color: #3D3831; }
+  </style>
+</head>
+<body class="min-h-screen">
+
+  <!-- Header -->
+  <header class="bg-white border-b border-gray-100 sticky top-0 z-50 backdrop-blur-lg bg-opacity-95">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center gap-3">
+      <a href="index.html" class="text-sm text-gray-400 hover:text-gray-600 transition">← 返回首页</a>
+      <div class="flex-1"></div>
+      <h1 class="text-sm font-medium text-gray-500 hidden sm:block">小平菇 · 咨询追踪面板</h1>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="max-w-6xl mx-auto px-4 py-6" id="app">
+    <!-- Loading -->
+    <div id="loading" class="space-y-4">
+      <div class="loading-skeleton h-8 w-48"></div>
+      <div class="loading-skeleton h-40 w-full"></div>
+      <div class="loading-skeleton h-64 w-full"></div>
+    </div>
+
+    <!-- Empty State -->
+    <div id="empty_state" class="empty-state hidden">
+      <svg width="80" height="80" viewBox="0 0 80 80" fill="none" class="mx-auto mb-4">
+        <ellipse cx="40" cy="36" rx="28" ry="22" fill="#5B8FC9"/>
+        <circle cx="32" cy="30" r="3" fill="#fff" opacity="0.3"/>
+        <circle cx="44" cy="28" r="2" fill="#fff" opacity="0.25"/>
+        <path d="M33 38 Q33 50 36 54 L44 54 Q47 50 47 38" fill="#F5EDE0"/>
+      </svg>
+      <p class="text-lg font-medium mb-2">暂无追踪数据</p>
+      <p class="text-sm" id="empty_hint">请先在评估结果页点击「开始咨询效果追踪」进行第一次评估</p>
+    </div>
+
+    <!-- Dashboard Content -->
+    <div id="dashboard" class="hidden space-y-6">
+
+      <!-- Client Info Bar -->
+      <div class="bg-white rounded-2xl p-5 shadow-sm flex flex-wrap items-center gap-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-gradient-to-br from-green-100 to-green-200 flex items-center justify-center text-lg" id="client_avatar">👤</div>
+          <div>
+            <h2 class="text-base font-bold text-gray-800" id="client_name">—</h2>
+            <p class="text-xs text-gray-400" id="client_meta">—</p>
+          </div>
+        </div>
+        <div class="flex-1"></div>
+        <div class="flex gap-2 flex-wrap" id="quick_stats"></div>
+      </div>
+
+      <!-- Summary Cards -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" id="summary_cards">
+        <div class="stat-card text-center">
+          <div class="text-xs text-gray-400 mb-1">总咨询次数</div>
+          <div class="text-2xl font-bold text-gray-800" id="stat_sessions">0</div>
+        </div>
+        <div class="stat-card text-center">
+          <div class="text-xs text-gray-400 mb-1">ORS 最新分数</div>
+          <div class="text-2xl font-bold text-green-700" id="stat_ors_latest">—</div>
+          <div class="text-xs text-gray-400 mt-1" id="stat_ors_change"></div>
+        </div>
+        <div class="stat-card text-center">
+          <div class="text-xs text-gray-400 mb-1">SRS 最新分数</div>
+          <div class="text-2xl font-bold text-blue-700" id="stat_srs_latest">—</div>
+          <div class="text-xs text-gray-400 mt-1" id="stat_srs_change"></div>
+        </div>
+        <div class="stat-card text-center">
+          <div class="text-xs text-gray-400 mb-1">临床显著改善</div>
+          <div class="text-2xl font-bold" id="stat_improved" style="color:#2E7D32">—</div>
+          <div class="text-xs text-gray-400 mt-1" id="stat_improved_pct"></div>
+        </div>
+      </div>
+
+      <!-- Tab Navigation -->
+      <div class="flex gap-2 flex-wrap">
+        <button class="tab-btn active" onclick="switchTab('timeline')">时间线</button>
+        <button class="tab-btn" onclick="switchTab('ors')">ORS 趋势</button>
+        <button class="tab-btn" onclick="switchTab('srs')">SRS 趋势</button>
+        <button class="tab-btn" onclick="switchTab('alerts')">临床预警</button>
+      </div>
+
+      <!-- Tab: Timeline -->
+      <div id="tab-timeline" class="space-y-4">
+        <div id="session_list" class="space-y-3"></div>
+      </div>
+
+      <!-- Tab: ORS Trend -->
+      <div id="tab-ors" class="hidden space-y-4">
+        <div class="chart-card">
+          <h3 class="text-sm font-bold text-gray-700 mb-4">📊 ORS 结果评分趋势（各维度）</h3>
+          <div style="position:relative;height:300px"><canvas id="chart_ors_detail"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3 class="text-sm font-bold text-gray-700 mb-4">📊 ORS 总分趋势</h3>
+          <div style="position:relative;height:240px"><canvas id="chart_ors_total"></canvas></div>
+        </div>
+        <div class="bg-white rounded-2xl p-4 shadow-sm">
+          <h3 class="text-sm font-bold text-gray-700 mb-2">📖 ORS 解读指南</h3>
+          <div class="text-xs text-gray-500 space-y-1.5">
+            <p><strong>总分范围：</strong>0-40 分（个人 + 人际 + 社会 + 总体）</p>
+            <p><strong>临床显著改善：</strong>相比上次总分提高 ≥5 分，表示咨询产生有意义的积极变化</p>
+            <p><strong>需要讨论：</strong>相比上次总分下降 ≥5 分，建议在下次咨询中重点讨论</p>
+            <p><strong>参考基线：</strong>ORS 临床人群中位线约 25 分，低于此值可能需要特别关注</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: SRS Trend -->
+      <div id="tab-srs" class="hidden space-y-4">
+        <div class="chart-card">
+          <h3 class="text-sm font-bold text-gray-700 mb-4">🤝 SRS 联盟评分趋势（各维度）</h3>
+          <div style="position:relative;height:300px"><canvas id="chart_srs_detail"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3 class="text-sm font-bold text-gray-700 mb-4">🤝 SRS 总分趋势</h3>
+          <div style="position:relative;height:240px"><canvas id="chart_srs_total"></canvas></div>
+        </div>
+        <div class="bg-white rounded-2xl p-4 shadow-sm">
+          <h3 class="text-sm font-bold text-gray-700 mb-2">📖 SRS 解读指南</h3>
+          <div class="text-xs text-gray-500 space-y-1.5">
+            <p><strong>总分范围：</strong>0-40 分（关系 + 目标 + 方法 + 总体）</p>
+            <p><strong>治疗联盟风险线：</strong>总分 &lt; 36 分时，治疗联盟可能存在问题，需要关注</p>
+            <p><strong>持续低于风险线：</strong>连续 2 次及以上低于 36 分，建议坦诚讨论咨询关系</p>
+            <p><strong>参考意义：</strong>SRS 测量来访者在每次咨询中对治疗联盟的感知，是咨询效果的强预测因子</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Alerts -->
+      <div id="tab-alerts" class="hidden space-y-4">
+        <div id="alerts_list" class="space-y-3"></div>
+        <div id="no_alerts" class="hidden bg-white rounded-2xl p-8 shadow-sm text-center">
+          <p class="text-2xl mb-2">✅</p>
+          <p class="text-sm font-medium text-gray-600">暂无预警</p>
+          <p class="text-xs text-gray-400 mt-1">所有指标均在正常范围内</p>
+        </div>
+      </div>
+
+      <!-- Session Detail Modal -->
+      <div id="session_detail" class="hidden fixed inset-0 z-50 bg-black bg-opacity-30 flex items-end sm:items-center justify-center" onclick="closeDetail(event)">
+        <div class="bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-lg max-h-[80vh] overflow-y-auto p-6" onclick="event.stopPropagation()">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-base font-bold text-gray-800" id="detail_title">会话详情</h3>
+            <button onclick="closeDetail()" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
+          </div>
+          <div id="detail_content"></div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="text-center py-6 text-xs text-gray-300">
+    小平菇心理 · PCOMS 循证追踪面板
+  </footer>
+
+<script>
+// ===== Global State =====
+var currentAssessmentId = null;
+var allSessions = [];
+var allRatings = [];  // all PCOMS ratings for this assessment
+var chartInstances = {};
+var currentTab = 'timeline';
+
+// ===== Init =====
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  currentAssessmentId = params.get('aid') || sessionStorage.getItem('xiaopingu_assessment_id');
+  window._dashRole = params.get('role') || 'visitor'; // visitor | counselor
+  window._dashCid = params.get('cid') || '';
+  window._dashVisitorName = params.get('name') || '';
+
+  if (!currentAssessmentId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(currentAssessmentId)) {
+    showEmpty('链接格式有误，请通过评估结果页的「开始咨询效果追踪」进入');
+    return;
+  }
+
+  // 咨询师模式：更新 header 标题
+  if (window._dashRole === 'counselor') {
+    document.querySelector('header h1').textContent = '小平菇 · 咨询师追踪面板';
+  }
+
+  loadDashboard(currentAssessmentId);
+})();
+
+// ===== Load Data =====
+function loadDashboard(aid) {
+  Promise.all([
+    getSessionsByAssessment(aid),
+    getPcomsTrend(aid)
+  ]).then(function(results) {
+    allSessions = results[0] || [];
+    allRatings = results[1] || [];
+
+    if (allSessions.length === 0 && allRatings.length === 0) {
+      showEmpty('该评估尚无追踪记录，请先完成第一次 PCOMS 评估');
+      return;
+    }
+
+    // Enrich sessions with their ratings
+    allSessions.forEach(function(s) {
+      s.ratings = allRatings.filter(function(r) { return r.session_id === s.id; });
+      s.ors = s.ratings.find(function(r) { return r.type === 'ORS'; });
+      s.srs = s.ratings.find(function(r) { return r.type === 'SRS'; });
+    });
+
+    renderDashboard();
+  }).catch(function(e) {
+    console.error('[小平菇] 加载追踪数据失败:', e);
+    showEmpty('数据加载失败，请检查网络连接后刷新页面');
+  });
+}
+
+function showEmpty(msg) {
+  document.getElementById('loading').classList.add('hidden');
+  document.getElementById('empty_state').classList.remove('hidden');
+  if (msg) document.getElementById('empty_hint').textContent = msg;
+}
+
+// ===== Render =====
+function renderDashboard() {
+  document.getElementById('loading').classList.add('hidden');
+  document.getElementById('dashboard').classList.remove('hidden');
+
+  // Client info
+  var firstSession = allSessions[0];
+  var name = firstSession.visitor_name || window._dashVisitorName || '来访者';
+  document.getElementById('client_name').textContent = name;
+  document.getElementById('client_meta').textContent =
+    window._dashRole === 'counselor'
+      ? '咨询师视角 · 来访者追踪数据'
+      : '咨询效果追踪';
+  document.getElementById('client_avatar').textContent = name.charAt(0);
+  document.getElementById('client_meta').textContent = '评估 ID: ' + currentAssessmentId.slice(0, 8) + '… · 共 ' + allSessions.length + ' 次会话';
+
+  // Summary stats
+  renderSummary();
+  // Session timeline
+  renderSessionList();
+  // Charts
+  renderCharts();
+  // Alerts
+  renderAlerts();
+}
+
+function renderSummary() {
+  var totalSessions = allSessions.length;
+  document.getElementById('stat_sessions').textContent = totalSessions;
+
+  // 构建按会话编号排序的 ORS/SRS 列表（与底部记录数据源一致，避免 allRatings 创建时间乱序）
+  var orsList = [];
+  var srsList = [];
+  allSessions.forEach(function(s) {
+    if (s.ors) orsList.push(s.ors);
+    if (s.srs) srsList.push(s.srs);
+  });
+
+  // Latest ORS
+  if (orsList.length > 0) {
+    var latestOrs = orsList[orsList.length - 1];
+    document.getElementById('stat_ors_latest').textContent = latestOrs.total_score.toFixed(1);
+    if (orsList.length >= 2) {
+      var prevOrs = orsList[orsList.length - 2];
+      var diff = latestOrs.total_score - prevOrs.total_score;
+      var el = document.getElementById('stat_ors_change');
+      if (diff >= 5) { el.textContent = '↑ +' + diff.toFixed(1) + ' 显著改善'; el.style.color = '#2E7D32'; }
+      else if (diff <= -5) { el.textContent = '↓ ' + diff.toFixed(1) + ' 需要讨论'; el.style.color = '#C62828'; }
+      else { el.textContent = '→ ' + (diff >= 0 ? '+' : '') + diff.toFixed(1) + ' 稳定'; el.style.color = '#888'; }
+    }
+  } else {
+    document.getElementById('stat_ors_latest').textContent = '—';
+  }
+
+  // Latest SRS
+  if (srsList.length > 0) {
+    var latestSrs = srsList[srsList.length - 1];
+    document.getElementById('stat_srs_latest').textContent = latestSrs.total_score.toFixed(1);
+    if (srsList.length >= 2) {
+      var prevSrs = srsList[srsList.length - 2];
+      var diff2 = latestSrs.total_score - prevSrs.total_score;
+      var el2 = document.getElementById('stat_srs_change');
+      if (latestSrs.total_score < 36) { el2.textContent = '⚠ 联盟风险 (' + latestSrs.total_score.toFixed(1) + '/40)'; el2.style.color = '#C62828'; }
+      else if (diff2 >= 0) { el2.textContent = '→ ' + (diff2 >= 0 ? '+' : '') + diff2.toFixed(1); el2.style.color = '#888'; }
+      else { el2.textContent = '↓ ' + diff2.toFixed(1) + ' 下降'; el2.style.color = '#C62828'; }
+    }
+  } else {
+    document.getElementById('stat_srs_latest').textContent = '—';
+  }
+
+  // Clinical improvement count
+  var improved = orsList.filter(function(r) { return r.clinical_change === 'improved'; }).length;
+  document.getElementById('stat_improved').textContent = improved + '/' + orsList.length;
+  if (orsList.length > 0) {
+    document.getElementById('stat_improved_pct').textContent = Math.round(improved / orsList.length * 100) + '% 次评估改善';
+  }
+}
+
+function renderSessionList() {
+  var html = '';
+  allSessions.forEach(function(s, idx) {
+    var orsScore = s.ors ? s.ors.total_score.toFixed(1) : '—';
+    var srsScore = s.srs ? s.srs.total_score.toFixed(1) : '—';
+    var srsRisk = s.srs && s.srs.total_score < 36;
+    var change = s.ors ? s.ors.clinical_change : null;
+
+    html += '<div class="session-row" onclick="showSessionDetail(' + idx + ')">';
+    html += '<div class="flex items-center justify-between flex-wrap gap-2">';
+    html += '<div class="flex items-center gap-3">';
+    html += '<span class="text-sm font-bold text-gray-800">第 ' + s.session_number + ' 次</span>';
+    html += '<span class="text-xs text-gray-400">' + formatDate(s.session_date || s.created_at) + '</span>';
+    if (change === 'improved') html += '<span class="alert-badge alert-improved">↑ 改善</span>';
+    else if (change === 'worsening') html += '<span class="alert-badge alert-worsening">↓ 需关注</span>';
+    else if (change === 'no_change') html += '<span class="alert-badge alert-no-change">→ 稳定</span>';
+    if (srsRisk) html += '<span class="alert-badge alert-risk">⚠ 联盟风险</span>';
+    html += '</div>';
+    html += '<div class="flex gap-2">';
+    html += '<span class="score-pill score-ors">ORS ' + orsScore + '</span>';
+    html += '<span class="score-pill score-srs">SRS ' + srsScore + '</span>';
+    html += '</div></div>';
+    if (s.notes) html += '<p class="text-xs text-gray-400 mt-2 truncate">' + escapeHtml(s.notes) + '</p>';
+    html += '</div>';
+  });
+
+  if (html === '') {
+    html = '<div class="bg-white rounded-2xl p-8 shadow-sm text-center text-gray-400 text-sm">暂无会话记录</div>';
+  }
+  document.getElementById('session_list').innerHTML = html;
+}
+
+function showSessionDetail(idx) {
+  var s = allSessions[idx];
+  if (!s) return;
+
+  document.getElementById('detail_title').textContent = '第 ' + s.session_number + ' 次咨询 · ' + formatDate(s.session_date || s.created_at);
+
+  var html = '';
+  if (s.ors) {
+    html += '<div class="mb-4">';
+    html += '<h4 class="text-sm font-bold text-green-700 mb-2">📊 ORS 结果评分</h4>';
+    html += '<div class="detail-grid">';
+    html += buildDetailItem('个人', s.ors.item_individual);
+    html += buildDetailItem('人际', s.ors.item_interpersonal);
+    html += buildDetailItem('社会', s.ors.item_social);
+    html += buildDetailItem('总体', s.ors.item_overall);
+    html += buildDetailItem('总分', s.ors.total_score, true);
+    html += '</div>';
+    if (s.ors.clinical_change) {
+      var changeLabel = s.ors.clinical_change === 'improved' ? '显著改善' : s.ors.clinical_change === 'worsening' ? '需要讨论' : '保持稳定';
+      html += '<p class="text-xs mt-2 ' + (s.ors.clinical_change === 'improved' ? 'text-green-600' : s.ors.clinical_change === 'worsening' ? 'text-red-600' : 'text-amber-600') + '">临床变化：' + changeLabel + '</p>';
+    }
+    html += '</div>';
+  }
+  if (s.srs) {
+    html += '<div class="mb-4">';
+    html += '<h4 class="text-sm font-bold text-blue-700 mb-2">🤝 SRS 联盟评分</h4>';
+    html += '<div class="detail-grid">';
+    html += buildDetailItem('关系', s.srs.item_individual);
+    html += buildDetailItem('目标', s.srs.item_interpersonal);
+    html += buildDetailItem('方法', s.srs.item_social);
+    html += buildDetailItem('总体', s.srs.item_overall);
+    html += buildDetailItem('总分', s.srs.total_score, true);
+    html += '</div>';
+    if (s.srs.total_score < 36) {
+      html += '<p class="text-xs mt-2 text-red-600">⚠ 治疗联盟总分低于风险线（36分），建议关注</p>';
+    }
+    html += '</div>';
+  }
+  if (s.notes) {
+    html += '<div class="bg-gray-50 rounded-lg p-3 text-sm text-gray-600">📝 ' + escapeHtml(s.notes) + '</div>';
+  }
+
+  document.getElementById('detail_content').innerHTML = html;
+  document.getElementById('session_detail').classList.remove('hidden');
+}
+
+function buildDetailItem(label, value, highlight) {
+  var color = value >= 7 ? '#2E7D32' : value >= 4 ? '#F57F17' : '#C62828';
+  if (highlight) color = '#3D3831';
+  return '<div class="detail-item"><div class="detail-label">' + label + '</div><div class="detail-value" style="color:' + color + '">' + value.toFixed(1) + '<span style="font-size:12px;font-weight:400;color:#A09889">/10</span></div></div>';
+}
+
+function closeDetail(e) {
+  if (e && e.target !== document.getElementById('session_detail')) return;
+  document.getElementById('session_detail').classList.add('hidden');
+}
+
+// ===== Charts =====
+var _orsRendered = false;
+var _srsRendered = false;
+
+// 销毁指定前缀的图表
+function destroyCharts(prefix) {
+  Object.keys(chartInstances).forEach(function(k) {
+    if (k.indexOf(prefix) === 0 && chartInstances[k]) {
+      chartInstances[k].destroy();
+      chartInstances[k] = null;
+    }
+  });
+}
+
+// 确保 canvas 有合理尺寸（解决隐藏容器中 canvas 尺寸为 0 的问题）
+function ensureCanvasSize(canvasId, minW, minH) {
+  var canvas = document.getElementById(canvasId);
+  if (!canvas) return null;
+  var parent = canvas.parentElement;
+  if (!parent) return null;
+  var rect = parent.getBoundingClientRect();
+  var w = rect.width > 0 ? rect.width : minW;
+  var h = rect.height > 0 ? rect.height : minH;
+  if (canvas.width !== w || canvas.height !== h) {
+    canvas.width = w;
+    canvas.height = h;
+    canvas.style.width = w + 'px';
+    canvas.style.height = h + 'px';
+  }
+  return canvas;
+}
+
+// 安全创建 Chart 实例（捕获异常）
+function safeChart(canvasId, minW, minH, config) {
+  var canvas = ensureCanvasSize(canvasId, minW, minH);
+  if (!canvas) { console.warn('[小平菇] 找不到 canvas: ' + canvasId); return null; }
+  try {
+    return new Chart(canvas, config);
+  } catch (e) {
+    console.error('[小平菇] Chart 创建失败 (' + canvasId + '):', e);
+    return null;
+  }
+}
+
+function renderOrsCharts() {
+  destroyCharts('ors_');
+  // 按会话编号排序（与底部记录一致）
+  var orsList = [];
+  allSessions.forEach(function(s) { if (s.ors) orsList.push(s.ors); });
+  if (orsList.length === 0) return;
+  var labels = orsList.map(function(r, i) { return '第' + (i + 1) + '次'; });
+
+  // ORS detail chart (4 dimensions) — 需要 ≥2 次才显示分维度
+  if (orsList.length >= 2) {
+    chartInstances.ors_detail = safeChart('chart_ors_detail', 320, 300, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [
+          { label: '个人', data: orsList.map(function(r){return r.item_individual;}), borderColor: '#2E7D32', backgroundColor: 'rgba(46,125,50,0.1)', tension: 0.3, fill: false },
+          { label: '人际', data: orsList.map(function(r){return r.item_interpersonal;}), borderColor: '#1565C0', backgroundColor: 'rgba(21,101,192,0.1)', tension: 0.3, fill: false },
+          { label: '社会', data: orsList.map(function(r){return r.item_social;}), borderColor: '#E65100', backgroundColor: 'rgba(230,81,0,0.1)', tension: 0.3, fill: false },
+          { label: '总体', data: orsList.map(function(r){return r.item_overall;}), borderColor: '#6A1B9A', backgroundColor: 'rgba(106,27,154,0.1)', tension: 0.3, fill: false }
+        ]
+      },
+      options: chartOptions('ORS 各维度变化趋势', 0, 10)
+    });
+  }
+
+  // ORS total chart — 1 次也能显示
+  chartInstances.ors_total = safeChart('chart_ors_total', 320, 240, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'ORS 总分',
+        data: orsList.map(function(r){return r.total_score;}),
+        borderColor: '#5C7A52', backgroundColor: 'rgba(92,122,82,0.15)',
+        tension: 0.3, fill: true, pointRadius: 5, pointBackgroundColor: '#5C7A52'
+      }]
+    },
+    options: chartOptions('ORS 总分变化', 0, 40)
+  });
+  _orsRendered = true;
+}
+
+function renderSrsCharts() {
+  destroyCharts('srs_');
+  // 按会话编号排序（与底部记录一致）
+  var srsList = [];
+  allSessions.forEach(function(s) { if (s.srs) srsList.push(s.srs); });
+  if (srsList.length === 0) return;
+  var labels = srsList.map(function(r, i) { return '第' + (i + 1) + '次'; });
+
+  // SRS detail chart (4 dimensions) — 需要 ≥2 次
+  if (srsList.length >= 2) {
+    chartInstances.srs_detail = safeChart('chart_srs_detail', 320, 300, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [
+          { label: '关系', data: srsList.map(function(r){return r.item_individual;}), borderColor: '#0277BD', backgroundColor: 'rgba(2,119,189,0.1)', tension: 0.3, fill: false },
+          { label: '目标', data: srsList.map(function(r){return r.item_interpersonal;}), borderColor: '#00838F', backgroundColor: 'rgba(0,131,143,0.1)', tension: 0.3, fill: false },
+          { label: '方法', data: srsList.map(function(r){return r.item_social;}), borderColor: '#4527A0', backgroundColor: 'rgba(69,39,160,0.1)', tension: 0.3, fill: false },
+          { label: '总体', data: srsList.map(function(r){return r.item_overall;}), borderColor: '#AD1457', backgroundColor: 'rgba(173,20,87,0.1)', tension: 0.3, fill: false }
+        ]
+      },
+      options: chartOptions('SRS 各维度变化趋势', 0, 10)
+    });
+  }
+
+  // SRS total chart with risk line
+  chartInstances.srs_total = safeChart('chart_srs_total', 320, 240, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: 'SRS 总分',
+          data: srsList.map(function(r){return r.total_score;}),
+          borderColor: '#1565C0', backgroundColor: 'rgba(21,101,192,0.15)',
+          tension: 0.3, fill: true, pointRadius: 5, pointBackgroundColor: function(ctx) {
+            return ctx.raw < 36 ? '#C62828' : '#1565C0';
+          }
+        },
+        {
+          label: '风险线 (36)',
+          data: srsList.map(function(){ return 36; }),
+          borderColor: '#E53935', borderDash: [6, 4], borderWidth: 1.5,
+          pointRadius: 0, fill: false
+        }
+      ]
+    },
+    options: chartOptions('SRS 总分变化（红线为风险线）', 0, 40)
+  });
+  _srsRendered = true;
+}
+
+function renderCharts() {
+  // 图表改为懒加载，在 switchTab 时按需渲染
+  // 此处不创建图表，避免隐藏容器中 canvas 尺寸为 0
+}
+
+function chartOptions(title, min, max) {
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'bottom', labels: { font: { size: 11 }, usePointStyle: true, padding: 16 } },
+      title: { display: false }
+    },
+    scales: {
+      y: { min: min, max: max, grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { font: { size: 11 } } },
+      x: { grid: { display: false }, ticks: { font: { size: 11 } } }
+    },
+    interaction: { mode: 'index', intersect: false }
+  };
+}
+
+// ===== Alerts =====
+function renderAlerts() {
+  var alerts = [];
+  // 按会话编号排序（与底部记录一致），避免 allRatings 创建时间乱序导致假警报
+  var orsList = [];
+  var srsList = [];
+  allSessions.forEach(function(s) {
+    if (s.ors) orsList.push(s.ors);
+    if (s.srs) srsList.push(s.srs);
+  });
+
+  // Check ORS worsening
+  for (var i = 1; i < orsList.length; i++) {
+    var diff = orsList[i].total_score - orsList[i-1].total_score;
+    if (diff <= -5) {
+      alerts.push({
+        type: 'danger',
+        icon: '📉',
+        title: 'ORS 显著下降',
+        detail: '第' + (i+1) + '次评估 ORS 总分下降 ' + Math.abs(diff).toFixed(1) + ' 分（从 ' + orsList[i-1].total_score.toFixed(1) + ' 降至 ' + orsList[i].total_score.toFixed(1) + '）',
+        suggestion: '建议在下次咨询中讨论近期可能发生的变化，了解来访者目前的状态和需求。',
+        session: i
+      });
+    }
+  }
+
+  // Check SRS below risk line
+  for (var j = 0; j < srsList.length; j++) {
+    if (srsList[j].total_score < 36) {
+      var isConsecutive = j > 0 && srsList[j-1].total_score < 36;
+      alerts.push({
+        type: isConsecutive ? 'danger' : 'warning',
+        icon: '⚠️',
+        title: 'SRS 联盟风险' + (isConsecutive ? '（连续）' : ''),
+        detail: '第' + (j+1) + '次评估 SRS 总分为 ' + srsList[j].total_score.toFixed(1) + '（风险线：36）' + (isConsecutive ? '，连续 2 次低于风险线' : ''),
+        suggestion: isConsecutive
+          ? '连续低于风险线，强烈建议与来访者坦诚讨论咨询关系、目标和方法，必要时考虑转介。'
+          : '治疗联盟可能存在问题，建议关注来访者的感受，主动讨论咨询进程。',
+        session: j
+      });
+    }
+  }
+
+  // Check if ORS consistently low (< 25, below median)
+  if (orsList.length >= 3) {
+    var recent = orsList.slice(-3);
+    var allLow = recent.every(function(r) { return r.total_score < 25; });
+    if (allLow) {
+      alerts.push({
+        type: 'warning',
+        icon: '🔍',
+        title: 'ORS 持续低于临床人群中位线',
+        detail: '最近 3 次 ORS 总分均低于 25 分（' + recent.map(function(r){return r.total_score.toFixed(1);}).join('、') + '）',
+        suggestion: 'ORS 长期偏低可能提示当前咨询方案效果有限，建议与督导讨论是否需要调整干预策略。',
+        session: orsList.length - 1
+      });
+    }
+  }
+
+  // Check positive milestones
+  if (orsList.length >= 3) {
+    var firstOrs = orsList[0].total_score;
+    var lastOrs = orsList[orsList.length - 1].total_score;
+    if (lastOrs - firstOrs >= 10) {
+      alerts.push({
+        type: 'success',
+        icon: '🎉',
+        title: 'ORS 显著改善',
+        detail: '从第 1 次（' + firstOrs.toFixed(1) + '）到第 ' + orsList.length + ' 次（' + lastOrs.toFixed(1) + '），总分提升 ' + (lastOrs - firstOrs).toFixed(1) + ' 分',
+        suggestion: '来访者表现出显著的临床改善，说明当前咨询方向有效。可以与来访者一起回顾进展，巩固积极变化。',
+        session: orsList.length - 1
+      });
+    }
+  }
+
+  var container = document.getElementById('alerts_list');
+  var noAlerts = document.getElementById('no_alerts');
+
+  if (alerts.length === 0) {
+    container.innerHTML = '';
+    noAlerts.classList.remove('hidden');
+    return;
+  }
+
+  noAlerts.classList.add('hidden');
+  var html = '';
+  alerts.forEach(function(a) {
+    var bgColor = a.type === 'danger' ? '#FFEBEE' : a.type === 'warning' ? '#FFF8E1' : '#E8F5E9';
+    var borderColor = a.type === 'danger' ? '#FFCDD2' : a.type === 'warning' ? '#FFE0B2' : '#C8E6C9';
+    var titleColor = a.type === 'danger' ? '#C62828' : a.type === 'warning' ? '#E65100' : '#2E7D32';
+    html += '<div class="bg-white rounded-2xl p-4 shadow-sm" style="border-left:4px solid ' + borderColor + '">';
+    html += '<div class="flex items-center gap-2 mb-1"><span>' + a.icon + '</span><span class="text-sm font-bold" style="color:' + titleColor + '">' + a.title + '</span></div>';
+    html += '<p class="text-xs text-gray-600 mb-2">' + a.detail + '</p>';
+    html += '<div class="text-xs text-gray-500 px-3 py-2 rounded-lg" style="background:' + bgColor + '">💡 ' + a.suggestion + '</div>';
+    html += '</div>';
+  });
+  container.innerHTML = html;
+}
+
+// ===== Tab Switching =====
+function switchTab(tab) {
+  currentTab = tab;
+  ['timeline', 'ors', 'srs', 'alerts'].forEach(function(t) {
+    var el = document.getElementById('tab-' + t);
+    if (el) el.classList.toggle('hidden', t !== tab);
+  });
+  document.querySelectorAll('.tab-btn').forEach(function(btn) {
+    btn.classList.toggle('active', btn.textContent.indexOf(tabLabel(tab)) >= 0);
+  });
+
+  // 懒加载图表：切换到 ORS/SRS tab 时强制重建（解决隐藏容器 canvas 尺寸为 0）
+  if (tab === 'ors') {
+    destroyCharts('ors_');
+    // requestAnimationFrame 确保 DOM 已渲染，canvas 有正确尺寸后再创建图表
+    requestAnimationFrame(function() {
+      requestAnimationFrame(function() {
+        renderOrsCharts();
+      });
+    });
+  } else if (tab === 'srs') {
+    destroyCharts('srs_');
+    requestAnimationFrame(function() {
+      requestAnimationFrame(function() {
+        renderSrsCharts();
+      });
+    });
+  }
+}
+
+function tabLabel(tab) {
+  var map = { timeline: '时间线', ors: 'ORS', srs: 'SRS', alerts: '临床预警' };
+  return map[tab] || tab;
+}
+
+// ===== Utils =====
+function formatDate(d) {
+  if (!d) return '—';
+  var dt = new Date(d);
+  return dt.getFullYear() + '/' + (dt.getMonth()+1).toString().padStart(2,'0') + '/' + dt.getDate().toString().padStart(2,'0');
+}
+
+function escapeHtml(s) {
+  if (!s) return '';
+  var d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+</script>
+
+</body>
+</html>
