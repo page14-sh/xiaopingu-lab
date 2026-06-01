@@ -205,6 +205,10 @@
   .req-btn-primary { background: #5C7A52; color: #fff; }
   .req-btn-outline { background: #fff; color: #5C7A52; border: 1px solid #5C7A52; }
   .req-btn-blue { background: #CFE2FF; color: #0A58CA; }
+  .req-btn-approve { background: #D4EDDA; color: #155724; border: 1px solid #C3E6CB; }
+  .req-btn-approve:hover { background: #C3E6CB; }
+  .req-btn-reject { background: #F8D7DA; color: #721C24; border: 1px solid #F5C6CB; }
+  .req-btn-reject:hover { background: #F5C6CB; }
   .panel-empty { text-align: center; padding: 24px; color: #A09889; font-size: 13px; }
   .panel-loading { text-align: center; padding: 24px; color: #A09889; }
   .spinner { display: inline-block; width: 24px; height: 24px; border: 3px solid #E8E4DC; border-top-color: #5C7A52; border-radius: 50%; animation: spin 0.8s linear infinite; }
@@ -2058,9 +2062,20 @@ function loadPanelRequests() {
       html += '🏷 ' + (a.severity || '-') + ' · ';
       html += '🕐 ' + formatTime(a.created_at);
       html += '</div>';
+      // 拒绝理由
+      if (status === 'rejected' && a.match_request_reviewed_note) {
+        html += '<div class="req-note" style="margin-top:6px;font-size:12px;color:#721C24;background:#F8D7DA;padding:6px 10px;border-radius:6px">📝 拒绝理由：' + esc(a.match_request_reviewed_note) + '</div>';
+      }
       html += '<div class="req-actions">';
       html += '<a href="session-dashboard.html?aid=' + a.id + '&role=counselor&cid=' + panelCid + '&name=' + encodeURIComponent(a.match_request_name || a.visitor_name || '') + '" class="req-btn req-btn-blue" target="_blank">📈 追踪面板</a>';
       html += '<button class="req-btn req-btn-outline" onclick="copyContact(\'' + esc(a.match_request_contact || '') + '\')">📋 复制联系方式</button>';
+      // 审批按钮（仅 pending 状态）
+      if (status === 'pending') {
+        html += '<button class="req-btn req-btn-approve" onclick="approveMatchApplication(\'' + a.id + '\')">✅ 通过</button>';
+        html += '<button class="req-btn req-btn-reject" onclick="rejectMatchApplication(\'' + a.id + '\')">❌ 拒绝</button>';
+      } else if (status === 'approved') {
+        html += '<button class="req-btn req-btn-outline" onclick="markContacted(\'' + a.id + '\')">📞 标记已联系</button>';
+      }
       html += '</div>';
       html += '</div>';
     });
@@ -2068,6 +2083,70 @@ function loadPanelRequests() {
   })
   .catch(function(e) {
     content.innerHTML = '<div class="panel-empty">❌ 查询失败<br><span style="font-size:12px;display:inline-block;margin-top:4px">请检查网络连接</span></div>';
+  });
+}
+
+// ========== 匹配申请审批（咨询师端） ==========
+function updateMatchStatus(id, status, note) {
+  var body = {
+    match_request_status: status,
+    match_request_reviewed_at: new Date().toISOString(),
+    match_request_reviewed_by: panelCid,
+    updated_at: new Date().toISOString()
+  };
+  if (note !== undefined) body.match_request_reviewed_note = note;
+  return fetch(SUPABASE_URL + '/rest/v1/assessments?id=eq.' + id, {
+    method: 'PATCH',
+    headers: {
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=minimal'
+    },
+    body: JSON.stringify(body)
+  });
+}
+
+function approveMatchApplication(id) {
+  if (!confirm('确认通过此匹配申请？通过后来访者将收到通知，可查看你的联系方式。')) return;
+  updateMatchStatus(id, 'approved').then(function(r) {
+    if (r.ok) {
+      alert('✅ 已通过！来访者将收到通知。');
+      loadPanelRequests();
+    } else {
+      alert('操作失败，请重试');
+    }
+  }).catch(function() {
+    alert('网络错误，请重试');
+  });
+}
+
+function rejectMatchApplication(id) {
+  var reason = prompt('请填写拒绝理由（选填，来访者可查看）：', '');
+  if (reason === null) return; // 用户取消
+  updateMatchStatus(id, 'rejected', reason || null).then(function(r) {
+    if (r.ok) {
+      alert('已拒绝该申请');
+      loadPanelRequests();
+    } else {
+      alert('操作失败，请重试');
+    }
+  }).catch(function() {
+    alert('网络错误，请重试');
+  });
+}
+
+function markContacted(id) {
+  if (!confirm('确认标记为"已联系"？')) return;
+  updateMatchStatus(id, 'contacted').then(function(r) {
+    if (r.ok) {
+      alert('📞 已标记为已联系');
+      loadPanelRequests();
+    } else {
+      alert('操作失败，请重试');
+    }
+  }).catch(function() {
+    alert('网络错误，请重试');
   });
 }
 

@@ -694,11 +694,13 @@
                 <th>危机等级</th>
                 <th>申请时间</th>
                 <th>状态</th>
+                <th>审核人</th>
+                <th>审核备注</th>
                 <th>操作</th>
               </tr>
             </thead>
             <tbody id="tbody-match-applications">
-              <tr><td colspan="11" class="loading"><div class="spinner"></div></td></tr>
+              <tr><td colspan="13" class="loading"><div class="spinner"></div></td></tr>
             </tbody>
           </table>
           <div class="empty-state" id="empty-match-applications" style="display:none;">
@@ -1271,14 +1273,21 @@
         : status === 'contacted' ? '<span class="tag tag-blue">📞 已联系</span>'
         : '<span class="tag tag-yellow">⏳ 待处理</span>';
 
-      // 操作按钮
-      var actionBtns = '<button class="action-btn view" onclick="viewDetail(\'assessments\', \'' + a.id + '\')">查看</button>';
-      if (status === 'pending') {
-        actionBtns += '<button class="action-btn approve" onclick="approveMatchApplication(\'' + a.id + '\')">✅ 通过</button>';
-        actionBtns += '<button class="action-btn reject" onclick="rejectMatchApplication(\'' + a.id + '\')">❌ 拒绝</button>';
-      } else if (status === 'approved') {
-        actionBtns += '<button class="action-btn approve" onclick="markContacted(\'' + a.id + '\')">📞 标记已联系</button>';
+      // 审核人（查找咨询师姓名）
+      var reviewerName = '-';
+      if (a.match_request_reviewed_by) {
+        if (a.match_request_reviewed_by === 'admin') {
+          reviewerName = '管理员';
+        } else if (allData.counselors) {
+          var reviewer = allData.counselors.find(function(c) { return c.id === a.match_request_reviewed_by; });
+          reviewerName = reviewer ? (reviewer.name || '咨询师') : a.match_request_reviewed_by.substring(0,8);
+        } else {
+          reviewerName = a.match_request_reviewed_by.substring(0,8);
+        }
       }
+
+      // 操作按钮（仅查看，审批权已移交咨询师）
+      var actionBtns = '<button class="action-btn view" onclick="viewDetail(\'assessments\', \'' + a.id + '\')">查看</button>';
 
       return '<tr>' +
         '<td><code style="font-size:11px;color:#6B635A">' + (a.id ? a.id.substring(0,8) : '-') + '</code></td>' +
@@ -1291,6 +1300,8 @@
         '<td>' + crisisTag + '</td>' +
         '<td>' + formatTime(a.updated_at || a.created_at) + '</td>' +
         '<td>' + statusTag + '</td>' +
+        '<td>' + reviewerName + '</td>' +
+        '<td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:#6B635A" title="' + (a.match_request_reviewed_note || '').replace(/"/g,'&quot;') + '">' + (a.match_request_reviewed_note || '-') + '</td>' +
         '<td><div class="action-btns">' + actionBtns + '</div></td>' +
       '</tr>';
     }

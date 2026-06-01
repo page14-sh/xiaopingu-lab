@@ -269,8 +269,13 @@
       contacted:{ icon: '📞', text: '已取得联系', sub: '咨询师已与你建立联系', cls: 'contacted' }
     };
     var sc = statusConfig[status] || statusConfig.none;
+    // 被拒时显示审核备注
+    var statusSub = sc.sub;
+    if (status === 'rejected' && a.match_request_reviewed_note) {
+      statusSub = '拒绝理由：' + a.match_request_reviewed_note;
+    }
 
-    html += '<div class="card"><div class="status-banner ' + sc.cls + '"><div class="icon">' + sc.icon + '</div><div class="text">' + sc.text + '</div><div class="sub">' + sc.sub + '</div></div></div>';
+    html += '<div class="card"><div class="status-banner ' + sc.cls + '"><div class="icon">' + sc.icon + '</div><div class="text">' + sc.text + '</div><div class="sub">' + statusSub + '</div></div></div>';
 
     // === 评估概要 ===
     html += '<div class="card"><div class="card-title">📊 评估概要</div><div class="card-sub">' + (a.visitor_name || '来访者') + ' · ' + formatTime(a.created_at) + '</div>';
