@@ -932,7 +932,7 @@
         <div class="pe-section">
           <div class="pe-section-title">基本信息</div>
           <div class="pe-row">
-            <div class="pe-field"><label>姓名 *</label><input type="text" id="pe_name" placeholder="真实姓名"></div>
+            <div class="pe-field"><label>姓名</label><input type="text" id="pe_name" readonly style="background:#f5f2ef;color:#8B7E6B;cursor:not-allowed;border-color:#E3DDD4;" title="姓名不可修改，须与执业证一致"></div>
             <div class="pe-field"><label>性别</label><select id="pe_gender"><option value="">请选择</option><option value="male">男</option><option value="female">女</option><option value="ta">TA</option><option value="other">其他/不便透露</option></select></div>
             <div class="pe-field"><label>城市</label><input type="text" id="pe_city" placeholder="如：上海"></div>
           </div>
@@ -2189,6 +2189,10 @@ function loadCounselorProfile() {
     var d = data[0];
     // 基本信息
     document.getElementById('pe_name').value = d.name || '';
+    // 名称兜底：如果数据库返回空，尝试从请求列表里读取
+    if (!d.name) {
+      console.warn('[编辑档案] 姓名未从数据库返回，检查字段名', Object.keys(d).filter(function(k) { return k.toLowerCase().indexOf('name') >= 0; }));
+    }
     document.getElementById('pe_gender').value = d.gender || '';
     document.getElementById('pe_city').value = d.city || '';
     document.getElementById('pe_credential').value = d.credential_level || '';
@@ -2250,7 +2254,7 @@ function loadCounselorProfile() {
 
 function saveCounselorProfile() {
   var name = document.getElementById('pe_name').value.trim();
-  if (!name) { peToast('请填写姓名', 'error'); return; }
+  if (!name) { peToast('未能读取档案姓名，请刷新页面重试', 'error'); return; }
   var bioShort = document.getElementById('pe_bio_short').value.trim();
   if (!bioShort) { peToast('请填写一句话简介', 'error'); return; }
   var btn = document.getElementById('pe-save-btn');
