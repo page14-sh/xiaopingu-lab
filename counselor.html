@@ -928,6 +928,7 @@
       </div>
       <div id="panel-content"><div class="panel-loading">加载中...</div></div>
       <div id="panel-edit" style="display:none;">
+        <!-- 基本信息 -->
         <div class="pe-section">
           <div class="pe-section-title">基本信息</div>
           <div class="pe-row">
@@ -936,23 +937,71 @@
             <div class="pe-field"><label>城市</label><input type="text" id="pe_city" placeholder="如：上海"></div>
           </div>
           <div class="pe-row">
-            <div class="pe-field"><label>主资质 *</label><select id="pe_credential"><option value="">请选择</option><option value="三级">心理咨询师（三级）</option><option value="二级">心理咨询师（二级）</option><option value="心理治疗师">心理治疗师</option><option value="精神科医生">精神科医生</option><option value="督导师">督导师</option><option value="注册心理师">注册心理师</option></select></div>
+            <div class="pe-field"><label>主资质 *</label><select id="pe_credential"><option value="">请选择</option><option value="三级">心理咨询师（三级）</option><option value="二级">心理咨询师（二级）</option><option value="心理治疗师">心理治疗师</option><option value="社会工作师（初级）">社会工作师（初级·助理社工师）</option><option value="社会工作师（中级）">社会工作师（中级·社工师）</option><option value="社会工作师（高级）">社会工作师（高级·高级社工师）</option><option value="精神科医生">精神科医生</option><option value="督导师">督导师</option></select></div>
             <div class="pe-field"><label>从业年限</label><select id="pe_years"><option value="">请选择</option><option value="0-1">0-1年</option><option value="1-3">1-3年</option><option value="3-5">3-5年</option><option value="5-10">5-10年</option><option value="10-15">10-15年</option><option value="15+">15年以上</option></select></div>
-            <div class="pe-field"><label>费用范围（元/次）</label><select id="pe_fee_level"><option value="">请选择</option><option value="low">公益/低费（&lt;200元）</option><option value="mid">常规（200-500元）</option><option value="high">资深（500-800元）</option><option value="premium">专家（&gt;800元）</option></select></div>
+            <div class="pe-field"><label>最高学历</label><select id="pe_education"><option value="">请选择</option><option value="专科">专科</option><option value="本科">本科</option><option value="研究生">研究生</option><option value="博士">博士</option></select></div>
+          </div>
+          <div class="pe-row">
+            <div class="pe-field"><label>注册编号 / 执业证号</label><input type="text" id="pe_license" placeholder="选填"></div>
+            <div class="pe-field"><label>督导师证书编号</label><input type="text" id="pe_supervisor_cert" placeholder="选填"></div>
           </div>
         </div>
+        <!-- 培训资质 -->
+        <div class="pe-section">
+          <div class="pe-section-title">培训资质（可多选）</div>
+          <div class="pe-chips" id="pe_extra_credentials"></div>
+        </div>
+        <!-- 咨询取向 -->
         <div class="pe-section">
           <div class="pe-section-title">咨询取向（可多选）</div>
           <div class="pe-chips" id="pe_approaches"></div>
         </div>
+        <!-- 擅长议题 -->
         <div class="pe-section">
           <div class="pe-section-title">擅长议题（可多选）</div>
           <div class="pe-chips" id="pe_specialties"></div>
         </div>
+        <!-- 专业范围 -->
         <div class="pe-section">
-          <div class="pe-section-title">咨询形式</div>
+          <div class="pe-section-title">专业范围</div>
+          <div class="pe-field" style="margin-bottom:10px"><label>擅长服务人群（可多选）</label><div class="pe-chips" id="pe_populations"></div></div>
+          <div class="pe-field" style="margin-bottom:10px"><label>可承接严重程度（可多选）</label><div class="pe-chips" id="pe_severity_levels"></div></div>
+        </div>
+        <!-- 服务设置 -->
+        <div class="pe-section">
+          <div class="pe-section-title">服务设置</div>
           <div class="pe-chips" id="pe_service_settings"></div>
         </div>
+        <!-- 咨询形式 -->
+        <div class="pe-section">
+          <div class="pe-section-title">咨询形式（可多选）</div>
+          <div class="pe-chips" id="pe_session_formats"></div>
+        </div>
+        <!-- 受训经历 -->
+        <div class="pe-section">
+          <div class="pe-section-title">受训经历</div>
+          <div class="pe-row">
+            <div class="pe-field"><label>累计督导时长（小时）</label><input type="number" id="pe_supervision" placeholder="小时" min="0"></div>
+            <div class="pe-field"><label>自我体验</label><select id="pe_therapy_status"><option value="">请选择</option><option value="是">是</option><option value="否">否</option><option value="进行中">进行中</option></select></div>
+            <div class="pe-field"><label>自我体验时长（小时）</label><input type="number" id="pe_therapy_hours" placeholder="小时" min="0"></div>
+          </div>
+          <div class="pe-row">
+            <div class="pe-field"><label>是否能开体验证明</label><select id="pe_therapy_cert"><option value="">请选择</option><option value="是">是</option><option value="否">否</option></select></div>
+            <div class="pe-field"><label>伦理培训</label><select id="pe_ethics_training"><option value="">请选择</option><option value="是">是</option><option value="否">否</option><option value="进行中">培训中</option></select></div>
+          </div>
+          <div class="pe-field" style="margin-top:6px"><label>专项认证（可多选）</label><div class="pe-chips" id="pe_certifications"></div></div>
+          <div class="pe-field" style="margin-top:6px"><label>受训背景</label><textarea id="pe_training" style="width:100%;padding:8px 10px;border:1px solid #D8D2C8;border-radius:6px;font-size:13px;min-height:60px;resize:vertical;font-family:inherit;box-sizing:border-box;" placeholder="简要描述主要受训经历…"></textarea></div>
+        </div>
+        <!-- 来访者偏好 -->
+        <div class="pe-section">
+          <div class="pe-section-title">来访者偏好设置（选填）</div>
+          <div class="pe-field" style="margin-bottom:6px"><label>偏好来访者性别</label><select id="pe_client_gender_pref"><option value="">不限</option><option value="male_only">仅接男性来访者</option><option value="female_only">仅接女性来访者</option><option value="any_with_lgbtq">不限，具备LGBTQ+友善能力</option></select></div>
+          <div class="pe-field" style="margin-bottom:6px"><label>偏好年龄段（可多选）</label><div class="pe-chips" id="pe_client_age_prefs"></div></div>
+          <div class="pe-field" style="margin-bottom:6px"><label>性取向友好（可多选）</label><div class="pe-chips" id="pe_orientation_friendly"></div></div>
+          <div class="pe-field" style="margin-bottom:6px"><label>性别认同友好（可多选）</label><div class="pe-chips" id="pe_gender_identity_friendly"></div></div>
+          <div class="pe-field"><label>沟通风格（可多选）</label><div class="pe-chips" id="pe_comm_styles"></div></div>
+        </div>
+        <!-- C-NIP 咨询风格偏好 -->
         <div class="pe-section">
           <div class="pe-section-title">C-NIP 咨询风格偏好</div>
           <div class="pe-row">
@@ -970,17 +1019,45 @@
             <div class="pe-field"><label>咨访关系</label><div class="pe-chips" id="pe_cnip_relational"></div></div>
           </div>
         </div>
+        <!-- 费用与预约 -->
+        <div class="pe-section">
+          <div class="pe-section-title">费用与预约设置</div>
+          <div class="pe-row">
+            <div class="pe-field"><label>单次时长</label><select id="pe_duration"><option value="50分钟">50分钟</option><option value="60分钟">60分钟</option><option value="90分钟">90分钟</option><option value="其他">其他</option></select></div>
+            <div class="pe-field"><label>单次费用（元）</label><input type="number" id="pe_fee_min" placeholder="如：500" min="0" step="50"></div>
+            <div class="pe-field"><label>收费档位</label><select id="pe_fee_level"><option value="">请选择</option><option value="low">平价 ≤300元/次</option><option value="mid">中等 300-600元/次</option><option value="high">偏高 600-1000元/次</option><option value="premium">高端 1000元/次以上</option></select></div>
+          </div>
+          <div class="pe-field" style="margin-top:6px"><label>可预约时段</label><textarea id="pe_slots" style="width:100%;padding:8px 10px;border:1px solid #D8D2C8;border-radius:6px;font-size:13px;min-height:50px;resize:vertical;font-family:inherit;box-sizing:border-box;" placeholder="如：工作日白天(9:00-17:00)、周二四晚间(19:00-21:00)、周末上午"></textarea></div>
+          <div class="pe-field" style="margin-top:10px">
+            <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:10px 12px;background:#f4f9f2;border-radius:10px;border:1px solid #c8ddc2;">
+              <input type="checkbox" id="pe_public_welfare" style="width:18px;height:18px;margin-top:2px;accent-color:#5C7A52;flex-shrink:0;">
+              <span style="font-size:13px;color:#3d5c35;">愿意参与公益咨询服务</span>
+            </label>
+          </div>
+        </div>
+        <!-- 联系方式 -->
         <div class="pe-section">
           <div class="pe-section-title">联系方式</div>
           <div class="pe-row">
-            <div class="pe-field"><label>微信</label><input type="text" id="pe_wechat" placeholder="微信号"></div>
-            <div class="pe-field"><label>手机号</label><input type="text" id="pe_phone" placeholder="手机号"></div>
-            <div class="pe-field"><label>邮箱</label><input type="text" id="pe_email" placeholder="邮箱地址"></div>
+            <div class="pe-field">
+              <label>微信</label><input type="text" id="pe_wechat" placeholder="选填">
+              <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#6B635A;margin-top:4px;cursor:pointer"><input type="checkbox" id="pe_wechat_public" style="width:14px;height:14px"> 允许对外公布</label>
+            </div>
+            <div class="pe-field">
+              <label>手机号</label><input type="text" id="pe_phone" placeholder="选填">
+              <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#6B635A;margin-top:4px;cursor:pointer"><input type="checkbox" id="pe_phone_public" style="width:14px;height:14px"> 允许对外公布</label>
+            </div>
+            <div class="pe-field">
+              <label>邮箱</label><input type="text" id="pe_email" placeholder="选填">
+              <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#6B635A;margin-top:4px;cursor:pointer"><input type="checkbox" id="pe_email_public" style="width:14px;height:14px"> 允许对外公布</label>
+            </div>
           </div>
         </div>
+        <!-- 对外简介 -->
         <div class="pe-section">
-          <div class="pe-section-title">个人简介</div>
-          <textarea id="pe_bio" style="width:100%;padding:8px 10px;border:1px solid #D8D2C8;border-radius:6px;font-size:13px;min-height:80px;resize:vertical;font-family:inherit;box-sizing:border-box;" placeholder="简短介绍你的咨询风格和擅长方向…"></textarea>
+          <div class="pe-section-title">对外简介</div>
+          <div class="pe-field"><label>一句话简介 * <span style="font-size:11px;color:#A09889;font-weight:400">（展示在匹配卡片上）</span></label><input type="text" id="pe_bio_short" placeholder="如：注册心理师，8年经验，专注CBT取向的情绪与关系议题" maxlength="80"></div>
+          <div class="pe-field" style="margin-top:6px"><label>详细个人介绍</label><textarea id="pe_bio_full" style="width:100%;padding:8px 10px;border:1px solid #D8D2C8;border-radius:6px;font-size:13px;min-height:80px;resize:vertical;font-family:inherit;box-sizing:border-box;" placeholder="详细介绍受训经历、咨询理念、擅长领域等（选填）"></textarea></div>
         </div>
         <div class="pe-actions">
           <button class="pe-cancel" onclick="hideEditPanel()">取消</button>
@@ -2015,6 +2092,15 @@ var PE_OPTIONS = {
   approaches: ['CBT','ACT','DBT','EMDR','精神动力学','人本主义','存在主义治疗','格式塔','家庭治疗','EFT','叙事治疗','婚姻伴侣治疗','游戏治疗','表达性艺术治疗','催眠治疗','正念','躯体治疗','短程焦点','荣格分析','自体心理学','人际精神分析','意义疗法','积极心理治疗'],
   specialties: ['emotion','relationship','trauma','growth','adolescent','marriage','personality','crisis'],
   service_settings: ['个体咨询','伴侣咨询','家庭治疗','团体咨询'],
+  extra_credentials: ['心理咨询师（三级）','心理咨询师（二级）','心理治疗师','社会工作师（初级）','社会工作师（中级）','社会工作师（高级）','精神科医生','注册心理师','督导师'],
+  certifications: ['危机干预','EMDR认证','CBT认证','创伤专项','婚姻咨询专项','儿童青少年专项','EAP专项','家庭治疗专项','正念认证','CAMS自杀干预','心理测量','评估性治疗','循证咨询受训','精神科门诊见习'],
+  populations: ['成人','青少年','儿童','大学生','家长','老年人','LGBTQ+','企业员工'],
+  severity_levels: ['轻度','中度','重度'],
+  client_age_prefs: ['儿童(6-12)','青少年(12-18)','青年(18-35)','中年(35-55)','老年(55+)'],
+  orientation_friendly: ['异性恋','同性恋','双性恋','跨性别','酷儿','无性恋','泛性恋','其他'],
+  gender_identity_friendly: ['顺性别','跨性别','非二元性别','性别酷儿','性别流动','其他'],
+  comm_styles: ['listening','guided','leading','collaborative','directive'],
+  session_formats: ['线下面询','视频咨询','语音咨询','文字咨询'],
   cnip_styles: ['structured','balanced','open'],
   cnip_emotion: ['emotional','balanced','rational'],
   cnip_time: ['past','present','future'],
@@ -2026,6 +2112,15 @@ var PE_LABELS = {
   approaches: {'CBT':'认知行为','ACT':'接纳承诺','DBT':'辩证行为','EMDR':'眼动脱敏','精神动力学':'精神动力学','人本主义':'人本主义','存在主义治疗':'存在主义','格式塔':'格式塔','家庭治疗':'家庭治疗','EFT':'EFT情绪聚焦','叙事治疗':'叙事治疗','婚姻伴侣治疗':'婚姻伴侣','游戏治疗':'游戏治疗','表达性艺术治疗':'表达艺术','催眠治疗':'催眠治疗','正念':'正念','躯体治疗':'躯体治疗','短程焦点':'短程焦点','荣格分析':'荣格分析','自体心理学':'自体心理学','人际精神分析':'人际精神分析','意义疗法':'意义疗法','积极心理治疗':'积极心理治疗'},
   specialties: {'emotion':'情绪困扰','relationship':'人际关系','trauma':'创伤经历','growth':'自我成长','adolescent':'青少年问题','marriage':'婚姻家庭','personality':'人格议题','crisis':'危机干预'},
   service_settings: {'个体咨询':'个体咨询','伴侣咨询':'伴侣咨询','家庭治疗':'家庭治疗','团体咨询':'团体咨询'},
+  extra_credentials: {'心理咨询师（三级）':'三级咨询师','心理咨询师（二级）':'二级咨询师','心理治疗师':'心理治疗师','社会工作师（初级）':'社工师(初级)','社会工作师（中级）':'社工师(中级)','社会工作师（高级）':'社工师(高级)','精神科医生':'精神科医生','注册心理师':'注册心理师','督导师':'督导师'},
+  certifications: {'危机干预':'危机干预','EMDR认证':'EMDR认证','CBT认证':'CBT认证','创伤专项':'创伤专项','婚姻咨询专项':'婚姻咨询','儿童青少年专项':'儿少专项','EAP专项':'EAP专项','家庭治疗专项':'家庭治疗','正念认证':'正念认证','CAMS自杀干预':'CAMS自杀干预','心理测量':'心理测量','评估性治疗':'评估性治疗','循证咨询受训':'循证咨询','精神科门诊见习':'精神科见习'},
+  populations: {'成人':'成人','青少年':'青少年','儿童':'儿童','大学生':'大学生','家长':'家长','老年人':'老年人','LGBTQ+':'LGBTQ+','企业员工':'企业员工'},
+  severity_levels: {'轻度':'轻度','中度':'中度','重度':'重度'},
+  client_age_prefs: {'儿童(6-12)':'儿童(6-12)','青少年(12-18)':'青少年(12-18)','青年(18-35)':'青年(18-35)','中年(35-55)':'中年(35-55)','老年(55+)':'老年(55+)'},
+  orientation_friendly: {'异性恋':'异性恋','同性恋':'同性恋','双性恋':'双性恋','跨性别':'跨性别','酷儿':'酷儿','无性恋':'无性恋','泛性恋':'泛性恋','其他':'其他'},
+  gender_identity_friendly: {'顺性别':'顺性别','跨性别':'跨性别','非二元性别':'非二元','性别酷儿':'性别酷儿','性别流动':'性别流动','其他':'其他'},
+  comm_styles: {'listening':'倾听型','guided':'引导型','leading':'带动型','collaborative':'对话型','directive':'指导型'},
+  session_formats: {'线下面询':'线下面询','视频咨询':'视频咨询','语音咨询':'语音咨询','文字咨询':'文字咨询'},
   cnip_styles: {'structured':'结构化','balanced':'适中','open':'开放式'},
   cnip_emotion: {'emotional':'情感聚焦','balanced':'适中','rational':'理性分析'},
   cnip_time: {'past':'关注过去','present':'关注当下','future':'关注未来'},
@@ -2092,25 +2187,63 @@ function loadCounselorProfile() {
   .then(function(data) {
     if (!data || !data.length) { peToast('未找到咨询师档案', 'error'); return; }
     var d = data[0];
+    // 基本信息
     document.getElementById('pe_name').value = d.name || '';
     document.getElementById('pe_gender').value = d.gender || '';
     document.getElementById('pe_city').value = d.city || '';
     document.getElementById('pe_credential').value = d.credential_level || '';
     document.getElementById('pe_years').value = d.years_experience || '';
-    document.getElementById('pe_fee_level').value = d.fee_budget_level || '';
-    document.getElementById('pe_wechat').value = d.contact_wechat || '';
-    document.getElementById('pe_phone').value = d.contact_phone || '';
-    document.getElementById('pe_email').value = d.contact_email || '';
-    document.getElementById('pe_bio').value = d.bio_short || '';
+    document.getElementById('pe_education').value = d.education || '';
+    document.getElementById('pe_license').value = d.license_number || '';
+    document.getElementById('pe_supervisor_cert').value = d.supervisor_cert || '';
+    // 培训资质
+    setPeChipValues('extra_credentials', d.extra_credentials);
+    // 取向、议题
     setPeChipValues('approaches', d.approaches);
     setPeChipValues('specialties', d.specialties);
+    // 专业范围
+    setPeChipValues('populations', d.populations);
+    setPeChipValues('severity_levels', d.severity_levels);
+    // 服务设置、咨询形式
     setPeChipValues('service_settings', d.service_settings);
+    setPeChipValues('session_formats', d.session_formats);
+    // 受训经历
+    document.getElementById('pe_supervision').value = d.supervision_hours || '';
+    document.getElementById('pe_therapy_status').value = d.personal_therapy_status || '';
+    document.getElementById('pe_therapy_hours').value = d.personal_therapy_hours || '';
+    document.getElementById('pe_therapy_cert').value = d.therapy_cert || '';
+    document.getElementById('pe_ethics_training').value = d.ethics_training || '';
+    setPeChipValues('certifications', d.certifications);
+    document.getElementById('pe_training').value = d.training_background || '';
+    // 偏好
+    document.getElementById('pe_client_gender_pref').value = d.client_gender_pref || '';
+    setPeChipValues('client_age_prefs', d.client_age_prefs);
+    setPeChipValues('orientation_friendly', d.orientation_friendly);
+    setPeChipValues('gender_identity_friendly', d.gender_identity_friendly);
+    setPeChipValues('comm_styles', d.comm_styles);
+    // C-NIP
     setPeChipValues('cnip_styles', d.cnip_styles);
     setPeChipValues('cnip_emotion', d.cnip_emotion_focus);
     setPeChipValues('cnip_time', d.cnip_time);
     setPeChipValues('cnip_stance', d.cnip_stance);
     setPeChipValues('cnip_homework', d.cnip_homework);
     setPeChipValues('cnip_relational', d.cnip_relational);
+    // 费用与预约
+    document.getElementById('pe_duration').value = (d.session_duration === '50分钟' || d.session_duration === '60分钟' || d.session_duration === '90分钟') ? d.session_duration : (d.session_duration ? '其他' : '50分钟');
+    document.getElementById('pe_fee_min').value = d.fee_min || '';
+    document.getElementById('pe_fee_level').value = d.fee_budget_level || '';
+    document.getElementById('pe_slots').value = d.available_slots || '';
+    document.getElementById('pe_public_welfare').checked = d.public_welfare || false;
+    // 联系方式
+    document.getElementById('pe_wechat').value = d.contact_wechat || '';
+    document.getElementById('pe_phone').value = d.contact_phone || '';
+    document.getElementById('pe_email').value = d.contact_email || '';
+    document.getElementById('pe_wechat_public').checked = d.contact_wechat_public || false;
+    document.getElementById('pe_phone_public').checked = d.contact_phone_public || false;
+    document.getElementById('pe_email_public').checked = d.contact_email_public || false;
+    // 对外简介
+    document.getElementById('pe_bio_short').value = d.bio_short || '';
+    document.getElementById('pe_bio_full').value = d.bio_full || '';
   })
   .catch(function() { peToast('加载档案失败，请检查网络', 'error'); });
 }
@@ -2118,6 +2251,8 @@ function loadCounselorProfile() {
 function saveCounselorProfile() {
   var name = document.getElementById('pe_name').value.trim();
   if (!name) { peToast('请填写姓名', 'error'); return; }
+  var bioShort = document.getElementById('pe_bio_short').value.trim();
+  if (!bioShort) { peToast('请填写一句话简介', 'error'); return; }
   var btn = document.getElementById('pe-save-btn');
   btn.classList.add('pe-saving');
   btn.textContent = '保存中...';
@@ -2128,20 +2263,47 @@ function saveCounselorProfile() {
     city: document.getElementById('pe_city').value || null,
     credential_level: document.getElementById('pe_credential').value || null,
     years_experience: document.getElementById('pe_years').value || null,
-    fee_budget_level: document.getElementById('pe_fee_level').value || null,
-    contact_wechat: document.getElementById('pe_wechat').value || null,
-    contact_phone: document.getElementById('pe_phone').value || null,
-    contact_email: document.getElementById('pe_email').value || null,
-    bio_short: document.getElementById('pe_bio').value || null,
+    education: document.getElementById('pe_education').value || null,
+    license_number: document.getElementById('pe_license').value || null,
+    supervisor_cert: document.getElementById('pe_supervisor_cert').value || null,
+    extra_credentials: getPeChipValues('extra_credentials'),
     approaches: getPeChipValues('approaches'),
     specialties: getPeChipValues('specialties'),
+    populations: getPeChipValues('populations'),
+    severity_levels: getPeChipValues('severity_levels'),
     service_settings: getPeChipValues('service_settings'),
+    session_formats: getPeChipValues('session_formats'),
+    supervision_hours: parseInt(document.getElementById('pe_supervision').value) || 0,
+    personal_therapy_status: document.getElementById('pe_therapy_status').value || null,
+    personal_therapy_hours: parseInt(document.getElementById('pe_therapy_hours').value) || 0,
+    therapy_cert: document.getElementById('pe_therapy_cert').value || null,
+    ethics_training: document.getElementById('pe_ethics_training').value || null,
+    certifications: getPeChipValues('certifications'),
+    training_background: document.getElementById('pe_training').value || null,
+    client_gender_pref: document.getElementById('pe_client_gender_pref').value || null,
+    client_age_prefs: getPeChipValues('client_age_prefs'),
+    orientation_friendly: getPeChipValues('orientation_friendly'),
+    gender_identity_friendly: getPeChipValues('gender_identity_friendly'),
+    comm_styles: getPeChipValues('comm_styles'),
     cnip_styles: getPeChipValues('cnip_styles'),
     cnip_emotion_focus: getPeChipValues('cnip_emotion'),
     cnip_time: getPeChipValues('cnip_time'),
     cnip_stance: getPeChipValues('cnip_stance'),
     cnip_homework: getPeChipValues('cnip_homework'),
-    cnip_relational: getPeChipValues('cnip_relational')
+    cnip_relational: getPeChipValues('cnip_relational'),
+    session_duration: document.getElementById('pe_duration').value === '其他' ? (document.getElementById('pe_duration').value) : document.getElementById('pe_duration').value,
+    fee_min: parseInt(document.getElementById('pe_fee_min').value) || 0,
+    fee_budget_level: document.getElementById('pe_fee_level').value || null,
+    available_slots: document.getElementById('pe_slots').value || null,
+    public_welfare: document.getElementById('pe_public_welfare').checked,
+    contact_wechat: document.getElementById('pe_wechat').value || null,
+    contact_wechat_public: document.getElementById('pe_wechat_public').checked,
+    contact_phone: document.getElementById('pe_phone').value || null,
+    contact_phone_public: document.getElementById('pe_phone_public').checked,
+    contact_email: document.getElementById('pe_email').value || null,
+    contact_email_public: document.getElementById('pe_email_public').checked,
+    bio_short: bioShort,
+    bio_full: document.getElementById('pe_bio_full').value || null
   };
 
   fetch(SUPABASE_URL + '/rest/v1/counselors?id=eq.' + encodeURIComponent(panelCid), {
