@@ -212,7 +212,7 @@
   .panel-login { text-align: center; padding: 20px; }
   .panel-login input { padding: 10px 14px; border: 1px solid #D8D2C8; border-radius: 8px; font-size: 14px; width: 100%; max-width: 300px; margin-bottom: 10px; }
   /* 面板内编辑档案 */
-  #panel-edit { display: none; }
+  #panel-edit { display: none; max-height: 65vh; overflow-y: auto; padding-right: 4px; }
   .pe-section { margin-bottom: 16px; }
   .pe-section-title { font-size: 13px; font-weight: 600; color: #5C7A52; margin-bottom: 8px; border-bottom: 1px solid #E8E4DC; padding-bottom: 4px; }
   .pe-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
@@ -2067,6 +2067,9 @@ function showEditPanel() {
   document.getElementById('panel-edit').style.display = 'block';
   document.getElementById('panel-edit-btn').style.display = 'none';
   document.getElementById('panel-badge').style.display = 'none';
+  // 切换标题
+  var h3 = document.querySelector('.panel-header h3');
+  if (h3) h3.textContent = '✏️ 编辑档案';
   loadCounselorProfile();
 }
 
@@ -2074,6 +2077,9 @@ function hideEditPanel() {
   document.getElementById('panel-edit').style.display = 'none';
   document.getElementById('panel-content').style.display = 'block';
   document.getElementById('panel-edit-btn').style.display = '';
+  // 恢复标题
+  var h3 = document.querySelector('.panel-header h3');
+  if (h3) h3.textContent = '📩 我的来访申请';
   loadPanelRequests();
 }
 
