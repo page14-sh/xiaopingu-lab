@@ -211,6 +211,24 @@
   @keyframes spin { to { transform: rotate(360deg); } }
   .panel-login { text-align: center; padding: 20px; }
   .panel-login input { padding: 10px 14px; border: 1px solid #D8D2C8; border-radius: 8px; font-size: 14px; width: 100%; max-width: 300px; margin-bottom: 10px; }
+  /* 面板内编辑档案 */
+  #panel-edit { display: none; }
+  .pe-section { margin-bottom: 16px; }
+  .pe-section-title { font-size: 13px; font-weight: 600; color: #5C7A52; margin-bottom: 8px; border-bottom: 1px solid #E8E4DC; padding-bottom: 4px; }
+  .pe-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+  .pe-field { flex: 1; min-width: 140px; }
+  .pe-field label { display: block; font-size: 12px; color: #888; margin-bottom: 3px; }
+  .pe-field input, .pe-field select, .pe-field textarea { width: 100%; padding: 7px 10px; border: 1px solid #D8D2C8; border-radius: 6px; font-size: 13px; font-family: inherit; box-sizing: border-box; background: #fff; }
+  .pe-field textarea { min-height: 60px; resize: vertical; }
+  .pe-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .pe-chip { padding: 4px 10px; border: 1px solid #D8D2C8; border-radius: 14px; font-size: 11px; cursor: pointer; background: #fff; color: #555; transition: all 0.15s; user-select: none; white-space: nowrap; }
+  .pe-chip.selected { background: #5C7A52; color: #fff; border-color: #5C7A52; }
+  .pe-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; padding-top: 12px; border-top: 1px solid #E8E4DC; }
+  .pe-save { padding: 8px 24px; background: #5C7A52; color: #fff; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; font-family: inherit; }
+  .pe-cancel { padding: 8px 20px; background: #fff; color: #888; border: 1px solid #D8D2C8; border-radius: 8px; font-size: 14px; cursor: pointer; font-family: inherit; }
+  .pe-saving { opacity: 0.6; pointer-events: none; }
+  .pe-toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #5C7A52; color: #fff; padding: 10px 24px; border-radius: 8px; font-size: 13px; z-index: 9999; animation: peFadeIn 0.3s; }
+  @keyframes peFadeIn { from { opacity: 0; transform: translateX(-50%) translateY(-10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
 </style>
 </head>
 <body>
@@ -903,9 +921,72 @@
     <div class="card counselor-panel">
       <div class="panel-header">
         <h3>📩 我的来访申请</h3>
-        <span class="panel-badge" id="panel-badge" style="display:none"></span>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button class="req-btn req-btn-outline" onclick="showEditPanel()" id="panel-edit-btn" style="font-size:12px;">✏️ 编辑档案</button>
+          <span class="panel-badge" id="panel-badge" style="display:none"></span>
+        </div>
       </div>
       <div id="panel-content"><div class="panel-loading">加载中...</div></div>
+      <div id="panel-edit" style="display:none;">
+        <div class="pe-section">
+          <div class="pe-section-title">基本信息</div>
+          <div class="pe-row">
+            <div class="pe-field"><label>姓名 *</label><input type="text" id="pe_name" placeholder="真实姓名"></div>
+            <div class="pe-field"><label>性别</label><select id="pe_gender"><option value="">请选择</option><option value="male">男</option><option value="female">女</option><option value="ta">TA</option><option value="other">其他/不便透露</option></select></div>
+            <div class="pe-field"><label>城市</label><input type="text" id="pe_city" placeholder="如：上海"></div>
+          </div>
+          <div class="pe-row">
+            <div class="pe-field"><label>主资质 *</label><select id="pe_credential"><option value="">请选择</option><option value="三级">心理咨询师（三级）</option><option value="二级">心理咨询师（二级）</option><option value="心理治疗师">心理治疗师</option><option value="精神科医生">精神科医生</option><option value="督导师">督导师</option><option value="注册心理师">注册心理师</option></select></div>
+            <div class="pe-field"><label>从业年限</label><select id="pe_years"><option value="">请选择</option><option value="0-1">0-1年</option><option value="1-3">1-3年</option><option value="3-5">3-5年</option><option value="5-10">5-10年</option><option value="10-15">10-15年</option><option value="15+">15年以上</option></select></div>
+            <div class="pe-field"><label>费用范围（元/次）</label><select id="pe_fee_level"><option value="">请选择</option><option value="low">公益/低费（&lt;200元）</option><option value="mid">常规（200-500元）</option><option value="high">资深（500-800元）</option><option value="premium">专家（&gt;800元）</option></select></div>
+          </div>
+        </div>
+        <div class="pe-section">
+          <div class="pe-section-title">咨询取向（可多选）</div>
+          <div class="pe-chips" id="pe_approaches"></div>
+        </div>
+        <div class="pe-section">
+          <div class="pe-section-title">擅长议题（可多选）</div>
+          <div class="pe-chips" id="pe_specialties"></div>
+        </div>
+        <div class="pe-section">
+          <div class="pe-section-title">咨询形式</div>
+          <div class="pe-chips" id="pe_service_settings"></div>
+        </div>
+        <div class="pe-section">
+          <div class="pe-section-title">C-NIP 咨询风格偏好</div>
+          <div class="pe-row">
+            <div class="pe-field"><label>咨询结构</label><div class="pe-chips" id="pe_cnip_styles"></div></div>
+          </div>
+          <div class="pe-row" style="margin-top:6px;">
+            <div class="pe-field"><label>情感深度</label><div class="pe-chips" id="pe_cnip_emotion"></div></div>
+          </div>
+          <div class="pe-row" style="margin-top:6px;">
+            <div class="pe-field"><label>时间取向</label><div class="pe-chips" id="pe_cnip_time"></div></div>
+            <div class="pe-field"><label>咨询师立场</label><div class="pe-chips" id="pe_cnip_stance"></div></div>
+          </div>
+          <div class="pe-row" style="margin-top:6px;">
+            <div class="pe-field"><label>课后作业</label><div class="pe-chips" id="pe_cnip_homework"></div></div>
+            <div class="pe-field"><label>咨访关系</label><div class="pe-chips" id="pe_cnip_relational"></div></div>
+          </div>
+        </div>
+        <div class="pe-section">
+          <div class="pe-section-title">联系方式</div>
+          <div class="pe-row">
+            <div class="pe-field"><label>微信</label><input type="text" id="pe_wechat" placeholder="微信号"></div>
+            <div class="pe-field"><label>手机号</label><input type="text" id="pe_phone" placeholder="手机号"></div>
+            <div class="pe-field"><label>邮箱</label><input type="text" id="pe_email" placeholder="邮箱地址"></div>
+          </div>
+        </div>
+        <div class="pe-section">
+          <div class="pe-section-title">个人简介</div>
+          <textarea id="pe_bio" style="width:100%;padding:8px 10px;border:1px solid #D8D2C8;border-radius:6px;font-size:13px;min-height:80px;resize:vertical;font-family:inherit;box-sizing:border-box;" placeholder="简短介绍你的咨询风格和擅长方向…"></textarea>
+        </div>
+        <div class="pe-actions">
+          <button class="pe-cancel" onclick="hideEditPanel()">取消</button>
+          <button class="pe-save" id="pe-save-btn" onclick="saveCounselorProfile()">💾 保存档案</button>
+        </div>
+      </div>
       <div class="panel-login" id="panel-login" style="display:none;">
         <p style="font-size:13px;color:#6B635A;margin-bottom:10px;">输入你的咨询师 ID 查看匹配申请</p>
         <input type="text" id="panel-cid-input" placeholder="咨询师 ID（UUID）">
@@ -1928,6 +2009,162 @@ function copyContact(text) {
 function esc(s) { return s ? String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') : ''; }
 function formatTime(ts) { if (!ts) return '-'; var d = new Date(ts); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+' '+pad(d.getHours())+':'+pad(d.getMinutes()); }
 function pad(n) { return n<10?'0'+n:n; }
+
+// ===== 面板内编辑档案 =====
+var PE_OPTIONS = {
+  approaches: ['CBT','ACT','DBT','EMDR','精神动力学','人本主义','存在主义治疗','格式塔','家庭治疗','EFT','叙事治疗','婚姻伴侣治疗','游戏治疗','表达性艺术治疗','催眠治疗','正念','躯体治疗','短程焦点','荣格分析','自体心理学','人际精神分析','意义疗法','积极心理治疗'],
+  specialties: ['emotion','relationship','trauma','growth','adolescent','marriage','personality','crisis'],
+  service_settings: ['个体咨询','伴侣咨询','家庭治疗','团体咨询'],
+  cnip_styles: ['structured','balanced','open'],
+  cnip_emotion: ['emotional','balanced','rational'],
+  cnip_time: ['past','present','future'],
+  cnip_stance: ['warm','neutral','challenging'],
+  cnip_homework: ['regular','occasional','none'],
+  cnip_relational: ['discuss','optional','task-focused']
+};
+var PE_LABELS = {
+  approaches: {'CBT':'认知行为','ACT':'接纳承诺','DBT':'辩证行为','EMDR':'眼动脱敏','精神动力学':'精神动力学','人本主义':'人本主义','存在主义治疗':'存在主义','格式塔':'格式塔','家庭治疗':'家庭治疗','EFT':'EFT情绪聚焦','叙事治疗':'叙事治疗','婚姻伴侣治疗':'婚姻伴侣','游戏治疗':'游戏治疗','表达性艺术治疗':'表达艺术','催眠治疗':'催眠治疗','正念':'正念','躯体治疗':'躯体治疗','短程焦点':'短程焦点','荣格分析':'荣格分析','自体心理学':'自体心理学','人际精神分析':'人际精神分析','意义疗法':'意义疗法','积极心理治疗':'积极心理治疗'},
+  specialties: {'emotion':'情绪困扰','relationship':'人际关系','trauma':'创伤经历','growth':'自我成长','adolescent':'青少年问题','marriage':'婚姻家庭','personality':'人格议题','crisis':'危机干预'},
+  service_settings: {'个体咨询':'个体咨询','伴侣咨询':'伴侣咨询','家庭治疗':'家庭治疗','团体咨询':'团体咨询'},
+  cnip_styles: {'structured':'结构化','balanced':'适中','open':'开放式'},
+  cnip_emotion: {'emotional':'情感聚焦','balanced':'适中','rational':'理性分析'},
+  cnip_time: {'past':'关注过去','present':'关注当下','future':'关注未来'},
+  cnip_stance: {'warm':'温暖支持','neutral':'中立客观','challenging':'适度挑战'},
+  cnip_homework: {'regular':'经常布置','occasional':'偶尔布置','none':'不布置'},
+  cnip_relational: {'discuss':'主动讨论','optional':'按需涉及','task-focused':'聚焦任务'}
+};
+
+function initChipGroups() {
+  Object.keys(PE_OPTIONS).forEach(function(group) {
+    var container = document.getElementById('pe_' + group);
+    if (!container) return;
+    container.innerHTML = PE_OPTIONS[group].map(function(val) {
+      return '<span class="pe-chip" data-group="' + group + '" data-value="' + val + '" onclick="togglePeChip(this)">' + (PE_LABELS[group] && PE_LABELS[group][val] || val) + '</span>';
+    }).join('');
+  });
+}
+
+function togglePeChip(el) {
+  el.classList.toggle('selected');
+}
+
+function getPeChipValues(group) {
+  var chips = document.querySelectorAll('#pe_' + group + ' .pe-chip.selected');
+  return Array.from(chips).map(function(c) { return c.dataset.value; });
+}
+
+function setPeChipValues(group, values) {
+  if (!values || !values.length) return;
+  var chips = document.querySelectorAll('#pe_' + group + ' .pe-chip');
+  chips.forEach(function(c) {
+    if (values.indexOf(c.dataset.value) >= 0) c.classList.add('selected');
+  });
+}
+
+function showEditPanel() {
+  if (!panelCid) return;
+  document.getElementById('panel-content').style.display = 'none';
+  document.getElementById('panel-edit').style.display = 'block';
+  document.getElementById('panel-edit-btn').style.display = 'none';
+  document.getElementById('panel-badge').style.display = 'none';
+  loadCounselorProfile();
+}
+
+function hideEditPanel() {
+  document.getElementById('panel-edit').style.display = 'none';
+  document.getElementById('panel-content').style.display = 'block';
+  document.getElementById('panel-edit-btn').style.display = '';
+  loadPanelRequests();
+}
+
+function loadCounselorProfile() {
+  initChipGroups();
+  fetch(SUPABASE_URL + '/rest/v1/counselors?id=eq.' + encodeURIComponent(panelCid) + '&select=*', {
+    headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (!data || !data.length) { peToast('未找到咨询师档案', 'error'); return; }
+    var d = data[0];
+    document.getElementById('pe_name').value = d.name || '';
+    document.getElementById('pe_gender').value = d.gender || '';
+    document.getElementById('pe_city').value = d.city || '';
+    document.getElementById('pe_credential').value = d.credential_level || '';
+    document.getElementById('pe_years').value = d.years_experience || '';
+    document.getElementById('pe_fee_level').value = d.fee_budget_level || '';
+    document.getElementById('pe_wechat').value = d.contact_wechat || '';
+    document.getElementById('pe_phone').value = d.contact_phone || '';
+    document.getElementById('pe_email').value = d.contact_email || '';
+    document.getElementById('pe_bio').value = d.bio_short || '';
+    setPeChipValues('approaches', d.approaches);
+    setPeChipValues('specialties', d.specialties);
+    setPeChipValues('service_settings', d.service_settings);
+    setPeChipValues('cnip_styles', d.cnip_styles);
+    setPeChipValues('cnip_emotion', d.cnip_emotion_focus);
+    setPeChipValues('cnip_time', d.cnip_time);
+    setPeChipValues('cnip_stance', d.cnip_stance);
+    setPeChipValues('cnip_homework', d.cnip_homework);
+    setPeChipValues('cnip_relational', d.cnip_relational);
+  })
+  .catch(function() { peToast('加载档案失败，请检查网络', 'error'); });
+}
+
+function saveCounselorProfile() {
+  var name = document.getElementById('pe_name').value.trim();
+  if (!name) { peToast('请填写姓名', 'error'); return; }
+  var btn = document.getElementById('pe-save-btn');
+  btn.classList.add('pe-saving');
+  btn.textContent = '保存中...';
+
+  var payload = {
+    name: name,
+    gender: document.getElementById('pe_gender').value || null,
+    city: document.getElementById('pe_city').value || null,
+    credential_level: document.getElementById('pe_credential').value || null,
+    years_experience: document.getElementById('pe_years').value || null,
+    fee_budget_level: document.getElementById('pe_fee_level').value || null,
+    contact_wechat: document.getElementById('pe_wechat').value || null,
+    contact_phone: document.getElementById('pe_phone').value || null,
+    contact_email: document.getElementById('pe_email').value || null,
+    bio_short: document.getElementById('pe_bio').value || null,
+    approaches: getPeChipValues('approaches'),
+    specialties: getPeChipValues('specialties'),
+    service_settings: getPeChipValues('service_settings'),
+    cnip_styles: getPeChipValues('cnip_styles'),
+    cnip_emotion_focus: getPeChipValues('cnip_emotion'),
+    cnip_time: getPeChipValues('cnip_time'),
+    cnip_stance: getPeChipValues('cnip_stance'),
+    cnip_homework: getPeChipValues('cnip_homework'),
+    cnip_relational: getPeChipValues('cnip_relational')
+  };
+
+  fetch(SUPABASE_URL + '/rest/v1/counselors?id=eq.' + encodeURIComponent(panelCid), {
+    method: 'PATCH',
+    headers: getSupabaseWriteHeaders(),
+    body: JSON.stringify(payload)
+  })
+  .then(function(r) {
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    peToast('档案已更新 ✓');
+    setTimeout(function() { hideEditPanel(); }, 800);
+  })
+  .catch(function(e) {
+    peToast('保存失败：' + e.message, 'error');
+  })
+  .finally(function() {
+    btn.classList.remove('pe-saving');
+    btn.textContent = '💾 保存档案';
+  });
+}
+
+function peToast(msg, type) {
+  var t = document.createElement('div');
+  t.className = 'pe-toast';
+  t.textContent = msg;
+  if (type === 'error') t.style.background = '#E53935';
+  document.body.appendChild(t);
+  setTimeout(function() { t.remove(); }, 2500);
+}
 </script>
 </body>
 </html>
