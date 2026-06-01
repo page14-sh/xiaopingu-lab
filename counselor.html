@@ -209,6 +209,20 @@
   .req-btn-approve:hover { background: #C3E6CB; }
   .req-btn-reject { background: #F8D7DA; color: #721C24; border: 1px solid #F5C6CB; }
   .req-btn-reject:hover { background: #F5C6CB; }
+  /* Pending 详情扩展 */
+  .request-card.req-pending { border-color: #FFD700; background: #FFFEFA; }
+  .req-issues { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+  .req-issue-tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; }
+  .req-scores { margin-top: 8px; display: flex; flex-direction: column; gap: 3px; background: #F5F5F0; border-radius: 8px; padding: 8px 10px; }
+  .req-score-item { display: flex; align-items: center; gap: 8px; }
+  .req-score-label { font-size: 11px; color: #6B635A; width: 52px; flex-shrink: 0; text-align: right; }
+  .req-score-bar { flex: 1; height: 8px; background: #E8E4DC; border-radius: 4px; overflow: hidden; }
+  .req-score-fill { height: 100%; border-radius: 4px; min-width: 2px; }
+  .req-score-val { font-size: 11px; font-weight: 600; width: 28px; flex-shrink: 0; }
+  .req-description { margin-top: 8px; font-size: 12px; color: #5F5E5A; background: #F7F4EF; padding: 8px 10px; border-radius: 8px; line-height: 1.6; max-height: 100px; overflow-y: auto; }
+  .req-prefs { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 4px; }
+  .req-pref-tag { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 11px; background: #EDE8E0; color: #5F5E5A; }
+  .req-cnip { margin-top: 6px; font-size: 11px; color: #5C7A52; background: #EDF5E9; padding: 4px 8px; border-radius: 6px; }
   .panel-empty { text-align: center; padding: 24px; color: #A09889; font-size: 13px; }
   .panel-loading { text-align: center; padding: 24px; color: #A09889; }
   .spinner { display: inline-block; width: 24px; height: 24px; border: 3px solid #E8E4DC; border-top-color: #5C7A52; border-radius: 50%; animation: spin 0.8s linear infinite; }
@@ -2049,23 +2063,126 @@ function loadPanelRequests() {
     var html = '';
     records.forEach(function(a) {
       var status = a.match_request_status || 'pending';
+      var isPending = status === 'pending';
       var statusLabel = status === 'approved' ? '<span style="color:#155724;background:#D4EDDA;padding:2px 8px;border-radius:4px;font-size:11px">✅ 已通过</span>'
         : status === 'rejected' ? '<span style="color:#721C24;background:#F8D7DA;padding:2px 8px;border-radius:4px;font-size:11px">❌ 已拒绝</span>'
         : status === 'contacted' ? '<span style="color:#0A58CA;background:#CFE2FF;padding:2px 8px;border-radius:4px;font-size:11px">📞 已联系</span>'
         : '<span style="color:#856404;background:#FFF3CD;padding:2px 8px;border-radius:4px;font-size:11px">⏳ 待处理</span>';
 
-      html += '<div class="request-card">';
+      var issueMap = {emotion:'情绪困扰',relationship:'关系困境',trauma:'创伤经历',growth:'自我成长',adolescent:'青少年问题',marriage:'婚姻/伴侣',personality:'人格成长/发展性议题',crisis:'危机状态',workplace:'职场困扰',eating:'进食障碍',addiction:'成瘾行为',grief:'丧亲哀伤',sexual:'性心理议题',somatic:'心身困扰',family:'家庭系统'};
+      var scoreColors = function(v) { return v >= 4 ? '#C4654A' : v >= 2 ? '#B8860B' : '#5C7A52'; };
+
+      html += '<div class="request-card' + (isPending ? ' req-pending' : '') + '">';
+      // 标题行
       html += '<div class="req-name">' + esc(a.match_request_name || a.visitor_name || '匿名') + ' ' + statusLabel + '</div>';
+
+      // 基本信息行
       html += '<div class="req-meta">';
-      html += '📞 ' + esc(a.match_request_contact || '-') + ' · ';
-      html += '📊 评分 ' + (a.total_score || 0) + ' · ';
-      html += '🏷 ' + (a.severity || '-') + ' · ';
-      html += '🕐 ' + formatTime(a.created_at);
+      if (a.visitor_age) html += '👤 ' + a.visitor_age + '岁';
+      if (a.visitor_gender && a.visitor_gender !== '不便透露') html += ' · ' + a.visitor_gender;
+      if (a.visitor_city) html += ' · 📍' + esc(a.visitor_city);
+      if (a.visitor_occupation) html += ' · ' + esc(a.visitor_occupation);
       html += '</div>';
+
+      // 简要摘要行（非 pending 也显示）
+      html += '<div class="req-meta" style="margin-top:2px">';
+      html += '📞 ' + esc(a.match_request_contact || '-') + ' · ';
+      html += '📊 总分 ' + (a.total_score || 0) + '/25 · ';
+      html += '🏷 ' + (a.severity || a.severityStandard || '-');
+      if (a.duration) html += ' · ⏱ ' + esc(a.duration);
+      html += ' · 🕐 ' + formatTime(a.created_at);
+      html += '</div>';
+
+      // ===== Pending 状态：展示完整评估详情 =====
+      if (isPending) {
+        // 危机标记
+        if (a.crisis_level && a.crisis_level !== 'none') {
+          html += '<div style="margin-top:8px;background:#FFF0F0;border:1px solid #FFC9C9;border-radius:8px;padding:8px 12px;font-size:12px;color:#C41E3A;">⚠️ 危机筛查：' + esc(a.crisis_level) + '</div>';
+        }
+        if (a.specials && a.specials.length > 0) {
+          html += '<div style="margin-top:4px;font-size:12px;color:#B87333">🏴 特殊标记：' + (typeof a.specials === 'string' ? esc(a.specials) : a.specials.map(esc).join('、')) + '</div>';
+        }
+
+        // 主诉问题标签
+        if (a.issues) {
+          var issueArr = typeof a.issues === 'string' ? a.issues.split(',') : a.issues;
+          if (issueArr.length > 0) {
+            html += '<div class="req-issues">';
+            issueArr.forEach(function(v) {
+              var vv = (v || '').trim();
+              if (!vv) return;
+              var ci = (vv === 'crisis' || vv === 'trauma' || vv === 'addiction') ? '#D14B4B;bg:#FFF0F0' :
+                       (vv === 'personality' || vv === 'eating') ? '#7B3F8C;bg:#F8F0FA' :
+                       (vv === 'emotion' || vv === 'somatic' || vv === 'grief') ? '#2563EB;bg:#EFF3FF' :
+                       (vv === 'sexual') ? '#D94680;bg:#FFF0F5' :
+                       (vv === 'workplace' || vv === 'family') ? '#B8860B;bg:#FFF8EB' : '#5C7A52;bg:#EDF5E9';
+              var parts = ci.split(';bg:');
+              html += '<span class="req-issue-tag" style="background:' + parts[1] + ';color:' + parts[0] + '">' + esc(issueMap[vv] || vv) + '</span>';
+            });
+            html += '</div>';
+          }
+        }
+
+        // 五维症状评分
+        var dims = [
+          ['情绪低落', a.score_mood], ['焦虑紧张', a.score_anxiety], ['睡眠困难', a.score_sleep],
+          ['功能受损', a.score_function], ['人际紧张', a.score_relation]
+        ];
+        html += '<div class="req-scores">';
+        dims.forEach(function(d) {
+          var val = parseInt(d[1]) || 0;
+          var pct = (val / 5 * 100).toFixed(0);
+          html += '<div class="req-score-item"><span class="req-score-label">' + d[0] + '</span>' +
+            '<div class="req-score-bar"><div class="req-score-fill" style="width:' + pct + '%;background:' + scoreColors(val) + '"></div></div>' +
+            '<span class="req-score-val" style="color:' + scoreColors(val) + '">' + val + '/5</span></div>';
+        });
+        html += '</div>';
+
+        // 来访自述
+        if (a.description) {
+          html += '<div class="req-description">💬 ' + esc(a.description) + '</div>';
+        }
+
+        // 偏好设置行
+        html += '<div class="req-prefs">';
+        if (a.budget) html += '<span class="req-pref-tag">💰 ' + esc(a.budget) + '</span>';
+        if (a.prev_counseling) html += '<span class="req-pref-tag">📋 既往：' + esc(a.prev_counseling) + '</span>';
+        if (a.preferred_formats) {
+          var fmts = typeof a.preferred_formats === 'string' ? a.preferred_formats.split(',') : a.preferred_formats;
+          html += '<span class="req-pref-tag">📡 ' + (fmts || []).map(esc).join('、') + '</span>';
+        }
+        if (a.gender_pref && a.gender_pref !== 'any') html += '<span class="req-pref-tag">👤 倾向：' + esc(a.gender_pref) + '</span>';
+        if (a.comm_style) {
+          var csMap = {listening:'倾听型',guided:'引导型',leading:'带动型',collaborative:'对话型',directive:'指导型'};
+          html += '<span class="req-pref-tag">💭 ' + (csMap[a.comm_style] || a.comm_style) + '</span>';
+        }
+        if (a.filled_by === 'parent') html += '<span class="req-pref-tag" style="background:#FFF3E0;color:#E65100">📋 家长代填</span>';
+        html += '</div>';
+
+        // C-NIP 偏好
+        var cnipMap = {
+          cnip_structure: {label:'结构',values:{structured:'结构化',balanced:'适中',open:'开放式'}},
+          cnip_emotion: {label:'情感',values:{emotional:'情感聚焦',balanced:'适中',rational:'理性分析'}},
+          cnip_timefocus: {label:'时间',values:{past:'关注过去',present:'关注当下',future:'关注未来'}},
+          cnip_warmth: {label:'立场',values:{warm:'温暖支持',neutral:'中立客观',challenging:'适度挑战'}},
+          cnip_homework: {label:'作业',values:{regular:'经常布置',occasional:'偶尔布置',none:'不布置'}},
+          cnip_relational: {label:'关系',values:{discuss:'主动讨论',optional:'按需涉及',none:'关注任务'}}
+        };
+        var cnipParts = [];
+        Object.keys(cnipMap).forEach(function(k) {
+          var v = a[k];
+          if (v && cnipMap[k].values[v]) cnipParts.push(cnipMap[k].label + ':' + cnipMap[k].values[v]);
+        });
+        if (cnipParts.length > 0) {
+          html += '<div class="req-cnip">🧩 C-NIP：' + cnipParts.join(' · ') + '</div>';
+        }
+      }
+
       // 拒绝理由
       if (status === 'rejected' && a.match_request_reviewed_note) {
         html += '<div class="req-note" style="margin-top:6px;font-size:12px;color:#721C24;background:#F8D7DA;padding:6px 10px;border-radius:6px">📝 拒绝理由：' + esc(a.match_request_reviewed_note) + '</div>';
       }
+
       html += '<div class="req-actions">';
       html += '<a href="session-dashboard.html?aid=' + a.id + '&role=counselor&cid=' + panelCid + '&name=' + encodeURIComponent(a.match_request_name || a.visitor_name || '') + '" class="req-btn req-btn-blue" target="_blank">📈 追踪面板</a>';
       html += '<button class="req-btn req-btn-outline" onclick="copyContact(\'' + esc(a.match_request_contact || '') + '\')">📋 复制联系方式</button>';
