@@ -82,6 +82,56 @@
     .detail-item { background: #F7F4EF; border-radius: 10px; padding: 12px 14px; }
     .detail-label { font-size: 11px; color: #A09889; margin-bottom: 4px; }
     .detail-value { font-size: 20px; font-weight: 700; color: #3D3831; }
+
+    /* 轮次选择器 */
+    .round-selector {
+      display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;
+    }
+    .round-btn {
+      padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: 500;
+      border: 1.5px solid #E8E4DC; background: white; color: #6B635A;
+      cursor: pointer; transition: all 0.2s; white-space: nowrap;
+    }
+    .round-btn.active {
+      background: #5C7A52; color: white; border-color: #5C7A52;
+    }
+    .round-btn:hover:not(.active) { border-color: #5C7A52; color: #5C7A52; }
+    .round-btn .round-badge {
+      font-size: 10px; margin-left: 4px; padding: 1px 6px; border-radius: 10px;
+      background: rgba(255,255,255,0.3);
+    }
+    .round-btn.active .round-badge { background: rgba(255,255,255,0.25); }
+
+    /* 轮次总结卡片 */
+    .round-summary {
+      background: linear-gradient(135deg, #E8F5E9 0%, #F0F7EC 100%);
+      border: 1px solid #C8DCC0; border-radius: 16px; padding: 20px;
+      margin-bottom: 16px;
+    }
+    .round-summary .round-header {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+    }
+    .round-summary .round-badge-complete {
+      padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;
+      background: #2E7D32; color: white;
+    }
+    .round-summary .round-stats {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px;
+    }
+    .round-summary .round-stat {
+      text-align: center; background: white; border-radius: 10px; padding: 10px 12px;
+    }
+    .round-summary .round-stat-val { font-size: 20px; font-weight: 700; }
+    .round-summary .round-stat-label { font-size: 10px; color: #8B7E6B; margin-top: 2px; }
+
+    /* 轮次分隔线 */
+    .round-divider {
+      display: flex; align-items: center; gap: 12px;
+      margin: 20px 0 12px; color: #A09889; font-size: 12px; font-weight: 500;
+    }
+    .round-divider::before, .round-divider::after {
+      content: ''; flex: 1; height: 1px; background: #E8E4DC;
+    }
   </style>
 </head>
 <body class="min-h-screen">
@@ -243,6 +293,8 @@
 var currentAssessmentId = null;
 var allSessions = [];
 var allRatings = [];  // all PCOMS ratings for this assessment
+var allRounds = [];   // sessions grouped by round
+var currentRound = 0; // 0 = all rounds
 var chartInstances = {};
 var currentTab = 'timeline';
 
@@ -286,7 +338,23 @@ function loadDashboard(aid) {
       s.ratings = allRatings.filter(function(r) { return r.session_id === s.id; });
       s.ors = s.ratings.find(function(r) { return r.type === 'ORS'; });
       s.srs = s.ratings.find(function(r) { return r.type === 'SRS'; });
+      // 计算轮次
+      s.round = Math.ceil(s.session_number / 8);
     });
+
+    // 分组轮次
+    allRounds = [];
+    var roundMap = {};
+    allSessions.forEach(function(s) {
+      var r = s.round;
+      if (!roundMap[r]) { roundMap[r] = []; }
+      roundMap[r].push(s);
+    });
+    Object.keys(roundMap).sort(function(a,b){ return parseInt(a) - parseInt(b); }).forEach(function(k) {
+      allRounds.push({ number: parseInt(k), sessions: roundMap[k] });
+    });
+    // 默认选中最后一个轮次
+    currentRound = allRounds.length > 0 ? allRounds[allRounds.length - 1].number : 0;
 
     renderDashboard();
   }).catch(function(e) {
@@ -310,31 +378,133 @@ function renderDashboard() {
   var firstSession = allSessions[0];
   var name = firstSession.visitor_name || window._dashVisitorName || '来访者';
   document.getElementById('client_name').textContent = name;
-  document.getElementById('client_meta').textContent =
-    window._dashRole === 'counselor'
-      ? '咨询师视角 · 来访者追踪数据'
-      : '咨询效果追踪';
   document.getElementById('client_avatar').textContent = name.charAt(0);
-  document.getElementById('client_meta').textContent = '评估 ID: ' + currentAssessmentId.slice(0, 8) + '… · 共 ' + allSessions.length + ' 次会话';
 
-  // Summary stats
-  renderSummary();
+  // 轮次选择器
+  renderRoundSelector();
+
+  // 获取当前轮次数据
+  var activeSessions = getActiveSessions();
+
+  // Meta text
+  var totalRounds = allRounds.length;
+  document.getElementById('client_meta').textContent =
+    (window._dashRole === 'counselor' ? '咨询师视角 · ' : '') +
+    '评估 ID: ' + currentAssessmentId.slice(0, 8) + '… · 共 ' + allSessions.length + ' 次会话' +
+    (totalRounds > 1 ? ' · ' + totalRounds + ' 轮' : '');
+
+  // Summary cards
+  renderSummary(activeSessions);
+  // Round summaries
+  renderRoundSummaries();
   // Session timeline
-  renderSessionList();
-  // Charts
-  renderCharts();
+  renderSessionList(activeSessions);
   // Alerts
   renderAlerts();
 }
 
-function renderSummary() {
-  var totalSessions = allSessions.length;
-  document.getElementById('stat_sessions').textContent = totalSessions;
+// 获取当前选中轮次或全部 sessions
+function getActiveSessions() {
+  if (currentRound === 0) return allSessions.slice();
+  return allSessions.filter(function(s) { return s.round === currentRound; });
+}
 
-  // 构建按会话编号排序的 ORS/SRS 列表（与底部记录数据源一致，避免 allRatings 创建时间乱序）
+// ===== 轮次选择器 =====
+function renderRoundSelector() {
+  if (allRounds.length <= 1) return; // 只有一轮不显示
+
+  var html = '<div class="round-selector">';
+  html += '<button class="round-btn' + (currentRound === 0 ? ' active' : '') + '" onclick="switchRound(0)">全部</button>';
+  allRounds.forEach(function(r) {
+    var isComplete = r.sessions.length >= 8;
+    html += '<button class="round-btn' + (currentRound === r.number ? ' active' : '') + '" onclick="switchRound(' + r.number + ')">' +
+      '第 ' + r.number + ' 轮' +
+      '<span class="round-badge">' + r.sessions.length + '/' + (r.number * 8 <= allSessions.length + 1 ? 8 : Math.min(8, Math.max(0, allSessions.length - (r.number - 1) * 8))) + '</span>' +
+      '</button>';
+  });
+  html += '</div>';
+
+  // 插入到 client info bar 后面
+  var infoBar = document.querySelector('#dashboard > div:first-child');
+  infoBar.insertAdjacentHTML('afterend', html);
+}
+
+function switchRound(round) {
+  currentRound = round;
+  // 清除旧图表
+  Object.keys(chartInstances).forEach(function(k) {
+    if (chartInstances[k]) chartInstances[k].destroy();
+  });
+  chartInstances = {};
+  // 移除旧的轮次选择器
+  var oldSelector = document.querySelector('.round-selector');
+  if (oldSelector) oldSelector.remove();
+  // 重新渲染
+  renderDashboard();
+  // 重置 tab
+  switchTab(currentTab);
+}
+
+// ===== 轮次总结卡片 =====
+function renderRoundSummaries() {
+  if (allRounds.length === 0) return;
+
+  // 查找已有的轮次总结容器
+  var existing = document.getElementById('round_summaries');
+  if (existing) existing.remove();
+
+  var html = '<div id="round_summaries" class="space-y-3' + (currentRound !== 0 ? ' hidden' : '') + '">';
+  allRounds.forEach(function(r) {
+    var sessions = r.sessions;
+    var orsSessions = sessions.filter(function(s) { return s.ors; });
+    var srsSessions = sessions.filter(function(s) { return s.srs; });
+
+    if (orsSessions.length === 0) return; // 没有评分的轮次不显示
+
+    var firstOrs = orsSessions[0].ors.total_score;
+    var lastOrs = orsSessions[orsSessions.length - 1].ors.total_score;
+    var orsChange = lastOrs - firstOrs;
+    var improved = orsSessions.filter(function(s) { return s.ors.clinical_change === 'improved'; }).length;
+    var srsRisk = srsSessions.filter(function(s) { return s.srs.total_score < 36; }).length;
+    var isComplete = sessions.length >= 8;
+
+    var trendColor = orsChange >= 5 ? '#2E7D32' : orsChange <= -5 ? '#C62828' : '#8B7E6B';
+    var trendIcon = orsChange >= 5 ? '📈' : orsChange <= -5 ? '📉' : '➡️';
+
+    html += '<div class="round-summary">';
+    html += '<div class="round-header">';
+    html += '<span class="text-base font-bold text-gray-700">第 ' + r.number + ' 轮</span>';
+    if (isComplete) html += '<span class="round-badge-complete">✓ 已完成</span>';
+    else html += '<span style="font-size:12px;color:#8B7E6B">进行中（' + sessions.length + '/8）</span>';
+    html += '</div>';
+    html += '<div class="round-stats">';
+    html += '<div class="round-stat"><div class="round-stat-val" style="color:#5C7A52">' + firstOrs.toFixed(1) + '</div><div class="round-stat-label">起始 ORS</div></div>';
+    html += '<div class="round-stat"><div class="round-stat-val" style="color:#378ADD">' + lastOrs.toFixed(1) + '</div><div class="round-stat-label">结束 ORS</div></div>';
+    html += '<div class="round-stat"><div class="round-stat-val" style="color:' + trendColor + '">' + trendIcon + ' ' + (orsChange >= 0 ? '+' : '') + orsChange.toFixed(1) + '</div><div class="round-stat-label">变化</div></div>';
+    html += '<div class="round-stat"><div class="round-stat-val" style="color:' + (improved > 0 ? '#2E7D32' : '#8B7E6B') + '">' + improved + '</div><div class="round-stat-label">改善次数</div></div>';
+    if (srsRisk > 0) {
+      html += '<div class="round-stat"><div class="round-stat-val" style="color:#C62828">⚠ ' + srsRisk + '</div><div class="round-stat-label">联盟风险</div></div>';
+    }
+    html += '</div></div>';
+  });
+  html += '</div>';
+
+  // 插入到轮次选择器后面
+  var selector = document.querySelector('.round-selector');
+  var target = selector || document.querySelector('#summary_cards');
+  if (target && target.parentElement) {
+    target.parentElement.insertAdjacentHTML('afterend', html);
+  }
+}
+
+function renderSummary(activeSessions) {
+  var sessions = activeSessions || allSessions;
+  var totalSessions = sessions.length;
+  document.getElementById('stat_sessions').textContent = totalSessions;
+  // 构建按会话编号排序的 ORS/SRS 列表
   var orsList = [];
   var srsList = [];
-  allSessions.forEach(function(s) {
+  sessions.forEach(function(s) {
     if (s.ors) orsList.push(s.ors);
     if (s.srs) srsList.push(s.srs);
   });
@@ -379,9 +549,23 @@ function renderSummary() {
   }
 }
 
-function renderSessionList() {
+function renderSessionList(activeSessions) {
+  var sessions = activeSessions || allSessions;
   var html = '';
-  allSessions.forEach(function(s, idx) {
+  var lastRound = -1;
+
+  sessions.forEach(function(s, idx) {
+    // 如果切换到新轮次且多于一轮，添加分隔线
+    if (allRounds.length > 1 && s.round !== lastRound) {
+      if (lastRound !== -1) html += '</div>'; // 关闭上一轮的 div
+      html += '<div class="round-divider">第 ' + s.round + ' 轮</div>';
+      html += '<div class="space-y-3">';
+      lastRound = s.round;
+    }
+    if (lastRound === -1) {
+      html += '<div class="space-y-3">';
+      lastRound = s.round;
+    }
     var orsScore = s.ors ? s.ors.total_score.toFixed(1) : '—';
     var srsScore = s.srs ? s.srs.total_score.toFixed(1) : '—';
     var srsRisk = s.srs && s.srs.total_score < 36;
@@ -407,6 +591,8 @@ function renderSessionList() {
 
   if (html === '') {
     html = '<div class="bg-white rounded-2xl p-8 shadow-sm text-center text-gray-400 text-sm">暂无会话记录</div>';
+  } else {
+    html += '</div>'; // 关闭最后一个轮次的 div
   }
   document.getElementById('session_list').innerHTML = html;
 }
@@ -514,9 +700,9 @@ function safeChart(canvasId, minW, minH, config) {
 
 function renderOrsCharts() {
   destroyCharts('ors_');
-  // 按会话编号排序（与底部记录一致）
+  var sessions = getActiveSessions();
   var orsList = [];
-  allSessions.forEach(function(s) { if (s.ors) orsList.push(s.ors); });
+  sessions.forEach(function(s) { if (s.ors) orsList.push(s.ors); });
   if (orsList.length === 0) return;
   var labels = orsList.map(function(r, i) { return '第' + (i + 1) + '次'; });
 
@@ -556,9 +742,9 @@ function renderOrsCharts() {
 
 function renderSrsCharts() {
   destroyCharts('srs_');
-  // 按会话编号排序（与底部记录一致）
+  var sessions = getActiveSessions();
   var srsList = [];
-  allSessions.forEach(function(s) { if (s.srs) srsList.push(s.srs); });
+  sessions.forEach(function(s) { if (s.srs) srsList.push(s.srs); });
   if (srsList.length === 0) return;
   var labels = srsList.map(function(r, i) { return '第' + (i + 1) + '次'; });
 
@@ -631,9 +817,10 @@ function chartOptions(title, min, max) {
 function renderAlerts() {
   var alerts = [];
   // 按会话编号排序（与底部记录一致），避免 allRatings 创建时间乱序导致假警报
+  var sessions = getActiveSessions();
   var orsList = [];
   var srsList = [];
-  allSessions.forEach(function(s) {
+  sessions.forEach(function(s) {
     if (s.ors) orsList.push(s.ors);
     if (s.srs) srsList.push(s.srs);
   });

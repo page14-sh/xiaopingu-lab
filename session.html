@@ -204,6 +204,43 @@
     .alert-danger { border-color: #EF5350; }
     .alert-warning { border-color: #FFB74D; }
     .alert-success { border-color: #81C784; }
+
+    /* 轮次回顾总结 */
+    .round-summary-card {
+      background: white; border-radius: 16px; padding: 24px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 16px;
+    }
+    .round-summary-card .round-badge {
+      display: inline-block; padding: 4px 14px; border-radius: 20px;
+      font-size: 12px; font-weight: 600;
+    }
+    .round-summary-card .round-badge.complete { background: #E8F5E9; color: #2E7D32; }
+    .round-summary-card .round-badge.ongoing { background: #FFF3CD; color: #856404; }
+    .round-stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 12px; margin: 16px 0; }
+    .round-stat-item { background: #F7F4EF; border-radius: 12px; padding: 14px; text-align: center; }
+    .round-stat-value { font-size: 24px; font-weight: 700; }
+    .round-stat-label { font-size: 11px; color: #8B7E6B; margin-top: 4px; }
+    .session-mini-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 12px; border-radius: 8px; background: #FAF8F5; margin-bottom: 4px;
+    }
+    .session-mini-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .session-mini-dot.ors { background: #5C7A52; }
+    .session-mini-dot.srs { background: #378ADD; }
+    .session-mini-num { font-size: 12px; font-weight: 500; color: #6B635A; min-width: 36px; }
+    .session-mini-score { font-size: 13px; font-weight: 600; margin-left: auto; }
+    .session-mini-score.ors { color: #5C7A52; }
+    .session-mini-score.srs { color: #378ADD; }
+    .trend-arrow { font-size: 14px; margin-left: 4px; }
+    .trend-arrow.up { color: #2E7D32; }
+    .trend-arrow.down { color: #C62828; }
+    .round-insight {
+      background: #F0F7EC; border-left: 3px solid #5C7A52;
+      border-radius: 8px; padding: 10px 14px; font-size: 12px; color: #4A6040; margin-top: 8px;
+    }
+    .round-insight.warn {
+      background: #FFF8E1; border-left-color: #F0A35E; color: #8B6914;
+    }
   </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -266,7 +303,19 @@
       </div>
       <div class="bg-white rounded-2xl p-6 shadow-sm mb-4">
         <h2 class="text-base font-bold text-gray-700 mb-2">📊 结果评分 (ORS)</h2>
-        <p class="text-sm text-gray-500 mb-6">请在每条线上标记最能代表你当前状态的点。<br>左侧=非常不好，右侧=非常好</p>
+        <p class="text-sm text-gray-500 mb-4">请在每条线上标记最能代表你当前状态的点。<br>左侧=非常不好，右侧=非常好</p>
+
+        <!-- 评分指南（可折叠） -->
+        <details style="background:#F0F7EC;border-radius:10px;padding:10px 14px;margin-bottom:16px;cursor:pointer">
+          <summary style="font-size:12px;font-weight:500;color:#5C7A52">📖 评分指南：ORS 测量你过去一周的感受</summary>
+          <div style="font-size:11px;color:#6B635A;margin-top:8px;line-height:1.7">
+            <p><strong>个人：</strong>你对自己的整体感觉——情绪、身体健康、生活满意度</p>
+            <p><strong>人际：</strong>与家人、伴侣、朋友等亲密关系的质量</p>
+            <p><strong>社会角色：</strong>在工作/学习/社区中的表现和适应</p>
+            <p><strong>总体：</strong>综合以上，你对自己整体状态的评价</p>
+            <p style="margin-top:6px;color:#A09889">💡 <em>没有对错之分，请根据真实感受标记</em></p>
+          </div>
+        </details>
 
         <!-- 个人 wellbeing -->
         <div class="vas-item">
@@ -334,7 +383,19 @@
       </div>
       <div class="bg-white rounded-2xl p-6 shadow-sm mb-4">
         <h2 class="text-base font-bold text-gray-700 mb-2">🤝 联盟评分 (SRS)</h2>
-        <p class="text-sm text-gray-500 mb-6">评估你与咨询师在本次咨询中的合作感受。<br>左侧=完全不同意，右侧=非常同意</p>
+        <p class="text-sm text-gray-500 mb-4">评估你与咨询师在本次咨询中的合作感受。<br>左侧=完全不同意，右侧=非常同意</p>
+
+        <!-- 评分指南 -->
+        <details style="background:#EBF3FD;border-radius:10px;padding:10px 14px;margin-bottom:16px;cursor:pointer">
+          <summary style="font-size:12px;font-weight:500;color:#1565C0">📖 评分指南：SRS 测量你对本次咨询的感受</summary>
+          <div style="font-size:11px;color:#6B635A;margin-top:8px;line-height:1.7">
+            <p><strong>关系：</strong>你觉得被倾听、理解和尊重了吗？</p>
+            <p><strong>目标：</strong>你和咨询师在谈论的议题上是否一致？</p>
+            <p><strong>方法：</strong>咨询师的方式是否适合你、让你感到舒服？</p>
+            <p><strong>总体：</strong>总体而言，这次咨询对你是否有帮助？</p>
+            <p style="margin-top:6px;color:#A09889">💡 <em>诚实反馈能帮助咨询师更好地调整方式</em></p>
+          </div>
+        </details>
 
         <div class="vas-item">
           <div class="vas-item-title">关系 (Relationship)</div>
@@ -454,6 +515,16 @@
       </div>
     </div>
 
+    <!-- 轮次回顾总结（第 8/16/24... 次后） -->
+    <div id="step-round-summary" class="hidden">
+      <div id="round-summary-content"></div>
+      <div class="flex gap-3 justify-center flex-wrap mt-6">
+        <a id="round-dashboard-link" href="#" class="btn-primary inline-block no-underline">📊 查看完整追踪面板</a>
+        <button class="btn-secondary" id="btn-start-new-round" onclick="startNewRound()">开启新一轮 →</button>
+        <a href="index.html" class="btn-secondary inline-block no-underline">返回首页</a>
+      </div>
+    </div>
+
     <!-- 加载中 -->
     <div id="step-loading" class="text-center py-20">
       <svg viewBox="0 0 48 48" fill="none" width="48" height="48" class="mb-4 animate-pulse"><ellipse cx="24" cy="22" rx="18" ry="14" fill="#5B8FC9"/><circle cx="16" cy="17" r="3.5" fill="#fff" opacity="0.5"/><circle cx="28" cy="14" r="2.5" fill="#fff" opacity="0.4"/><path d="M19 24 Q19 36 21 40 L27 40 Q29 36 29 24" fill="#F5EDE0"/></svg>
@@ -471,6 +542,7 @@
     var counselorId = null;
     var visitorName = null;
     var sessionNumber = 1;
+    var roundNumber = 1;
     var previousOrs = null;
     var previousSrs = null;
     var allOrsHistory = [];
@@ -478,6 +550,24 @@
     var isCounselorMode = false;
 
     // ========== 初始化 ==========
+    // 检查来访者匹配审批状态
+    function checkAssessmentMatchStatus(aid, cid) {
+      if (!aid) return Promise.resolve({ status: 'none' });
+      var url = SUPABASE_CONFIG.url + '/rest/v1/assessments?select=match_request_status,match_request_cid&id=eq.' + aid;
+      return fetch(url, {
+        headers: { 'apikey': SUPABASE_CONFIG.anonKey, 'Authorization': 'Bearer ' + SUPABASE_CONFIG.anonKey }
+      }).then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (!data || data.length === 0) return { status: 'none' };
+        var a = data[0];
+        // 如果指定了咨询师ID，校验是否匹配
+        if (cid && a.match_request_cid !== cid) {
+          return { status: 'none', reason: 'counselor_mismatch' };
+        }
+        return { status: a.match_request_status || 'none' };
+      }).catch(function() { return { status: 'error' }; });
+    }
+
     window.addEventListener('load', function() {
       var params = new URLSearchParams(location.search);
       assessmentId = params.get('aid');
@@ -495,7 +585,37 @@
     });
 
     function initSession() {
-      // 先检查是否有现有会话（通过 assessment_id 查询）
+      // 先检查来访者匹配审批状态（非咨询师模式需要）
+      var checkPromise = isCounselorMode
+        ? Promise.resolve({ status: 'approved' })  // 咨询师模式跳过校验
+        : checkAssessmentMatchStatus(assessmentId, counselorId);
+
+      checkPromise.then(function(matchCheck) {
+        if (!isCounselorMode && matchCheck.status !== 'approved' && matchCheck.status !== 'contacted') {
+          document.getElementById('step-loading').innerHTML =
+            '<div class="text-4xl mb-4">🔒</div>' +
+            '<p class="text-gray-500 font-medium">暂未获得评分权限</p>' +
+            '<p class="text-xs text-gray-400 mt-2">' + (matchCheck.status === 'pending'
+              ? '你的匹配申请正在审核中，咨询师通过后方可开始 PCOMS 追踪评分'
+              : matchCheck.status === 'rejected'
+              ? '匹配申请未通过，可返回首页重新选择咨询师'
+              : '请先在评估结果页向咨询师提交匹配申请，通过后再进行评分') + '</p>' +
+            '<div style="margin-top:16px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">' +
+            '<a href="my-assessment.html?aid=' + assessmentId + '" class="btn-secondary inline-block no-underline">📋 查看申请状态</a>' +
+            '<a href="index.html" class="btn-primary inline-block no-underline">返回首页</a>' +
+            '</div>';
+          document.getElementById('step-loading').classList.remove('hidden');
+          return;
+        }
+        initSessionAfterAuthCheck();
+      }).catch(function(e) {
+        console.error('状态校验失败:', e);
+        // 降级：直接进入评分（网络错误时不阻断）
+        initSessionAfterAuthCheck();
+      });
+    }
+
+    function initSessionAfterAuthCheck() {
       getSessionsByAssessment(assessmentId).then(function(sessions) {
         var existingSession = null;
 
@@ -547,10 +667,13 @@
         previousOrs = lastOrs;
         previousSrs = lastSrs;
 
+        // 计算轮次
+        roundNumber = Math.ceil(sessionNumber / 8);
+
         // 显示页面
         document.getElementById('step-loading').classList.add('hidden');
         document.getElementById('session-info').textContent =
-          '第 ' + sessionNumber + ' 次咨询 · ' + visitorName +
+          '第 ' + roundNumber + ' 轮 · 第 ' + sessionNumber + ' 次咨询 · ' + visitorName +
           (previousOrs ? ' · 上次ORS: ' + previousOrs.total_score + '分' : ' · 首次评估');
 
         // 咨询师速览条
@@ -589,7 +712,7 @@
       // 基本信息
       document.getElementById('bar-avatar').textContent = visitorName.charAt(0);
       document.getElementById('bar-name').textContent = visitorName;
-      document.getElementById('bar-session-tag').textContent = '第 ' + sessionNumber + ' 次';
+      document.getElementById('bar-session-tag').textContent = '第 ' + roundNumber + ' 轮 · 第 ' + sessionNumber + ' 次';
       document.getElementById('bar-meta').textContent =
         '评估ID: ' + (assessmentId || '').slice(0, 8) + '…';
 
@@ -884,10 +1007,237 @@
       document.getElementById('step-srs').classList.add('hidden');
       document.getElementById('step-review').classList.add('hidden');
       document.getElementById('step-success').classList.add('hidden');
+      document.getElementById('step-round-summary').classList.add('hidden');
       document.getElementById('step-' + step).classList.remove('hidden');
 
       if (step === 'review') buildReview();
       window.scrollTo(0, 0);
+    }
+
+    // ========== 标准成功页 ==========
+    function showStandardSuccess(orsTotal, srsTotal, orsClinicalChange) {
+      goToStep('success');
+
+      var titleEl = document.getElementById('success-title');
+      var descEl = document.getElementById('success-desc');
+      var summaryEl = document.getElementById('success-summary');
+
+      if (orsClinicalChange === 'improved') {
+        titleEl.textContent = '有显著改善！';
+        descEl.textContent = '你的 ORS 评分相比上次提升了 5 分以上，咨询效果良好。继续保持！';
+      } else if (orsClinicalChange === 'worsening') {
+        titleEl.textContent = '评分有变化';
+        descEl.textContent = '你的评分有所下降，建议在下次咨询中与咨询师讨论这个变化。';
+      } else {
+        titleEl.textContent = '评分已提交';
+        descEl.textContent = '感谢你的反馈，这些数据将帮助你和咨询师更好地了解咨询进展。';
+      }
+
+      summaryEl.innerHTML =
+        '<div class="result-card"><div class="grid grid-cols-2 gap-4 text-center">' +
+          '<div><div class="text-2xl font-bold" style="color:#5C7A52">' + orsTotal.toFixed(1) + '</div><div class="text-xs text-gray-500">ORS 总分</div></div>' +
+          '<div><div class="text-2xl font-bold" style="color:#378ADD">' + srsTotal.toFixed(1) + '</div><div class="text-xs text-gray-500">SRS 总分</div></div>' +
+        '</div></div>';
+
+      var roleParam = isCounselorMode ? '&role=counselor' : '';
+      var nextUrl = location.pathname + '?aid=' + assessmentId +
+        (counselorId ? '&cid=' + counselorId : '') +
+        '&name=' + encodeURIComponent(visitorName) +
+        '&sn=' + (sessionNumber + 1) + roleParam;
+      summaryEl.innerHTML +=
+        '<div class="result-card text-center">' +
+          '<p class="text-sm text-gray-500 mb-3">下次咨询后，可继续在此填写追踪评分</p>' +
+          '<div class="bg-gray-50 rounded-lg p-3 text-xs text-gray-400 break-all">' + location.origin + nextUrl + '</div>' +
+        '</div>';
+
+      var dashUrl = 'session-dashboard.html?aid=' + assessmentId;
+      document.getElementById('dashboard_link').href = dashUrl;
+
+      // 自动跳转到追踪面板（5秒倒计时）
+      var autoSec = 5;
+      var autoEl = document.createElement('div');
+      autoEl.style.cssText = 'text-align:center;margin-top:16px;font-size:12px;color:#A09889';
+      autoEl.textContent = autoSec + ' 秒后自动跳转到追踪面板...';
+      document.getElementById('step-success').appendChild(autoEl);
+      var autoTimer = setInterval(function() {
+        autoSec--;
+        if (autoSec <= 0) {
+          clearInterval(autoTimer);
+          window.location.href = dashUrl;
+        } else {
+          autoEl.textContent = autoSec + ' 秒后自动跳转到追踪面板...';
+        }
+      }, 1000);
+      document.getElementById('btn-new-rating').addEventListener('click', function() { clearInterval(autoTimer); autoEl.remove(); }, { once: true });
+      document.getElementById('dashboard_link').addEventListener('click', function() { clearInterval(autoTimer); autoEl.remove(); }, { once: true });
+
+      // 分享给咨询师的链接
+      var counselorShareUrl = location.pathname + '?aid=' + assessmentId +
+        (counselorId ? '&cid=' + counselorId : '') +
+        '&name=' + encodeURIComponent(visitorName) +
+        '&sn=' + sessionNumber + '&role=counselor';
+      document.getElementById('counselor-share-link').value = location.origin + counselorShareUrl;
+    }
+
+    // ========== 轮次回顾总结 ==========
+    function showRoundSummary() {
+      document.getElementById('step-loading').classList.remove('hidden');
+      document.getElementById('step-ors').classList.add('hidden');
+      document.getElementById('step-srs').classList.add('hidden');
+      document.getElementById('step-review').classList.add('hidden');
+      document.getElementById('step-success').classList.add('hidden');
+      document.getElementById('step-round-summary').classList.add('hidden');
+
+      // 获取本轮所有 sessions 和 ratings
+      getSessionsByAssessment(assessmentId).then(function(sessions) {
+        var roundStart = (roundNumber - 1) * 8 + 1;
+        var roundEnd = roundNumber * 8;
+        var roundSessions = sessions.filter(function(s) {
+          return s.session_number >= roundStart && s.session_number <= roundEnd;
+        });
+
+        return getPcomsTrend(assessmentId).then(function(ratings) {
+          // 给每个 session 关联 ratings
+          roundSessions.forEach(function(s) {
+            s.ors = ratings.find(function(r) { return r.session_id === s.id && r.type === 'ORS'; });
+            s.srs = ratings.find(function(r) { return r.session_id === s.id && r.type === 'SRS'; });
+          });
+
+          renderRoundSummaryUI(roundSessions, ratings);
+        });
+      }).catch(function(e) {
+        console.error('加载轮次数据失败:', e);
+        // 降级显示
+        document.getElementById('round-summary-content').innerHTML =
+          '<div class="round-summary-card text-center">' +
+          '<div class="text-4xl mb-4">🎉</div>' +
+          '<h2 class="text-lg font-bold text-gray-800 mb-2">第 ' + roundNumber + ' 轮已完成！</h2>' +
+          '<p class="text-sm text-gray-500 mb-4">你已完成 8 次咨询追踪</p>' +
+          '<p class="text-xs text-gray-400">（数据加载暂时不可用，请查看追踪面板）</p>' +
+          '</div>';
+        goToStep('round-summary');
+      });
+    }
+
+    function renderRoundSummaryUI(roundSessions, allRatings) {
+      var orsSessions = roundSessions.filter(function(s) { return s.ors; });
+      var srsSessions = roundSessions.filter(function(s) { return s.srs; });
+      var completedCount = roundSessions.length;
+      var totalCount = 8;
+
+      var firstOrs = orsSessions.length > 0 ? orsSessions[0].ors.total_score : null;
+      var lastOrs = orsSessions.length > 0 ? orsSessions[orsSessions.length - 1].ors.total_score : null;
+      var orsChange = (firstOrs !== null && lastOrs !== null) ? (lastOrs - firstOrs) : null;
+
+      var improvedCount = orsSessions.filter(function(s) { return s.ors.clinical_change === 'improved'; }).length;
+      var worseningCount = orsSessions.filter(function(s) { return s.ors.clinical_change === 'worsening'; }).length;
+
+      var srsRiskCount = srsSessions.filter(function(s) { return s.srs && s.srs.total_score < 36; }).length;
+
+      var html = '';
+
+      // 头图
+      html += '<div class="text-center mb-6">';
+      html += '<div class="text-5xl mb-3">🎉</div>';
+      html += '<h2 class="text-xl font-bold text-gray-800 mb-2">第 ' + roundNumber + ' 轮咨询完成！</h2>';
+      html += '<p class="text-sm text-gray-500">你已坚持完成 ' + completedCount + ' 次咨询追踪，本轮回顾如下</p>';
+      html += '</div>';
+
+      // 统计卡片
+      html += '<div class="round-stat-grid">';
+      html += '<div class="round-stat-item">';
+      html += '<div class="round-stat-value" style="color:#5C7A52">' + completedCount + '/' + totalCount + '</div>';
+      html += '<div class="round-stat-label">完成次数</div>';
+      html += '</div>';
+      html += '<div class="round-stat-item">';
+      html += '<div class="round-stat-value" style="color:' + (orsChange >= 5 ? '#2E7D32' : orsChange <= -5 ? '#C62828' : '#8B7E6B') + '">' + (orsChange !== null ? (orsChange >= 0 ? '+' : '') + orsChange.toFixed(1) : '—') + '</div>';
+      html += '<div class="round-stat-label">ORS 变化（首→末）</div>';
+      html += '</div>';
+      html += '<div class="round-stat-item">';
+      html += '<div class="round-stat-value" style="color:#2E7D32">' + improvedCount + '</div>';
+      html += '<div class="round-stat-label">改善次数</div>';
+      html += '</div>';
+      html += '<div class="round-stat-item">';
+      html += '<div class="round-stat-value" style="color:' + (srsRiskCount > 0 ? '#C62828' : '#8B7E6B') + '">' + srsRiskCount + '</div>';
+      html += '<div class="round-stat-label">SRS 联盟风险</div>';
+      html += '</div>';
+      html += '</div>';
+
+      // 本轮每次评分列表
+      html += '<div class="round-summary-card"><h3 class="text-sm font-bold text-gray-700 mb-3">📋 本轮评分记录</h3>';
+
+      // ORS 行
+      html += '<div class="text-xs font-medium text-gray-500 mb-2">📊 ORS 结果评分</div>';
+      for (var i = roundStart; i <= roundEnd; i++) {
+        var ss = roundSessions.find(function(s) { return s.session_number === i; });
+        var orsVal = (ss && ss.ors) ? ss.ors.total_score.toFixed(1) : '—';
+        var scoreColor = (ss && ss.ors) ? '#5C7A52' : '#CCC';
+        html += '<div class="session-mini-row">';
+        html += '<div class="session-mini-dot ors"></div>';
+        html += '<span class="session-mini-num">第 ' + i + ' 次</span>';
+        html += '<span class="session-mini-score ors" style="color:' + scoreColor + '">' + orsVal + '</span>';
+        if (ss && ss.ors && ss.ors.clinical_change === 'improved') {
+          html += '<span class="trend-arrow up">↑</span>';
+        } else if (ss && ss.ors && ss.ors.clinical_change === 'worsening') {
+          html += '<span class="trend-arrow down">↓</span>';
+        }
+        html += '</div>';
+      }
+
+      // SRS 行
+      html += '<div class="text-xs font-medium text-gray-500 mb-2 mt-3">🤝 SRS 联盟评分</div>';
+      for (var j = roundStart; j <= roundEnd; j++) {
+        var ss2 = roundSessions.find(function(s) { return s.session_number === j; });
+        var srsVal = (ss2 && ss2.srs) ? ss2.srs.total_score.toFixed(1) : '—';
+        var srsColor = (ss2 && ss2.srs) ? (ss2.srs.total_score < 36 ? '#C62828' : '#378ADD') : '#CCC';
+        html += '<div class="session-mini-row">';
+        html += '<div class="session-mini-dot srs"></div>';
+        html += '<span class="session-mini-num">第 ' + j + ' 次</span>';
+        html += '<span class="session-mini-score srs" style="color:' + srsColor + '">' + srsVal + '</span>';
+        if (ss2 && ss2.srs && ss2.srs.total_score < 36) {
+          html += '<span style="font-size:11px;color:#C62828">⚠</span>';
+        }
+        html += '</div>';
+      }
+
+      html += '</div>';
+
+      // 洞察建议
+      if (orsChange !== null) {
+        if (orsChange >= 5) {
+          html += '<div class="round-insight">🌟 <strong>显著进步！</strong>你的 ORS 评分提升了 ' + orsChange.toFixed(1) + ' 分，说明咨询整体方向有效。下一轮可以巩固已取得的进展，同时挑战新的成长领域。</div>';
+        } else if (orsChange <= -5) {
+          html += '<div class="round-insight warn">🔍 <strong>需要关注：</strong>ORS 评分下降了 ' + Math.abs(orsChange).toFixed(1) + ' 分。建议与咨询师坦诚讨论可能的原因，调整咨询方向或节奏。</div>';
+        } else {
+          html += '<div class="round-insight">📈 你的 ORS 评分整体稳定（变化 ' + (orsChange >= 0 ? '+' : '') + orsChange.toFixed(1) + '），咨询在稳步推进中。下一轮可以关注有什么新变化可以带来突破。</div>';
+        }
+      }
+      if (improvedCount >= 4) {
+        html += '<div class="round-insight">✨ 本轮有 ' + improvedCount + ' 次显著改善，咨询效果明显！</div>';
+      }
+      if (srsRiskCount >= 2) {
+        html += '<div class="round-insight warn">⚠️ 本轮有 ' + srsRiskCount + ' 次 SRS 联盟评分低于风险线(36分)，建议与咨询师坦诚讨论咨访关系。</div>';
+      }
+
+      document.getElementById('round-summary-content').innerHTML = html;
+
+      // 设置链接
+      var dashUrl = 'session-dashboard.html?aid=' + assessmentId;
+      document.getElementById('round-dashboard-link').href = dashUrl;
+
+      // 显示
+      document.getElementById('step-loading').classList.add('hidden');
+      goToStep('round-summary');
+    }
+
+    // ========== 开启新一轮 ==========
+    function startNewRound() {
+      var nextSn = roundNumber * 8 + 1;
+      var roleParam = isCounselorMode ? '&role=counselor' : '';
+      window.location.href = location.pathname + '?aid=' + assessmentId +
+        (counselorId ? '&cid=' + counselorId : '') +
+        '&name=' + encodeURIComponent(visitorName) +
+        '&sn=' + nextSn + roleParam;
     }
 
     // ========== 生成回顾摘要 ==========
@@ -1045,51 +1395,15 @@
       });
 
       Promise.all([p1, p2]).then(function() {
-        // 成功
-        goToStep('success');
+        var isRoundComplete = sessionNumber % 8 === 0;
 
-        var titleEl = document.getElementById('success-title');
-        var descEl = document.getElementById('success-desc');
-        var summaryEl = document.getElementById('success-summary');
-
-        if (orsClinicalChange === 'improved') {
-          titleEl.textContent = '有显著改善！';
-          descEl.textContent = '你的 ORS 评分相比上次提升了 5 分以上，咨询效果良好。继续保持！';
-        } else if (orsClinicalChange === 'worsening') {
-          titleEl.textContent = '评分有变化';
-          descEl.textContent = '你的评分有所下降，建议在下次咨询中与咨询师讨论这个变化。';
+        if (isRoundComplete) {
+          // 轮次完成：加载并展示回顾总结
+          showRoundSummary();
         } else {
-          titleEl.textContent = '评分已提交';
-          descEl.textContent = '感谢你的反馈，这些数据将帮助你和咨询师更好地了解咨询进展。';
+          // 非轮次结束：标准成功页
+          showStandardSuccess(orsTotal, srsTotal, orsClinicalChange);
         }
-
-        summaryEl.innerHTML =
-          '<div class="result-card"><div class="grid grid-cols-2 gap-4 text-center">' +
-            '<div><div class="text-2xl font-bold" style="color:#5C7A52">' + orsTotal.toFixed(1) + '</div><div class="text-xs text-gray-500">ORS 总分</div></div>' +
-            '<div><div class="text-2xl font-bold" style="color:#378ADD">' + srsTotal.toFixed(1) + '</div><div class="text-xs text-gray-500">SRS 总分</div></div>' +
-          '</div></div>';
-
-        // 构建下一次链接
-        var roleParam = isCounselorMode ? '&role=counselor' : '';
-        var nextUrl = location.pathname + '?aid=' + assessmentId +
-          (counselorId ? '&cid=' + counselorId : '') +
-          '&name=' + encodeURIComponent(visitorName) +
-          '&sn=' + (sessionNumber + 1) + roleParam;
-        summaryEl.innerHTML +=
-          '<div class="result-card text-center">' +
-            '<p class="text-sm text-gray-500 mb-3">下次咨询后，可继续在此填写追踪评分</p>' +
-            '<div class="bg-gray-50 rounded-lg p-3 text-xs text-gray-400 break-all">' + location.origin + nextUrl + '</div>' +
-          '</div>';
-
-        // 设置追踪面板链接
-        document.getElementById('dashboard_link').href = 'session-dashboard.html?aid=' + assessmentId;
-
-        // 设置分享给咨询师的链接
-        var counselorShareUrl = location.pathname + '?aid=' + assessmentId +
-          (counselorId ? '&cid=' + counselorId : '') +
-          '&name=' + encodeURIComponent(visitorName) +
-          '&sn=' + sessionNumber + '&role=counselor';
-        document.getElementById('counselor-share-link').value = location.origin + counselorShareUrl;
       }).catch(function(e) {
         console.error('提交失败:', e);
         btn.disabled = false;

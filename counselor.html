@@ -196,7 +196,62 @@
   .counselor-panel { margin-top: 24px; }
   .panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
   .panel-header h3 { font-size: 16px; color: #3D3831; }
+  /* 面板 Tab */
+  .panel-tab {
+    padding: 6px 16px; border-radius: 8px 8px 0 0; font-size: 13px; font-weight: 500;
+    border: none; background: transparent; color: #A09889; cursor: pointer;
+    transition: all 0.2s; font-family: inherit; position: relative;
+  }
+  .panel-tab:hover { color: #5C7A52; }
+  .panel-tab.active { color: #5C7A52; font-weight: 600; }
+  .panel-tab.active::after {
+    content: ''; position: absolute; bottom: -10px; left: 0; right: 0;
+    height: 3px; background: #5C7A52; border-radius: 2px;
+  }
+  /* 已通过来访卡片 */
+  .client-card {
+    background: #FAF8F5; border: 1px solid #E8E4DC; border-radius: 12px;
+    padding: 16px; margin-bottom: 10px;
+  }
+  .client-card .client-name { font-size: 15px; font-weight: 600; color: #3D3831; }
+  .client-card .client-meta { font-size: 12px; color: #8B7E6B; margin-top: 4px; }
+  .client-card .pcoms-row {
+    display: flex; gap: 12px; margin-top: 10px; flex-wrap: wrap;
+  }
+  .client-card .pcoms-pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 500;
+  }
+  .client-card .pcoms-pill.ors { background: #E8F5E9; color: #2E7D32; }
+  .client-card .pcoms-pill.srs { background: #E3F2FD; color: #1565C0; }
+  .client-card .pcoms-pill.no-data { background: #F5F0EB; color: #A09889; }
+  .client-card .client-actions {
+    display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap;
+  }
+  .client-card .progress-bar-wrap {
+    margin-top: 10px; background: #E8E4DC; border-radius: 4px; height: 4px; overflow: hidden;
+  }
+  .client-card .progress-bar-fill {
+    height: 100%; border-radius: 4px; background: #5C7A52;
+    transition: width 0.3s ease;
+  }
   .panel-badge { background: #FFF3CD; color: #856404; padding: 3px 10px; border-radius: 10px; font-size: 12px; font-weight: 500; }
+
+  /* PCOMS 新评分通知徽章 */
+  .pcoms-notify-badge {
+    background: #E53935; color: white; padding: 1px 7px; border-radius: 10px;
+    font-size: 11px; font-weight: 600; vertical-align: middle; margin-left: 4px;
+    animation: blink-badge 1.5s infinite;
+  }
+  @keyframes blink-badge {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+  .client-card .new-pcoms-tag {
+    background: #FFF3CD; color: #856404; padding: 2px 8px; border-radius: 4px;
+    font-size: 10px; font-weight: 600; margin-left: 6px;
+    animation: blink-badge 1.5s infinite;
+  }
   .request-card { background: #FAF8F5; border: 1px solid #E8E4DC; border-radius: 10px; padding: 14px; margin-bottom: 10px; }
   .request-card .req-name { font-size: 15px; font-weight: 600; color: #3D3831; }
   .request-card .req-meta { font-size: 12px; color: #6B635A; margin-top: 4px; line-height: 1.6; }
@@ -938,11 +993,16 @@
   <div class="main" id="panel-area" style="display:none;">
     <div class="card counselor-panel">
       <div class="panel-header">
-        <h3>📩 我的来访申请</h3>
+        <h3>📩 来访管理</h3>
         <div style="display:flex;gap:8px;align-items:center;">
           <button class="req-btn req-btn-outline" onclick="showEditPanel()" id="panel-edit-btn" style="font-size:12px;">✏️ 编辑档案</button>
           <span class="panel-badge" id="panel-badge" style="display:none"></span>
         </div>
+      </div>
+      <!-- Tab 切换 -->
+      <div style="display:flex;gap:4px;margin-bottom:12px;border-bottom:2px solid #F0ECE5;padding-bottom:8px">
+        <button class="panel-tab active" id="tab-requests" onclick="switchPanelTab('requests')">📩 匹配申请</button>
+        <button class="panel-tab" id="tab-clients" onclick="switchPanelTab('clients')">👥 已通过来访 <span id="pcoms-badge" class="pcoms-notify-badge" style="display:none">0</span></button>
       </div>
       <div id="panel-content"><div class="panel-loading">加载中...</div></div>
       <div id="panel-edit" style="display:none;">
@@ -2019,6 +2079,10 @@ var panelCid = null;
 
 function showPanel() {
   document.getElementById('panel-area').style.display = 'block';
+  // 初始化 tab 状态
+  panelCurrentTab = 'requests';
+  document.getElementById('tab-requests').classList.add('active');
+  document.getElementById('tab-clients').classList.remove('active');
 }
 function showPanelLogin() {
   document.getElementById('panel-area').style.display = 'block';
@@ -2034,6 +2098,239 @@ function loadPanelByInput() {
   document.getElementById('panel-login').style.display = 'none';
   document.getElementById('panel-content').style.display = 'block';
   loadPanelRequests();
+}
+
+// ========== 面板 Tab 切换 ==========
+var panelCurrentTab = 'requests'; // 'requests' | 'clients'
+var pcomsNewCount = 0; // 新评分通知数
+
+function switchPanelTab(tab) {
+  panelCurrentTab = tab;
+  document.getElementById('tab-requests').classList.toggle('active', tab === 'requests');
+  document.getElementById('tab-clients').classList.toggle('active', tab === 'clients');
+  if (tab === 'requests') {
+    loadPanelRequests();
+  } else {
+    loadPanelClients();
+    // 切换到已通过来访时清除通知
+    if (pcomsNewCount > 0) {
+      clearPcomsNotifications();
+    }
+  }
+}
+
+// ========== PCOMS 新评分通知 ==========
+function checkPcomsNotifications() {
+  if (!panelCid) return Promise.resolve(0);
+
+  var lastCheck = localStorage.getItem('counselor_last_pcoms_check_' + panelCid);
+  var sinceParam = '';
+  if (lastCheck) {
+    sinceParam = '&created_at=gt.' + encodeURIComponent(lastCheck);
+  }
+
+  // 查询该咨询师关联的所有来访的 pcoms_ratings
+  return fetch(SUPABASE_URL + '/rest/v1/assessments?match_request_cid=eq.' + encodeURIComponent(panelCid) + '&match_request_status=in.(approved,contacted)&select=id', {
+    headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(clients) {
+    if (!clients || clients.length === 0) return 0;
+    var aidList = clients.map(function(c) { return c.id; });
+    if (aidList.length === 0) return 0;
+
+    // 查询这些来访的所有 sessions
+    return fetch(SUPABASE_URL + '/rest/v1/sessions?assessment_id=in.(' + aidList.join(',') + ')&select=id', {
+      headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY }
+    })
+    .then(function(r) { return r.json(); });
+  })
+  .then(function(sessions) {
+    if (!sessions || sessions.length === 0) return 0;
+    var sidList = sessions.map(function(s) { return s.id; });
+    if (sidList.length === 0) return 0;
+
+    // 查询新评分
+    var url = SUPABASE_URL + '/rest/v1/pcoms_ratings?session_id=in.(' + sidList.join(',') + ')' + sinceParam + '&select=id&limit=50';
+    return fetch(url, {
+      headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY }
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(ratings) {
+      if (!ratings || ratings.length === 0) return 0;
+      // 更新上次检查时间
+      var now = new Date().toISOString();
+      localStorage.setItem('counselor_last_pcoms_check_' + panelCid, now);
+      return ratings.length;
+    });
+  })
+  .catch(function(e) {
+    console.error('[小平菇] 检查 PCOMS 通知失败:', e);
+    return 0;
+  });
+}
+
+function clearPcomsNotifications() {
+  pcomsNewCount = 0;
+  updatePcomsBadge();
+  var now = new Date().toISOString();
+  localStorage.setItem('counselor_last_pcoms_check_' + panelCid, now);
+}
+
+function updatePcomsBadge() {
+  var badge = document.getElementById('pcoms-badge');
+  if (pcomsNewCount > 0) {
+    badge.style.display = 'inline';
+    badge.textContent = pcomsNewCount;
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+// ========== 已通过来访列表 ==========
+function loadPanelClients() {
+  var content = document.getElementById('panel-content');
+  content.innerHTML = '<div class="panel-loading"><div class="spinner"></div><p style="margin-top:8px">加载已通过来访...</p></div>';
+
+  // 并行检查新评分通知
+  checkPcomsNotifications().then(function(newCount) {
+    pcomsNewCount = newCount;
+    updatePcomsBadge();
+  });
+
+  fetch(SUPABASE_URL + '/rest/v1/assessments?match_request_cid=eq.' + encodeURIComponent(panelCid) + '&match_request_status=in.(approved,contacted)&select=*&order=created_at.desc', {
+    headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(records) {
+    if (!records || records.length === 0) {
+      content.innerHTML = '<div class="panel-empty">👥 暂无已通过来访<br><span style="font-size:12px;display:inline-block;margin-top:4px">通过匹配申请后，来访者将显示在这里</span></div>';
+      return;
+    }
+
+    // 批量获取 PCOMS 数据
+    var aidList = records.map(function(r) { return r.id; });
+    return fetchPcomsSummary(aidList).then(function(pcomsMap) {
+      return { records: records, pcoms: pcomsMap };
+    });
+  })
+  .then(function(result) {
+    if (!result) return;
+    var records = result.records;
+    var pcomsMap = result.pcoms;
+    renderClientList(records, pcomsMap);
+  })
+  .catch(function(e) {
+    content.innerHTML = '<div class="panel-empty">❌ 加载失败<br><span style="font-size:12px;display:inline-block;margin-top:4px">请检查网络连接</span></div>';
+  });
+}
+
+function fetchPcomsSummary(aidList) {
+  if (!aidList || aidList.length === 0) return Promise.resolve({});
+  var ids = aidList.join(',');
+  return fetch(SUPABASE_URL + '/rest/v1/sessions?assessment_id=in.(' + ids + ')&select=id,assessment_id,session_number', {
+    headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY }
+  }).then(function(r) { return r.json(); })
+  .then(function(sessions) {
+    if (!sessions || sessions.length === 0) return {};
+    var sessionIds = sessions.map(function(s) { return s.id; }).join(',');
+    return fetch(SUPABASE_URL + '/rest/v1/pcoms_ratings?session_id=in.(' + sessionIds + ')&select=session_id,type,total_score,clinical_change,created_at&order=created_at.desc', {
+      headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY }
+    }).then(function(r) { return r.json(); })
+    .then(function(ratings) {
+      var map = {};
+      sessions.forEach(function(s) {
+        if (!map[s.assessment_id]) map[s.assessment_id] = { sessions: 0, latestOrs: null, latestSrs: null, improved: 0, totalRatings: 0 };
+        map[s.assessment_id].sessions = Math.max(map[s.assessment_id].sessions, s.session_number || 0);
+      });
+      (ratings || []).forEach(function(r) {
+        var sid = r.session_id;
+        var sessInfo = sessions.find(function(s) { return s.id === sid; });
+        if (!sessInfo) return;
+        var aid = sessInfo.assessment_id;
+        if (!map[aid]) map[aid] = { sessions: 0, latestOrs: null, latestSrs: null, improved: 0, totalRatings: 0 };
+        map[aid].totalRatings++;
+        if (r.type === 'ORS' && (!map[aid].latestOrs || new Date(r.created_at) > new Date(map[aid].latestOrs.created_at))) {
+          map[aid].latestOrs = { score: r.total_score, change: r.clinical_change || '' };
+        }
+        if (r.type === 'SRS' && (!map[aid].latestSrs || new Date(r.created_at) > new Date(map[aid].latestSrs.created_at))) {
+          map[aid].latestSrs = { score: r.total_score };
+        }
+        if (r.clinical_change === 'improved') map[aid].improved++;
+      });
+      return map;
+    });
+  }).catch(function() { return {}; });
+}
+
+function renderClientList(records, pcomsMap) {
+  var content = document.getElementById('panel-content');
+  var html = '';
+
+  records.forEach(function(a) {
+    var p = pcomsMap[a.id] || {};
+    var status = a.match_request_status;
+    var statusLabel = status === 'contacted' ? '📞 已联系' : '✅ 已通过';
+    var statusColor = status === 'contacted' ? '#0A58CA' : '#155724';
+    var statusBg = status === 'contacted' ? '#CFE2FF' : '#D4EDDA';
+
+    html += '<div class="client-card">';
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">';
+    html += '<div><div class="client-name">' + esc(a.match_request_name || a.visitor_name || '匿名') + '</div>';
+    html += '<div class="client-meta">';
+    if (a.visitor_age) html += a.visitor_age + '岁';
+    if (a.visitor_gender && a.visitor_gender !== '不便透露') html += ' · ' + a.visitor_gender;
+    if (a.visitor_city) html += ' · 📍' + esc(a.visitor_city);
+    html += ' · 📊 评估总分 ' + (a.total_score || 0) + ' · 🏷 ' + (a.severity || '-');
+    html += '</div></div>';
+    html += '<span style="padding:2px 8px;border-radius:4px;font-size:11px;background:' + statusBg + ';color:' + statusColor + '">' + statusLabel + '</span>';
+    html += '</div>';
+
+    // PCOMS 追踪摘要
+    if (p.totalRatings > 0) {
+      var sessionRound = Math.ceil(p.sessions / 8);
+      html += '<div class="pcoms-row">';
+      html += '<span style="font-size:12px;color:#6B635A">📈 ' + p.sessions + ' 次咨询';
+      if (sessionRound > 1) html += ' · 第 ' + sessionRound + ' 轮';
+      html += ' · ' + p.totalRatings + ' 条评分</span>';
+      if (pcomsNewCount > 0) {
+        html += '<span class="new-pcoms-tag">🆕 新评分</span>';
+      }
+      if (p.latestOrs) {
+        html += '<span class="pcoms-pill ors">ORS ' + p.latestOrs.score.toFixed(1);
+        if (p.latestOrs.change === 'improved') html += ' ↑';
+        html += '</span>';
+      }
+      if (p.latestSrs) {
+        var srsRisk = p.latestSrs.score < 36;
+        html += '<span class="pcoms-pill srs' + (srsRisk ? ' no-data' : '') + '" style="' + (srsRisk ? 'background:#F8D7DA;color:#721C24' : '') + '">SRS ' + p.latestSrs.score.toFixed(1) + (srsRisk ? ' ⚠' : '') + '</span>';
+      }
+      if (p.improved > 0) {
+        html += '<span class="pcoms-pill ors" style="background:#F0F7EC">✨ ' + p.improved + ' 次改善</span>';
+      }
+      html += '</div>';
+      // 进度条（按轮次 8 次一轮重置）
+      var roundPos = p.sessions % 8 || 8;
+      var progPct = roundPos / 8 * 100;
+      var progLabel = sessionRound > 1 ? '第 ' + sessionRound + ' 轮 ' + roundPos + '/8' : roundPos + '/8 次';
+      html += '<div class="progress-bar-wrap" title="' + progLabel + '">><div class="progress-bar-fill" style="width:' + progPct + '%"></div></div>';
+    } else {
+      html += '<div class="pcoms-row"><span class="pcoms-pill no-data">📋 暂无 PCOMS 评分数据</span></div>';
+    }
+
+    // 操作按钮
+    html += '<div class="client-actions">';
+    html += '<a href="session-dashboard.html?aid=' + a.id + '&role=counselor&cid=' + panelCid + '&name=' + encodeURIComponent(a.match_request_name || a.visitor_name || '') + '" class="req-btn req-btn-blue" target="_blank">📈 追踪面板</a>';
+    html += '<button class="req-btn req-btn-outline" onclick="copyContact(\'' + esc(a.match_request_contact || '') + '\')">📋 复制联系方式</button>';
+    if (status === 'approved') {
+      html += '<button class="req-btn req-btn-outline" onclick="markContacted(\'' + a.id + '\')">📞 标记已联系</button>';
+    }
+    html += '</div>';
+
+    html += '</div>';
+  });
+
+  content.innerHTML = html;
 }
 
 function loadPanelRequests() {
