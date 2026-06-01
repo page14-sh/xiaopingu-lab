@@ -40,6 +40,25 @@
     padding: 6px 12px; border: 1px solid #C8DCC0; border-radius: 8px;
     display: inline-block;
   }
+  /* 来访者我的评估弹窗 */
+  #my-assessment-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.35);
+    z-index: 9000; align-items: center; justify-content: center;
+  }
+  #my-assessment-overlay.show { display: flex; }
+  #my-assessment-box {
+    background: #fff; border-radius: 16px; padding: 28px 24px; width: 90%; max-width: 360px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18); position: relative;
+  }
+  #my-assessment-box h3 { font-size: 16px; font-weight: 700; color: #3D3831; margin-bottom: 6px; }
+  #my-assessment-box p { font-size: 12px; color: #9B9489; margin-bottom: 16px; line-height: 1.6; }
+  #my-assessment-input {
+    width: 100%; box-sizing: border-box; padding: 10px 14px; border: 1px solid #D4CFC8;
+    border-radius: 10px; font-size: 14px; color: #3D3831; outline: none;
+    transition: border-color 0.2s; margin-bottom: 12px;
+  }
+  #my-assessment-input:focus { border-color: #5C7A52; }
+
   /* 咨询师登录弹窗 */
   #counselor-login-overlay {
     display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.35);
@@ -638,6 +657,65 @@
     <button class="btn-cl-register" onclick="location.href='counselor.html'">还没注册？点此入驻 →</button>
   </div>
 </div>
+
+<!-- 我的评估弹窗 -->
+<div id="my-assessment-overlay" onclick="if(event.target===this)closeMyAssessment()">
+  <div id="my-assessment-box">
+    <h3>📋 查看我的评估</h3>
+    <p id="my-assessment-hint">输入评估完成后显示的<strong>评估号（ASID）</strong>，查看评估结果、匹配状态和咨询跟踪信息。</p>
+    <div id="my-assessment-auto" style="display:none;background:#E8F5E9;border-radius:10px;padding:12px;margin-bottom:12px">
+      <div style="font-size:13px;color:#2E7D32;font-weight:500;margin-bottom:8px">🔍 检测到本设备的评估记录</div>
+      <div id="my-assessment-auto-asid" style="font-size:11px;color:#4A6741;word-break:break-all;background:#F5F9F2;padding:6px 10px;border-radius:6px;margin-bottom:8px"></div>
+      <button class="btn-cl-go" style="width:100%" onclick="goMyAssessment()">📋 查看我的评估</button>
+      <div style="font-size:11px;color:#81A076;margin-top:6px;text-align:center">—— 或手动输入 ——</div>
+    </div>
+    <input id="my-assessment-input" type="text" placeholder="粘贴评估号（ASID）…" autocomplete="off"
+      onkeydown="if(event.key==='Enter')goMyAssessmentManual()" />
+    <div class="counselor-login-btns">
+      <button class="btn-cl-cancel" onclick="closeMyAssessment()">取消</button>
+      <button class="btn-cl-go" onclick="goMyAssessmentManual()">查询</button>
+    </div>
+    <div style="font-size:11px;color:#A09889;text-align:center;margin-top:10px;line-height:1.5">
+      💡 <strong>找不到评估号？</strong><br>可以回评估结果页复制，或重新评估获取新号
+    </div>
+  </div>
+</div>
+<script>
+function openMyAssessment() {
+  var aid = getAsid() || localStorage.getItem('xiaopingu_my_asid');
+  var autoDiv = document.getElementById('my-assessment-auto');
+  var hint = document.getElementById('my-assessment-hint');
+  if (aid) {
+    // 有缓存的 ASID，展示一键直达
+    document.getElementById('my-assessment-auto-asid').textContent = aid;
+    autoDiv.style.display = 'block';
+    hint.style.display = 'none';
+  } else {
+    autoDiv.style.display = 'none';
+    hint.style.display = 'block';
+  }
+  var overlay = document.getElementById('my-assessment-overlay');
+  overlay.classList.add('show');
+  if (!aid) {
+    setTimeout(function(){ document.getElementById('my-assessment-input').focus(); }, 100);
+  }
+}
+function closeMyAssessment() {
+  document.getElementById('my-assessment-overlay').classList.remove('show');
+  document.getElementById('my-assessment-input').value = '';
+}
+function goMyAssessment() {
+  var aid = getAsid() || localStorage.getItem('xiaopingu_my_asid');
+  if (aid) { location.href = 'my-assessment.html?aid=' + encodeURIComponent(aid); }
+}
+function goMyAssessmentManual() {
+  var val = document.getElementById('my-assessment-input').value.trim();
+  if (!val) { document.getElementById('my-assessment-input').style.borderColor='#E53935'; return; }
+  // 同时缓存到 localStorage
+  localStorage.setItem('xiaopingu_my_asid', val);
+  location.href = 'my-assessment.html?aid=' + encodeURIComponent(val);
+}
+</script>
 <script>
 function openCounselorLogin() {
   var overlay = document.getElementById('counselor-login-overlay');
@@ -691,6 +769,7 @@ function doCounselorLogin() {
     <p>专业心理评估，帮你找到最合适的心理支持 · v1.2 Lab</p>
   </div>
   <div class="header-right" style="display:flex;gap:8px;align-items:center;">
+    <button onclick="openMyAssessment()" class="header-link" style="cursor:pointer;background:none;font-family:inherit;white-space:nowrap">📋 我的评估</button>
     <button onclick="openCounselorLogin()" class="header-link" style="cursor:pointer;background:none;font-family:inherit;white-space:nowrap">咨询师登录</button>
     <a href="counselor.html" class="header-link" style="white-space:nowrap">入驻 →</a>
   </div>
@@ -911,12 +990,13 @@ function doCounselorLogin() {
     </div>
     <div id="view_link_wrap" style="margin:0 0 16px;padding:16px;background:#F0F7EC;border:1px solid #C8DCC0;border-radius:10px;display:none;text-align:left">
       <p style="font-size:13px;color:#5A6B52;margin-bottom:8px;line-height:1.7">
-        📝 <strong>您的专属查看链接</strong><br>
-        <span style="font-size:12px;color:#7A8B72">收藏此链接可随时回看评估结果与匹配建议</span>
+        📝 <strong>您的评估报告永久入口</strong><br>
+        <span style="font-size:12px;color:#7A8B72">收藏此链接随时回看 · 也可点首页「📋 我的评估」输入评估号</span>
       </p>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
         <input type="text" id="view_link_input" style="flex:1;padding:8px 12px;font-size:12px;border:1px solid #C8DCC0;border-radius:8px;background:#fff;color:#5A6B52;min-width:0;overflow:hidden;text-overflow:ellipsis" readonly>
         <button type="button" class="btn btn-outline" style="padding:8px 16px;font-size:13px;white-space:nowrap" onclick="copyViewLink()">复制链接</button>
+        <button type="button" class="btn btn-outline" style="padding:8px 12px;font-size:12px;white-space:nowrap" onclick="copyAsidLink(window.xiaopinguAsid||'')">🔗 复制评估号</button>
       </div>
     </div>
     <div class="action-bar" id="result_action_bar">
@@ -2049,7 +2129,7 @@ function renderMyCounselorCard(aid) {
   html += '<a href="' + trackUrl + '" class="mc-btn mc-btn-primary">📊 开始追踪评分</a>';
   html += '<a href="' + dashboardUrl + '" class="mc-btn">📈 查看追踪面板</a>';
   html += '<a href="my-assessment.html?aid=' + aid + '" class="mc-btn">📋 查看申请状态</a>';
-  html += '<button class="mc-btn" onclick="copyCounselorLink(\'' + counselorUrl + '\')">📋 分享给咨询师</button>';
+  html += '<button class="mc-btn" onclick="copyAsidLink(\'' + asid + '\')">🔗 复制评估链接</button>';
   html += '</div>';
   html += '<span class="mc-change" onclick="deselectCounselor(\'' + aid + '\')">✕ 更换咨询师</span>';
   html += '</div>';
@@ -2066,6 +2146,19 @@ function copyCounselorLink(url) {
     ta.value = fullUrl; document.body.appendChild(ta); ta.select();
     document.execCommand('copy'); document.body.removeChild(ta);
     showToast('链接已复制');
+  }
+}
+
+function copyAsidLink(asid) {
+  var fullUrl = location.origin + location.pathname.replace(/[^/]*$/, '') + 'my-assessment.html?aid=' + asid;
+  var text = '评估号：' + asid + '\n查看链接：' + fullUrl;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(function() { showToast('✅ 评估号和链接已复制，可保存到备忘录'); });
+  } else {
+    var ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    showToast('✅ 评估号和链接已复制');
   }
 }
 
@@ -2354,8 +2447,10 @@ function submitMatchApply(){
     <div id="apply-success" class="apply-success">
       <div style="font-size:28px;margin-bottom:8px">✅</div>
       <div style="font-size:14px;color:#5C7A52;font-weight:500">申请已提交</div>
-      <div style="font-size:12px;color:#A09889;margin-top:4px">咨询师会尽快通过系统联系您</div>
+      <div style="font-size:12px;color:#A09889;margin-top:4px">咨询师审核后，点击下方按钮查看结果</div>
       <button class="btn btn-outline" style="width:100%;margin-top:12px" onclick="window.open('my-assessment.html?aid='+getAsid())">📋 查看申请状态</button>
+      <button class="btn btn-outline" style="width:100%;margin-top:8px;background:#F7F4EF" onclick="copyAsidLink(getAsid())">🔗 复制评估号与链接</button>
+      <div style="font-size:11px;color:#A09889;margin-top:8px;line-height:1.4">💡 <strong>提示：</strong>复制链接后可以收藏或发给自己，<br>下次点击首页「📋 我的评估」也能查到</div>
       <button class="btn btn-outline" style="width:100%;margin-top:8px;background:#F7F4EF" onclick="closeMatchApply()">关闭</button>
     </div>
     <button id="btn-submit-match" class="btn btn-primary" style="width:100%;margin-top:8px" onclick="submitMatchApply()">提交申请</button>

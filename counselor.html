@@ -2225,10 +2225,10 @@ function updateMatchStatus(id, status, note) {
 }
 
 function approveMatchApplication(id) {
-  if (!confirm('确认通过此匹配申请？通过后来访者将收到通知，可查看你的联系方式。')) return;
+  if (!confirm('确认通过此匹配申请？\n\n通过后：\n• 来访者在「我的评估」页将看到审批结果\n• 来访者可查看你的联系方式（微信/电话/邮箱）\n• 来访者可开始 PCOMS 循证追踪')) return;
   updateMatchStatus(id, 'approved').then(function(r) {
     if (r.ok) {
-      alert('✅ 已通过！来访者将收到通知。');
+      alert('✅ 已通过！来访者进入「我的评估」页面即可查看你的联系方式和档案信息。');
       loadPanelRequests();
     } else {
       alert('操作失败，请重试');
@@ -2239,11 +2239,11 @@ function approveMatchApplication(id) {
 }
 
 function rejectMatchApplication(id) {
-  var reason = prompt('请填写拒绝理由（选填，来访者可查看）：', '');
+  var reason = prompt('请填写拒绝理由（选填，来访者可查看）：\n\n💡 建议：可简要说明原因，如"暂不接新来访""议题不匹配"等\n来访者在「我的评估」页面将看到此理由', '');
   if (reason === null) return; // 用户取消
   updateMatchStatus(id, 'rejected', reason || null).then(function(r) {
     if (r.ok) {
-      alert('已拒绝该申请');
+      alert('已拒绝该申请。来访者进入「我的评估」页面可查看结果及理由。');
       loadPanelRequests();
     } else {
       alert('操作失败，请重试');
@@ -2254,7 +2254,7 @@ function rejectMatchApplication(id) {
 }
 
 function markContacted(id) {
-  if (!confirm('确认标记为"已联系"？')) return;
+  if (!confirm('确认标记为"已联系"？标记后来访者状态页将更新。')) return;
   updateMatchStatus(id, 'contacted').then(function(r) {
     if (r.ok) {
       alert('📞 已标记为已联系');
