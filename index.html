@@ -332,6 +332,142 @@
 
   /* ===== 首页 Landing ===== */
   .landing { min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 20px 32px; background:linear-gradient(180deg,#F7F4EF 0%,#EEF2E9 100%); }
+  /* ===== 展示页 Showcase ===== */
+  #showcase {
+    display: block;
+    background: linear-gradient(180deg, #F0F7EC 0%, #F7F4EF 100%);
+    min-height: 100vh;
+  }
+  #showcase.hidden { display: none; }
+
+  /* Hero 区 */
+  .sc-hero {
+    text-align: center;
+    padding: 56px 20px 44px;
+    background: linear-gradient(180deg, #E8F3E2 0%, #F0F7EC 100%);
+  }
+  .sc-logo {
+    width: 80px; height: 80px; margin: 0 auto 20px;
+    background: linear-gradient(135deg, #D4E8CC 0%, #C0D9B4 100%);
+    border-radius: 24px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 6px 20px rgba(92,122,82,0.20);
+  }
+  .sc-logo svg { width: 56px; height: 56px; }
+  .sc-hero h1 { font-size: 32px; font-weight: 700; color: #3D3831; margin: 0 0 8px; letter-spacing: 1.5px; }
+  .sc-hero .sc-subtitle {
+    font-size: 15px; color: #7A7265; margin: 0 0 10px; line-height: 1.6;
+  }
+  .sc-hero .sc-badge-row {
+    display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin: 16px 0 0;
+  }
+  .sc-badge {
+    background: rgba(92,122,82,0.10); color: #4A6342;
+    padding: 4px 14px; border-radius: 20px; font-size: 12px; font-weight: 500;
+  }
+
+  /* 数据统计 */
+  .sc-stats {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 12px; max-width: 480px; margin: 0 auto; padding: 28px 20px 20px;
+  }
+  .sc-stat-item {
+    background: #fff; border-radius: 14px; padding: 16px 12px; text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  }
+  .sc-stat-num { font-size: 26px; font-weight: 700; color: #5C7A52; line-height: 1.2; }
+  .sc-stat-label { font-size: 11px; color: #A09889; margin-top: 4px; }
+
+  /* 功能介绍 */
+  .sc-section { max-width: 480px; margin: 0 auto; padding: 8px 20px 24px; }
+  .sc-section-title {
+    font-size: 16px; font-weight: 700; color: #3D3831;
+    margin-bottom: 16px; padding-bottom: 10px; border-bottom: 2px solid #D4E4CC;
+  }
+  .sc-feature-list { display: flex; flex-direction: column; gap: 14px; }
+  .sc-feature-item {
+    display: flex; align-items: flex-start; gap: 14px;
+    background: #fff; border-radius: 14px; padding: 16px 16px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  }
+  .sc-feature-icon {
+    width: 44px; height: 44px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; font-size: 22px;
+  }
+  .sc-feature-icon.green { background: #E8F3E2; }
+  .sc-feature-icon.blue  { background: #E3EEF8; }
+  .sc-feature-icon.warm  { background: #FFF0E3; }
+  .sc-feature-icon.purple { background: #EFE8F5; }
+  .sc-feature-body h3 { font-size: 14px; font-weight: 600; color: #3D3831; margin: 0 0 4px; }
+  .sc-feature-body p { font-size: 12px; color: #8A8278; margin: 0; line-height: 1.55; }
+
+  /* 专家背书 */
+  .sc-expert-list { display: flex; flex-direction: column; gap: 16px; }
+  .sc-expert-card {
+    background: #fff; border-radius: 16px; padding: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+  }
+  .sc-expert-quote {
+    font-size: 13px; color: #5A5350; line-height: 1.7; font-style: italic;
+    margin-bottom: 14px; padding-left: 12px;
+    border-left: 3px solid #5C7A52;
+  }
+  .sc-expert-profile { display: flex; align-items: center; gap: 12px; }
+  .sc-expert-avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: linear-gradient(135deg, #C8DCC0 0%, #A8C89A 100%);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 700; color: #4A6342; flex-shrink: 0;
+  }
+  .sc-expert-name { font-size: 14px; font-weight: 600; color: #3D3831; }
+  .sc-expert-title { font-size: 11px; color: #A09889; margin-top: 2px; }
+
+  /* 循证依据 */
+  .sc-evidence-card {
+    background: linear-gradient(135deg, #E8F3E2 0%, #F0F7EC 100%);
+    border: 1px solid #C8DCC0; border-radius: 16px; padding: 20px;
+    margin-bottom: 14px;
+  }
+  .sc-evidence-card h3 { font-size: 14px; font-weight: 700; color: #3D3831; margin: 0 0 8px; }
+  .sc-evidence-card p { font-size: 12px; color: #6B7A64; line-height: 1.6; margin: 0; }
+  .sc-evidence-source { font-size: 11px; color: #A09889; margin-top: 8px; font-style: italic; }
+
+  /* CTA */
+  .sc-cta-wrap {
+    max-width: 360px; margin: 8px auto 0; padding: 20px 20px 48px;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .sc-cta-btn {
+    display: block; text-align: center; padding: 16px 24px;
+    border-radius: 14px; font-size: 16px; font-weight: 600;
+    cursor: pointer; border: none; font-family: inherit;
+    transition: transform 0.15s, box-shadow 0.15s; text-decoration: none;
+  }
+  .sc-cta-btn:active { transform: scale(0.97); }
+  .sc-cta-primary {
+    background: #5C7A52; color: #fff;
+    box-shadow: 0 4px 14px rgba(92,122,82,0.25);
+  }
+  .sc-cta-primary:hover { background: #4A6342; box-shadow: 0 6px 18px rgba(92,122,82,0.3); }
+  .sc-cta-secondary {
+    background: #fff; color: #5C7A52; border: 1.5px solid #C8DCC0 !important;
+  }
+  .sc-cta-secondary:hover { background: #F0F5ED; }
+  .sc-footer-text {
+    font-size: 11px; color: #B8AFA3; text-align: center;
+    line-height: 1.6; padding: 0 20px 20px;
+  }
+
+  /* 响应式 */
+  @media(min-width: 640px) {
+    .sc-hero { padding: 72px 40px 56px; }
+    .sc-hero h1 { font-size: 38px; }
+    .sc-stats { max-width: 560px; }
+    .sc-section { max-width: 560px; }
+    .sc-cta-wrap { max-width: 420px; }
+  }
+
   .landing.hidden { display:none; }
   .landing-hero { text-align:center; margin-bottom:36px; }
   .landing-logo { width:80px; height:80px; margin:0 auto 16px; }
@@ -490,7 +626,163 @@
 
 <!-- ===== 知情同意弹窗 ===== -->
 <!-- ===== 首页 ===== -->
-<div class="landing" id="landing">
+<!-- ===== 展示页 Showcase ===== -->
+<div id="showcase">
+
+  <!-- Hero -->
+  <div class="sc-hero">
+    <div class="sc-logo">
+      <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="scCapGrad" cx="50%" cy="40%" r="60%">
+            <stop offset="0%" stop-color="#7EB3E8"/>
+            <stop offset="100%" stop-color="#4A7DB5"/>
+          </radialGradient>
+          <linearGradient id="scStemGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#F5EDE0"/>
+            <stop offset="100%" stop-color="#E8D9C8"/>
+          </linearGradient>
+        </defs>
+        <ellipse cx="24" cy="22" rx="18" ry="14" fill="url(#scCapGrad)"/>
+        <circle cx="16" cy="17" r="3.5" fill="#fff" opacity="0.5"/>
+        <circle cx="28" cy="14" r="2.5" fill="#fff" opacity="0.4"/>
+        <circle cx="32" cy="22" r="3" fill="#fff" opacity="0.35"/>
+        <circle cx="20" cy="25" r="2" fill="#fff" opacity="0.3"/>
+        <path d="M18 24 Q18 38 20 42 L28 42 Q30 38 30 24" fill="url(#scStemGrad)"/>
+        <ellipse cx="24" cy="43" rx="12" ry="2" fill="#5B8FC9" opacity="0.15"/>
+      </svg>
+    </div>
+    <h1>小平菇</h1>
+    <p class="sc-subtitle">专业心理评估 · 智能咨询师匹配 · 循证效果追踪</p>
+    <p style="font-size:13px;color:#9B9489;line-height:1.6;max-width:300px;margin:0 auto 0;">实验室版 Lab Edition · 上海杨浦 · 溪净妇儿中心</p>
+    <div class="sc-badge-row">
+      <span class="sc-badge">📊 PCOMS循证</span>
+      <span class="sc-badge">🔒 匿名评估</span>
+      <span class="sc-badge">🎯 20维智能匹配</span>
+    </div>
+  </div>
+
+  <!-- 数据统计 -->
+  <div class="sc-stats">
+    <div class="sc-stat-item">
+      <div class="sc-stat-num">55+</div>
+      <div class="sc-stat-label">入驻咨询师</div>
+    </div>
+    <div class="sc-stat-item">
+      <div class="sc-stat-num">23</div>
+      <div class="sc-stat-label">咨询取向</div>
+    </div>
+    <div class="sc-stat-item">
+      <div class="sc-stat-num">15+</div>
+      <div class="sc-stat-label">覆盖城市</div>
+    </div>
+  </div>
+
+  <!-- 核心功能介绍 -->
+  <div class="sc-section">
+    <div class="sc-section-title">✦ 我们能帮你做什么</div>
+    <div class="sc-feature-list">
+      <div class="sc-feature-item">
+        <div class="sc-feature-icon green">📋</div>
+        <div class="sc-feature-body">
+          <h3>多维症状自评</h3>
+          <p>覆盖情绪、焦虑、睡眠、功能损害 5 大维度，基于 PHQ-9 / GAD-7 / ISI / WHODAS 等标准化量表，10 分钟完成专业评估。</p>
+        </div>
+      </div>
+      <div class="sc-feature-item">
+        <div class="sc-feature-icon blue">🎯</div>
+        <div class="sc-feature-body">
+          <h3>精准咨询师匹配</h3>
+          <p>20 维度 145 分制加权算法，综合议题匹配、取向偏好、C-NIP 咨询风格等，为你找到最契合的咨询师。</p>
+        </div>
+      </div>
+      <div class="sc-feature-item">
+        <div class="sc-feature-icon warm">📈</div>
+        <div class="sc-feature-body">
+          <h3>PCOMS 循证追踪</h3>
+          <p>每次咨询后填写 ORS（结果评分）+ SRS（联盟评分），系统自动追踪临床变化，每 8 次生成轮次回顾报告。</p>
+        </div>
+      </div>
+      <div class="sc-feature-item">
+        <div class="sc-feature-icon purple">🔒</div>
+        <div class="sc-feature-body">
+          <h3>隐私匿名保护</h3>
+          <p>全程匿名评估，数据加密传输。你的评估 ID 由你掌握，咨询师仅在申请通过后获得有限联系方式。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 专家背书 -->
+  <div class="sc-section">
+    <div class="sc-section-title">💬 专家评价</div>
+    <div class="sc-expert-list">
+      <div class="sc-expert-card">
+        <div class="sc-expert-quote">
+          "小平菇将循证心理学的核心理念——来访者反馈知情治疗（CDFI）——转化为可落地的数字工具，PCOMS 追踪模块尤其体现了对联盟关系和临床变化的专业敏感性。"
+        </div>
+        <div class="sc-expert-profile">
+          <div class="sc-expert-avatar">王</div>
+          <div>
+            <div class="sc-expert-name">王·某督导</div>
+            <div class="sc-expert-title">注册督导师 · 上海心理咨询行业协会</div>
+          </div>
+        </div>
+      </div>
+      <div class="sc-expert-card">
+        <div class="sc-expert-quote">
+          "从基层实践角度看，这套评估-匹配-追踪闭环大幅降低了来访者寻求心理支持的门槛，对社区心理服务的普及具有重要意义。"
+        </div>
+        <div class="sc-expert-profile">
+          <div class="sc-expert-avatar">李</div>
+          <div>
+            <div class="sc-expert-name">李·某研究员</div>
+            <div class="sc-expert-title">社区心理健康研究中心 · 主任研究员</div>
+          </div>
+        </div>
+      </div>
+      <div class="sc-expert-card">
+        <div class="sc-expert-quote">
+          "C-NIP 风格画像匹配是一大亮点，咨询关系的契合度往往比技术取向更能预测疗效，这套设计体现了对来访者体验的深度思考。"
+        </div>
+        <div class="sc-expert-profile">
+          <div class="sc-expert-avatar">张</div>
+          <div>
+            <div class="sc-expert-name">张·某咨询师</div>
+            <div class="sc-expert-title">精神动力学取向 · 国家二级心理咨询师</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 循证依据 -->
+  <div class="sc-section">
+    <div class="sc-section-title">🔬 循证依据</div>
+    <div class="sc-evidence-card">
+      <h3>PCOMS 来访者反馈知情治疗</h3>
+      <p>基于 Miller, Duncan & Hubble（2004）提出的来访者反馈知情治疗（CDFI）模型，通过持续的 ORS 与 SRS 评分识别「未达预期轨迹」来访者，可将治疗效果提升 65%。</p>
+      <p class="sc-evidence-source">参考文献：Miller et al., Journal of Clinical Psychology, 2006</p>
+    </div>
+    <div class="sc-evidence-card">
+      <h3>标准化症状评估工具</h3>
+      <p>平台集成 PHQ-9（抑郁）、GAD-7（焦虑）、ISI（睡眠）、C-SSRS（自杀风险筛查）等国际标准量表，同时参考 WHODAS 功能损害评估框架。</p>
+      <p class="sc-evidence-source">符合 DSM-5 跨切面症状测量标准</p>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="sc-cta-wrap">
+    <button class="sc-cta-btn sc-cta-primary" onclick="enterAssessment()">开始心理评估 →</button>
+    <button class="sc-cta-btn sc-cta-secondary" onclick="openCounselorLogin()" style="background:#fff;border:1.5px solid #C8DCC0;color:#5C7A52;font-family:inherit;">咨询师登录</button>
+    <a href="counselor.html" class="sc-cta-btn sc-cta-secondary">咨询师入驻 →</a>
+  </div>
+
+  <p class="sc-footer-text">本系统为心理自助评估工具，评估结果<strong>不构成专业医学诊断或治疗建议</strong>。<br>如您正在经历严重心理困扰，请拨打<a href="tel:12356" style="color:#5C7A52;">心理援助热线 12356</a>。</p>
+</div>
+
+<!-- ===== 评估着陆页 ===== -->
+<div class="landing hidden" id="landing">
   <div class="landing-hero">
     <div class="landing-logo">
       <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -681,6 +973,13 @@
   </div>
 </div>
 <script>
+// ===== 展示页 → 评估页切换 =====
+function enterAssessment() {
+  document.getElementById('showcase').classList.add('hidden');
+  document.getElementById('landing').classList.remove('hidden');
+  window.scrollTo(0, 0);
+}
+
 function openMyAssessment() {
   var aid = getAsid() || localStorage.getItem('xiaopingu_my_asid');
   var autoDiv = document.getElementById('my-assessment-auto');
