@@ -1,0 +1,26 @@
+<view class="page">
+  <view class="card">
+    <view class="title">咨询效果追踪</view>
+    <view class="sub">请在本次咨询后填写 ORS 与 SRS。每项 0-10 分。</view>
+  </view>
+
+  <view class="card">
+    <view class="title">ORS 结果评分</view>
+    <view class="score-row" wx:for="{{orsItems}}" wx:key="key">
+      <view class="score-head"><text>{{item.label}}</text><text>{{ors[item.key]}}/10</text></view>
+      <slider min="0" max="10" step="0.5" value="{{ors[item.key]}}" data-group="ors" data-key="{{item.key}}" bindchange="onScoreChange" activeColor="#5C7A52" />
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="title">SRS 联盟评分</view>
+    <view class="score-row" wx:for="{{srsItems}}" wx:key="key">
+      <view class="score-head"><text>{{item.label}}</text><text>{{srs[item.key]}}/10</text></view>
+      <slider min="0" max="10" step="0.5" value="{{srs[item.key]}}" data-group="srs" data-key="{{item.key}}" bindchange="onScoreChange" activeColor="#378ADD" />
+    </view>
+  </view>
+
+  <view class="card">
+    <button class="btn btn-primary" loading="{{submitting}}" bindtap="submit">提交评分</button>
+  </view>
+</view>

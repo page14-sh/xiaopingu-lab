@@ -1,0 +1,56 @@
+<view class="page">
+  <view class="card">
+    <view class="title">小平菇评估</view>
+    <view class="sub">用于初步了解心理困扰与咨询偏好。评估结果不构成医学诊断。</view>
+  </view>
+
+  <view class="card">
+    <label class="label">姓名</label>
+    <input class="input" value="{{form.visitor_name}}" data-key="visitor_name" bindinput="onInput" placeholder="可填写昵称" />
+
+    <label class="label">年龄</label>
+    <input class="input" type="number" value="{{form.visitor_age}}" data-key="visitor_age" bindinput="onInput" placeholder="请输入年龄" />
+
+    <label class="label">所在城市</label>
+    <input class="input" value="{{form.visitor_city}}" data-key="visitor_city" bindinput="onInput" placeholder="如：上海" />
+
+    <label class="label">希望的咨询方式</label>
+    <view class="tag-row">
+      <view wx:for="{{formatOptions}}" wx:key="value" class="tag {{item.active ? 'active' : ''}}" data-value="{{item.value}}" bindtap="toggleFormat">{{item.label}}</view>
+    </view>
+  </view>
+
+  <view class="card">
+    <label class="label">主要困扰</label>
+    <view class="tag-row">
+      <view wx:for="{{issueOptions}}" wx:key="value" class="tag {{item.active ? 'active' : ''}}" data-value="{{item.value}}" bindtap="toggleIssue">{{item.label}}</view>
+    </view>
+
+    <label class="label">简单描述</label>
+    <textarea class="textarea" value="{{form.description}}" data-key="description" bindinput="onInput" placeholder="可以简单写写最近遇到的困难"></textarea>
+  </view>
+
+  <view class="card">
+    <view class="score-row" wx:for="{{scoreItems}}" wx:key="key">
+      <view class="score-head">
+        <text>{{item.label}}</text>
+        <text>{{scores[item.key]}}/5</text>
+      </view>
+      <slider min="0" max="5" step="1" value="{{scores[item.key]}}" data-key="{{item.key}}" bindchange="onScoreChange" activeColor="#5C7A52" />
+    </view>
+  </view>
+
+  <view class="card">
+    <label class="label">危机筛查</label>
+    <picker mode="selector" range="{{crisisLabels}}" value="{{crisisIndex}}" bindchange="onCrisisChange">
+      <view class="picker">{{crisisLabels[crisisIndex]}}</view>
+    </picker>
+
+    <label class="label">预算</label>
+    <picker mode="selector" range="{{budgetLabels}}" value="{{budgetIndex}}" bindchange="onBudgetChange">
+      <view class="picker">{{budgetLabels[budgetIndex]}}</view>
+    </picker>
+
+    <button class="btn btn-primary" loading="{{submitting}}" bindtap="submitAssessment">生成评估并匹配</button>
+  </view>
+</view>

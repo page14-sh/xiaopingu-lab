@@ -7,6 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>小平菇 · 咨询师档案录入</title>
+<script src="web-auth.js"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   html { scroll-behavior: smooth; }
@@ -1525,6 +1526,9 @@ function enterEditMode(token) {
     currentEditId = data.id;
     currentReviewStatus = data.review_status || 'pending';
     localStorage.setItem('xiaopingu_counselor_id', data.id);
+    if (window.XPG_WEB_AUTH) {
+      XPG_WEB_AUTH.setSession('counselor', data.id, { via: 'edit_token', name: data.name || '' });
+    }
     restoreFromData(data);
     var submitBtn = document.getElementById('submit-btn');
     if (submitBtn) submitBtn.textContent = '保存修改';
@@ -2050,9 +2054,12 @@ var panelCid = null;
 // 初始化面板：URL 参数 or localStorage
 (function initPanel() {
   var params = new URLSearchParams(location.search);
-  var cid = params.get('cid') || params.get('panel');
+  var cid = params.get('cid');
   if (cid) {
     panelCid = cid;
+    if (window.XPG_WEB_AUTH) {
+      XPG_WEB_AUTH.setSession('counselor', cid, { via: 'cid' });
+    }
     // 隐藏注册表单，只显示工作台面板
     if (document.getElementById('form_area')) document.getElementById('form_area').style.display = 'none';
     // 页面标题改为工作台
@@ -2066,6 +2073,18 @@ var panelCid = null;
     var stored = localStorage.getItem('xiaopingu_counselor_id');
     if (stored) {
       panelCid = stored;
+      if (window.XPG_WEB_AUTH) {
+        XPG_WEB_AUTH.setSession('counselor', stored, { via: 'localStorage' });
+      }
+      showPanel();
+      loadPanelRequests();
+      return;
+    }
+  }
+  if (window.XPG_WEB_AUTH) {
+    var webSubject = XPG_WEB_AUTH.getSubject('counselor');
+    if (webSubject) {
+      panelCid = webSubject;
       showPanel();
       loadPanelRequests();
       return;
@@ -2095,6 +2114,9 @@ function loadPanelByInput() {
   if (!input) return;
   panelCid = input;
   localStorage.setItem('xiaopingu_counselor_id', input);
+  if (window.XPG_WEB_AUTH) {
+    XPG_WEB_AUTH.setSession('counselor', input, { via: 'manual_input' });
+  }
   document.getElementById('panel-login').style.display = 'none';
   document.getElementById('panel-content').style.display = 'block';
   loadPanelRequests();

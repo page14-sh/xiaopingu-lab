@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
   <script src="supabase-config.js"></script>
+  <script src="web-auth.js"></script>
   <title>小平菇 · 数据管理后台</title>
   <style>
     * { box-sizing: border-box; margin:0; padding:0; }
@@ -803,6 +804,9 @@
         document.getElementById('main-app').style.display = 'block';
         // 记住登录状态（2小时）
         sessionStorage.setItem('xiaopingu_logged_in', 'true');
+        if (window.XPG_WEB_AUTH) {
+          XPG_WEB_AUTH.setSession('admin', 'local-admin', { login_name: 'admin' });
+        }
         initApp();
       } else {
         errorEl.textContent = '密码错误，请重新输入';
@@ -812,6 +816,7 @@
 
     function doLogout() {
       sessionStorage.removeItem('xiaopingu_logged_in');
+      if (window.XPG_WEB_AUTH) XPG_WEB_AUTH.clearSession('admin');
       document.getElementById('main-app').style.display = 'none';
       document.getElementById('login-screen').style.display = 'flex';
       document.getElementById('login-password').value = '';
@@ -835,9 +840,12 @@
         });
         document.title = '小平菇 · 数据查看（只读）';
         initApp();
-      } else if (sessionStorage.getItem('xiaopingu_logged_in') === 'true') {
+      } else if ((window.XPG_WEB_AUTH && XPG_WEB_AUTH.getSession('admin')) || sessionStorage.getItem('xiaopingu_logged_in') === 'true') {
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
+        if (window.XPG_WEB_AUTH && !XPG_WEB_AUTH.getSession('admin')) {
+          XPG_WEB_AUTH.setSession('admin', 'local-admin', { login_name: 'admin' });
+        }
         initApp();
       }
     });
