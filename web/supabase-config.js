@@ -9,7 +9,7 @@
 
 var SUPABASE_CONFIG = {
   enableDataCollection: true,
-  url: 'https://csvhikdiliwqoacitlag.supabase.co',
+  url: 'http://127.0.0.1:8787',
   anonKey: 'sb_publishable_atXq0SmWEiEY6UMouG4dLw_ouXN2U6B'
 };
 

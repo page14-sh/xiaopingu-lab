@@ -1,0 +1,7 @@
+{
+  "scripts": {
+    "start:server": "HOST=0.0.0.0 node server/local-api-server.js",
+    "start:web": "python3 -m http.server 8080 --bind 127.0.0.1 --directory web",
+    "docker:server": "docker compose -f server/docker-compose.yml up --build"
+  }
+}

@@ -2047,8 +2047,8 @@ document.getElementById('c_cert_other').addEventListener('keydown', function(e) 
 document.getElementById('c_extra_credential_other').addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); addOtherExtraCredential(); } });
 
 /* ===== 咨询师面板 ===== */
-var SUPABASE_URL = 'https://csvhikdiliwqoacitlag.supabase.co';
-var SUPABASE_ANON_KEY = 'sb_publishable_atXq0SmWEiEY6UMouG4dLw_ouXN2U6B';
+var SUPABASE_URL = (window.SUPABASE_CONFIG && SUPABASE_CONFIG.url) || 'http://127.0.0.1:8787';
+var SUPABASE_ANON_KEY = (window.SUPABASE_CONFIG && SUPABASE_CONFIG.anonKey) || 'dev-local-key';
 var panelCid = null;
 
 // 初始化面板：URL 参数 or localStorage

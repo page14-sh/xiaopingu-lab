@@ -1,17 +1,48 @@
 const config = require('./config');
 
+function localApiHosts() {
+  return Array.isArray(config.localApiHosts) ? config.localApiHosts.filter(Boolean) : [];
+}
+
+function fallbackUrl(url, attemptedHosts) {
+  const hosts = localApiHosts();
+  const current = hosts.find((host) => url.indexOf(host) === 0);
+  if (!current) return '';
+  return hosts
+    .filter((host) => host !== current && !attemptedHosts.includes(host))
+    .map((host) => host + url.slice(current.length))[0] || '';
+}
+
 function request(options) {
+  const attemptedHosts = options._attemptedHosts || [];
+  const wxOptions = { ...options };
+  delete wxOptions._attemptedHosts;
   return new Promise((resolve, reject) => {
     wx.request({
-      ...options,
+      ...wxOptions,
       success(res) {
         if (res.statusCode >= 200 && res.statusCode < 300) {
           resolve(res.data);
         } else {
-          reject(new Error(`HTTP ${res.statusCode}`));
+          const data = res.data || {};
+          const message = data.message || data.error || data.details || JSON.stringify(data);
+          reject(new Error(message ? `HTTP ${res.statusCode}: ${message}` : `HTTP ${res.statusCode}`));
         }
       },
-      fail: reject
+      fail(err) {
+        const nextUrl = fallbackUrl(options.url, attemptedHosts);
+        if (nextUrl) {
+          const currentHost = localApiHosts().find((host) => options.url.indexOf(host) === 0);
+          request({
+            ...options,
+            url: nextUrl,
+            _attemptedHosts: currentHost ? attemptedHosts.concat(currentHost) : attemptedHosts
+          }).then(resolve).catch(reject);
+          return;
+        }
+        const message = err && err.errMsg ? err.errMsg : '网络请求失败';
+        reject(new Error(`${message} (${options.url})`));
+      }
     });
   });
 }

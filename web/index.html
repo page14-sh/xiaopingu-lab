@@ -71,12 +71,18 @@
   }
   #counselor-login-box h3 { font-size: 16px; font-weight: 700; color: #3D3831; margin-bottom: 6px; }
   #counselor-login-box p { font-size: 12px; color: #9B9489; margin-bottom: 16px; line-height: 1.6; }
-  #counselor-login-input {
+  #counselor-login-input,
+  #counselor-login-password {
     width: 100%; box-sizing: border-box; padding: 10px 14px; border: 1px solid #D4CFC8;
-    border-radius: 10px; font-size: 14px; color: #3D3831; outline: none;
+    border-radius: 10px; font-size: 14px; color: #3D3831; outline: none; margin-bottom: 10px;
     transition: border-color 0.2s;
   }
-  #counselor-login-input:focus { border-color: #5C7A52; }
+  #counselor-login-input:focus,
+  #counselor-login-password:focus { border-color: #5C7A52; }
+  .counselor-login-demo {
+    background: #F6FAF3; border: 1px solid #DCEAD5; border-radius: 10px;
+    color: #5C7A52; font-size: 12px; line-height: 1.6; padding: 9px 10px; margin-bottom: 12px;
+  }
   .counselor-login-btns { display: flex; gap: 10px; margin-top: 14px; }
   .counselor-login-btns button {
     flex: 1; padding: 11px; border-radius: 10px; font-size: 14px;
@@ -939,8 +945,11 @@
 <div id="counselor-login-overlay" onclick="if(event.target===this)closeCounselorLogin()">
   <div id="counselor-login-box">
     <h3>🖥️ 咨询师工作台</h3>
-    <p>输入注册时收到的「咨询师 ID」或「编辑码」，进入工作台查看来访匹配申请。</p>
-    <input id="counselor-login-input" type="text" placeholder="粘贴咨询师 ID 或编辑码…" autocomplete="off"
+    <p>使用本地演示账号登录，或输入注册时收到的「咨询师 ID / 编辑码」。</p>
+    <div class="counselor-login-demo">本地演示账号：<strong>counselor</strong><br>密码：<strong>xiaopingu2026</strong></div>
+    <input id="counselor-login-input" type="text" placeholder="账号 / 咨询师 ID / 编辑码" autocomplete="off"
+      onkeydown="if(event.key==='Enter')document.getElementById('counselor-login-password').focus()" />
+    <input id="counselor-login-password" type="password" placeholder="密码（ID / 编辑码登录可留空）" autocomplete="off"
       onkeydown="if(event.key==='Enter')doCounselorLogin()" />
     <div class="counselor-login-btns">
       <button class="btn-cl-cancel" onclick="closeCounselorLogin()">取消</button>
@@ -1026,7 +1035,22 @@ function closeCounselorLogin() {
 }
 function doCounselorLogin() {
   var val = document.getElementById('counselor-login-input').value.trim();
+  var pwd = document.getElementById('counselor-login-password').value;
   if (!val) { document.getElementById('counselor-login-input').style.borderColor='#E53935'; return; }
+  var localCounselorId = '00000000-0000-4000-8000-000000000001';
+  if (val === 'counselor') {
+    if (pwd !== 'xiaopingu2026') {
+      document.getElementById('counselor-login-password').style.borderColor='#E53935';
+      alert('咨询师账号密码不正确');
+      return;
+    }
+    localStorage.setItem('xiaopingu_counselor_id', localCounselorId);
+    if (window.XPG_WEB_AUTH) {
+      XPG_WEB_AUTH.setSession('counselor', localCounselorId, { login_name: 'counselor', via: 'local_demo_account' });
+    }
+    location.href = 'counselor.html?cid=' + encodeURIComponent(localCounselorId);
+    return;
+  }
   // 判断是 edit token（不含 -）还是 UUID（含 -）
   if (val.indexOf('-') >= 0) {
     // UUID → ?cid=
@@ -1317,6 +1341,7 @@ function doCounselorLogin() {
 </div>
 
 <div class="toast" id="toast"></div>
+<script src="web-auth.js"></script>
 <script src="supabase-config.js"></script>
 <script>
 var scores = { mood:0, anxiety:0, sleep:0, function:0, relation:0 };
@@ -2100,7 +2125,7 @@ function generateResult() {
         '<div style="text-align:center;padding:24px;color:#C4654A;font-size:14px;background:#FFF5F0;border-radius:12px">' +
         '⚠ 咨询师匹配加载失败<br>' +
         '<span style="font-size:12px;margin:8px 0;display:inline-block;color:#999">' + (isFileProtocol
-          ? '检测到你正在用 file:// 打开<br>请改用 localhost 访问：<br><code style="background:#f5f5f5;padding:2px 8px;border-radius:4px;font-size:13px">http://localhost:8765/index.html</code>'
+          ? '检测到你正在用 file:// 打开<br>请改用 localhost 访问：<br><code style="background:#f5f5f5;padding:2px 8px;border-radius:4px;font-size:13px">http://127.0.0.1:8080/index.html</code>'
           : '网络连接异常: ' + (e.message || '未知错误')) + '</span><br>' +
         '<button onclick="location.reload()" style="padding:8px 24px;border:1px solid #C4654A;background:#fff;color:#C4654A;border-radius:8px;cursor:pointer;font-size:14px;margin-top:8px">🔄 重试</button>' +
         '</div>';

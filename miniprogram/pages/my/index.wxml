@@ -2,6 +2,7 @@
   <view class="card">
     <view class="title">我的评估</view>
     <view class="sub">这里按微信身份展示你的评估记录、匹配申请状态和追踪入口。</view>
+    <view wx:if="{{last_refreshed_text}}" class="refresh-text">已同步 {{last_refreshed_text}}</view>
   </view>
 
   <view wx:if="{{loading}}" class="card muted">加载中...</view>
@@ -9,11 +10,12 @@
 
   <view wx:for="{{assessments}}" wx:key="id" class="card">
     <view class="title">{{item.visitor_name || '微信来访者'}}</view>
-    <view class="sub">总分 {{item.total_score || 0}}/25 · {{item.severity || '-'}} · {{item.created_at_text}}</view>
+    <view class="sub">评估号 {{item.assessment_no}} · 总分 {{item.total_score || 0}}/25 · {{item.severity || '-'}} · {{item.created_at_text}}</view>
     <view class="tag-row">
-      <view class="tag active">{{item.match_request_status || '未申请'}}</view>
+      <view class="tag active">{{item.status_text}}</view>
       <view wx:if="{{item.selected_counselor_name}}" class="tag active">已选 {{item.selected_counselor_name}}</view>
     </view>
+    <button wx:if="{{item.can_apply_demo}}" class="btn btn-primary" data-id="{{item.id}}" bindtap="applyDemoCounselor">申请本地演示咨询师</button>
     <button class="btn btn-ghost" data-id="{{item.id}}" bindtap="openPcoms">填写 PCOMS</button>
   </view>
 </view>

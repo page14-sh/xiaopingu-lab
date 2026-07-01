@@ -1,3 +1,9 @@
 button {
   margin-top: 12rpx;
 }
+
+.refresh-text {
+  margin-top: 12rpx;
+  color: #8B857B;
+  font-size: 24rpx;
+}

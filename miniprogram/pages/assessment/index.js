@@ -1,4 +1,5 @@
-const { createAssessment, listApprovedCounselors } = require('../../utils/api');
+const { createAssessment, listApprovedCounselors, updateAssessment } = require('../../utils/api');
+const config = require('../../utils/config');
 
 const issueOptionsSeed = [
   ['emotion', '情绪困扰'],
@@ -125,6 +126,22 @@ Page({
       };
 
       return createAssessment(visitor, payload).then((assessment) => {
+        if (config.localDemoCounselorId) {
+          return updateAssessment(assessment.id, {
+            match_request_name: assessment.visitor_name,
+            match_request_contact: visitor.openid,
+            match_request_cid: config.localDemoCounselorId,
+            match_request_status: 'pending'
+          }).then(() => ({
+            ...assessment,
+            match_request_name: assessment.visitor_name,
+            match_request_contact: visitor.openid,
+            match_request_cid: config.localDemoCounselorId,
+            match_request_status: 'pending'
+          }));
+        }
+        return assessment;
+      }).then((assessment) => {
         wx.setStorageSync('xpg_last_assessment', assessment);
         return listApprovedCounselors().then((counselors) => ({ assessment, counselors }));
       });
