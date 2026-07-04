@@ -391,12 +391,6 @@ function upsertVisitorUser(rows, body) {
 
 function applyLocalDemoMatch(table, row) {
   if (table !== 'assessments') return row;
-  if (row.match_request_cid) return row;
-  if (row.user_agent !== 'wechat-miniprogram') return row;
-  row.match_request_name = row.visitor_name || '微信来访者';
-  row.match_request_contact = row.visitor_openid || DEV_OPENID;
-  row.match_request_cid = LOCAL_COUNSELOR_ID;
-  row.match_request_status = 'pending';
   return row;
 }
 

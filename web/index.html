@@ -946,7 +946,7 @@
   <div id="counselor-login-box">
     <h3>🖥️ 咨询师工作台</h3>
     <p>使用本地演示账号登录，或输入注册时收到的「咨询师 ID / 编辑码」。</p>
-    <div class="counselor-login-demo">本地演示账号：<strong>counselor</strong><br>密码：<strong>xiaopingu2026</strong></div>
+    <div class="counselor-login-demo">本地演示账号：<strong>counselor</strong> / <strong>counselor2</strong><br>密码：<strong>xiaopingu2026</strong></div>
     <input id="counselor-login-input" type="text" placeholder="账号 / 咨询师 ID / 编辑码" autocomplete="off"
       onkeydown="if(event.key==='Enter')document.getElementById('counselor-login-password').focus()" />
     <input id="counselor-login-password" type="password" placeholder="密码（ID / 编辑码登录可留空）" autocomplete="off"
@@ -1037,18 +1037,28 @@ function doCounselorLogin() {
   var val = document.getElementById('counselor-login-input').value.trim();
   var pwd = document.getElementById('counselor-login-password').value;
   if (!val) { document.getElementById('counselor-login-input').style.borderColor='#E53935'; return; }
-  var localCounselorId = '00000000-0000-4000-8000-000000000001';
-  if (val === 'counselor') {
+  var localCounselorAccounts = {
+    counselor: {
+      id: '00000000-0000-4000-8000-000000000001',
+      name: '本地演示咨询师'
+    },
+    counselor2: {
+      id: '00000000-0000-4000-8000-000000000002',
+      name: '调试咨询师'
+    }
+  };
+  if (localCounselorAccounts[val]) {
     if (pwd !== 'xiaopingu2026') {
       document.getElementById('counselor-login-password').style.borderColor='#E53935';
       alert('咨询师账号密码不正确');
       return;
     }
-    localStorage.setItem('xiaopingu_counselor_id', localCounselorId);
+    var account = localCounselorAccounts[val];
+    localStorage.setItem('xiaopingu_counselor_id', account.id);
     if (window.XPG_WEB_AUTH) {
-      XPG_WEB_AUTH.setSession('counselor', localCounselorId, { login_name: 'counselor', via: 'local_demo_account' });
+      XPG_WEB_AUTH.setSession('counselor', account.id, { login_name: val, via: 'local_demo_account', name: account.name });
     }
-    location.href = 'counselor.html?cid=' + encodeURIComponent(localCounselorId);
+    location.href = 'counselor.html?cid=' + encodeURIComponent(account.id);
     return;
   }
   // 判断是 edit token（不含 -）还是 UUID（含 -）

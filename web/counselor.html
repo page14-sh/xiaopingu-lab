@@ -197,6 +197,24 @@
   .counselor-panel { margin-top: 24px; }
   .panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
   .panel-header h3 { font-size: 16px; color: #3D3831; }
+  .panel-identity {
+    margin: -4px 0 14px;
+    padding: 10px 12px;
+    background: #F0F7EC;
+    border: 1px solid #C8DCC0;
+    border-radius: 10px;
+    color: #4A6741;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  .panel-identity strong { color: #2F5D2A; font-size: 14px; }
+  .panel-identity code {
+    color: #6B635A;
+    font-size: 12px;
+    background: rgba(255,255,255,0.7);
+    border-radius: 4px;
+    padding: 1px 4px;
+  }
   /* 面板 Tab */
   .panel-tab {
     padding: 6px 16px; border-radius: 8px 8px 0 0; font-size: 13px; font-weight: 500;
@@ -1062,6 +1080,7 @@
           <span class="panel-badge" id="panel-badge" style="display:none"></span>
         </div>
       </div>
+      <div class="panel-identity" id="panel-identity" style="display:none"></div>
       <!-- Tab 切换 -->
       <div style="display:flex;gap:4px;margin-bottom:12px;border-bottom:2px solid #F0ECE5;padding-bottom:8px">
         <button class="panel-tab active" id="tab-requests" onclick="switchPanelTab('requests')">📩 匹配申请</button>
@@ -1982,10 +2001,51 @@ function submitProfile() {
   });
 })();
 
+var LOCAL_COUNSELOR_ACCOUNTS = {
+  counselor: {
+    id: '00000000-0000-4000-8000-000000000001',
+    name: '本地演示咨询师'
+  },
+  counselor1: {
+    id: '00000000-0000-4000-8000-000000000001',
+    name: '本地演示咨询师'
+  },
+  counselor2: {
+    id: '00000000-0000-4000-8000-000000000002',
+    name: '调试咨询师'
+  },
+  'local-counselor-demo-token': {
+    id: '00000000-0000-4000-8000-000000000001',
+    name: '本地演示咨询师'
+  },
+  'demo-counselor-token': {
+    id: '00000000-0000-4000-8000-000000000002',
+    name: '调试咨询师'
+  }
+};
+
+function resolveLocalCounselorAccount(value) {
+  return LOCAL_COUNSELOR_ACCOUNTS[(value || '').trim()] || null;
+}
+
+function enterLocalCounselorAccount(value) {
+  var account = resolveLocalCounselorAccount(value);
+  if (!account) return false;
+  localStorage.setItem('xiaopingu_counselor_id', account.id);
+  if (window.XPG_WEB_AUTH) {
+    XPG_WEB_AUTH.setSession('counselor', account.id, { login_name: value, via: 'local_demo_account', name: account.name });
+  }
+  window.location.replace('counselor.html?cid=' + encodeURIComponent(account.id));
+  return true;
+}
+
 // 检查 URL 中的编辑令牌 → 查 ID 后跳转面板
 (function() {
   var params = new URLSearchParams(window.location.search);
   var editToken = params.get('edit');
+  if (editToken && enterLocalCounselorAccount(editToken)) {
+    return;
+  }
   if (editToken && typeof getCounselorByToken === 'function') {
     getCounselorByToken(editToken).then(function(data) {
       if (data && data.id) {
@@ -2113,12 +2173,45 @@ var SUPABASE_URL = (window.SUPABASE_CONFIG && SUPABASE_CONFIG.url) || 'http://12
 var SUPABASE_ANON_KEY = (window.SUPABASE_CONFIG && SUPABASE_CONFIG.anonKey) || 'dev-local-key';
 var panelCid = null;
 
+function updatePanelIdentity(profile) {
+  var el = document.getElementById('panel-identity');
+  if (!el || !panelCid) return;
+  var localName = Object.keys(LOCAL_COUNSELOR_ACCOUNTS).map(function(k) {
+    return LOCAL_COUNSELOR_ACCOUNTS[k];
+  }).filter(function(a, idx, arr) {
+    return a.id === panelCid && arr.findIndex(function(x) { return x.id === a.id; }) === idx;
+  })[0];
+  var name = (profile && profile.name) || (localName && localName.name) || '当前咨询师';
+  var meta = [];
+  if (profile && profile.credential_level) meta.push(profile.credential_level);
+  if (profile && profile.city) meta.push(profile.city);
+  el.innerHTML = '当前咨询师：<strong>' + esc(name) + '</strong>' +
+    (meta.length ? ' · ' + esc(meta.join(' · ')) : '') +
+    '<br>ID：<code>' + esc(panelCid) + '</code>';
+  el.style.display = 'block';
+}
+
+function loadPanelIdentity() {
+  if (!panelCid) return;
+  updatePanelIdentity(null);
+  fetch(SUPABASE_URL + '/rest/v1/counselors?id=eq.' + encodeURIComponent(panelCid) + '&select=id,name,credential_level,city', {
+    headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY }
+  }).then(function(r) { return r.json(); })
+    .then(function(rows) { updatePanelIdentity(rows && rows[0]); })
+    .catch(function() { updatePanelIdentity(null); });
+}
+
 // 初始化面板：URL 参数 or localStorage
 (function initPanel() {
   var params = new URLSearchParams(location.search);
   var cid = params.get('cid');
+  if (resolveLocalCounselorAccount(cid)) {
+    enterLocalCounselorAccount(cid);
+    return;
+  }
   if (cid) {
     panelCid = cid;
+    localStorage.setItem('xiaopingu_counselor_id', cid);
     if (window.XPG_WEB_AUTH) {
       XPG_WEB_AUTH.setSession('counselor', cid, { via: 'cid' });
     }
@@ -2127,6 +2220,7 @@ var panelCid = null;
     // 页面标题改为工作台
     document.querySelector('.page-header .brand-name').textContent = '咨询师工作台';
     showPanel();
+    loadPanelIdentity();
     loadPanelRequests();
     return;
   }
@@ -2139,6 +2233,7 @@ var panelCid = null;
         XPG_WEB_AUTH.setSession('counselor', stored, { via: 'localStorage' });
       }
       showPanel();
+      loadPanelIdentity();
       loadPanelRequests();
       return;
     }
@@ -2148,6 +2243,7 @@ var panelCid = null;
     if (webSubject) {
       panelCid = webSubject;
       showPanel();
+      loadPanelIdentity();
       loadPanelRequests();
       return;
     }
@@ -2174,6 +2270,7 @@ function showPanelLogin() {
 function loadPanelByInput() {
   var input = document.getElementById('panel-cid-input').value.trim();
   if (!input) return;
+  if (enterLocalCounselorAccount(input)) return;
   panelCid = input;
   localStorage.setItem('xiaopingu_counselor_id', input);
   if (window.XPG_WEB_AUTH) {
@@ -2181,6 +2278,7 @@ function loadPanelByInput() {
   }
   document.getElementById('panel-login').style.display = 'none';
   document.getElementById('panel-content').style.display = 'block';
+  loadPanelIdentity();
   loadPanelRequests();
 }
 

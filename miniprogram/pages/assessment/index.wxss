@@ -49,3 +49,162 @@
   line-height: 1.7;
   margin-top: 20rpx;
 }
+
+.match-result-card {
+  border-color: #C8DCC0;
+}
+
+.referral-card {
+  position: relative;
+  margin: 18rpx 0 22rpx;
+  padding: 24rpx;
+  background: #fff;
+  border: 2rpx solid #E8E4DC;
+  border-radius: 18rpx;
+}
+
+.referral-card.top {
+  border-color: #5C7A52;
+}
+
+.referral-green {
+  border-color: #C8DCC0;
+  background: #FAFDF8;
+}
+
+.referral-amber {
+  border-color: #F1D49B;
+  background: #FFF9EC;
+}
+
+.referral-red {
+  border-color: #F2B4B4;
+  background: #FFF1F1;
+}
+
+.referral-badge {
+  align-self: flex-start;
+  display: inline-flex;
+  padding: 6rpx 14rpx;
+  border-radius: 999rpx;
+  background: #E8F0E4;
+  color: #3D6B34;
+  font-size: 22rpx;
+  font-weight: 700;
+  margin-bottom: 12rpx;
+}
+
+.referral-amber .referral-badge {
+  background: #FFF3CD;
+  color: #856404;
+}
+
+.referral-red .referral-badge {
+  background: #F8D7DA;
+  color: #8F2424;
+}
+
+.referral-title {
+  color: #3D3831;
+  font-size: 30rpx;
+  font-weight: 700;
+  line-height: 1.45;
+  margin-bottom: 10rpx;
+}
+
+.referral-desc {
+  color: #6B635A;
+  font-size: 25rpx;
+  line-height: 1.7;
+  margin-bottom: 14rpx;
+}
+
+.referral-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10rpx;
+  margin-top: 8rpx;
+}
+
+.require-tags .mini-tag {
+  background: #FFF3E0;
+  color: #9A5A12;
+}
+
+.empty-match {
+  margin-top: 20rpx;
+  color: #A09889;
+  font-size: 26rpx;
+  line-height: 1.6;
+}
+
+.counselor-card {
+  margin-top: 22rpx;
+  padding: 24rpx;
+  background: #FAFDF8;
+  border: 2rpx solid #C8DCC0;
+  border-radius: 18rpx;
+}
+
+.counselor-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 18rpx;
+  align-items: flex-start;
+  margin-bottom: 14rpx;
+}
+
+.counselor-name {
+  color: #3D3831;
+  font-size: 32rpx;
+  font-weight: 700;
+}
+
+.counselor-meta,
+.counselor-info,
+.match-detail {
+  color: #7A7167;
+  font-size: 24rpx;
+  line-height: 1.6;
+}
+
+.match-score {
+  flex-shrink: 0;
+  padding: 8rpx 14rpx;
+  border-radius: 999rpx;
+  background: #E8F0E4;
+  color: #3D6B34;
+  font-size: 22rpx;
+  font-weight: 700;
+}
+
+.counselor-bio {
+  color: #5F5A52;
+  font-size: 26rpx;
+  line-height: 1.7;
+  margin-bottom: 14rpx;
+}
+
+.counselor-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10rpx;
+  margin-bottom: 12rpx;
+}
+
+.mini-tag {
+  padding: 8rpx 14rpx;
+  border-radius: 999rpx;
+  background: #F0ECE5;
+  color: #6B635A;
+  font-size: 22rpx;
+}
+
+.mini-tag.warn {
+  background: #FFF3E0;
+  color: #9A5A12;
+}
+
+.counselor-select-btn {
+  margin-top: 18rpx;
+}

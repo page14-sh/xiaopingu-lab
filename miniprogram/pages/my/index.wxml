@@ -15,7 +15,29 @@
       <view class="tag active">{{item.status_text}}</view>
       <view wx:if="{{item.selected_counselor_name}}" class="tag active">已选 {{item.selected_counselor_name}}</view>
     </view>
-    <button wx:if="{{item.can_apply_demo}}" class="btn btn-primary" data-id="{{item.id}}" bindtap="applyDemoCounselor">申请本地演示咨询师</button>
+    <view class="advice-box">
+      <view class="recommend-title">转介匹配建议</view>
+      <view wx:for="{{item.referral_advice_cards}}" wx:for-item="advice" wx:key="title" class="advice-card advice-{{advice.tone}}">
+        <view class="advice-badge">{{advice.badge}}</view>
+        <view class="advice-title">{{advice.title}}</view>
+        <view class="advice-sub">{{advice.desc}}</view>
+      </view>
+    </view>
+    <view wx:if="{{item.can_apply_demo}}" class="recommend-box">
+      <view class="recommend-title">选择推荐咨询师</view>
+      <view wx:for="{{item.recommended_counselors}}" wx:for-item="counselor" wx:key="id" class="recommend-card">
+        <view class="recommend-head">
+          <view>
+            <view class="recommend-name">{{counselor.name}}</view>
+            <view class="recommend-meta">{{counselor.meta_text}}</view>
+          </view>
+          <view class="recommend-score">{{counselor.matchScore}}%</view>
+        </view>
+        <view class="recommend-sub">{{counselor.fee_text}} · {{counselor.first_format}}</view>
+        <view class="recommend-sub">{{counselor.match_details_text}}</view>
+        <button class="btn btn-primary" data-id="{{item.id}}" data-cid="{{counselor.id}}" data-name="{{counselor.name}}" bindtap="applyDemoCounselor">选择 {{counselor.name}}</button>
+      </view>
+    </view>
     <button class="btn btn-ghost" data-id="{{item.id}}" bindtap="openPcoms">填写 PCOMS</button>
   </view>
 </view>

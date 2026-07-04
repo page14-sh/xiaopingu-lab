@@ -1,5 +1,5 @@
 const { createAssessment, listApprovedCounselors, updateAssessment } = require('../../utils/api');
-const config = require('../../utils/config');
+const { buildCounselorMatches, buildReferralAdvice } = require('../../utils/matching');
 
 const issueOptionsSeed = [
   ['emotion', '情绪困扰'],
@@ -50,6 +50,11 @@ function optionLabels(items) {
 Page({
   data: {
     submitting: false,
+    selectingCounselor: false,
+    matchResultVisible: false,
+    submittedAssessment: null,
+    referralAdviceCards: [],
+    recommendedCounselors: [],
     form: {
       visitor_name: '',
       visitor_age: '',
@@ -289,22 +294,16 @@ Page({
     return '轻度';
   },
 
-  recommendedApproaches(issues) {
-    const out = [];
-    if (issues.includes('personality') || issues.includes('crisis')) out.push('DBT', '精神动力学');
-    if (issues.includes('trauma')) out.push('EMDR', 'CBT');
-    if (issues.includes('relationship') || issues.includes('marriage') || issues.includes('family')) out.push('家庭治疗', 'EFT');
-    if (issues.includes('emotion') || issues.includes('workplace') || issues.includes('somatic') || issues.includes('sexual')) out.push('CBT', 'ACT');
-    if (issues.includes('adolescent')) out.push('家庭治疗', 'CBT');
-    if (issues.includes('eating') || issues.includes('addiction')) out.push('CBT', 'DBT');
-    if (issues.includes('growth') || issues.includes('grief')) out.push('人本主义');
-    return Array.from(new Set(out.length ? out : ['CBT']));
-  },
-
   submitAssessment() {
     if (this.data.submitting) return;
     const app = getApp();
-    this.setData({ submitting: true });
+    this.setData({
+      submitting: true,
+      matchResultVisible: false,
+      submittedAssessment: null,
+      referralAdviceCards: [],
+      recommendedCounselors: []
+    });
 
     app.ensureVisitor().then((visitor) => {
       const issues = this.data.issueOptions.filter((i) => i.active).map((i) => i.value);
@@ -363,55 +362,69 @@ Page({
       };
 
       return createAssessment(visitor, payload).then((assessment) => {
-        if (config.localDemoCounselorId) {
-          return updateAssessment(assessment.id, {
-            match_request_name: assessment.visitor_name,
-            match_request_contact: visitor.openid,
-            match_request_cid: config.localDemoCounselorId,
-            match_request_status: 'pending'
-          }).then(() => ({
-            ...assessment,
-            match_request_name: assessment.visitor_name,
-            match_request_contact: visitor.openid,
-            match_request_cid: config.localDemoCounselorId,
-            match_request_status: 'pending'
-          }));
-        }
-        return assessment;
-      }).then((assessment) => {
         wx.setStorageSync('xpg_last_assessment', assessment);
-        return listApprovedCounselors().then((counselors) => ({ assessment, counselors }));
+        return listApprovedCounselors().then((counselors) => ({ assessment, counselors, visitor }));
       });
-    }).then(({ assessment, counselors }) => {
-      const issues = assessment.issues || [];
-      const approaches = this.recommendedApproaches(issues);
-      const matches = (counselors || []).map((c) => {
-        let score = 0;
-        const details = [];
-        const specialties = c.specialties || [];
-        const overlap = issues.filter((i) => specialties.includes(i));
-        if (issues.length && overlap.length) {
-          score += Math.round(overlap.length / issues.length * 40);
-          details.push(`议题 ${overlap.length}/${issues.length}`);
-        }
-        const appOverlap = approaches.filter((a) => (c.approaches || []).includes(a));
-        if (appOverlap.length) {
-          score += Math.min(30, appOverlap.length * 15);
-          details.push(appOverlap.join('/'));
-        }
-        if ((c.severity_levels || []).includes(assessment.severity)) score += 15;
-        if (assessment.budget && c.fee_budget_level === assessment.budget) score += 10;
-        if (assessment.visitor_city && c.city && c.city.indexOf(assessment.visitor_city) >= 0) score += 5;
-        return { ...c, matchScore: score, matchDetails: details };
-      }).filter((c) => c.matchScore > 0).sort((a, b) => b.matchScore - a.matchScore).slice(0, 3);
-
+    }).then(({ assessment, counselors, visitor }) => {
+      const matches = buildCounselorMatches(assessment, counselors, 2);
+      const advice = buildReferralAdvice(assessment);
       wx.setStorageSync(`xpg_matches_${assessment.id}`, matches);
+      wx.setStorageSync(`xpg_referral_advice_${assessment.id}`, advice.cards);
+      this.currentVisitor = visitor;
+      this.setData({
+        submittedAssessment: assessment,
+        referralAdviceCards: advice.cards,
+        recommendedCounselors: matches,
+        matchResultVisible: true
+      });
       wx.showToast({ title: '评估已保存', icon: 'success' });
-      wx.switchTab({ url: '/pages/my/index' });
     }).catch((err) => {
       wx.showModal({ title: '提交失败', content: err.message || '请稍后重试', showCancel: false });
     }).finally(() => {
       this.setData({ submitting: false });
+    });
+  },
+
+  selectCounselor(e) {
+    if (this.data.selectingCounselor) return;
+    const counselorId = e.currentTarget.dataset.id;
+    const counselorName = e.currentTarget.dataset.name;
+    const assessment = this.data.submittedAssessment;
+    if (!assessment || !assessment.id || !counselorId) return;
+    const visitor = this.currentVisitor || {};
+
+    this.setData({ selectingCounselor: true });
+    updateAssessment(assessment.id, {
+      match_request_name: assessment.visitor_name || '微信来访者',
+      match_request_contact: visitor.openid || assessment.visitor_openid || '',
+      match_request_cid: counselorId,
+      match_request_status: 'pending',
+      selected_counselor_id: counselorId,
+      selected_counselor_name: counselorName,
+      selected_at: new Date().toISOString()
+    }).then(() => {
+      const updated = {
+        ...assessment,
+        match_request_name: assessment.visitor_name || '微信来访者',
+        match_request_contact: visitor.openid || assessment.visitor_openid || '',
+        match_request_cid: counselorId,
+        match_request_status: 'pending',
+        selected_counselor_id: counselorId,
+        selected_counselor_name: counselorName
+      };
+      wx.setStorageSync('xpg_last_assessment', updated);
+      wx.showModal({
+        title: '已提交申请',
+        content: `已选择 ${counselorName}，对应咨询师工作台会收到这条待处理申请。`,
+        showCancel: false,
+        success: () => {
+          wx.switchTab({ url: '/pages/my/index' });
+        }
+      });
+    }).catch((err) => {
+      wx.showModal({ title: '申请失败', content: err.message || '请稍后重试', showCancel: false });
+    }).finally(() => {
+      this.setData({ selectingCounselor: false });
     });
   }
 });

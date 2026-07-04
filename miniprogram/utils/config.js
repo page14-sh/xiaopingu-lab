@@ -13,7 +13,11 @@ module.exports = {
   // 开发者工具里无后端 code2session 时使用；正式版必须移除。
   devOpenid: 'dev-openid-xiaopingu',
 
-  // 本地演示咨询师账号，用于让小程序提交后直接进入咨询师工作台的匹配申请列表。
+  // 本地演示咨询师账号，用于让小程序提交后选择咨询师并进入对应工作台的匹配申请列表。
   localDemoCounselorId: '00000000-0000-4000-8000-000000000001',
-  localDemoCounselorName: '本地演示咨询师'
+  localDemoCounselorName: '本地演示咨询师',
+  localDemoCounselorIds: [
+    '00000000-0000-4000-8000-000000000001',
+    '00000000-0000-4000-8000-000000000002'
+  ]
 };

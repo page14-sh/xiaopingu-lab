@@ -161,4 +161,41 @@
 
     <button class="btn btn-primary" loading="{{submitting}}" bindtap="submitAssessment">生成评估并匹配</button>
   </view>
+
+  <view wx:if="{{matchResultVisible}}" class="card match-result-card">
+    <view class="group-title">转介匹配建议</view>
+    <view wx:for="{{referralAdviceCards}}" wx:key="title" class="referral-card referral-{{item.tone}} {{item.top ? 'top' : ''}}">
+      <view class="referral-badge">{{item.badge}}</view>
+      <view class="referral-title">{{item.title}}</view>
+      <view class="referral-desc">{{item.desc}}</view>
+      <view class="referral-tags">
+        <view wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this" class="mini-tag">{{tag}}</view>
+      </view>
+      <view class="referral-tags require-tags">
+        <view wx:for="{{item.require}}" wx:for-item="req" wx:key="*this" class="mini-tag warn">{{req}}</view>
+      </view>
+    </view>
+
+    <view class="group-title">推荐咨询师</view>
+    <view class="sub">请选择一位本地演示咨询师提交匹配申请。选择后，对应 web 咨询师工作台会收到这条待处理请求。</view>
+
+    <view wx:if="{{recommendedCounselors.length === 0}}" class="empty-match">暂无可推荐咨询师，请稍后再试。</view>
+
+    <view wx:for="{{recommendedCounselors}}" wx:key="id" class="counselor-card">
+      <view class="counselor-head">
+        <view>
+          <view class="counselor-name">{{item.name || '未命名咨询师'}}</view>
+          <view class="counselor-meta">{{item.meta_text}}</view>
+        </view>
+        <view class="match-score">匹配度 {{item.matchScore}}%</view>
+      </view>
+      <view wx:if="{{item.bio_short}}" class="counselor-bio">{{item.bio_short}}</view>
+      <view class="counselor-tags">
+        <view wx:for="{{item.approaches}}" wx:for-item="tag" wx:key="*this" class="mini-tag">{{tag}}</view>
+      </view>
+      <view class="counselor-info">{{item.fee_text}} · {{item.first_format}}</view>
+      <view class="match-detail">{{item.match_details_text}}</view>
+      <button class="btn btn-primary counselor-select-btn" loading="{{selectingCounselor}}" data-id="{{item.id}}" data-name="{{item.name}}" bindtap="selectCounselor">选择这位咨询师</button>
+    </view>
+  </view>
 </view>

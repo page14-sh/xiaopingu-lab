@@ -1,5 +1,6 @@
-const { listMyAssessments, updateAssessment } = require('../../utils/api');
+const { listMyAssessments, listApprovedCounselors, updateAssessment } = require('../../utils/api');
 const config = require('../../utils/config');
+const { buildCounselorMatches, buildReferralAdvice } = require('../../utils/matching');
 
 Page({
   data: {
@@ -51,45 +52,29 @@ Page({
     return map[status] || '未申请';
   },
 
-  ensureDemoApplications(rows) {
-    if (!config.localDemoCounselorId) return Promise.resolve(rows || []);
-    const missing = (rows || []).filter((item) => !item.match_request_cid);
-    if (!missing.length) return Promise.resolve(rows || []);
-
-    return Promise.all(missing.map((item) => updateAssessment(item.id, {
-      match_request_name: item.visitor_name || '微信来访者',
-      match_request_contact: item.visitor_openid || config.devOpenid,
-      match_request_cid: config.localDemoCounselorId,
-      match_request_status: 'pending'
-    }))).then(() => {
-      return rows.map((item) => {
-        if (item.match_request_cid) return item;
-        return {
-          ...item,
-          match_request_name: item.visitor_name || '微信来访者',
-          match_request_contact: item.visitor_openid || config.devOpenid,
-          match_request_cid: config.localDemoCounselorId,
-          match_request_status: 'pending'
-        };
-      });
-    });
-  },
-
   load(options = {}) {
     const app = getApp();
+    let currentVisitor = null;
     if (!options.silent) this.setData({ loading: true });
     return app.ensureVisitor().then((visitor) => {
-      return listMyAssessments(visitor.openid);
+      currentVisitor = visitor;
+      return Promise.all([
+        listMyAssessments(visitor.openid),
+        listApprovedCounselors()
+      ]);
     }).then((rows) => {
-      return this.ensureDemoApplications(rows);
-    }).then((rows) => {
-      const assessments = (rows || []).map((item) => ({
+      const assessmentsRows = rows[0] || [];
+      const counselors = rows[1] || [];
+      const assessments = assessmentsRows.map((item) => ({
         ...item,
         assessment_no: item.id ? item.id.slice(0, 8) : '',
         created_at_text: item.created_at ? item.created_at.slice(0, 10) : '',
         status_text: this.statusText(item.match_request_status),
-        can_apply_demo: !item.match_request_cid && !!config.localDemoCounselorId
+        can_apply_demo: !item.match_request_cid,
+        referral_advice_cards: buildReferralAdvice(item).cards,
+        recommended_counselors: !item.match_request_cid ? buildCounselorMatches(item, counselors, 2) : []
       }));
+      this.currentVisitor = currentVisitor;
       const now = new Date();
       const timeText = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
       this.setData({ assessments, last_refreshed_text: timeText });
@@ -109,15 +94,21 @@ Page({
 
   applyDemoCounselor(e) {
     const id = e.currentTarget.dataset.id;
+    const counselorId = e.currentTarget.dataset.cid || config.localDemoCounselorId;
+    const counselorName = e.currentTarget.dataset.name || config.localDemoCounselorName || '本地演示咨询师';
     const item = (this.data.assessments || []).find((a) => a.id === id);
-    if (!item) return;
+    if (!item || !counselorId) return;
+    const visitor = this.currentVisitor || {};
 
     wx.showLoading({ title: '提交申请...' });
     updateAssessment(id, {
       match_request_name: item.visitor_name || '微信来访者',
-      match_request_contact: item.visitor_openid || config.devOpenid,
-      match_request_cid: config.localDemoCounselorId,
-      match_request_status: 'pending'
+      match_request_contact: visitor.openid || item.visitor_openid || config.devOpenid,
+      match_request_cid: counselorId,
+      match_request_status: 'pending',
+      selected_counselor_id: counselorId,
+      selected_counselor_name: counselorName,
+      selected_at: new Date().toISOString()
     }).then(() => {
       wx.showToast({ title: '已提交申请', icon: 'success' });
       this.load();
