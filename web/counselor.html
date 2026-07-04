@@ -296,6 +296,30 @@
   .detail-chip.warn { background: #FFF3CD; color: #856404; }
   .detail-chip.danger { background: #F8D7DA; color: #721C24; }
   .detail-text { font-size: 12px; color: #5F5E5A; background: #F7F4EF; padding: 10px 12px; border-radius: 8px; line-height: 1.7; white-space: pre-wrap; }
+  .detail-referral-card {
+    position: relative; padding: 12px; border: 1px solid #D8D2C8;
+    border-radius: 10px; background: #fff; margin-bottom: 8px;
+  }
+  .detail-referral-card.top { border-color: #5C7A52; box-shadow: inset 3px 0 0 #5C7A52; }
+  .detail-referral-card h4 { font-size: 13px; color: #3D3831; margin: 0 72px 4px 0; }
+  .detail-referral-card p { font-size: 12px; color: #6B635A; line-height: 1.7; margin: 0 0 8px; }
+  .detail-referral-badge {
+    position: absolute; top: 10px; right: 10px; padding: 2px 8px;
+    border-radius: 10px; font-size: 10px; font-weight: 700;
+  }
+  .detail-referral-badge.green { background: #E8F0E4; color: #3D6B34; }
+  .detail-referral-badge.amber { background: #FFF3CD; color: #856404; }
+  .detail-referral-badge.red { background: #F8D7DA; color: #721C24; }
+  .detail-counselor-card {
+    border: 1px solid #E8E4DC; border-radius: 10px; padding: 12px;
+    margin-bottom: 8px; background: #fff;
+  }
+  .detail-counselor-card.current { border-color: #5C7A52; box-shadow: inset 3px 0 0 #5C7A52; }
+  .detail-counselor-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
+  .detail-counselor-name { font-size: 14px; font-weight: 700; color: #3D3831; }
+  .detail-match-score { flex-shrink: 0; font-size: 11px; padding: 2px 8px; border-radius: 10px; background: #F0F7EC; color: #5C7A52; font-weight: 700; }
+  .detail-counselor-meta { font-size: 12px; color: #6B635A; line-height: 1.7; }
+  .detail-loading { padding: 12px; color: #A09889; font-size: 12px; text-align: center; background: #F7F4EF; border-radius: 8px; }
   @media (max-width: 560px) {
     .detail-grid { grid-template-columns: 1fr; }
   }
@@ -2192,6 +2216,140 @@ function renderDetailChips(values, map, cls) {
   }).join('');
 }
 
+function buildReferralAdvice(a) {
+  var issues = arrVal(a.issues);
+  var specials = arrVal(a.specials);
+  var crisisVal = a.crisis_level || 'safe';
+  var totalScore = parseInt(a.total_score) || 0;
+  var scores = {
+    mood: parseInt(a.score_mood) || 0,
+    anxiety: parseInt(a.score_anxiety) || 0
+  };
+  var cards = [];
+  var recommendedApproaches = [];
+  var minYears = 1;
+  var minCredential = '二级';
+
+  function add(card) {
+    cards.push(card);
+    (card.approaches || []).forEach(function(v) {
+      if (recommendedApproaches.indexOf(v) < 0) recommendedApproaches.push(v);
+    });
+    if (card.minYears) minYears = Math.max(minYears, card.minYears);
+    if (card.minCredential) minCredential = card.minCredential;
+  }
+
+  if (crisisVal === 'active' || crisisVal === 'action') {
+    add({ top:true, badge:'紧急转介', tone:'red', title:'立即转介：危机干预专业机构', desc:'当前存在自伤/自杀风险，普通心理咨询不适用。建议立即联系危机干预机构或精神科急诊。', tags:['危机干预资质','注册心理师','精神科联动','安全评估'], require:['从业年限：8年+','危机干预专项培训','精神科医疗团队协作'], approaches:['DBT'], minYears:8, minCredential:'注册心理师' });
+  } else if (crisisVal === 'passive') {
+    add({ top:true, badge:'优先处理', tone:'amber', title:'优先安排：有危机倾向的支持性咨询', desc:'存在消极念头，需优先安排具备危机风险评估能力的咨询师。', tags:['DBT取向','危机风险评估','安全计划制定'], require:['从业年限：5年+','危机评估培训','DBT/CBT取向优先'], approaches:['DBT','CBT'], minYears:5 });
+  }
+
+  if (specials.indexOf('diagnosed') >= 0 || specials.indexOf('medication') >= 0 || issues.indexOf('personality') >= 0) {
+    add({ top:!cards.length, badge:'医心联动', tone:'amber', title:'建议：精神科-咨询联合模式', desc:'存在精神科诊断或人格成长/发展性议题，建议采用联合工作模式。', tags:['DBT取向','精神动力学','精神科协作','长程咨询'], require:['从业年限：8年+','注册心理师级别','需与精神科协作'], approaches:['DBT','精神动力学'], minYears:8, minCredential:'注册心理师' });
+  }
+  if (issues.indexOf('trauma') >= 0) add({ top:!cards.length, badge:'强烈推荐', tone:'green', title:'推荐取向：创伤聚焦咨询（EMDR / TF-CBT）', desc:'创伤类议题需要受过专项创伤训练的咨询师。', tags:['EMDR取向','TF-CBT','创伤专项培训'], require:['从业年限：5年+','创伤专项培训认证','督导≥200小时'], approaches:['EMDR','CBT'], minYears:5 });
+  if (issues.indexOf('relationship') >= 0 || issues.indexOf('marriage') >= 0) add({ top:!cards.length, badge:'推荐', tone:'green', title:'推荐取向：关系/婚姻咨询', desc:'关系类议题推荐具备家庭治疗培训背景的咨询师。', tags:['家庭治疗取向','EFT婚姻治疗','系统式治疗'], require:['从业年限：3年+','家庭/婚姻咨询专项培训'], approaches:['家庭治疗','EFT'], minYears:3 });
+  if (issues.indexOf('adolescent') >= 0 || /中小学|青少年|学生/.test(a.visitor_occupation || '')) add({ top:!cards.length, badge:'推荐', tone:'green', title:'推荐取向：青少年专项咨询', desc:'青少年问题推荐具备儿童青少年专项培训的咨询师。', tags:['青少年专项','家庭治疗','CBT取向'], require:['从业年限：3年+','青少年/儿童专项培训'], approaches:['家庭治疗','CBT'], minYears:3 });
+  if (issues.indexOf('emotion') >= 0 || scores.mood >= 3 || scores.anxiety >= 3) add({ top:!cards.length, badge:totalScore >= 15 ? '建议优先' : '推荐', tone:totalScore >= 15 ? 'amber' : 'green', title:'推荐取向：CBT / ACT 认知行为疗法', desc:'情绪困扰首选循证证据较充分的认知行为疗法。', tags:['CBT取向','ACT取向','短程结构化','循证支持'], require:['从业年限：1年+','二级咨询师及以上', totalScore >= 15 ? '建议先精神科评估' : '无特殊限制'], approaches:['CBT','ACT'] });
+  if (issues.indexOf('growth') >= 0 || (!issues.length && !cards.length)) add({ top:!cards.length, badge:'推荐', tone:'green', title:'推荐取向：人本主义 / 存在主义咨询', desc:'自我成长类议题适合人本主义或存在主义取向。', tags:['人本主义','存在主义','来访者中心','中长程'], require:['从业年限：1年+','二/三级咨询师均可','无特殊限制'], approaches:['人本主义'] });
+  if (issues.indexOf('workplace') >= 0) add({ top:!cards.length, badge:'推荐', tone:'green', title:'推荐取向：EAP / 组织心理学方向', desc:'职场困扰推荐具备 EAP 或组织心理学背景的咨询师。', tags:['EAP经验','CBT取向','职业规划'], require:['从业年限：3年+','EAP或企业心理服务经验'], approaches:['CBT'], minYears:3 });
+  if (issues.indexOf('eating') >= 0) add({ top:!cards.length, badge:'建议优先', tone:'amber', title:'建议：进食障碍专项咨询', desc:'进食障碍涉及身心双重因素，建议寻求具备专项训练的咨询师，必要时配合精神科评估。', tags:['进食障碍专项','CBT-E','精神科协作'], require:['从业年限：5年+','进食障碍专项培训','建议精神科联合评估'], approaches:['CBT','DBT'], minYears:5 });
+  if (issues.indexOf('addiction') >= 0) add({ top:!cards.length, badge:'建议优先', tone:'amber', title:'建议：成瘾行为专项咨询', desc:'成瘾类议题建议寻求具备成瘾干预专项训练的咨询师，配合精神科评估。', tags:['成瘾干预专项','CBT取向','精神科协作'], require:['从业年限：5年+','成瘾行为专项培训','需排除共病'], approaches:['CBT','DBT'], minYears:5 });
+  if (issues.indexOf('grief') >= 0) add({ top:!cards.length, badge:'推荐', tone:'green', title:'推荐取向：哀伤辅导 / 存在主义咨询', desc:'丧亲哀伤类议题推荐具备哀伤辅导训练的咨询师。', tags:['哀伤辅导','存在主义','人本主义'], require:['从业年限：2年+','哀伤辅导专项培训'], approaches:['人本主义'], minYears:2 });
+  if (issues.indexOf('sexual') >= 0) add({ top:!cards.length, badge:'推荐', tone:'green', title:'推荐取向：性心理专项咨询', desc:'性心理议题需要受过性心理专项训练的咨询师。', tags:['性心理专项培训','CBT取向','系统式治疗'], require:['从业年限：3年+','性心理专项培训认证','尊重多元性别认同'], approaches:['CBT'], minYears:3 });
+  if (issues.indexOf('somatic') >= 0) add({ top:!cards.length, badge:'推荐', tone:'green', title:'推荐取向：身心整合 / CBT / 正念', desc:'心身困扰推荐具备身心整合或正念训练的咨询师。', tags:['正念减压(MBSR)','CBT取向','精神科协作'], require:['从业年限：3年+','正念或身心训练','建议先排除器质性病变'], approaches:['CBT'], minYears:3 });
+  if (issues.indexOf('family') >= 0) add({ top:!cards.length, badge:'推荐', tone:'green', title:'推荐取向：家庭系统治疗', desc:'家庭系统议题推荐具备家庭治疗培训背景的咨询师。', tags:['家庭治疗取向','系统式治疗','鲍恩家庭系统'], require:['从业年限：5年+','家庭治疗专项培训','建议家庭成员参与'], approaches:['家庭治疗'], minYears:5 });
+
+  if (!cards.length) add({ top:true, badge:'通用推荐', tone:'green', title:'推荐进行初始评估咨询', desc:'建议先预约 1-2 次初始评估。', tags:['初始评估','1-2次探索'], require:['从业年限：2年+','二级咨询师及以上'], approaches:['CBT'], minYears:2 });
+
+  return { cards: cards.slice(0, 3), recommendedApproaches: recommendedApproaches, minYears: minYears, minCredential: minCredential };
+}
+
+function renderReferralAdvice(a, advice) {
+  return advice.cards.map(function(c) {
+    var html = '<div class="detail-referral-card' + (c.top ? ' top' : '') + '">';
+    html += '<span class="detail-referral-badge ' + (c.tone || 'green') + '">' + esc(c.badge) + '</span>';
+    html += '<h4>' + esc(c.title) + '</h4><p>' + esc(c.desc) + '</p>';
+    html += '<div class="detail-chips">' + c.tags.map(function(t) { return '<span class="detail-chip">' + esc(t) + '</span>'; }).join('') + '</div>';
+    html += '<div class="detail-chips" style="margin-top:6px">' + c.require.map(function(t) { return '<span class="detail-chip warn">' + esc(t) + '</span>'; }).join('') + '</div>';
+    html += '</div>';
+    return html;
+  }).join('');
+}
+
+function buildMatchAssessment(a, advice) {
+  var age = parseInt(a.visitor_age) || null;
+  return {
+    issues: arrVal(a.issues),
+    severity: a.severity,
+    recommendedApproaches: advice.recommendedApproaches,
+    minYears: advice.minYears,
+    minCredential: advice.minCredential,
+    budget: a.budget || '',
+    visitor_city: a.visitor_city || '',
+    visitor_formats: arrVal(a.preferred_formats),
+    gender_pref: a.gender_pref || '',
+    visitor_gender: a.visitor_gender || '',
+    visitor_age: age,
+    age_pref: a.age_pref || '',
+    orientation_pref: a.orientation_pref || '',
+    comm_style: a.comm_style || '',
+    filled_by: a.filled_by || '',
+    is_minor: !!(age && age < 18),
+    cnip: {
+      cnip_structure: a.cnip_structure || '',
+      cnip_emotion: a.cnip_emotion || '',
+      cnip_timefocus: a.cnip_timefocus || '',
+      cnip_warmth: a.cnip_warmth || '',
+      cnip_homework: a.cnip_homework || '',
+      cnip_relational: a.cnip_relational || ''
+    }
+  };
+}
+
+function loadAssessmentCounselorMatches(id) {
+  var a = panelAssessmentRecords[id];
+  var el = document.getElementById('assessment-matches-' + id);
+  if (!a || !el || el.getAttribute('data-loaded') === '1') return;
+  if (typeof matchCounselors !== 'function') {
+    el.innerHTML = '<div class="detail-loading">当前页面未加载咨询师匹配模块</div>';
+    return;
+  }
+  el.setAttribute('data-loaded', '1');
+  var advice = buildReferralAdvice(a);
+  matchCounselors(buildMatchAssessment(a, advice)).then(function(results) {
+    if (!results || !results.length) {
+      el.innerHTML = '<div class="detail-loading">暂无匹配的咨询师</div>';
+      return;
+    }
+    var html = '<div class="detail-loading" style="text-align:left;margin-bottom:8px">以下推荐基于来访者评估信息自动匹配，仅供咨询师参考，匹配度不等于适合度。</div>';
+    results.slice(0, 3).forEach(function(r) {
+      var c = r.counselor || {};
+      var isCurrent = c.id === panelCid;
+      html += '<div class="detail-counselor-card' + (isCurrent ? ' current' : '') + '">';
+      html += '<div class="detail-counselor-head"><span class="detail-counselor-name">' + esc(c.name || '未命名咨询师') + (isCurrent ? ' · 当前咨询师' : '') + '</span><span class="detail-match-score">匹配度 ' + Math.min(100, r.matchScore || 0) + '%</span></div>';
+      html += '<div class="detail-counselor-meta">';
+      var meta = [];
+      if (c.credential_level) meta.push(c.credential_level);
+      if (c.years_experience) meta.push(c.years_experience + '年经验');
+      if (c.city) meta.push(c.city);
+      if (c.fee_min) meta.push(c.fee_min + '元/次');
+      if (arrVal(c.session_formats).length) meta.push(arrVal(c.session_formats).join('、'));
+      html += meta.map(esc).join(' · ') || '暂无基本信息';
+      html += '</div>';
+      if (c.bio_short) html += '<div class="detail-counselor-meta" style="margin-top:4px">' + esc(c.bio_short) + '</div>';
+      if (r.matchDetails && r.matchDetails.length) {
+        html += '<div class="detail-chips" style="margin-top:8px">' + r.matchDetails.slice(0, 5).map(function(d) { return '<span class="detail-chip">' + esc(d) + '</span>'; }).join('') + '</div>';
+      }
+      html += '</div>';
+    });
+    el.innerHTML = html;
+  }).catch(function(e) {
+    el.innerHTML = '<div class="detail-loading">推荐咨询师加载失败：' + esc(e.message || '网络错误') + '</div>';
+  });
+}
+
 function renderAssessmentDetail(a) {
   var issueMap = {
     emotion:'情绪困扰', relationship:'关系困境', trauma:'创伤经历', growth:'自我成长',
@@ -2286,6 +2444,15 @@ function renderAssessmentDetail(a) {
   html += renderDetailChips(a.specials, specialMap, arrVal(a.specials).length ? 'danger' : '');
   html += '</div></div>';
 
+  var advice = buildReferralAdvice(a);
+  html += '<div class="detail-section"><div class="detail-title">转介匹配建议</div>';
+  html += renderReferralAdvice(a, advice);
+  html += '</div>';
+
+  html += '<div class="detail-section"><div class="detail-title">推荐咨询师</div>';
+  html += '<div id="assessment-matches-' + a.id + '" class="detail-loading">展开后正在加载推荐咨询师...</div>';
+  html += '</div>';
+
   return html;
 }
 
@@ -2295,6 +2462,7 @@ function toggleAssessmentDetail(id) {
   if (!el) return;
   var open = el.classList.toggle('open');
   if (btn) btn.textContent = open ? '收起详情' : '查看详情';
+  if (open) loadAssessmentCounselorMatches(id);
 }
 
 // ========== PCOMS 新评分通知 ==========
