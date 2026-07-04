@@ -11,12 +11,99 @@
     <label class="label">年龄</label>
     <input class="input" type="number" value="{{form.visitor_age}}" data-key="visitor_age" bindinput="onInput" placeholder="请输入年龄" />
 
+    <label class="label">填写身份</label>
+    <picker mode="selector" range="{{filledByLabels}}" value="{{filledByIndex}}" data-key="filledByIndex" bindchange="onPickerChange">
+      <view class="picker">{{filledByLabels[filledByIndex]}}</view>
+    </picker>
+
+    <label class="label">性别</label>
+    <picker mode="selector" range="{{genderLabels}}" value="{{genderIndex}}" data-key="genderIndex" bindchange="onPickerChange">
+      <view class="picker">{{genderLabels[genderIndex]}}</view>
+    </picker>
+
+    <label class="label">职业身份</label>
+    <picker mode="selector" range="{{occupationLabels}}" value="{{occupationIndex}}" data-key="occupationIndex" bindchange="onPickerChange">
+      <view class="picker">{{occupationLabels[occupationIndex]}}</view>
+    </picker>
+    <input wx:if="{{showOccupationOther}}" class="input" value="{{form.occupation_other}}" data-key="occupation_other" bindinput="onInput" placeholder="请填写您的职业" />
+
     <label class="label">所在城市</label>
     <input class="input" value="{{form.visitor_city}}" data-key="visitor_city" bindinput="onInput" placeholder="如：上海" />
+
+    <label class="label">是否接受过心理健康服务？</label>
+    <picker mode="selector" range="{{prevCounselingLabels}}" value="{{prevCounselingIndex}}" data-key="prevCounselingIndex" bindchange="onPickerChange">
+      <view class="picker">{{prevCounselingLabels[prevCounselingIndex]}}</view>
+    </picker>
 
     <label class="label">希望的咨询方式</label>
     <view class="tag-row">
       <view wx:for="{{formatOptions}}" wx:key="value" class="tag {{item.active ? 'active' : ''}}" data-value="{{item.value}}" bindtap="toggleFormat">{{item.label}}</view>
+    </view>
+
+    <label class="label">经济承受能力</label>
+    <picker mode="selector" range="{{budgetLabels}}" value="{{budgetIndex}}" data-key="budgetIndex" bindchange="onPickerChange">
+      <view class="picker">{{budgetLabels[budgetIndex]}}</view>
+    </picker>
+
+    <label class="label">对咨询师的性别偏好</label>
+    <picker mode="selector" range="{{genderPrefLabels}}" value="{{genderPrefIndex}}" data-key="genderPrefIndex" bindchange="onPickerChange">
+      <view class="picker">{{genderPrefLabels[genderPrefIndex]}}</view>
+    </picker>
+
+    <label class="label">对咨询师的年龄偏好</label>
+    <picker mode="selector" range="{{agePrefLabels}}" value="{{agePrefIndex}}" data-key="agePrefIndex" bindchange="onPickerChange">
+      <view class="picker">{{agePrefLabels[agePrefIndex]}}</view>
+    </picker>
+
+    <label class="label">性取向友善需求</label>
+    <picker mode="selector" range="{{orientationPrefLabels}}" value="{{orientationPrefIndex}}" data-key="orientationPrefIndex" bindchange="onPickerChange">
+      <view class="picker">{{orientationPrefLabels[orientationPrefIndex]}}</view>
+    </picker>
+
+    <label class="label">希望咨询师的沟通风格</label>
+    <picker mode="selector" range="{{commStyleLabels}}" value="{{commStyleIndex}}" data-key="commStyleIndex" bindchange="onPickerChange">
+      <view class="picker">{{commStyleLabels[commStyleIndex]}}</view>
+    </picker>
+  </view>
+
+  <view class="card">
+    <view class="group-title">咨询风格偏好</view>
+
+    <label class="label">更有方向感，还是更自由探索？</label>
+    <view class="tag-row">
+      <view wx:for="{{cnipOptions.structure}}" wx:key="value" class="tag {{cnip.structure === item.value ? 'active' : ''}}" data-key="structure" data-value="{{item.value}}" bindtap="selectCnip">{{item.label}}</view>
+    </view>
+
+    <label class="label">深入感受情绪，还是聚焦解决问题？</label>
+    <view class="tag-row">
+      <view wx:for="{{cnipOptions.emotion}}" wx:key="value" class="tag {{cnip.emotion === item.value ? 'active' : ''}}" data-key="emotion" data-value="{{item.value}}" bindtap="selectCnip">{{item.label}}</view>
+    </view>
+
+    <label class="label">探讨过去，还是关注当下和未来？</label>
+    <view class="tag-row">
+      <view wx:for="{{cnipOptions.timefocus}}" wx:key="value" class="tag {{cnip.timefocus === item.value ? 'active' : ''}}" data-key="timefocus" data-value="{{item.value}}" bindtap="selectCnip">{{item.label}}</view>
+    </view>
+
+    <label class="label">温和支持，还是坦诚直接反馈？</label>
+    <view class="tag-row">
+      <view wx:for="{{cnipOptions.warmth}}" wx:key="value" class="tag {{cnip.warmth === item.value ? 'active' : ''}}" data-key="warmth" data-value="{{item.value}}" bindtap="selectCnip">{{item.label}}</view>
+    </view>
+
+    <label class="label">愿意在咨询之间做练习或记录吗？</label>
+    <view class="tag-row">
+      <view wx:for="{{cnipOptions.homework}}" wx:key="value" class="tag {{cnip.homework === item.value ? 'active' : ''}}" data-key="homework" data-value="{{item.value}}" bindtap="selectCnip">{{item.label}}</view>
+    </view>
+
+    <label class="label">想讨论你和咨询师之间的关系吗？</label>
+    <view class="tag-row">
+      <view wx:for="{{cnipOptions.relational}}" wx:key="value" class="tag {{cnip.relational === item.value ? 'active' : ''}}" data-key="relational" data-value="{{item.value}}" bindtap="selectCnip">{{item.label}}</view>
+    </view>
+  </view>
+
+  <view class="card">
+    <label class="label">您的咨询预期是</label>
+    <view class="tag-row">
+      <view wx:for="{{expectOptions}}" wx:key="value" class="tag {{item.active ? 'active' : ''}}" data-value="{{item.value}}" bindtap="toggleExpect">{{item.label}}</view>
     </view>
   </view>
 
@@ -28,6 +115,11 @@
 
     <label class="label">简单描述</label>
     <textarea class="textarea" value="{{form.description}}" data-key="description" bindinput="onInput" placeholder="可以简单写写最近遇到的困难"></textarea>
+
+    <label class="label">困扰持续时间</label>
+    <picker mode="selector" range="{{durationLabels}}" value="{{durationIndex}}" data-key="durationIndex" bindchange="onPickerChange">
+      <view class="picker">{{durationLabels[durationIndex]}}</view>
+    </picker>
   </view>
 
   <view class="card">
@@ -46,10 +138,10 @@
       <view class="picker">{{crisisLabels[crisisIndex]}}</view>
     </picker>
 
-    <label class="label">预算</label>
-    <picker mode="selector" range="{{budgetLabels}}" value="{{budgetIndex}}" bindchange="onBudgetChange">
-      <view class="picker">{{budgetLabels[budgetIndex]}}</view>
-    </picker>
+    <label class="label">是否有以下特殊情况？</label>
+    <view class="tag-row">
+      <view wx:for="{{specialOptions}}" wx:key="value" class="tag {{item.active ? 'active' : ''}}" data-value="{{item.value}}" bindtap="toggleSpecial">{{item.label}}</view>
+    </view>
 
     <button class="btn btn-primary" loading="{{submitting}}" bindtap="submitAssessment">生成评估并匹配</button>
   </view>

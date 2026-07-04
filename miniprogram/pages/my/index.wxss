@@ -1,4 +1,4 @@
-button {
+.btn {
   margin-top: 12rpx;
 }
 

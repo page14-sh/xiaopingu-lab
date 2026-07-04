@@ -279,6 +279,26 @@
   .req-prefs { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 4px; }
   .req-pref-tag { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 11px; background: #EDE8E0; color: #5F5E5A; }
   .req-cnip { margin-top: 6px; font-size: 11px; color: #5C7A52; background: #EDF5E9; padding: 4px 8px; border-radius: 6px; }
+  .assessment-detail {
+    display: none; margin-top: 12px; padding: 12px;
+    background: #fff; border: 1px solid #E8E4DC; border-radius: 10px;
+  }
+  .assessment-detail.open { display: block; animation: fadeIn 0.2s ease; }
+  .detail-section { padding: 10px 0; border-top: 1px solid #F0ECE5; }
+  .detail-section:first-child { border-top: none; padding-top: 0; }
+  .detail-title { font-size: 13px; font-weight: 700; color: #3D3831; margin-bottom: 8px; }
+  .detail-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .detail-item { background: #F7F4EF; border-radius: 8px; padding: 8px 10px; min-height: 48px; }
+  .detail-label { font-size: 11px; color: #A09889; margin-bottom: 2px; }
+  .detail-value { font-size: 13px; color: #3D3831; font-weight: 600; line-height: 1.5; word-break: break-word; }
+  .detail-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+  .detail-chip { display: inline-block; padding: 3px 9px; border-radius: 10px; font-size: 11px; background: #E8F0E4; color: #3D6B34; }
+  .detail-chip.warn { background: #FFF3CD; color: #856404; }
+  .detail-chip.danger { background: #F8D7DA; color: #721C24; }
+  .detail-text { font-size: 12px; color: #5F5E5A; background: #F7F4EF; padding: 10px 12px; border-radius: 8px; line-height: 1.7; white-space: pre-wrap; }
+  @media (max-width: 560px) {
+    .detail-grid { grid-template-columns: 1fr; }
+  }
   .panel-empty { text-align: center; padding: 24px; color: #A09889; font-size: 13px; }
   .panel-loading { text-align: center; padding: 24px; color: #A09889; }
   .spinner { display: inline-block; width: 24px; height: 24px; border: 3px solid #E8E4DC; border-top-color: #5C7A52; border-radius: 50%; animation: spin 0.8s linear infinite; }
@@ -2125,6 +2145,7 @@ function loadPanelByInput() {
 // ========== 面板 Tab 切换 ==========
 var panelCurrentTab = 'requests'; // 'requests' | 'clients'
 var pcomsNewCount = 0; // 新评分通知数
+var panelAssessmentRecords = {};
 
 function switchPanelTab(tab) {
   panelCurrentTab = tab;
@@ -2139,6 +2160,141 @@ function switchPanelTab(tab) {
       clearPcomsNotifications();
     }
   }
+}
+
+function arrVal(value) {
+  if (!value) return [];
+  if (Array.isArray(value)) return value.filter(Boolean);
+  if (typeof value === 'string') {
+    try {
+      var parsed = JSON.parse(value);
+      if (Array.isArray(parsed)) return parsed.filter(Boolean);
+    } catch(e) {}
+    return value.split(',').map(function(v) { return v.trim(); }).filter(Boolean);
+  }
+  return [];
+}
+
+function mapVal(value, map) {
+  return map[value] || value || '-';
+}
+
+function renderDetailItem(label, value) {
+  if (value === undefined || value === null || value === '') value = '-';
+  return '<div class="detail-item"><div class="detail-label">' + esc(label) + '</div><div class="detail-value">' + esc(String(value)) + '</div></div>';
+}
+
+function renderDetailChips(values, map, cls) {
+  var arr = arrVal(values);
+  if (!arr.length) return '<span class="detail-chip">未填写</span>';
+  return arr.map(function(v) {
+    return '<span class="detail-chip ' + (cls || '') + '">' + esc(mapVal(v, map || {})) + '</span>';
+  }).join('');
+}
+
+function renderAssessmentDetail(a) {
+  var issueMap = {
+    emotion:'情绪困扰', relationship:'关系困境', trauma:'创伤经历', growth:'自我成长',
+    adolescent:'青少年问题', marriage:'婚姻/伴侣', personality:'人格成长/发展性议题',
+    crisis:'危机状态', workplace:'职场困扰', eating:'进食障碍', addiction:'成瘾行为',
+    grief:'丧亲哀伤', sexual:'性心理议题', somatic:'心身困扰', family:'家庭系统'
+  };
+  var expectMap = {
+    understand:'了解自己', solve:'解决问题', support:'情感支持',
+    relationship_improve:'改善关系', emotion_manage:'情绪管理',
+    career_develop:'职业发展', crisis:'危机处理'
+  };
+  var specialMap = {
+    medication:'目前正在服用精神类药物', diagnosed:'已有精神科诊断',
+    substance:'存在物质滥用/成瘾', medical:'有慢性躯体疾病'
+  };
+  var crisisMap = {
+    safe:'无明显危机', passive:'消极念头',
+    active:'主动自伤/自杀想法', action:'已有行动风险'
+  };
+  var prefMap = {
+    gender: {male:'希望是男性咨询师', female:'希望是女性咨询师', any:'咨询师性别不重要'},
+    age: {older:'偏年长', younger:'偏年轻', peer:'同龄相仿'},
+    orientation: {friendly:'希望 LGBTQ+ 友善', experienced:'需要性少数相关经验'},
+    comm: {
+      talkative:'希望咨询师多听', guided:'需要咨询师引导',
+      shy:'需要咨询师带动', collaborative:'平等交流一起探讨',
+      directive:'希望多给建议和反馈'
+    }
+  };
+  var cnipMap = {
+    cnip_structure: { label:'咨询结构', values:{ structured:'有方向感', balanced:'适度引导', open:'自由探索' } },
+    cnip_emotion: { label:'情感深度', values:{ emotional:'深入感受', balanced:'两者兼顾', rational:'聚焦解决' } },
+    cnip_timefocus: { label:'时间取向', values:{ past:'探讨过去', balanced:'两者兼顾', present:'关注当下' } },
+    cnip_warmth: { label:'咨询师风格', values:{ warm:'温和支持', balanced:'两者兼顾', direct:'坦诚直接' } },
+    cnip_homework: { label:'课后作业', values:{ yes:'愿意', neutral:'无所谓', no:'不太愿意' } },
+    cnip_relational: { label:'咨访关系', values:{ discuss:'想讨论', neutral:'无所谓', skip:'不需要' } }
+  };
+
+  var html = '';
+  html += '<div class="detail-section"><div class="detail-title">来访者基本信息</div><div class="detail-grid">';
+  html += renderDetailItem('姓名', a.match_request_name || a.visitor_name || '匿名');
+  html += renderDetailItem('年龄 / 性别', (a.visitor_age ? a.visitor_age + '岁' : '-') + (a.visitor_gender ? ' / ' + a.visitor_gender : ''));
+  html += renderDetailItem('填写身份', a.filled_by === 'parent' ? '家长 / 监护人代填' : '本人填写');
+  html += renderDetailItem('职业身份', a.visitor_occupation);
+  html += renderDetailItem('所在城市', a.visitor_city);
+  html += renderDetailItem('是否咨询过', a.prev_counseling);
+  html += renderDetailItem('困扰时长', a.duration);
+  html += renderDetailItem('咨询方式', arrVal(a.preferred_formats).join('、') || '-');
+  html += renderDetailItem('经济承受', mapVal(a.budget, {low:'300元/次以内', mid:'300-600元/次', high:'600-1000元/次', premium:'1000元/次以上'}));
+  html += '</div></div>';
+
+  html += '<div class="detail-section"><div class="detail-title">咨询偏好</div><div class="detail-grid">';
+  html += renderDetailItem('咨询师性别偏好', mapVal(a.gender_pref, prefMap.gender));
+  html += renderDetailItem('咨询师年龄偏好', mapVal(a.age_pref, prefMap.age));
+  html += renderDetailItem('性取向友善需求', mapVal(a.orientation_pref, prefMap.orientation));
+  html += renderDetailItem('沟通风格', mapVal(a.comm_style, prefMap.comm));
+  html += '</div></div>';
+
+  var cnipParts = [];
+  Object.keys(cnipMap).forEach(function(k) {
+    if (a[k]) cnipParts.push(cnipMap[k].label + '：' + mapVal(a[k], cnipMap[k].values));
+  });
+  html += '<div class="detail-section"><div class="detail-title">C-NIP 咨询风格偏好</div><div class="detail-chips">';
+  html += cnipParts.length ? cnipParts.map(function(v) { return '<span class="detail-chip">' + esc(v) + '</span>'; }).join('') : '<span class="detail-chip">未填写</span>';
+  html += '</div></div>';
+
+  html += '<div class="detail-section"><div class="detail-title">主诉与预期</div>';
+  html += '<div class="detail-chips" style="margin-bottom:8px">' + renderDetailChips(a.issues, issueMap) + '</div>';
+  html += '<div class="detail-chips" style="margin-bottom:8px">' + renderDetailChips(a.expects, expectMap, 'warn') + '</div>';
+  html += '<div class="detail-text">' + esc(a.description || '未填写详细描述') + '</div>';
+  html += '</div>';
+
+  html += '<div class="detail-section"><div class="detail-title">症状程度评分</div><div class="req-scores">';
+  [
+    ['情绪低落', a.score_mood], ['焦虑紧张', a.score_anxiety], ['睡眠困难', a.score_sleep],
+    ['功能受损', a.score_function], ['人际紧张', a.score_relation]
+  ].forEach(function(d) {
+    var val = parseInt(d[1]) || 0;
+    var color = val >= 4 ? '#C4654A' : val >= 2 ? '#B8860B' : '#5C7A52';
+    html += '<div class="req-score-item"><span class="req-score-label">' + d[0] + '</span>' +
+      '<div class="req-score-bar"><div class="req-score-fill" style="width:' + (val / 5 * 100) + '%;background:' + color + '"></div></div>' +
+      '<span class="req-score-val" style="color:' + color + '">' + val + '/5</span></div>';
+  });
+  html += '</div><div class="detail-grid" style="margin-top:8px">';
+  html += renderDetailItem('总分', (a.total_score || 0) + '/25');
+  html += renderDetailItem('程度', a.severity || '-');
+  html += renderDetailItem('危机筛查', mapVal(a.crisis_level, crisisMap));
+  html += '</div></div>';
+
+  html += '<div class="detail-section"><div class="detail-title">特殊情况</div><div class="detail-chips">';
+  html += renderDetailChips(a.specials, specialMap, arrVal(a.specials).length ? 'danger' : '');
+  html += '</div></div>';
+
+  return html;
+}
+
+function toggleAssessmentDetail(id) {
+  var el = document.getElementById('assessment-detail-' + id);
+  var btn = document.getElementById('assessment-detail-btn-' + id);
+  if (!el) return;
+  var open = el.classList.toggle('open');
+  if (btn) btn.textContent = open ? '收起详情' : '查看详情';
 }
 
 // ========== PCOMS 新评分通知 ==========
@@ -2225,6 +2381,7 @@ function loadPanelClients() {
   })
   .then(function(r) { return r.json(); })
   .then(function(records) {
+    panelAssessmentRecords = {};
     if (!records || records.length === 0) {
       content.innerHTML = '<div class="panel-empty">👥 暂无已通过来访<br><span style="font-size:12px;display:inline-block;margin-top:4px">通过匹配申请后，来访者将显示在这里</span></div>';
       return;
@@ -2381,6 +2538,7 @@ function loadPanelRequests() {
 
     var html = '';
     records.forEach(function(a) {
+      panelAssessmentRecords[a.id] = a;
       var status = a.match_request_status || 'pending';
       var isPending = status === 'pending';
       var statusLabel = status === 'approved' ? '<span style="color:#155724;background:#D4EDDA;padding:2px 8px;border-radius:4px;font-size:11px">✅ 已通过</span>'
@@ -2503,6 +2661,7 @@ function loadPanelRequests() {
       }
 
       html += '<div class="req-actions">';
+      html += '<button class="req-btn req-btn-outline" id="assessment-detail-btn-' + a.id + '" onclick="toggleAssessmentDetail(\'' + a.id + '\')">查看详情</button>';
       html += '<a href="session-dashboard.html?aid=' + a.id + '&role=counselor&cid=' + panelCid + '&name=' + encodeURIComponent(a.match_request_name || a.visitor_name || '') + '" class="req-btn req-btn-blue" target="_blank">📈 追踪面板</a>';
       html += '<button class="req-btn req-btn-outline" onclick="copyContact(\'' + esc(a.match_request_contact || '') + '\')">📋 复制联系方式</button>';
       // 审批按钮（仅 pending 状态）
@@ -2513,6 +2672,7 @@ function loadPanelRequests() {
         html += '<button class="req-btn req-btn-outline" onclick="markContacted(\'' + a.id + '\')">📞 标记已联系</button>';
       }
       html += '</div>';
+      html += '<div class="assessment-detail" id="assessment-detail-' + a.id + '">' + renderAssessmentDetail(a) + '</div>';
       html += '</div>';
     });
     content.innerHTML = html;

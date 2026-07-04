@@ -7,6 +7,7 @@ module.exports = {
     'http://127.0.0.1:8787',
     'http://localhost:8787'
   ],
+  requestTimeoutMs: 5000,
   supabaseAnonKey: 'sb_publishable_atXq0SmWEiEY6UMouG4dLw_ouXN2U6B',
 
   // 开发者工具里无后端 code2session 时使用；正式版必须移除。

@@ -20,6 +20,7 @@ function request(options) {
   return new Promise((resolve, reject) => {
     wx.request({
       ...wxOptions,
+      timeout: config.requestTimeoutMs || 5000,
       success(res) {
         if (res.statusCode >= 200 && res.statusCode < 300) {
           resolve(res.data);
@@ -33,6 +34,7 @@ function request(options) {
         const nextUrl = fallbackUrl(options.url, attemptedHosts);
         if (nextUrl) {
           const currentHost = localApiHosts().find((host) => options.url.indexOf(host) === 0);
+          console.warn('[小平菇] 本地 API 请求失败，切换备用地址', options.url, '=>', nextUrl, err && err.errMsg);
           request({
             ...options,
             url: nextUrl,

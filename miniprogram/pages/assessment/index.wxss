@@ -1,3 +1,10 @@
-.card button {
+.card .btn {
   margin-top: 10rpx;
+}
+
+.group-title {
+  color: #3D3831;
+  font-size: 30rpx;
+  font-weight: 700;
+  margin-bottom: 20rpx;
 }
