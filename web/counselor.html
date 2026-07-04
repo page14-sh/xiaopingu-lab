@@ -267,6 +267,15 @@
   .req-btn-reject:hover { background: #F5C6CB; }
   /* Pending 详情扩展 */
   .request-card.req-pending { border-color: #FFD700; background: #FFFEFA; }
+  .request-card.crisis-high { border-color: #E28A8A; background: #FFF7F7; box-shadow: inset 3px 0 0 #A32D2D; }
+  .request-card.crisis-medium { border-color: #F0D48B; background: #FFFDF5; box-shadow: inset 3px 0 0 #B8860B; }
+  .crisis-banner {
+    margin-top: 8px; border-radius: 8px; padding: 8px 12px;
+    font-size: 12px; line-height: 1.7; font-weight: 600;
+  }
+  .crisis-banner.safe { background: #F0F7EC; border: 1px solid #C8DCC0; color: #3D6B34; }
+  .crisis-banner.medium { background: #FFF8E1; border: 1px solid #F0D48B; color: #856404; }
+  .crisis-banner.high { background: #FDECEC; border: 1px solid #F3B3B3; color: #A32D2D; }
   .req-issues { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
   .req-issue-tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; }
   .req-scores { margin-top: 8px; display: flex; flex-direction: column; gap: 3px; background: #F5F5F0; border-radius: 8px; padding: 8px 10px; }
@@ -289,8 +298,17 @@
   .detail-title { font-size: 13px; font-weight: 700; color: #3D3831; margin-bottom: 8px; }
   .detail-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
   .detail-item { background: #F7F4EF; border-radius: 8px; padding: 8px 10px; min-height: 48px; }
+  .detail-item.crisis-safe { background: #F0F7EC; border: 1px solid #C8DCC0; }
+  .detail-item.crisis-medium { background: #FFF8E1; border: 1px solid #F0D48B; }
+  .detail-item.crisis-high { background: #FDECEC; border: 1px solid #F3B3B3; }
   .detail-label { font-size: 11px; color: #A09889; margin-bottom: 2px; }
   .detail-value { font-size: 13px; color: #3D3831; font-weight: 600; line-height: 1.5; word-break: break-word; }
+  .detail-item.crisis-high .detail-label,
+  .detail-item.crisis-high .detail-value { color: #A32D2D; }
+  .detail-item.crisis-medium .detail-label,
+  .detail-item.crisis-medium .detail-value { color: #856404; }
+  .detail-item.crisis-safe .detail-label,
+  .detail-item.crisis-safe .detail-value { color: #3D6B34; }
   .detail-chips { display: flex; flex-wrap: wrap; gap: 5px; }
   .detail-chip { display: inline-block; padding: 3px 9px; border-radius: 10px; font-size: 11px; background: #E8F0E4; color: #3D6B34; }
   .detail-chip.warn { background: #FFF3CD; color: #856404; }
@@ -2208,12 +2226,51 @@ function renderDetailItem(label, value) {
   return '<div class="detail-item"><div class="detail-label">' + esc(label) + '</div><div class="detail-value">' + esc(String(value)) + '</div></div>';
 }
 
+function renderDetailItemClass(label, value, cls) {
+  if (value === undefined || value === null || value === '') value = '-';
+  return '<div class="detail-item ' + (cls || '') + '"><div class="detail-label">' + esc(label) + '</div><div class="detail-value">' + esc(String(value)) + '</div></div>';
+}
+
 function renderDetailChips(values, map, cls) {
   var arr = arrVal(values);
   if (!arr.length) return '<span class="detail-chip">未填写</span>';
   return arr.map(function(v) {
     return '<span class="detail-chip ' + (cls || '') + '">' + esc(mapVal(v, map || {})) + '</span>';
   }).join('');
+}
+
+function crisisInfo(level) {
+  var map = {
+    safe: {
+      label: '无明显危机',
+      tone: 'safe',
+      cardClass: '',
+      detailClass: 'crisis-safe',
+      summary: '未报告自伤或伤害他人的想法'
+    },
+    passive: {
+      label: '消极念头',
+      tone: 'medium',
+      cardClass: ' crisis-medium',
+      detailClass: 'crisis-medium',
+      summary: '存在不想活了/活着没意思的想法，需要优先关注'
+    },
+    active: {
+      label: '主动自伤/自杀想法',
+      tone: 'high',
+      cardClass: ' crisis-high',
+      detailClass: 'crisis-high',
+      summary: '存在具体自伤/自杀想法或计划，请优先进行安全评估'
+    },
+    action: {
+      label: '已有行动风险',
+      tone: 'high',
+      cardClass: ' crisis-high',
+      detailClass: 'crisis-high',
+      summary: '最近已有自伤行为，请立即进行危机安全评估并建议紧急帮助'
+    }
+  };
+  return map[level] || map.safe;
 }
 
 function buildReferralAdvice(a) {
@@ -2366,10 +2423,7 @@ function renderAssessmentDetail(a) {
     medication:'目前正在服用精神类药物', diagnosed:'已有精神科诊断',
     substance:'存在物质滥用/成瘾', medical:'有慢性躯体疾病'
   };
-  var crisisMap = {
-    safe:'无明显危机', passive:'消极念头',
-    active:'主动自伤/自杀想法', action:'已有行动风险'
-  };
+  var cInfo = crisisInfo(a.crisis_level);
   var prefMap = {
     gender: {male:'希望是男性咨询师', female:'希望是女性咨询师', any:'咨询师性别不重要'},
     age: {older:'偏年长', younger:'偏年轻', peer:'同龄相仿'},
@@ -2437,7 +2491,7 @@ function renderAssessmentDetail(a) {
   html += '</div><div class="detail-grid" style="margin-top:8px">';
   html += renderDetailItem('总分', (a.total_score || 0) + '/25');
   html += renderDetailItem('程度', a.severity || '-');
-  html += renderDetailItem('危机筛查', mapVal(a.crisis_level, crisisMap));
+  html += renderDetailItemClass('危机安全筛查', cInfo.label + ' · ' + cInfo.summary, cInfo.detailClass);
   html += '</div></div>';
 
   html += '<div class="detail-section"><div class="detail-title">特殊情况</div><div class="detail-chips">';
@@ -2716,8 +2770,9 @@ function loadPanelRequests() {
 
       var issueMap = {emotion:'情绪困扰',relationship:'关系困境',trauma:'创伤经历',growth:'自我成长',adolescent:'青少年问题',marriage:'婚姻/伴侣',personality:'人格成长/发展性议题',crisis:'危机状态',workplace:'职场困扰',eating:'进食障碍',addiction:'成瘾行为',grief:'丧亲哀伤',sexual:'性心理议题',somatic:'心身困扰',family:'家庭系统'};
       var scoreColors = function(v) { return v >= 4 ? '#C4654A' : v >= 2 ? '#B8860B' : '#5C7A52'; };
+      var cInfo = crisisInfo(a.crisis_level);
 
-      html += '<div class="request-card' + (isPending ? ' req-pending' : '') + '">';
+      html += '<div class="request-card' + (isPending ? ' req-pending' : '') + cInfo.cardClass + '">';
       // 标题行
       html += '<div class="req-name">' + esc(a.match_request_name || a.visitor_name || '匿名') + ' ' + statusLabel + '</div>';
 
@@ -2738,12 +2793,12 @@ function loadPanelRequests() {
       html += ' · 🕐 ' + formatTime(a.created_at);
       html += '</div>';
 
+      if (cInfo.tone !== 'safe') {
+        html += '<div class="crisis-banner ' + cInfo.tone + '">危机安全筛查：' + esc(cInfo.label) + '<br><span style="font-weight:500">' + esc(cInfo.summary) + '</span></div>';
+      }
+
       // ===== Pending 状态：展示完整评估详情 =====
       if (isPending) {
-        // 危机标记
-        if (a.crisis_level && a.crisis_level !== 'none') {
-          html += '<div style="margin-top:8px;background:#FFF0F0;border:1px solid #FFC9C9;border-radius:8px;padding:8px 12px;font-size:12px;color:#C41E3A;">⚠️ 危机筛查：' + esc(a.crisis_level) + '</div>';
-        }
         if (a.specials && a.specials.length > 0) {
           html += '<div style="margin-top:4px;font-size:12px;color:#B87333">🏴 特殊标记：' + (typeof a.specials === 'string' ? esc(a.specials) : a.specials.map(esc).join('、')) + '</div>';
         }

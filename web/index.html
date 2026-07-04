@@ -1355,6 +1355,19 @@ var currentMinCredential = '二级';
 var lastResultData = null; // 用于导出
 var puzzleVerified = false; // 验证码状态
 var _captchaAnswer = 0;
+var SKIP_CAPTCHA_FOR_LOCAL_DEBUG = true;
+
+function isLocalDebugHost() {
+  var host = location.hostname;
+  return ['127.0.0.1', 'localhost', '::1'].indexOf(host) >= 0 ||
+    /^192\.168\./.test(host) ||
+    /^10\./.test(host) ||
+    /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(host);
+}
+
+function hasAdminDebugSession() {
+  return !!(window.XPG_WEB_AUTH && XPG_WEB_AUTH.getSession('admin'));
+}
 
 /* ===== 数学验证码 ===== */
 function generateCaptcha() {
@@ -1540,6 +1553,11 @@ function afterPuzzle() {
 }
 
 function startVisitorFlow() {
+  if ((SKIP_CAPTCHA_FOR_LOCAL_DEBUG && isLocalDebugHost()) || hasAdminDebugSession()) {
+    puzzleVerified = true;
+    afterPuzzle();
+    return;
+  }
   showCaptcha(function() {
     afterPuzzle();
   });

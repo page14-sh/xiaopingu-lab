@@ -8,3 +8,44 @@
   font-weight: 700;
   margin-bottom: 20rpx;
 }
+
+.crisis-label {
+  color: #A32D2D;
+}
+
+.crisis-alert {
+  margin: 0 0 26rpx;
+  padding: 26rpx 28rpx;
+  background: #FDECEC;
+  border: 2rpx solid #F6B7B7;
+  border-radius: 18rpx;
+}
+
+.crisis-alert-title {
+  color: #A32D2D;
+  font-size: 30rpx;
+  font-weight: 700;
+  margin-bottom: 18rpx;
+}
+
+.crisis-alert-text {
+  color: #7A2D2D;
+  font-size: 26rpx;
+  line-height: 1.7;
+  margin-bottom: 8rpx;
+}
+
+.crisis-hotline {
+  color: #8F2424;
+  font-size: 28rpx;
+  font-weight: 700;
+  line-height: 1.7;
+  margin-top: 18rpx;
+}
+
+.crisis-alert-note {
+  color: #8F4444;
+  font-size: 24rpx;
+  line-height: 1.7;
+  margin-top: 20rpx;
+}

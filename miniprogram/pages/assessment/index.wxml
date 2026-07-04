@@ -133,10 +133,26 @@
   </view>
 
   <view class="card">
-    <label class="label">危机筛查</label>
+    <label class="label crisis-label">危机安全筛查（必填）</label>
     <picker mode="selector" range="{{crisisLabels}}" value="{{crisisIndex}}" bindchange="onCrisisChange">
       <view class="picker">{{crisisLabels[crisisIndex]}}</view>
     </picker>
+
+    <view wx:if="{{crisisWarningVisible}}" class="crisis-alert">
+      <view class="crisis-alert-title">请立即寻求紧急帮助</view>
+      <view class="crisis-alert-text">当您有自伤或自杀的想法/行为时，请立即联系以下热线：</view>
+      <view class="crisis-hotline">全国心理援助热线：12356</view>
+      <view class="crisis-alert-text">服务对象：所有有心理需要的人</view>
+      <view class="crisis-alert-text">服务时间：24小时 | 主办：国家及各地卫健委</view>
+      <view class="crisis-hotline">妇女维权公益热线：12338</view>
+      <view class="crisis-alert-text">服务对象：女性及儿童维权</view>
+      <view class="crisis-alert-text">服务时间：24小时（心理咨询 8:00-23:00）| 主办：全国妇联</view>
+      <view class="crisis-hotline">青少年法律与心理咨询热线：12355</view>
+      <view class="crisis-alert-text">服务对象：青少年</view>
+      <view class="crisis-alert-text">服务时间：9:00-19:00 | 主办：共青团</view>
+      <view class="crisis-hotline">紧急情况请拨打 120 或 110</view>
+      <view class="crisis-alert-note">本系统的转介建议不能替代紧急心理危机干预。</view>
+    </view>
 
     <label class="label">是否有以下特殊情况？</label>
     <view class="tag-row">

@@ -115,6 +115,7 @@ Page({
     crisisLabels: ['无明显危机', '消极念头', '主动自伤/自杀想法', '已有行动风险'],
     crisisValues: ['safe', 'passive', 'active', 'action'],
     crisisIndex: 0,
+    crisisWarningVisible: false,
     budgetOptions: [
       { value: '', label: '不介意 / 未考虑' },
       { value: 'low', label: '希望控制在 300元/次 以内' },
@@ -245,7 +246,11 @@ Page({
   },
 
   onCrisisChange(e) {
-    this.setData({ crisisIndex: Number(e.detail.value) });
+    const crisisIndex = Number(e.detail.value);
+    this.setData({
+      crisisIndex,
+      crisisWarningVisible: crisisIndex >= 2
+    });
   },
 
   toggleIssue(e) {
