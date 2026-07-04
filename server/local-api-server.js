@@ -9,6 +9,7 @@ const DEV_OPENID = process.env.DEV_OPENID || 'dev-openid-xiaopingu';
 const LOCAL_COUNSELOR_ID = '00000000-0000-4000-8000-000000000001';
 const DEMO_SEED_ENABLED = process.env.DEMO_SEED !== '0';
 const DEMO_COUNSELOR_ID = '00000000-0000-4000-8000-000000000002';
+const LEGACY_DEBUG_COUNSELOR_ID = 'debug-counselor-001';
 const DEMO_ASSESSMENT_CRISIS_ID = '10000000-0000-4000-8000-000000000001';
 const DEMO_ASSESSMENT_APPROVED_ID = '10000000-0000-4000-8000-000000000002';
 const DEMO_ASSESSMENT_PASSIVE_ID = '10000000-0000-4000-8000-000000000003';
@@ -271,6 +272,32 @@ function ensureDemoSeed(db) {
   return changed;
 }
 
+function cleanupLegacyDemoRows(db) {
+  let changed = false;
+  const originalCounselorCount = db.counselors.length;
+  db.counselors = db.counselors.filter((item) => item.id !== LEGACY_DEBUG_COUNSELOR_ID);
+  if (db.counselors.length !== originalCounselorCount) changed = true;
+
+  db.assessments.forEach((item) => {
+    if (item.match_request_cid === LEGACY_DEBUG_COUNSELOR_ID) {
+      item.match_request_cid = DEMO_COUNSELOR_ID;
+      if (!item.selected_counselor_id || item.selected_counselor_id === LEGACY_DEBUG_COUNSELOR_ID) {
+        item.selected_counselor_id = DEMO_COUNSELOR_ID;
+      }
+      if (!item.selected_counselor_name) item.selected_counselor_name = demoCounselor.name;
+      changed = true;
+    }
+  });
+
+  db.sessions.forEach((item) => {
+    if (item.counselor_id === LEGACY_DEBUG_COUNSELOR_ID) {
+      item.counselor_id = DEMO_COUNSELOR_ID;
+      changed = true;
+    }
+  });
+  return changed;
+}
+
 function loadDb() {
   const db = fs.existsSync(DATA_FILE) ? { ...emptyDb, ...JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')) } : { ...emptyDb };
   let changed = false;
@@ -279,6 +306,7 @@ function loadDb() {
     changed = true;
   }
   changed = ensureDemoSeed(db) || changed;
+  changed = cleanupLegacyDemoRows(db) || changed;
   if (changed) {
     saveDb(db);
   }

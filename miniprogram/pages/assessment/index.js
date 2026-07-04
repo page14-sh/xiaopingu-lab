@@ -418,7 +418,7 @@ Page({
         content: `已选择 ${counselorName}，对应咨询师工作台会收到这条待处理申请。`,
         showCancel: false,
         success: () => {
-          wx.switchTab({ url: '/pages/my/index' });
+          wx.redirectTo({ url: '/pages/my/index' });
         }
       });
     }).catch((err) => {

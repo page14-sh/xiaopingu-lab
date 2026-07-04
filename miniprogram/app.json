@@ -1,5 +1,6 @@
 {
   "pages": [
+    "pages/home/index",
     "pages/assessment/index",
     "pages/my/index",
     "pages/pcoms/index"
@@ -9,22 +10,6 @@
     "navigationBarBackgroundColor": "#5C7A52",
     "navigationBarTextStyle": "white",
     "backgroundColor": "#F7F4EF"
-  },
-  "tabBar": {
-    "color": "#8B857B",
-    "selectedColor": "#5C7A52",
-    "backgroundColor": "#FFFFFF",
-    "borderStyle": "white",
-    "list": [
-      {
-        "pagePath": "pages/assessment/index",
-        "text": "评估"
-      },
-      {
-        "pagePath": "pages/my/index",
-        "text": "我的"
-      }
-    ]
   },
   "sitemapLocation": "sitemap.json"
 }

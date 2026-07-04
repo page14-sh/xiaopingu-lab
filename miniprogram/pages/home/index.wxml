@@ -1,0 +1,149 @@
+<view class="home-page">
+  <view class="hero">
+    <view class="brand-mark">
+      <view class="mushroom-cap">
+        <view class="spot spot-one"></view>
+        <view class="spot spot-two"></view>
+        <view class="spot spot-three"></view>
+      </view>
+      <view class="mushroom-stem"></view>
+    </view>
+    <view class="brand-name">小平菇</view>
+    <view class="brand-sub">专业心理评估 · 智能咨询师匹配 · 循证效果追踪</view>
+    <view class="brand-line">沐朴心服</view>
+    <view class="hero-tags">
+      <view class="hero-tag">PCOMS循证</view>
+      <view class="hero-tag">匿名评估</view>
+      <view class="hero-tag">20维智能匹配</view>
+    </view>
+    <view class="stats-row">
+      <view class="stat-card">
+        <view class="stat-number">55+</view>
+        <view class="stat-label">入驻咨询师</view>
+      </view>
+      <view class="stat-card">
+        <view class="stat-number">23</view>
+        <view class="stat-label">咨询取向</view>
+      </view>
+      <view class="stat-card">
+        <view class="stat-number">15+</view>
+        <view class="stat-label">覆盖城市</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="section">
+    <view class="section-title">我们能帮你做什么</view>
+    <view class="feature-list">
+      <view class="feature-item">
+        <view class="feature-icon green">📋</view>
+        <view class="feature-body">
+          <view class="feature-title">多维症状自评</view>
+          <view class="feature-text">覆盖情绪、焦虑、睡眠、功能损害 5 大维度，基于 PHQ-9 / GAD-7 / ISI / WHODAS 等标准化量表，10 分钟完成专业评估。</view>
+        </view>
+      </view>
+      <view class="feature-item">
+        <view class="feature-icon blue">🎯</view>
+        <view class="feature-body">
+          <view class="feature-title">精准咨询师匹配</view>
+          <view class="feature-text">20 维度 145 分制加权算法，综合议题匹配、取向偏好、C-NIP 咨询风格等，为你找到最契合的咨询师。</view>
+        </view>
+      </view>
+      <view class="feature-item">
+        <view class="feature-icon amber">📈</view>
+        <view class="feature-body">
+          <view class="feature-title">PCOMS 循证追踪</view>
+          <view class="feature-text">每次咨询后填写 ORS（结果评分）+ SRS（联盟评分），系统自动追踪临床变化，每 8 次生成轮次回顾报告。</view>
+        </view>
+      </view>
+      <view class="feature-item">
+        <view class="feature-icon purple">🔒</view>
+        <view class="feature-body">
+          <view class="feature-title">隐私匿名保护</view>
+          <view class="feature-text">全程匿名评估，数据加密传输。你的评估 ID 由你掌握，咨询师仅在申请通过后获得有限联系方式。</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="section">
+    <view class="section-title">服务流程</view>
+    <view class="flow">
+      <view class="flow-step">
+        <view class="flow-no">1</view>
+        <view class="flow-text">填写心理评估</view>
+      </view>
+      <view class="flow-line"></view>
+      <view class="flow-step">
+        <view class="flow-no">2</view>
+        <view class="flow-text">查看转介建议</view>
+      </view>
+      <view class="flow-line"></view>
+      <view class="flow-step">
+        <view class="flow-no">3</view>
+        <view class="flow-text">选择咨询师</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="fold-card">
+    <view class="fold-head" data-key="expertOpen" bindtap="togglePanel">
+      <view class="fold-title">💬 专家评价</view>
+      <view class="fold-arrow {{expertOpen ? 'open' : ''}}">⌄</view>
+    </view>
+    <view wx:if="{{expertOpen}}" class="fold-body">
+      <view class="quote-card">
+        <view class="quote-text">“小平菇将循证心理学的核心理念——来访者反馈知情治疗（CDFI）——转化为可落地的数字工具，PCOMS 追踪模块尤其体现了对联盟关系和临床变化的专业敏感性。”</view>
+        <view class="expert-row">
+          <view class="expert-avatar">王</view>
+          <view>
+            <view class="expert-name">王·某督导</view>
+            <view class="expert-title">注册督导师 · 上海心理咨询行业协会</view>
+          </view>
+        </view>
+      </view>
+      <view class="quote-card">
+        <view class="quote-text">“从基层实践角度看，这套评估-匹配-追踪闭环大幅降低了来访者寻求心理支持的门槛，对社区心理服务的普及具有重要意义。”</view>
+        <view class="expert-row">
+          <view class="expert-avatar">李</view>
+          <view>
+            <view class="expert-name">李·某研究员</view>
+            <view class="expert-title">社区心理健康研究中心 · 主任研究员</view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="fold-card">
+    <view class="fold-head" data-key="evidenceOpen" bindtap="togglePanel">
+      <view class="fold-title">🔬 循证依据</view>
+      <view class="fold-arrow {{evidenceOpen ? 'open' : ''}}">⌄</view>
+    </view>
+    <view wx:if="{{evidenceOpen}}" class="fold-body">
+      <view class="evidence-card">
+        <view class="evidence-title">PCOMS 来访者反馈知情治疗</view>
+        <view class="evidence-text">基于 Miller, Duncan & Hubble（2004）提出的来访者反馈知情治疗（CDFI）模型，通过持续的 ORS 与 SRS 评分识别「未达预期轨迹」来访者，可将治疗效果提升 65%。</view>
+        <view class="evidence-source">参考文献：Miller et al., Journal of Clinical Psychology, 2006</view>
+      </view>
+      <view class="evidence-card">
+        <view class="evidence-title">标准化症状评估工具</view>
+        <view class="evidence-text">平台集成 PHQ-9（抑郁）、GAD-7（焦虑）、ISI（睡眠）、C-SSRS（自杀风险筛查）等国际标准量表，同时参考 WHODAS 功能损害评估框架。</view>
+        <view class="evidence-source">符合 DSM-5 跨切面症状测量标准</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="notice">
+    <view class="notice-title">重要提示</view>
+    <view class="notice-text">本系统为心理自助评估工具，评估结果不构成专业医学诊断或治疗建议。</view>
+    <view class="notice-text">如正在经历严重心理困扰，请及时联系专业机构或拨打心理援助热线 12356。</view>
+  </view>
+
+  <view class="bottom-spacer"></view>
+
+  <view class="bottom-actions">
+    <button class="action-btn primary" bindtap="startAssessment">开始心理评估</button>
+    <button class="action-btn secondary" bindtap="openRecords">我的填写记录</button>
+  </view>
+</view>
