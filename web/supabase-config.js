@@ -291,8 +291,12 @@ function getCounselorByToken(token) {
     .catch(function(e) { console.warn('[小平菇] 获取咨询师失败:', e); return null; });
 }
 
-// 匹配咨询师（核心匹配算法）
-// 权重分配：议题30% + 取向20% + 程度15% + 城市10% + 门槛10% + 方式10% + 经济5% = 100%
+// 匹配咨询师（核心匹配算法 v2.0）
+// 架构：3项硬性过滤 + 11维度100分制计分
+// 硬性过滤：门槛匹配 / 严重程度承接 / 性取向友善（不达标直接排除）
+// 计分维度：议题22 + C-NIP风格18 + 取向14 + 城市12 + 咨询方式8 + 沟通风格7 +
+//           经济6 + 性别偏好5 + 年龄偏好4 + 年龄段2 + 咨询师性别偏好2 = 100
+// 阈值：高匹配 ≥70 / 中匹配 ≥45 / 低匹配 <45
 function matchCounselors(assessment) {
   if (!SUPABASE_CONFIG.enableDataCollection || !SUPABASE_CONFIG.url) return Promise.resolve([]);
 
@@ -304,136 +308,169 @@ function matchCounselors(assessment) {
   })
   .then(function(counselors) {
     if (!Array.isArray(counselors)) return [];
+
+    // 资质等级映射（用于硬性过滤）
+    var credRank = { '三级': 1, '二级': 2, '心理治疗师': 3, '社会工作师（初级）': 1, '社会工作师（中级）': 2, '社会工作师（高级）': 3, '精神科医生': 4, '注册心理师': 3, '督导师': 4 };
+    var severityMap = { '轻度': 'mild', '中度': 'moderate', '重度': 'severe' };
+    var levelMap = { 'mild': '轻度', 'moderate': '中度', 'severe': '重度' };
+    var budgetRank = { 'low': 1, 'mid': 2, 'high': 3, 'premium': 4 };
+    var commMap = { 'talkative': 'listening', 'guided': 'guided', 'shy': 'leading', 'collaborative': 'collaborative', 'directive': 'directive' };
+
     return counselors.map(function(c) {
       var score = 0;
       var details = [];
 
-      // 1. 议题匹配 30%
-      if (c.specialties && assessment.issues && assessment.issues.length > 0) {
-        var overlap = assessment.issues.filter(function(i) {
-          return c.specialties.indexOf(i) >= 0;
-        });
-        var issueScore = (overlap.length / assessment.issues.length) * 30;
-        score += issueScore;
-        if (overlap.length > 0) {
-          details.push('议题匹配: ' + overlap.length + '/' + assessment.issues.length);
+      // ===== 硬性过滤层（不达标 = 直接排除，不计分）=====
+
+      // F1. 门槛匹配（硬性过滤）：从业年限 + 资质等级必须满足最低要求
+      if (assessment.minYears && c.years_experience < assessment.minYears) {
+        return { counselor: c, matchScore: 0, matchDetails: ['硬性过滤: 从业年限不足'], filtered: true };
+      }
+      if (assessment.minCredential) {
+        if ((credRank[c.credential_level] || 0) < (credRank[assessment.minCredential] || 0)) {
+          return { counselor: c, matchScore: 0, matchDetails: ['硬性过滤: 资质等级不足'], filtered: true };
         }
       }
 
-      // 2. 取向匹配 20%
+      // F2. 严重程度承接（硬性过滤）：咨询师必须能承接来访者的严重程度
+      if (assessment.severity && c.severity_levels && c.severity_levels.length > 0) {
+        var clientLevel = severityMap[assessment.severity] || assessment.severity;
+        if (c.severity_levels.indexOf(levelMap[clientLevel]) < 0 && c.severity_levels.indexOf(assessment.severity) < 0) {
+          return { counselor: c, matchScore: 0, matchDetails: ['硬性过滤: 无法承接' + assessment.severity + '程度'], filtered: true };
+        }
+      }
+
+      // F3. 性取向友善（硬性过滤）：来访者有LGBTQ+需求时，咨询师必须具备对应能力
+      if (assessment.orientation_pref && assessment.orientation_pref !== 'any' && assessment.orientation_pref !== '') {
+        if (!c.orientation_friendly || c.orientation_friendly.length === 0) {
+          return { counselor: c, matchScore: 0, matchDetails: ['硬性过滤: 缺少LGBTQ+友善标记'], filtered: true };
+        }
+        if (assessment.orientation_pref === 'experienced') {
+          var hasSpecific = c.orientation_friendly.filter(function(v) { return v !== '异性恋'; }).length > 0;
+          if (!hasSpecific) {
+            return { counselor: c, matchScore: 0, matchDetails: ['硬性过滤: 缺少性少数专项经验'], filtered: true };
+          }
+        }
+      }
+
+      // ===== 计分排序层（11维度，满分100）=====
+
+      // 1. 议题匹配（22分）
+      if (c.specialties && assessment.issues && assessment.issues.length > 0) {
+        var overlap = assessment.issues.filter(function(i) { return c.specialties.indexOf(i) >= 0; });
+        var issueScore = Math.round((overlap.length / assessment.issues.length) * 22);
+        score += issueScore;
+        if (overlap.length > 0) details.push('议题匹配: ' + overlap.length + '/' + assessment.issues.length);
+      }
+
+      // 2. C-NIP 咨询风格匹配（18分：结构4 + 情感4 + 时间3 + 立场3 + 作业2 + 关系2）
+      var cnip = assessment.cnip || {};
+      var cnipScore = 0;
+
+      if (cnip.cnip_structure && c.cnip_styles && c.cnip_styles.length > 0) {
+        if (c.cnip_styles.indexOf(cnip.cnip_structure) >= 0) cnipScore += 4;
+        else if (c.cnip_styles.indexOf('balanced') >= 0 && cnip.cnip_structure !== 'balanced') cnipScore += 2;
+      }
+      if (cnip.cnip_emotion && c.cnip_emotion_focus && c.cnip_emotion_focus.length > 0) {
+        if (c.cnip_emotion_focus.indexOf(cnip.cnip_emotion) >= 0) cnipScore += 4;
+        else if (c.cnip_emotion_focus.indexOf('balanced') >= 0 && cnip.cnip_emotion !== 'balanced') cnipScore += 2;
+      }
+      if (cnip.cnip_timefocus && c.cnip_time && c.cnip_time.length > 0) {
+        if (c.cnip_time.indexOf(cnip.cnip_timefocus) >= 0) cnipScore += 3;
+        else if (c.cnip_time.indexOf('balanced') >= 0 && cnip.cnip_timefocus !== 'balanced') cnipScore += 1;
+      }
+      if (cnip.cnip_warmth && c.cnip_stance && c.cnip_stance.length > 0) {
+        if (c.cnip_stance.indexOf(cnip.cnip_warmth) >= 0) cnipScore += 3;
+        else if (c.cnip_stance.indexOf('balanced') >= 0 && cnip.cnip_warmth !== 'balanced') cnipScore += 1;
+      }
+      if (cnip.cnip_homework && c.cnip_homework && c.cnip_homework.length > 0) {
+        if (c.cnip_homework.indexOf(cnip.cnip_homework) >= 0) cnipScore += 2;
+      }
+      if (cnip.cnip_relational && c.cnip_relational && c.cnip_relational.length > 0) {
+        if (c.cnip_relational.indexOf(cnip.cnip_relational) >= 0) cnipScore += 2;
+      }
+      if (cnipScore > 0) {
+        score += Math.min(18, cnipScore);
+        details.push('C-NIP风格: +' + cnipScore + '分');
+      }
+
+      // 3. 取向匹配（14分）
       if (c.approaches && assessment.recommendedApproaches) {
-        var approachMatch = assessment.recommendedApproaches.filter(function(a) {
-          return c.approaches.indexOf(a) >= 0;
-        });
+        var approachMatch = assessment.recommendedApproaches.filter(function(a) { return c.approaches.indexOf(a) >= 0; });
         if (approachMatch.length > 0) {
-          score += Math.min(20, approachMatch.length * 10);
+          score += Math.min(14, approachMatch.length * 7);
           details.push('取向匹配: ' + approachMatch.join('/'));
         }
       }
 
-      // 3. 程度承接 15%
-      if (c.severity_levels) {
-        var severityMap = { '轻度': 'mild', '中度': 'moderate', '重度': 'severe' };
-        var clientLevel = severityMap[assessment.severity] || assessment.severity;
-        var levelMap = { 'mild': '轻度', 'moderate': '中度', 'severe': '重度' };
-        if (c.severity_levels.indexOf(levelMap[clientLevel]) >= 0 || c.severity_levels.indexOf(assessment.severity) >= 0) {
-          score += 15;
-          details.push('程度承接: 可承接' + assessment.severity);
-        }
-      }
-
-      // 4. 门槛匹配 10%（核心硬性条件，不满足扣20分）
-      var thresholdMet = true;
-      if (assessment.minYears && c.years_experience < assessment.minYears) thresholdMet = false;
-      if (assessment.minCredential) {
-        var credRank = { '三级': 1, '二级': 2, '心理治疗师': 3, '社会工作师（初级）': 1, '社会工作师（中级）': 2, '社会工作师（高级）': 3, '精神科医生': 4 };
-        if ((credRank[c.credential_level] || 0) < (credRank[assessment.minCredential] || 0)) {
-          thresholdMet = false;
-        }
-      }
-      if (thresholdMet) {
-        score += 10;
-        details.push('门槛匹配: 满足要求');
-      } else {
-        score = Math.max(0, score - 20);
-        details.push('门槛匹配: 部分不满足（排序靠后）');
-      }
-
-      // 5. 城市匹配 10%
+      // 4. 城市匹配（12分）
       if (assessment.visitor_city && c.city) {
         var cityLower = assessment.visitor_city.toLowerCase();
         var cCityLower = c.city.toLowerCase();
         if (cCityLower.indexOf(cityLower) >= 0 || cityLower.indexOf(cCityLower) >= 0) {
-          score += 10;
-          details.push('城市匹配: ' + c.city);
+          score += 12;
+          details.push('同城: ' + c.city);
         }
       }
 
-      // 6. 咨询方式匹配 10%
+      // 5. 咨询方式匹配（8分）
       if (assessment.visitor_formats && assessment.visitor_formats.length > 0 && c.session_formats) {
-        var formatOverlap = assessment.visitor_formats.filter(function(f) {
-          return c.session_formats.indexOf(f) >= 0;
-        });
+        var formatOverlap = assessment.visitor_formats.filter(function(f) { return c.session_formats.indexOf(f) >= 0; });
         if (formatOverlap.length > 0) {
-          score += 10;
+          score += 8;
           details.push('方式匹配: ' + formatOverlap.join('/'));
         }
       }
 
-      // 7. 经济匹配 5%
+      // 6. 沟通风格匹配（7分）
+      if (assessment.comm_style && c.comm_styles && c.comm_styles.length > 0) {
+        var matchedStyle = commMap[assessment.comm_style];
+        if (matchedStyle && c.comm_styles.indexOf(matchedStyle) >= 0) {
+          score += 7;
+          details.push('沟通风格: 匹配');
+        }
+      }
+
+      // 7. 经济匹配（6分）
       if (assessment.budget && c.fee_budget_level) {
-        var budgetRank = { 'low': 1, 'mid': 2, 'high': 3, 'premium': 4 };
         var clientRank = budgetRank[assessment.budget] || 0;
         var counselorRank = budgetRank[c.fee_budget_level] || 0;
         if (clientRank > 0 && counselorRank > 0) {
           if (counselorRank <= clientRank) {
-            score += 5;
+            score += 6;
             details.push('经济匹配: 费用在可承受范围内');
           } else if (counselorRank === clientRank + 1) {
-            score += 2;
+            score += 3;
             details.push('经济匹配: 费用略高于预期');
           }
         }
       }
 
-      // 8. 性别偏好匹配 5%
+      // 8. 性别偏好匹配（5分）
       if (assessment.gender_pref && c.gender) {
         var gpMap = { 'male': 'male', 'female': 'female' };
         if (gpMap[assessment.gender_pref] === c.gender) {
           score += 5;
           details.push('性别偏好: 符合');
         }
-        // 来访者要求不限(any)时，任何性别都加分（但已在gender_pref=''时不触发）
       }
 
-      // 9. 咨询师性别偏好与来访者匹配 3%
-      if (c.client_gender_pref) {
-        var visitorGender = assessment.visitor_gender || '';
-        var genderMatchOk = true;
-        if (c.client_gender_pref === 'male_only' && visitorGender !== '男' && visitorGender !== 'male') genderMatchOk = false;
-        if (c.client_gender_pref === 'female_only' && visitorGender !== '女' && visitorGender !== 'female') genderMatchOk = false;
-        if (genderMatchOk && c.client_gender_pref !== '') {
-          score += 3;
-          details.push('咨询师偏好: 符合');
-        }
-      }
-
-      // 10. 年龄偏好匹配 5%
+      // 9. 年龄偏好匹配（4分）
       if (assessment.age_pref && c.years_experience) {
         var agePref = assessment.age_pref;
         if (agePref === 'older' && c.years_experience >= 10) {
-          score += 5;
+          score += 4;
           details.push('年龄偏好: 资深咨询师');
         } else if (agePref === 'younger' && c.years_experience <= 5) {
-          score += 5;
+          score += 4;
           details.push('年龄偏好: 新锐咨询师');
         } else if (agePref === 'peer' && c.years_experience >= 3 && c.years_experience <= 10) {
-          score += 5;
+          score += 4;
           details.push('年龄偏好: 同龄相仿');
         }
       }
 
-      // 11. 来访者年龄段与咨询师偏好匹配 3%
+      // 10. 来访者年龄段与咨询师偏好匹配（2分）
       if (c.client_age_prefs && c.client_age_prefs.length > 0 && assessment.visitor_age) {
         var age = parseInt(assessment.visitor_age);
         if (age) {
@@ -446,115 +483,31 @@ function matchCounselors(assessment) {
             if (g.indexOf('55+') >= 0 && age >= 55) ageGroupMatch = true;
           });
           if (ageGroupMatch) {
-            score += 3;
+            score += 2;
             details.push('年龄阶段: 在偏好范围内');
           }
         }
       }
 
-      // 12. 性取向友善匹配 5%
-      if (assessment.orientation_pref && c.orientation_friendly) {
-        if (assessment.orientation_pref === 'friendly' && c.orientation_friendly.length > 0) {
-          score += 5;
-          details.push('LGBTQ+友善: 具备友好能力');
-        } else if (assessment.orientation_pref === 'experienced') {
-          // 需要性少数经验：检查是否有具体性取向友好标记
-          var hasSpecific = c.orientation_friendly.filter(function(v) {
-            return v !== '异性恋';
-          }).length > 0;
-          if (hasSpecific) {
-            score += 5;
-            details.push('LGBTQ+经验: 具备性少数相关经验');
-          }
+      // 11. 咨询师性别偏好与来访者匹配（2分）
+      if (c.client_gender_pref) {
+        var visitorGender = assessment.visitor_gender || '';
+        var genderMatchOk = true;
+        if (c.client_gender_pref === 'male_only' && visitorGender !== '男' && visitorGender !== 'male') genderMatchOk = false;
+        if (c.client_gender_pref === 'female_only' && visitorGender !== '女' && visitorGender !== 'female') genderMatchOk = false;
+        if (genderMatchOk && c.client_gender_pref !== '') {
+          score += 2;
+          details.push('咨询师偏好: 符合');
         }
       }
-
-      // 沟通风格匹配（+5分）
-      if (assessment.comm_style && c.comm_styles && c.comm_styles.length > 0) {
-        var commMap = {
-          'talkative': 'listening',
-          'guided': 'guided',
-          'shy': 'leading',
-          'collaborative': 'collaborative',
-          'directive': 'directive'
-        };
-        var matchedStyle = commMap[assessment.comm_style];
-        if (matchedStyle && c.comm_styles.indexOf(matchedStyle) >= 0) {
-          score += 5;
-          details.push('沟通风格: 匹配');
-        }
-      }
-
-      // ===== C-NIP 咨询风格匹配（6维度，共+20分） =====
-      var cnip = assessment.cnip || {};
-      var cnipScore = 0;
-      var cnipDetails = [];
-
-      // 咨询结构（+4分）：来访者偏好与咨询师提供匹配
-      if (cnip.cnip_structure && c.cnip_styles && c.cnip_styles.length > 0) {
-        if (c.cnip_styles.indexOf(cnip.cnip_structure) >= 0) {
-          cnipScore += 4;
-        } else if (c.cnip_styles.indexOf('balanced') >= 0 && cnip.cnip_structure !== 'balanced') {
-          cnipScore += 2; // 咨询师有 balanced，兼容大部分来访者
-        }
-      }
-
-      // 情感深度（+4分）
-      if (cnip.cnip_emotion && c.cnip_emotion_focus && c.cnip_emotion_focus.length > 0) {
-        if (c.cnip_emotion_focus.indexOf(cnip.cnip_emotion) >= 0) {
-          cnipScore += 4;
-        } else if (c.cnip_emotion_focus.indexOf('balanced') >= 0 && cnip.cnip_emotion !== 'balanced') {
-          cnipScore += 2;
-        }
-      }
-
-      // 时间取向（+3分）
-      if (cnip.cnip_timefocus && c.cnip_time && c.cnip_time.length > 0) {
-        if (c.cnip_time.indexOf(cnip.cnip_timefocus) >= 0) {
-          cnipScore += 3;
-        } else if (c.cnip_time.indexOf('balanced') >= 0 && cnip.cnip_timefocus !== 'balanced') {
-          cnipScore += 1;
-        }
-      }
-
-      // 咨询师立场（+3分）
-      if (cnip.cnip_warmth && c.cnip_stance && c.cnip_stance.length > 0) {
-        if (c.cnip_stance.indexOf(cnip.cnip_warmth) >= 0) {
-          cnipScore += 3;
-        } else if (c.cnip_stance.indexOf('balanced') >= 0 && cnip.cnip_warmth !== 'balanced') {
-          cnipScore += 1;
-        }
-      }
-
-      // 课后作业（+3分）
-      if (cnip.cnip_homework && c.cnip_homework && c.cnip_homework.length > 0) {
-        if (c.cnip_homework.indexOf(cnip.cnip_homework) >= 0) {
-          cnipScore += 3;
-        }
-      }
-
-      // 咨访关系讨论（+3分）
-      if (cnip.cnip_relational && c.cnip_relational && c.cnip_relational.length > 0) {
-        if (c.cnip_relational.indexOf(cnip.cnip_relational) >= 0) {
-          cnipScore += 3;
-        }
-      }
-
-      if (cnipScore > 0) {
-        score += Math.min(20, cnipScore);
-        details.push('咨询风格: +' + cnipScore + '分');
-      }
-
-      // 14. 未成年人优先（家长代填时，只保留擅长儿童青少年的咨询师）
-      // 注意：这不是加分，而是排序优先——在最终排序时给未成年人专长咨询师加权
 
       return {
         counselor: c,
-        matchScore: Math.min(145, Math.round(score)),
+        matchScore: Math.min(100, Math.round(score)),
         matchDetails: details
       };
     })
-    .filter(function(item) { return item.matchScore > 0; })
+    .filter(function(item) { return !item.filtered && item.matchScore > 0; })
     .sort(function(a, b) {
       // 家长代填 + 未成年人：擅长儿童青少年的咨询师排序优先
       if (assessment.filled_by === 'parent' && assessment.is_minor) {

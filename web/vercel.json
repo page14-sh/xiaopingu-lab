@@ -1,9 +1,0 @@
-{
-  "rewrites": [
-    { "source": "/counselor.html", "destination": "/counselor.html" },
-    { "source": "/admin.html", "destination": "/admin.html" },
-    { "source": "/session.html", "destination": "/session.html" },
-    { "source": "/session-dashboard.html", "destination": "/session-dashboard.html" },
-    { "source": "/(.*)", "destination": "/index.html" }
-  ]
-}

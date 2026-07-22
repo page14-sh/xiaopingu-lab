@@ -1,10 +1,10 @@
 module.exports = {
   // 推荐正式接入自己的 API / 云函数，避免小程序直接持有数据库 key。
-  apiBase: 'http://192.168.3.54:8787',
-  supabaseUrl: 'http://192.168.3.54:8787',
+  apiBase: 'http://127.0.0.1:8787',
+  supabaseUrl: 'http://127.0.0.1:8787',
   localApiHosts: [
-    'http://192.168.3.54:8787',
     'http://127.0.0.1:8787',
+    'http://192.168.10.55:8787',
     'http://localhost:8787'
   ],
   requestTimeoutMs: 5000,
