@@ -699,7 +699,7 @@
         <div class="sc-feature-icon blue">🎯</div>
         <div class="sc-feature-body">
           <h3>精准咨询师匹配</h3>
-          <p>20 维度 145 分制加权算法，综合议题匹配、取向偏好、C-NIP 咨询风格等，为你找到最契合的咨询师。</p>
+          <p>11 维度 100 分制加权算法，3项硬性过滤 + 多维度精准匹配，为你找到最契合的咨询师。</p>
         </div>
       </div>
       <div class="sc-feature-item">
@@ -828,7 +828,7 @@
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#5C7A52" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
       </div>
       <h3>精准匹配</h3>
-      <p>20维度145分制加权算法，匹配最适合你的咨询师</p>
+      <p>11维度100分制加权算法，匹配最适合你的咨询师</p>
     </div>
     <div class="landing-card">
       <div class="landing-card-icon">
@@ -2049,8 +2049,8 @@ function generateResult() {
         var chtml='<div style="padding:10px 14px;background:#F0F7EC;border-radius:10px;font-size:12px;color:#5A6B52;line-height:1.7;margin-bottom:12px">💡 以下推荐基于您的评估信息自动匹配，仅供参考。建议结合咨询师的专业背景、个人感受和实际情况综合选择，匹配度不等于适合度。</div>';
         results.slice(0,3).forEach(function(r,idx){
           var c=r.counselor;
-          var cls=r.matchScore>=80?'match-high':r.matchScore>=50?'match-mid':'match-low';
-          var badgeCls=r.matchScore>=80?'match-high-badge':r.matchScore>=50?'match-mid-badge':'match-low-badge';
+          var cls=r.matchScore>=70?'match-high':r.matchScore>=45?'match-mid':'match-low';
+          var badgeCls=r.matchScore>=70?'match-high-badge':r.matchScore>=45?'match-mid-badge':'match-low-badge';
           // XSS防护：转义用户输入字段
           function esc(s){if(!s)return '';var d=document.createElement('div');d.textContent=s;return d.innerHTML;}
           chtml+='<div class="counselor-card '+cls+'">';

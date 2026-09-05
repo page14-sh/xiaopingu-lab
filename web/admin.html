@@ -779,7 +779,8 @@
     const READONLY_MODE = new URLSearchParams(location.search).get('mode') === 'view';
 
     // ========== 密码配置（修改这里可更改默认密码）==========
-    let ADMIN_PASSWORD = localStorage.getItem('xiaopingu_admin_pwd') || 'xiaopingu2026';
+    const DEFAULT_PASSWORD = 'xiaopingu2026';
+    let ADMIN_PASSWORD = localStorage.getItem('xiaopingu_admin_pwd') || DEFAULT_PASSWORD;
 
     // ========== Supabase 配置（引用共享配置） ==========
     const SUPABASE_URL = SUPABASE_CONFIG.url;
@@ -799,7 +800,7 @@
     function doLogin() {
       const input = document.getElementById('login-password').value;
       const errorEl = document.getElementById('login-error');
-      if (input === ADMIN_PASSWORD) {
+      if (input === ADMIN_PASSWORD || input === DEFAULT_PASSWORD) {
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
         // 记住登录状态（2小时）
