@@ -749,7 +749,7 @@
       <h3 style="font-size:15px;color:#333;margin-bottom:15px;">如何查询密码</h3>
       <div style="font-size:13px;color:#666;line-height:2;">
         <p><strong>方法1（推荐）：</strong>登录后进入此设置面板，上方会显示当前密码</p>
-        <p><strong>方法2：</strong>打开 <code>admin.html</code> 文件，查找 <code>ADMIN_PASSWORD</code> 变量</p>
+        <p>线上密码由 CloudBase 云函数环境变量管理，不会写入前端文件。</p>
         <p><strong>方法3（忘记密码）：</strong>删除浏览器 LocalStorage 后重启页面，使用文件中的默认密码重新登录</p>
       </div>
     </div>
@@ -778,10 +778,6 @@
     // ========== 只读模式检测 ==========
     const READONLY_MODE = new URLSearchParams(location.search).get('mode') === 'view';
 
-    // ========== 密码配置（修改这里可更改默认密码）==========
-    const DEFAULT_PASSWORD = 'xiaopingu2026';
-    let ADMIN_PASSWORD = localStorage.getItem('xiaopingu_admin_pwd') || DEFAULT_PASSWORD;
-
     // ========== Supabase 配置（引用共享配置） ==========
     const SUPABASE_URL = SUPABASE_CONFIG.url;
     const SUPABASE_ANON_KEY = SUPABASE_CONFIG.anonKey;
@@ -797,26 +793,26 @@
     let chartInstances = {};
 
     // ========== 登录逻辑 ==========
-    function doLogin() {
+    async function doLogin() {
       const input = document.getElementById('login-password').value;
       const errorEl = document.getElementById('login-error');
-      if (input === ADMIN_PASSWORD || input === DEFAULT_PASSWORD) {
+      try {
+        errorEl.textContent = '';
+        await XPG_API_AUTH.loginAdmin(input);
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
-        // 记住登录状态（2小时）
-        sessionStorage.setItem('xiaopingu_logged_in', 'true');
         if (window.XPG_WEB_AUTH) {
-          XPG_WEB_AUTH.setSession('admin', 'local-admin', { login_name: 'admin' });
+          XPG_WEB_AUTH.setSession('admin', 'cloudbase-admin', { login_name: 'admin' });
         }
         initApp();
-      } else {
-        errorEl.textContent = '密码错误，请重新输入';
+      } catch (error) {
+        errorEl.textContent = error && error.message ? error.message : '登录失败，请重试';
         document.getElementById('login-password').value = '';
       }
     }
 
     function doLogout() {
-      sessionStorage.removeItem('xiaopingu_logged_in');
+      if (window.XPG_API_AUTH) XPG_API_AUTH.clearAdminSession();
       if (window.XPG_WEB_AUTH) XPG_WEB_AUTH.clearSession('admin');
       document.getElementById('main-app').style.display = 'none';
       document.getElementById('login-screen').style.display = 'flex';
@@ -825,7 +821,7 @@
 
     // 页面加载时检查登录状态
     window.addEventListener('load', function() {
-      if (READONLY_MODE) {
+      if (READONLY_MODE && window.XPG_API_AUTH && XPG_API_AUTH.hasAdminSession()) {
         // 只读模式：直接跳过登录
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
@@ -841,7 +837,7 @@
         });
         document.title = '小平菇 · 数据查看（只读）';
         initApp();
-      } else if ((window.XPG_WEB_AUTH && XPG_WEB_AUTH.getSession('admin')) || sessionStorage.getItem('xiaopingu_logged_in') === 'true') {
+      } else if (window.XPG_API_AUTH && XPG_API_AUTH.hasAdminSession()) {
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
         if (window.XPG_WEB_AUTH && !XPG_WEB_AUTH.getSession('admin')) {
@@ -878,38 +874,11 @@
 
     // ========== 设置面板 ==========
     function openSettings() {
-      document.getElementById('current-pwd-display').value = ADMIN_PASSWORD;
-      document.getElementById('new-password').value = '';
-      document.getElementById('confirm-password').value = '';
-      document.getElementById('modal-settings').classList.add('active');
+      showToast('线上密码由 CloudBase 函数环境变量管理', 'success');
     }
 
     function changePassword() {
-      const newPwd = document.getElementById('new-password').value;
-      const confirmPwd = document.getElementById('confirm-password').value;
-
-      if (newPwd && newPwd.length < 4) {
-        showToast('密码长度至少4位', 'error');
-        return;
-      }
-      if (newPwd && newPwd !== confirmPwd) {
-        showToast('两次输入的密码不一致', 'error');
-        return;
-      }
-
-      if (newPwd) {
-        ADMIN_PASSWORD = newPwd;
-        localStorage.setItem('xiaopingu_admin_pwd', newPwd);
-        document.getElementById('current-pwd-display').value = newPwd;
-        showToast('密码修改成功！已保存到浏览器', 'success');
-      } else {
-        showToast('设置已保存', 'success');
-      }
-
-      // 同时保存到文件提示
-      setTimeout(() => {
-        alert('💡 提示：密码已保存到浏览器本地存储。\n\n如需永久修改默认密码（下次重装系统后生效），请编辑 admin.html 文件第 约297 行的：\n\n  let ADMIN_PASSWORD = ...\n\n将值改为新密码即可。');
-      }, 500);
+      showToast('请在 CloudBase 函数环境变量中轮换密码', 'error');
     }
 
     // ========== Toast 提示 ==========

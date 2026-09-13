@@ -8,7 +8,6 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="小平菇">
 <title>小平菇 · 心理咨询自助评估</title>
-<link rel="manifest" href="manifest.json">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   html { scroll-behavior: smooth; }
@@ -626,9 +625,76 @@
   .apply-success.show { display: block; }
   .apply-form.show { display: block; }
   .apply-form { display: block; }
+
+  .admin-center-overlay {
+    display: none; position: fixed; inset: 0; z-index: 12000; background: #F7F4EF;
+  }
+  .admin-center-overlay.show { display: flex; flex-direction: column; }
+  .admin-center-toolbar {
+    min-height: 56px; padding: 8px 14px; display: flex; align-items: center; gap: 12px;
+    color: #3D3831; background: rgba(255,255,255,0.97); border-bottom: 1px solid #E8E4DC;
+    box-shadow: 0 3px 14px rgba(61,56,49,0.06);
+  }
+  .admin-center-back {
+    width: 38px; height: 38px; border-radius: 10px; border: 1px solid #C8DCC0;
+    background: #F6FAF3; color: #5C7A52; cursor: pointer; display: inline-flex;
+    align-items: center; justify-content: center;
+  }
+  .admin-center-back svg { width: 18px; height: 18px; }
+  .admin-center-title { font-size: 15px; font-weight: 650; color: #5C7A52; }
+  .admin-center-note { margin-left: auto; font-size: 11px; color: #A09889; }
+  .admin-center-frame { flex: 1; width: 100%; border: 0; background: #F7F4EF; }
+  @media (max-width: 640px) {
+    .admin-center-note { display: none; }
+    .admin-center-toolbar { padding-left: 10px; }
+  }
 </style>
 </head>
 <body>
+
+<div id="admin-center" class="admin-center-overlay" aria-hidden="true">
+  <div class="admin-center-toolbar">
+    <button class="admin-center-back" type="button" onclick="closeAdminCenter()" aria-label="返回首页">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M19 12H5"></path><path d="M12 19l-7-7 7-7"></path>
+      </svg>
+    </button>
+    <span class="admin-center-title">小平菇管理中心</span>
+    <span class="admin-center-note">受保护的数据管理工作区</span>
+  </div>
+  <iframe id="admin-center-frame" class="admin-center-frame" title="小平菇管理中心" loading="lazy"></iframe>
+</div>
+
+<script>
+function openAdminCenter() {
+  var overlay = document.getElementById('admin-center');
+  var frame = document.getElementById('admin-center-frame');
+  if (!overlay || !frame) return;
+  if (!frame.getAttribute('src')) frame.setAttribute('src', 'admin.html');
+  overlay.classList.add('show');
+  overlay.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeAdminCenter() {
+  var overlay = document.getElementById('admin-center');
+  if (!overlay) return;
+  overlay.classList.remove('show');
+  overlay.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+  var url = new URL(window.location.href);
+  if (url.searchParams.has('admin')) {
+    url.searchParams.delete('admin');
+    window.history.replaceState(null, '', url.pathname + url.search + url.hash);
+  }
+}
+
+window.addEventListener('load', function() {
+  if (new URLSearchParams(window.location.search).get('admin') === '1' || window.location.pathname === '/admin') {
+    openAdminCenter();
+  }
+});
+</script>
 
 <!-- ===== 知情同意弹窗 ===== -->
 <!-- ===== 首页 ===== -->
@@ -782,6 +848,7 @@
     <button class="sc-cta-btn sc-cta-primary" onclick="enterAssessment()">开始心理评估 →</button>
     <button class="sc-cta-btn sc-cta-secondary" onclick="openCounselorLogin()" style="background:#fff;border:1.5px solid #C8DCC0;color:#5C7A52;font-family:inherit;">咨询师登录</button>
     <a href="counselor.html" class="sc-cta-btn sc-cta-secondary">咨询师入驻 →</a>
+    <button class="sc-cta-btn sc-cta-secondary" type="button" onclick="openAdminCenter()" style="background:#F7F4EF;border:1px solid #D8D1C7;color:#6B635A;font-family:inherit;">管理中心</button>
   </div>
 
   <p class="sc-footer-text">本系统为心理自助评估工具，评估结果<strong>不构成专业医学诊断或治疗建议</strong>。<br>如您正在经历严重心理困扰，请拨打<a href="tel:12356" style="color:#5C7A52;">心理援助热线 12356</a>。</p>
@@ -946,7 +1013,7 @@
   <div id="counselor-login-box">
     <h3>🖥️ 咨询师工作台</h3>
     <p>使用本地演示账号登录，或输入注册时收到的「咨询师 ID / 编辑码」。</p>
-    <div class="counselor-login-demo">本地演示账号：<strong>counselor</strong> / <strong>counselor2</strong><br>密码：<strong>xiaopingu2026</strong></div>
+    <div class="counselor-login-demo">演示账号：<strong>counselor</strong> / <strong>counselor2</strong><br>密码请向项目管理员获取</div>
     <input id="counselor-login-input" type="text" placeholder="账号 / 咨询师 ID / 编辑码" autocomplete="off"
       onkeydown="if(event.key==='Enter')document.getElementById('counselor-login-password').focus()" />
     <input id="counselor-login-password" type="password" placeholder="密码（ID / 编辑码登录可留空）" autocomplete="off"
@@ -1014,14 +1081,14 @@ function closeMyAssessment() {
 }
 function goMyAssessment() {
   var aid = getAsid() || localStorage.getItem('xiaopingu_my_asid');
-  if (aid) { location.href = 'my-assessment.html?aid=' + encodeURIComponent(aid); }
+  if (aid) { location.href = 'index.html?view=' + encodeURIComponent(aid); }
 }
 function goMyAssessmentManual() {
   var val = document.getElementById('my-assessment-input').value.trim();
   if (!val) { document.getElementById('my-assessment-input').style.borderColor='#E53935'; return; }
   // 同时缓存到 localStorage
   localStorage.setItem('xiaopingu_my_asid', val);
-  location.href = 'my-assessment.html?aid=' + encodeURIComponent(val);
+  location.href = 'index.html?view=' + encodeURIComponent(val);
 }
 </script>
 <script>
@@ -1037,38 +1104,17 @@ function doCounselorLogin() {
   var val = document.getElementById('counselor-login-input').value.trim();
   var pwd = document.getElementById('counselor-login-password').value;
   if (!val) { document.getElementById('counselor-login-input').style.borderColor='#E53935'; return; }
-  var localCounselorAccounts = {
-    counselor: {
-      id: '00000000-0000-4000-8000-000000000001',
-      name: '本地演示咨询师'
-    },
-    counselor2: {
-      id: '00000000-0000-4000-8000-000000000002',
-      name: '调试咨询师'
-    }
-  };
-  if (localCounselorAccounts[val]) {
-    if (pwd !== 'xiaopingu2026') {
-      document.getElementById('counselor-login-password').style.borderColor='#E53935';
-      alert('咨询师账号密码不正确');
-      return;
-    }
-    var account = localCounselorAccounts[val];
+  XPG_API_AUTH.loginCounselor(val, pwd).then(function(result) {
+    var account = result.counselor;
     localStorage.setItem('xiaopingu_counselor_id', account.id);
     if (window.XPG_WEB_AUTH) {
-      XPG_WEB_AUTH.setSession('counselor', account.id, { login_name: val, via: 'local_demo_account', name: account.name });
+      XPG_WEB_AUTH.setSession('counselor', account.id, { login_name: val, via: 'cloudbase_api', name: account.name || '' });
     }
     location.href = 'counselor.html?cid=' + encodeURIComponent(account.id);
-    return;
-  }
-  // 判断是 edit token（不含 -）还是 UUID（含 -）
-  if (val.indexOf('-') >= 0) {
-    // UUID → ?cid=
-    location.href = 'counselor.html?cid=' + encodeURIComponent(val);
-  } else {
-    // 编辑码 → ?edit=
-    location.href = 'counselor.html?edit=' + encodeURIComponent(val);
-  }
+  }).catch(function(error) {
+    document.getElementById('counselor-login-password').style.borderColor='#E53935';
+    alert(error && error.message ? error.message : '咨询师登录失败');
+  });
 }
 </script>
 
@@ -1105,6 +1151,7 @@ function doCounselorLogin() {
     <button onclick="openMyAssessment()" class="header-link" style="cursor:pointer;background:none;font-family:inherit;white-space:nowrap">📋 我的评估</button>
     <button onclick="openCounselorLogin()" class="header-link" style="cursor:pointer;background:none;font-family:inherit;white-space:nowrap">咨询师登录</button>
     <a href="counselor.html" class="header-link" style="white-space:nowrap">入驻 →</a>
+    <button onclick="openAdminCenter()" class="header-link" style="cursor:pointer;background:#F7F4EF;font-family:inherit;white-space:nowrap">管理中心</button>
   </div>
 </div>
 
@@ -2100,9 +2147,7 @@ function generateResult() {
           // PCOMS 效果追踪入口
           var asid=getAsid();
           if(asid){
-            var trackUrl='session.html?aid='+asid+'&cid='+c.id+'&name='+encodeURIComponent(name||'来访者')+'&sn=1';
-            chtml+='<div class="counselor-contact" style="margin-top:8px"><a href="'+trackUrl+'" style="color:#5C7A52;text-decoration:none;font-size:13px">📊 开始咨询效果追踪（PCOMS）</a></div>';
-  chtml+='<div class="counselor-contact" style="margin-top:4px"><a href="session-dashboard.html?aid='+asid+'" style="color:#7A8B72;text-decoration:none;font-size:12px">📈 查看追踪面板</a></div>';
+            chtml+='<div class="counselor-contact" style="margin-top:8px;color:#7A8B72;font-size:13px">📱 PCOMS 效果追踪请使用小程序端</div>';
           }
 
           // 展开详情按钮
@@ -2462,10 +2507,6 @@ function renderMyCounselorCard(aid) {
 
   document.getElementById('my_counselor_section').style.display = 'block';
   var asid = getAsid() || aid;
-  var visitorName = document.getElementById('name') ? document.getElementById('name').value : '来访者';
-  var trackUrl = 'session.html?aid=' + asid + '&cid=' + sel.id + '&name=' + encodeURIComponent(visitorName) + '&sn=1';
-  var counselorUrl = trackUrl + '&role=counselor';
-  var dashboardUrl = 'session-dashboard.html?aid=' + asid;
 
   var metaHtml = '';
   if (sel.meta) {
@@ -2478,9 +2519,8 @@ function renderMyCounselorCard(aid) {
   html += '<div class="mc-header"><span class="mc-badge">✓ 已选择</span><span class="mc-name">' + esc(sel.name) + '</span><span class="mc-score">匹配度 ' + sel.score + '%</span></div>';
   html += '<div class="mc-meta">' + metaHtml + '</div>';
   html += '<div class="mc-actions">';
-  html += '<a href="' + trackUrl + '" class="mc-btn mc-btn-primary">📊 开始追踪评分</a>';
-  html += '<a href="' + dashboardUrl + '" class="mc-btn">📈 查看追踪面板</a>';
-  html += '<a href="my-assessment.html?aid=' + aid + '" class="mc-btn">📋 查看申请状态</a>';
+  html += '<span class="mc-btn mc-btn-primary">📱 PCOMS 追踪请使用小程序</span>';
+  html += '<a href="index.html?view=' + aid + '" class="mc-btn">📋 查看申请状态</a>';
   html += '<button class="mc-btn" onclick="copyAsidLink(\'' + asid + '\')">🔗 复制评估链接</button>';
   html += '</div>';
   html += '<span class="mc-change" onclick="deselectCounselor(\'' + aid + '\')">✕ 更换咨询师</span>';
@@ -2502,7 +2542,7 @@ function copyCounselorLink(url) {
 }
 
 function copyAsidLink(asid) {
-  var fullUrl = location.origin + location.pathname.replace(/[^/]*$/, '') + 'my-assessment.html?aid=' + asid;
+  var fullUrl = location.origin + location.pathname.replace(/[^/]*$/, '') + 'index.html?view=' + asid;
   var text = '评估号：' + asid + '\n查看链接：' + fullUrl;
   if (navigator.clipboard) {
     navigator.clipboard.writeText(text).then(function() { showToast('✅ 评估号和链接已复制，可保存到备忘录'); });
@@ -2800,7 +2840,7 @@ function submitMatchApply(){
       <div style="font-size:28px;margin-bottom:8px">✅</div>
       <div style="font-size:14px;color:#5C7A52;font-weight:500">申请已提交</div>
       <div style="font-size:12px;color:#A09889;margin-top:4px">咨询师审核后，点击下方按钮查看结果</div>
-      <button class="btn btn-outline" style="width:100%;margin-top:12px" onclick="window.open('my-assessment.html?aid='+getAsid())">📋 查看申请状态</button>
+      <button class="btn btn-outline" style="width:100%;margin-top:12px" onclick="window.open('index.html?view='+getAsid())">📋 查看申请状态</button>
       <button class="btn btn-outline" style="width:100%;margin-top:8px;background:#F7F4EF" onclick="copyAsidLink(getAsid())">🔗 复制评估号与链接</button>
       <div style="font-size:11px;color:#A09889;margin-top:8px;line-height:1.4">💡 <strong>提示：</strong>复制链接后可以收藏或发给自己，<br>下次点击首页「📋 我的评估」也能查到</div>
       <button class="btn btn-outline" style="width:100%;margin-top:8px;background:#F7F4EF" onclick="closeMatchApply()">关闭</button>

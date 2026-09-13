@@ -2819,7 +2819,7 @@ function renderClientList(records, pcomsMap) {
 
     // 操作按钮
     html += '<div class="client-actions">';
-    html += '<a href="session-dashboard.html?aid=' + a.id + '&role=counselor&cid=' + panelCid + '&name=' + encodeURIComponent(a.match_request_name || a.visitor_name || '') + '" class="req-btn req-btn-blue" target="_blank">📈 追踪面板</a>';
+    html += '<span class="req-btn req-btn-blue">📱 PCOMS 追踪请使用小程序</span>';
     html += '<button class="req-btn req-btn-outline" onclick="copyContact(\'' + esc(a.match_request_contact || '') + '\')">📋 复制联系方式</button>';
     if (status === 'approved') {
       html += '<button class="req-btn req-btn-outline" onclick="markContacted(\'' + a.id + '\')">📞 标记已联系</button>';
@@ -2983,7 +2983,7 @@ function loadPanelRequests() {
 
       html += '<div class="req-actions">';
       html += '<button class="req-btn req-btn-outline" id="assessment-detail-btn-' + a.id + '" onclick="toggleAssessmentDetail(\'' + a.id + '\')">查看详情</button>';
-      html += '<a href="session-dashboard.html?aid=' + a.id + '&role=counselor&cid=' + panelCid + '&name=' + encodeURIComponent(a.match_request_name || a.visitor_name || '') + '" class="req-btn req-btn-blue" target="_blank">📈 追踪面板</a>';
+      html += '<span class="req-btn req-btn-blue">📱 PCOMS 追踪请使用小程序</span>';
       html += '<button class="req-btn req-btn-outline" onclick="copyContact(\'' + esc(a.match_request_contact || '') + '\')">📋 复制联系方式</button>';
       // 审批按钮（仅 pending 状态）
       if (status === 'pending') {

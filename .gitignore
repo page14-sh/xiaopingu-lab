@@ -7,3 +7,4 @@ node_modules/
 *.xlsx
 *.csv
 local-data.json
+cloudrun/xiaopingu-api/public/

@@ -1,14 +1,14 @@
 module.exports = {
   // 推荐正式接入自己的 API / 云函数，避免小程序直接持有数据库 key。
-  apiBase: 'http://127.0.0.1:8787',
-  supabaseUrl: 'http://127.0.0.1:8787',
+  apiBase: 'https://xiaopingu-api-xpg-demo-d3gzsswtcc3233ea0-1300577165.ap-shanghai.run.wxcloudrun.com',
+  supabaseUrl: 'https://xiaopingu-api-xpg-demo-d3gzsswtcc3233ea0-1300577165.ap-shanghai.run.wxcloudrun.com',
   localApiHosts: [
     'http://127.0.0.1:8787',
     'http://192.168.10.55:8787',
     'http://localhost:8787'
   ],
   requestTimeoutMs: 5000,
-  supabaseAnonKey: 'sb_publishable_atXq0SmWEiEY6UMouG4dLw_ouXN2U6B',
+  supabaseAnonKey: '',
 
   // 开发者工具里无后端 code2session 时使用；正式版必须移除。
   devOpenid: 'dev-openid-xiaopingu',

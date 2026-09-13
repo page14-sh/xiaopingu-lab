@@ -1,0 +1,12 @@
+{
+  "name": "xiaopingu-api",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node index.js",
+    "test": "node --test test.js"
+  },
+  "dependencies": {
+    "@cloudbase/node-sdk": "^3.16.0"
+  }
+}

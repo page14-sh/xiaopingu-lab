@@ -7,10 +7,13 @@
 // 3. 填入您的 SUPABASE_URL 和 SUPABASE_ANON_KEY
 // 4. 将 enableDataCollection 改为 true
 
+var XPG_CLOUDRUN_API = 'https://xiaopingu-api-308810-6-1300577165.sh.run.tcloudbase.com';
+var XPG_SERVED_BY_CLOUDRUN = typeof window !== 'undefined' && /\.run\.(tcloudbase\.com|wxcloudrun\.com)$/.test(window.location.hostname);
+
 var SUPABASE_CONFIG = {
   enableDataCollection: true,
-  url: 'http://127.0.0.1:8787',
-  anonKey: 'sb_publishable_atXq0SmWEiEY6UMouG4dLw_ouXN2U6B'
+  url: XPG_SERVED_BY_CLOUDRUN ? window.location.origin : XPG_CLOUDRUN_API,
+  anonKey: ''
 };
 
 /*
@@ -158,6 +161,69 @@ CREATE INDEX idx_counselors_budget ON counselors(fee_budget_level);
 
 // ========== API 封装 ==========
 
+var XPG_ADMIN_TOKEN_KEY = 'xiaopingu_admin_token';
+var XPG_COUNSELOR_TOKEN_KEY = 'xiaopingu_counselor_token';
+
+function currentApiToken() {
+  try {
+    return sessionStorage.getItem(XPG_ADMIN_TOKEN_KEY) || localStorage.getItem(XPG_COUNSELOR_TOKEN_KEY) || '';
+  } catch (_error) {
+    return '';
+  }
+}
+
+// 为所有发往 CloudBase API 的请求统一附加短期会话令牌。
+(function installAuthenticatedFetch() {
+  if (typeof window === 'undefined' || typeof window.fetch !== 'function') return;
+  var nativeFetch = window.fetch.bind(window);
+  window.fetch = function(resource, options) {
+    var requestUrl = typeof resource === 'string' ? resource : (resource && resource.url) || '';
+    if (requestUrl.indexOf(SUPABASE_CONFIG.url) !== 0) return nativeFetch(resource, options);
+    var next = Object.assign({}, options || {});
+    var headers = new Headers(next.headers || {});
+    var token = currentApiToken();
+    if (token) headers.set('Authorization', 'Bearer ' + token);
+    next.headers = headers;
+    return nativeFetch(resource, next);
+  };
+})();
+
+function loginAdmin(password) {
+  return fetch(SUPABASE_CONFIG.url + '/auth/admin', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password: password })
+  }).then(function(response) {
+    if (!response.ok) throw new Error('管理员密码错误');
+    return response.json();
+  }).then(function(data) {
+    sessionStorage.setItem(XPG_ADMIN_TOKEN_KEY, data.token);
+    return data;
+  });
+}
+
+function loginCounselor(credential, password) {
+  return fetch(SUPABASE_CONFIG.url + '/auth/counselor', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ credential: credential, password: password || '' })
+  }).then(function(response) {
+    if (!response.ok) throw new Error('咨询师账号或编辑码无效');
+    return response.json();
+  }).then(function(data) {
+    localStorage.setItem(XPG_COUNSELOR_TOKEN_KEY, data.token);
+    return data;
+  });
+}
+
+window.XPG_API_AUTH = {
+  loginAdmin: loginAdmin,
+  loginCounselor: loginCounselor,
+  hasAdminSession: function() { return Boolean(sessionStorage.getItem(XPG_ADMIN_TOKEN_KEY)); },
+  clearAdminSession: function() { sessionStorage.removeItem(XPG_ADMIN_TOKEN_KEY); },
+  clearCounselorSession: function() { localStorage.removeItem(XPG_COUNSELOR_TOKEN_KEY); }
+};
+
 // 通用请求函数（含自动重试）
 function _xpg_fetch(url, options, retries) {
   retries = retries || 1;
@@ -172,21 +238,17 @@ function _xpg_fetch(url, options, retries) {
 }
 
 function getSupabaseHeaders() {
-  return {
+  var headers = {
     'Content-Type': 'application/json',
-    'apikey': SUPABASE_CONFIG.anonKey,
-    'Authorization': 'Bearer ' + SUPABASE_CONFIG.anonKey,
     'Prefer': 'return=representation'
   };
+  if (SUPABASE_CONFIG.anonKey) headers.apikey = SUPABASE_CONFIG.anonKey;
+  return headers;
 }
 
 // 写操作 header（不含 return=representation，避免 INSERT/PATCH 后 SELECT 被 RLS 拦截）
 function getSupabaseWriteHeaders() {
-  return {
-    'Content-Type': 'application/json',
-    'apikey': SUPABASE_CONFIG.anonKey,
-    'Authorization': 'Bearer ' + SUPABASE_CONFIG.anonKey
-  };
+  return { 'Content-Type': 'application/json' };
 }
 
 // 轻量 toast 通知（当页面无 showToast 时使用）
@@ -228,7 +290,7 @@ function saveCounselor(data) {
     headers: getSupabaseWriteHeaders(),
     body: JSON.stringify(data)
   }).then(function(r) {
-    if (r.ok) return data; // 返回输入数据，供调用方取 edit_token
+    if (r.ok) return r.json().then(function(rows) { return Array.isArray(rows) && rows[0] ? rows[0] : data; });
     else throw new Error('HTTP ' + r.status);
   });
 }
@@ -281,13 +343,8 @@ function getAssessmentByToken(token) {
 // 按 edit_token 获取咨询师档案（用于编辑模式）
 function getCounselorByToken(token) {
   if (!SUPABASE_CONFIG.enableDataCollection || !SUPABASE_CONFIG.url) return Promise.resolve(null);
-  return fetch(SUPABASE_CONFIG.url + '/rest/v1/counselors?edit_token=eq.' + encodeURIComponent(token) + '&select=*', {
-    headers: {
-      'apikey': SUPABASE_CONFIG.anonKey,
-      'Authorization': 'Bearer ' + SUPABASE_CONFIG.anonKey
-    }
-  }).then(function(r) { return r.json(); })
-    .then(function(data) { return Array.isArray(data) && data.length > 0 ? data[0] : null; })
+  return loginCounselor(token, '')
+    .then(function(data) { return data && data.counselor ? data.counselor : null; })
     .catch(function(e) { console.warn('[小平菇] 获取咨询师失败:', e); return null; });
 }
 

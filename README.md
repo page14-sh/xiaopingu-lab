@@ -12,6 +12,46 @@ xiaopingu-lab/
 └── docs/         # 设计与迁移说明
 ```
 
+## CloudBase 演示环境
+
+- 首页与 API：<https://xiaopingu-api-308810-6-1300577165.sh.run.tcloudbase.com/>
+- 首页内管理中心：<https://xiaopingu-api-308810-6-1300577165.sh.run.tcloudbase.com/admin>
+- 健康检查：<https://xiaopingu-api-308810-6-1300577165.sh.run.tcloudbase.com/health>
+- 环境 ID：`xpg-demo-d3gzsswtcc3233ea0`（上海）
+- 运行：同一个 CloudRun 容器托管首页、管理中心与 API；`0.25 CPU / 0.5 GB`，最小实例数 `0`，最大实例数 `2`
+- 数据：CloudBase NoSQL，业务集合仅允许管理端访问，客户端统一经过 API
+
+首页点击“管理中心”即可在同一页面进入后台；也可以直接打开 `/admin`。管理员密码保存在本机被 Git 忽略的 `.env.cloudbase.local` 中；不要把该文件提交或发送给他人。服务端 API Key 将于 `2026-12-04` 到期，届时需轮换后重新部署服务环境变量。
+
+云端密码拆分配置（需部署新版服务后生效）：
+- `XPG_ADMIN_PASSWORD`：管理中心密码，保留现有值。
+- `XPG_DEMO_COUNSELOR_PASSWORD`：演示账号 `counselor` / `counselor2` 的独立密码，在 `.env.cloudbase.local` 中配置。
+- 演示账号登录还要求 `XPG_DEMO_MODE=1`；未配置演示密码时拒绝账号登录，不回退使用管理员密码。编辑码登录不受影响。
+
+部署时须同时更新服务代码和云托管环境变量，保留其他环境变量；仅修改本地 `.env.cloudbase.local` 不会改变远端配置。
+
+
+CloudBase API 自动缩容到 0，长时间无访问后的第一次请求可能稍慢。验证：
+
+```bash
+npm run test:cloudbase
+curl https://xiaopingu-api-308810-6-1300577165.sh.run.tcloudbase.com/health
+```
+
+### 同步本地演示数据
+
+同步脚本读取被 Git 忽略的 `server/local-data.json`，按业务 `id` 合并到 CloudBase NoSQL。默认只预览；`--apply` 才会写入。脚本不会删除云端记录，也不会用时间更旧或相同的本地记录覆盖云端。
+
+```bash
+# 预览差异
+npm run sync:cloudbase:data
+
+# 应用同步
+npm run sync:cloudbase:data -- --apply
+```
+
+当前已同步：16 条评估、6 条会话、9 条 PCOMS 评分和 1 条访客记录；云端保留 3 条咨询师记录。
+
 ## 分别启动
 
 ### 给本地 Agent 的启动指令
@@ -71,11 +111,11 @@ npm run start:web
 http://127.0.0.1:8080/index.html
 ```
 
-本地演示咨询师账号：
+本地文件服务演示咨询师账号：
 
 ```text
 账号：counselor
-密码：xiaopingu2026
+密码：xiaopingu2026（仅本地文件服务）
 ```
 
 小程序端：
@@ -83,6 +123,8 @@ http://127.0.0.1:8080/index.html
 ```text
 用微信开发者工具打开 miniprogram/ 目录
 ```
+
+当前小程序开发配置指向 CloudRun 的微信域名。正式发布前仍需在微信后台绑定 CloudBase 环境和合法请求域名，并把演示用 `/wechat/login` 切换为 `wx.cloud` 原生身份。
 
 开发者工具本地调试时，小程序当前会访问：
 

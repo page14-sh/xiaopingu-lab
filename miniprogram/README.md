@@ -8,13 +8,13 @@
 用微信开发者工具打开 miniprogram/ 目录
 ```
 
-本地 API 配置在 `utils/config.js`：
+API 配置在 `utils/config.js`，当前默认指向 CloudRun 演示服务：
 
 ```js
-apiBase: 'http://192.168.3.54:8787',
-supabaseUrl: 'http://192.168.3.54:8787'
+apiBase: 'https://xiaopingu-api-xpg-demo-d3gzsswtcc3233ea0-1300577165.ap-shanghai.run.wxcloudrun.com',
+supabaseUrl: 'https://xiaopingu-api-xpg-demo-d3gzsswtcc3233ea0-1300577165.ap-shanghai.run.wxcloudrun.com'
 ```
 
 开发者工具本地调试时，`project.private.config.json` 已关闭 `urlCheck`。
 
-真机预览时，手机访问不到电脑上的 `127.0.0.1`。当前配置使用本机局域网 IP `192.168.3.54`，换网络或换机器后需要改成新机器的局域网 IP，或使用 HTTPS 内网穿透域名。
+当前 `/wechat/login` 仅用于演示环境。正式上传前需要在微信后台绑定 CloudBase 环境和合法请求域名，并改用 `wx.cloud` 原生身份获取 OPENID。
