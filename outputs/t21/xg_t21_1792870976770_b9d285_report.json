@@ -1,0 +1,1735 @@
+{
+  "schema_version": "integration-t21-v1",
+  "env": "xpg-demo-d3gzsswtcc3233ea0",
+  "prefix": "xg_t21_1792870976770_b9d285_",
+  "started_at": "2026-10-24T19:42:56.784Z",
+  "environment": {
+    "status": "NORMAL",
+    "region": "ap-shanghai"
+  },
+  "created": [
+    "xg_t21_1792870976770_b9d285_matches",
+    "xg_t21_1792870976770_b9d285_active_matches",
+    "xg_t21_1792870976770_b9d285_assessment_events",
+    "xg_t21_1792870976770_b9d285_submissions",
+    "xg_t21_1792870976770_b9d285_baseline_profiles",
+    "xg_t21_1792870976770_b9d285_end_profiles",
+    "xg_t21_1792870976770_b9d285_visitors",
+    "xg_t21_1792870976770_b9d285_identity_assertions",
+    "xg_t21_1792870976770_b9d285_intake_owners",
+    "xg_t21_1792870976770_b9d285_match_requests",
+    "xg_t21_1792870976770_b9d285_case_switches",
+    "xg_t21_1792870976770_b9d285_llm_results",
+    "xg_t21_1792870976770_b9d285_consent_policies",
+    "xg_t21_1792870976770_b9d285_consent_documents",
+    "xg_t21_1792870976770_b9d285_consent_states",
+    "xg_t21_1792870976770_b9d285_consent_history",
+    "xg_t21_1792870976770_b9d285_item_versions",
+    "xg_t21_1792870976770_b9d285_rule_versions",
+    "xg_t21_1792870976770_b9d285_assessment_release",
+    "xg_t21_1792870976770_b9d285_case_assessment_configs",
+    "xg_t21_1792870976770_b9d285_event_transitions",
+    "xg_t21_1792870976770_b9d285_request_receipts",
+    "xg_t21_1792870976770_b9d285_combination_jobs",
+    "xg_t21_1792870976770_b9d285_raw_signals",
+    "xg_t21_1792870976770_b9d285_session_combinations",
+    "xg_t21_1792870976770_b9d285_combination_history",
+    "xg_t21_1792870976770_b9d285_rollout_policy",
+    "xg_t21_1792870976770_b9d285_rollout_history",
+    "xg_t21_1792870976770_b9d285_followup_jobs",
+    "xg_t21_1792870976770_b9d285_notification_tasks",
+    "xg_t21_1792870976770_b9d285_notification_attempts",
+    "xg_t21_1792870976770_b9d285_notification_inbox",
+    "xg_t21_1792870976770_b9d285_notification_recipients",
+    "xg_t21_1792870976770_b9d285_notification_audit",
+    "xg_t21_1792870976770_b9d285_notification_bridge",
+    "xg_t21_1792870976770_b9d285_alert_actions",
+    "xg_t21_1792870976770_b9d285_llm_jobs",
+    "xg_t21_1792870976770_b9d285_llm_attempts",
+    "xg_t21_1792870976770_b9d285_llm_history",
+    "xg_t21_1792870976770_b9d285_llm_audit",
+    "xg_t21_1792870976770_b9d285_tag_weight_proposals",
+    "xg_t21_1792870976770_b9d285_tag_weights",
+    "xg_t21_1792870976770_b9d285_assessments",
+    "xg_t21_1792870976770_b9d285_counselors"
+  ],
+  "resources": [
+    {
+      "logical": "xg_matches",
+      "physical": "xg_t21_1792870976770_b9d285_matches",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        }
+      ]
+    },
+    {
+      "logical": "xg_active_matches",
+      "physical": "xg_t21_1792870976770_b9d285_active_matches",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        }
+      ]
+    },
+    {
+      "logical": "xg_assessment_events",
+      "physical": "xg_t21_1792870976770_b9d285_assessment_events",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "match_session_id",
+          "keys": [
+            {
+              "Name": "match_id",
+              "Direction": "1"
+            },
+            {
+              "Name": "session_no",
+              "Direction": "1"
+            },
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "status_expiry_id",
+          "keys": [
+            {
+              "Name": "status",
+              "Direction": "1"
+            },
+            {
+              "Name": "expires_at",
+              "Direction": "1"
+            },
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "stats_id_time",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            },
+            {
+              "Name": "started_at",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        }
+      ]
+    },
+    {
+      "logical": "xg_submissions",
+      "physical": "xg_t21_1792870976770_b9d285_submissions",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        }
+      ]
+    },
+    {
+      "logical": "xg_baseline_profiles",
+      "physical": "xg_t21_1792870976770_b9d285_baseline_profiles",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        }
+      ]
+    },
+    {
+      "logical": "xg_end_profiles",
+      "physical": "xg_t21_1792870976770_b9d285_end_profiles",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        }
+      ]
+    },
+    {
+      "logical": "xg_visitors",
+      "physical": "xg_t21_1792870976770_b9d285_visitors",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        }
+      ]
+    },
+    {
+      "logical": "xg_identity_assertions",
+      "physical": "xg_t21_1792870976770_b9d285_identity_assertions",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        }
+      ]
+    },
+    {
+      "logical": "xg_intake_owners",
+      "physical": "xg_t21_1792870976770_b9d285_intake_owners",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        }
+      ]
+    },
+    {
+      "logical": "xg_match_requests",
+      "physical": "xg_t21_1792870976770_b9d285_match_requests",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        }
+      ]
+    },
+    {
+      "logical": "xg_case_switches",
+      "physical": "xg_t21_1792870976770_b9d285_case_switches",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        }
+      ]
+    },
+    {
+      "logical": "xg_llm_results",
+      "physical": "xg_t21_1792870976770_b9d285_llm_results",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "match_result_id",
+          "keys": [
+            {
+              "Name": "match_id",
+              "Direction": "1"
+            },
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        }
+      ]
+    },
+    {
+      "logical": "xg_consent_policies",
+      "physical": "xg_t21_1792870976770_b9d285_consent_policies",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        }
+      ]
+    },
+    {
+      "logical": "xg_consent_documents",
+      "physical": "xg_t21_1792870976770_b9d285_consent_documents",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        }
+      ]
+    },
+    {
+      "logical": "xg_consent_states",
+      "physical": "xg_t21_1792870976770_b9d285_consent_states",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        }
+      ]
+    },
+    {
+      "logical": "xg_consent_history",
+      "physical": "xg_t21_1792870976770_b9d285_consent_history",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "visitor_scope_revision",
+          "keys": [
+            {
+              "Name": "visitor_id",
+              "Direction": "1"
+            },
+            {
+              "Name": "scope",
+              "Direction": "1"
+            },
+            {
+              "Name": "revision",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        }
+      ]
+    },
+    {
+      "logical": "xg_item_versions",
+      "physical": "xg_t21_1792870976770_b9d285_item_versions",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        }
+      ]
+    },
+    {
+      "logical": "xg_rule_versions",
+      "physical": "xg_t21_1792870976770_b9d285_rule_versions",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        }
+      ]
+    },
+    {
+      "logical": "xg_assessment_release",
+      "physical": "xg_t21_1792870976770_b9d285_assessment_release",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        }
+      ]
+    },
+    {
+      "logical": "xg_case_assessment_configs",
+      "physical": "xg_t21_1792870976770_b9d285_case_assessment_configs",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        }
+      ]
+    },
+    {
+      "logical": "xg_event_transitions",
+      "physical": "xg_t21_1792870976770_b9d285_event_transitions",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        }
+      ]
+    },
+    {
+      "logical": "xg_request_receipts",
+      "physical": "xg_t21_1792870976770_b9d285_request_receipts",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        }
+      ]
+    },
+    {
+      "logical": "xg_combination_jobs",
+      "physical": "xg_t21_1792870976770_b9d285_combination_jobs",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        }
+      ]
+    },
+    {
+      "logical": "xg_raw_signals",
+      "physical": "xg_t21_1792870976770_b9d285_raw_signals",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        }
+      ]
+    },
+    {
+      "logical": "xg_session_combinations",
+      "physical": "xg_t21_1792870976770_b9d285_session_combinations",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        }
+      ]
+    },
+    {
+      "logical": "xg_combination_history",
+      "physical": "xg_t21_1792870976770_b9d285_combination_history",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        }
+      ]
+    },
+    {
+      "logical": "xg_rollout_policy",
+      "physical": "xg_t21_1792870976770_b9d285_rollout_policy",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        }
+      ]
+    },
+    {
+      "logical": "xg_rollout_history",
+      "physical": "xg_t21_1792870976770_b9d285_rollout_history",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        }
+      ]
+    },
+    {
+      "logical": "xg_followup_jobs",
+      "physical": "xg_t21_1792870976770_b9d285_followup_jobs",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "status_check_id",
+          "keys": [
+            {
+              "Name": "status",
+              "Direction": "1"
+            },
+            {
+              "Name": "next_check_at",
+              "Direction": "1"
+            },
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "stats_id_time",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            },
+            {
+              "Name": "due_at",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        }
+      ]
+    },
+    {
+      "logical": "xg_notification_tasks",
+      "physical": "xg_t21_1792870976770_b9d285_notification_tasks",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "status_attempt_id",
+          "keys": [
+            {
+              "Name": "status",
+              "Direction": "1"
+            },
+            {
+              "Name": "next_attempt_at",
+              "Direction": "1"
+            },
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "stats_id_time",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            },
+            {
+              "Name": "created_at",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        }
+      ]
+    },
+    {
+      "logical": "xg_notification_attempts",
+      "physical": "xg_t21_1792870976770_b9d285_notification_attempts",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "scoped_order",
+          "keys": [
+            {
+              "Name": "task_id",
+              "Direction": "1"
+            },
+            {
+              "Name": "number",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "stats_id_time",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            },
+            {
+              "Name": "started_at",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        }
+      ]
+    },
+    {
+      "logical": "xg_notification_inbox",
+      "physical": "xg_t21_1792870976770_b9d285_notification_inbox",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "scoped_order",
+          "keys": [
+            {
+              "Name": "recipient_role",
+              "Direction": "1"
+            },
+            {
+              "Name": "recipient_id",
+              "Direction": "1"
+            },
+            {
+              "Name": "created_at",
+              "Direction": "-1"
+            },
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "stats_id_time",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            },
+            {
+              "Name": "created_at",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        }
+      ]
+    },
+    {
+      "logical": "xg_notification_recipients",
+      "physical": "xg_t21_1792870976770_b9d285_notification_recipients",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        }
+      ]
+    },
+    {
+      "logical": "xg_notification_audit",
+      "physical": "xg_t21_1792870976770_b9d285_notification_audit",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        }
+      ]
+    },
+    {
+      "logical": "xg_notification_bridge",
+      "physical": "xg_t21_1792870976770_b9d285_notification_bridge",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        }
+      ]
+    },
+    {
+      "logical": "xg_alert_actions",
+      "physical": "xg_t21_1792870976770_b9d285_alert_actions",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "stats_id_time",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            },
+            {
+              "Name": "created_at",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        }
+      ]
+    },
+    {
+      "logical": "xg_llm_jobs",
+      "physical": "xg_t21_1792870976770_b9d285_llm_jobs",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "stats_id_time",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            },
+            {
+              "Name": "created_at",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "status_recovery_id",
+          "keys": [
+            {
+              "Name": "status",
+              "Direction": "1"
+            },
+            {
+              "Name": "recovery_eligible",
+              "Direction": "1"
+            },
+            {
+              "Name": "recover_at",
+              "Direction": "1"
+            },
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "status_id",
+          "keys": [
+            {
+              "Name": "status",
+              "Direction": "1"
+            },
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "status_attempt_id",
+          "keys": [
+            {
+              "Name": "status",
+              "Direction": "1"
+            },
+            {
+              "Name": "next_attempt_at",
+              "Direction": "1"
+            },
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        }
+      ]
+    },
+    {
+      "logical": "xg_llm_attempts",
+      "physical": "xg_t21_1792870976770_b9d285_llm_attempts",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        }
+      ]
+    },
+    {
+      "logical": "xg_llm_history",
+      "physical": "xg_t21_1792870976770_b9d285_llm_history",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        }
+      ]
+    },
+    {
+      "logical": "xg_llm_audit",
+      "physical": "xg_t21_1792870976770_b9d285_llm_audit",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        }
+      ]
+    },
+    {
+      "logical": "xg_tag_weight_proposals",
+      "physical": "xg_t21_1792870976770_b9d285_tag_weight_proposals",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        }
+      ]
+    },
+    {
+      "logical": "xg_tag_weights",
+      "physical": "xg_t21_1792870976770_b9d285_tag_weights",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        }
+      ]
+    },
+    {
+      "logical": "assessments",
+      "physical": "xg_t21_1792870976770_b9d285_assessments",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        }
+      ]
+    },
+    {
+      "logical": "counselors",
+      "physical": "xg_t21_1792870976770_b9d285_counselors",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        }
+      ]
+    }
+  ],
+  "tests": [],
+  "cleanup": [
+    {
+      "collection": "xg_t21_1792870976770_b9d285_matches",
+      "deleted": true
+    },
+    {
+      "collection": "xg_t21_1792870976770_b9d285_active_matches",
+      "deleted": true
+    },
+    {
+      "collection": "xg_t21_1792870976770_b9d285_assessment_events",
+      "deleted": true
+    },
+    {
+      "collection": "xg_t21_1792870976770_b9d285_submissions",
+      "deleted": true
+    },
+    {
+      "collection": "xg_t21_1792870976770_b9d285_baseline_profiles",
+      "deleted": true
+    },
+    {
+      "collection": "xg_t21_1792870976770_b9d285_end_profiles",
+      "deleted": true
+    },
+    {
+      "collection": "xg_t21_1792870976770_b9d285_visitors",
+      "deleted": true
+    },
+    {
+      "collection": "xg_t21_1792870976770_b9d285_identity_assertions",
+      "deleted": true
+    },
+    {
+      "collection": "xg_t21_1792870976770_b9d285_intake_owners",
+      "deleted": true
+    },
+    {
+      "collection": "xg_t21_1792870976770_b9d285_match_requests",
+      "deleted": true
+    },
+    {
+      "collection": "xg_t21_1792870976770_b9d285_case_switches",
+      "deleted": true
+    },
+    {
+      "collection": "xg_t21_1792870976770_b9d285_llm_results",
+      "deleted": true
+    },
+    {
+      "collection": "xg_t21_1792870976770_b9d285_consent_policies",
+      "deleted": true
+    },
+    {
+      "collection": "xg_t21_1792870976770_b9d285_consent_documents",
+      "deleted": true
+    },
+    {
+      "collection": "xg_t21_1792870976770_b9d285_consent_states",
+      "deleted": true
+    },
+    {
+      "collection": "xg_t21_1792870976770_b9d285_consent_history",
+      "deleted": true
+    },
+    {
+      "collection": "xg_t21_1792870976770_b9d285_item_versions",
+      "deleted": true
+    },
+    {
+      "collection": "xg_t21_1792870976770_b9d285_rule_versions",
+      "deleted": true
+    },
+    {
+      "collection": "xg_t21_1792870976770_b9d285_assessment_release",
+      "deleted": true
+    },
+    {
+      "collection": "xg_t21_1792870976770_b9d285_case_assessment_configs",
+      "deleted": true
+    },
+    {
+      "collection": "xg_t21_1792870976770_b9d285_event_transitions",
+      "deleted": true
+    },
+    {
+      "collection": "xg_t21_1792870976770_b9d285_request_receipts",
+      "deleted": true
+    },
+    {
+      "collection": "xg_t21_1792870976770_b9d285_combination_jobs",
+      "deleted": true
+    },
+    {
+      "collection": "xg_t21_1792870976770_b9d285_raw_signals",
+      "deleted": true
+    },
+    {
+      "collection": "xg_t21_1792870976770_b9d285_session_combinations",
+      "deleted": true
+    },
+    {
+      "collection": "xg_t21_1792870976770_b9d285_combination_history",
+      "deleted": true
+    },
+    {
+      "collection": "xg_t21_1792870976770_b9d285_rollout_policy",
+      "deleted": true
+    },
+    {
+      "collection": "xg_t21_1792870976770_b9d285_rollout_history",
+      "deleted": true
+    },
+    {
+      "collection": "xg_t21_1792870976770_b9d285_followup_jobs",
+      "deleted": true
+    },
+    {
+      "collection": "xg_t21_1792870976770_b9d285_notification_tasks",
+      "deleted": true
+    },
+    {
+      "collection": "xg_t21_1792870976770_b9d285_notification_attempts",
+      "deleted": true
+    },
+    {
+      "collection": "xg_t21_1792870976770_b9d285_notification_inbox",
+      "deleted": true
+    },
+    {
+      "collection": "xg_t21_1792870976770_b9d285_notification_recipients",
+      "deleted": true
+    },
+    {
+      "collection": "xg_t21_1792870976770_b9d285_notification_audit",
+      "deleted": true
+    },
+    {
+      "collection": "xg_t21_1792870976770_b9d285_notification_bridge",
+      "deleted": true
+    },
+    {
+      "collection": "xg_t21_1792870976770_b9d285_alert_actions",
+      "deleted": true
+    },
+    {
+      "collection": "xg_t21_1792870976770_b9d285_llm_jobs",
+      "deleted": true
+    },
+    {
+      "collection": "xg_t21_1792870976770_b9d285_llm_attempts",
+      "deleted": true
+    },
+    {
+      "collection": "xg_t21_1792870976770_b9d285_llm_history",
+      "deleted": true
+    },
+    {
+      "collection": "xg_t21_1792870976770_b9d285_llm_audit",
+      "deleted": true
+    },
+    {
+      "collection": "xg_t21_1792870976770_b9d285_tag_weight_proposals",
+      "deleted": true
+    },
+    {
+      "collection": "xg_t21_1792870976770_b9d285_tag_weights",
+      "deleted": true
+    },
+    {
+      "collection": "xg_t21_1792870976770_b9d285_assessments",
+      "deleted": true
+    },
+    {
+      "collection": "xg_t21_1792870976770_b9d285_counselors",
+      "deleted": true
+    }
+  ],
+  "transaction_events": {
+    "committed": 7
+  },
+  "scope": {
+    "api": "local-loopback-current-code",
+    "database": "real-cloudbase-isolated-collections",
+    "identity": "synthetic-signed-bridge",
+    "notifications": "mock",
+    "llm": "mock",
+    "business_clock": "injected"
+  },
+  "passed": false,
+  "error": {
+    "code": "ERR_ASSERTION",
+    "phase": 0
+  },
+  "cleanup_complete": true,
+  "finished_at": "2026-10-24T19:45:55.769Z"
+}

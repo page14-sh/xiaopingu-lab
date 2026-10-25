@@ -1,0 +1,157 @@
+{
+  "schema_version": "integration-t21-v1",
+  "env": "xpg-demo-d3gzsswtcc3233ea0",
+  "prefix": "xg_t21_1792871326566_6abefa_",
+  "started_at": "2026-10-24T19:48:46.577Z",
+  "environment": {
+    "status": "NORMAL",
+    "region": "ap-shanghai"
+  },
+  "created": [
+    "xg_t21_1792871326566_6abefa_matches"
+  ],
+  "resources": [
+    {
+      "logical": "xg_matches",
+      "physical": "xg_t21_1792871326566_6abefa_matches",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        },
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ],
+          "status": null
+        }
+      ]
+    }
+  ],
+  "tests": [
+    {
+      "name": "five concurrent increments preserve every commit; record rollback codes",
+      "passed": true
+    }
+  ],
+  "cleanup": [
+    {
+      "collection": "xg_t21_1792871326566_6abefa_matches",
+      "deleted": true
+    }
+  ],
+  "transaction_events": {},
+  "scope": {
+    "api": "local-loopback-current-code",
+    "database": "real-cloudbase-isolated-collections",
+    "identity": "synthetic-signed-bridge",
+    "notifications": "mock",
+    "llm": "mock",
+    "business_clock": "injected",
+    "probe": "conflict_observability"
+  },
+  "observations": [
+    {
+      "type": "committed"
+    },
+    {
+      "type": "committed"
+    },
+    {
+      "type": "rollback_failed",
+      "code": "DATABASE_TRANSACTION_FAIL"
+    },
+    {
+      "type": "conflict"
+    },
+    {
+      "type": "rollback_failed",
+      "code": "DATABASE_TRANSACTION_FAIL"
+    },
+    {
+      "type": "conflict"
+    },
+    {
+      "type": "rollback_failed",
+      "code": "DATABASE_TRANSACTION_FAIL"
+    },
+    {
+      "type": "conflict"
+    },
+    {
+      "type": "rollback_failed",
+      "code": "DATABASE_TRANSACTION_FAIL"
+    },
+    {
+      "type": "conflict"
+    },
+    {
+      "type": "committed"
+    },
+    {
+      "type": "rollback_failed",
+      "code": "DATABASE_TRANSACTION_FAIL"
+    },
+    {
+      "type": "conflict"
+    },
+    {
+      "type": "rollback_failed",
+      "code": "DATABASE_TRANSACTION_FAIL"
+    },
+    {
+      "type": "conflict"
+    },
+    {
+      "type": "rollback_failed",
+      "code": "DATABASE_TRANSACTION_FAIL"
+    },
+    {
+      "type": "conflict"
+    },
+    {
+      "type": "committed"
+    },
+    {
+      "type": "rollback_failed",
+      "code": "DATABASE_TRANSACTION_FAIL"
+    },
+    {
+      "type": "conflict"
+    },
+    {
+      "type": "rollback_failed",
+      "code": "DATABASE_TRANSACTION_FAIL"
+    },
+    {
+      "type": "conflict"
+    },
+    {
+      "type": "committed"
+    },
+    {
+      "type": "rollback_failed",
+      "code": "DATABASE_TRANSACTION_FAIL"
+    },
+    {
+      "type": "conflict"
+    },
+    {
+      "type": "committed"
+    }
+  ],
+  "passed": true,
+  "cleanup_complete": true,
+  "finished_at": "2026-10-24T19:48:51.756Z"
+}

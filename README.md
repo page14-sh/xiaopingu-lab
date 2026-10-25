@@ -12,6 +12,18 @@ xiaopingu-lab/
 └── docs/         # 设计与迁移说明
 ```
 
+## 四评当前实现与联调入口
+
+四评采用 **CloudRun + CloudBase NoSQL**，与旧PCOMS演示功能并存；`server/`中的Supabase SQL不用于当前四评。下方已有线上地址不代表T01–T21新增四评功能已经发布。
+
+- [当前API契约](specs/assessment-foundation/api-contract.md)、[数据/资源/配置契约](specs/assessment-foundation/data-contract.md)
+- [逐项任务状态](specs/assessment-foundation/tasks.md)、[T21隔离联调记录](specs/assessment-foundation/t21-integration.md)
+- [T22发布审查与回滚材料](specs/assessment-foundation/t22-release-readiness.md)：当前NO_GO，完整前端及真实客户端/通道等发布门槛未关闭；任务材料完成不等于可上线。
+- `npm run check:assessment:release`：离线核对既有证据和发布缺口；退出码2表示仍被发布门槛阻断，不执行部署。
+- `npm run demo:assessment`：仅本地合成数据及24个场景验收，不连接云端。
+- `npm run test:cloudbase`：后端本地回归；不等于真实客户端/外部通道验收。
+- `node scripts/t21-isolated-integration.cjs --run`：显式真实数据库联调，固定授权演示环境并使用独立测试集合，完成后清理。
+
 ## CloudBase 演示环境
 
 - 首页与 API：<https://xiaopingu-api-308810-6-1300577165.sh.run.tcloudbase.com/>

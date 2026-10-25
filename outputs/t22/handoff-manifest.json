@@ -1,0 +1,47 @@
+{
+  "schema_version": "handoff-t22-v1",
+  "prepared_at": "2026-10-24T19:56:27.714Z",
+  "release_decision": "NO_GO",
+  "release_candidate_commit": null,
+  "image_digest": null,
+  "working_tree": {
+    "base_head_not_release_candidate": "2260c5faddb22b38d689da948d3c852bec493705",
+    "branch": "codex/local-demo-modules",
+    "dirty": true,
+    "tracked_changed_paths": 13,
+    "untracked_paths": 15
+  },
+  "local_tests": {
+    "command": "npm run test:cloudbase",
+    "passed": 497,
+    "failed": 0,
+    "new_t22_tests": 5
+  },
+  "evidence": "outputs/t21/evidence-index.json",
+  "evidence_sha256": "949f88dd11ccbe991d914abc35934ae2f34d3098dd774417d68d19e40cd4ab5d",
+  "locked_sdk_version": "3.18.3",
+  "artifacts_sha256": {
+    "specs/assessment-foundation/t22-release-readiness.md": "9aa99c58c6a3e953a36aa4b75e6203384c41ae97f9c3ec5e7e1b2ad44dee2cec",
+    "specs/assessment-foundation/t22-rollback.md": "507159dd49cbc7705bdd8469429dde8475abb5cab8901857dd6284502e9adb8b",
+    "specs/assessment-foundation/release/gates.json": "b62fe016d3c124fc489d7b53586e656722fce426db55033b93ca65026d84b47a",
+    "specs/assessment-foundation/release/config-template.json": "75002b47fdaa96564805cd3b186f9050a8b00011c735e9fc75fecc6b1d2b6d69",
+    "outputs/t22/resource-plan.json": "95a0940103d00d505a183c3fe9e6df9bd4b50f5fb692f6c6d1e233c6008e989f",
+    "outputs/t22/release-readiness.json": "a8177073b59ab83d226c8c1a5b0253360258db2baff98a64b1989bac4e21218d",
+    "scripts/check-assessment-release.cjs": "0e19f18e43037bb1897fbc9012e00037c9c9f56445081b3361ef6ab0c751b9a3",
+    "cloudrun/xiaopingu-api/assessment/release-readiness.test.js": "1b3a18d5ee9f810fb2272a763a5eca0f443a105f7aa1b6de1b30305f67d15080",
+    "cloudrun/xiaopingu-api/package.json": "c1b7d787b32c359ed289908fc4d98d005c1865dbc4f54e1fa5d5e4ecf9a30156",
+    "cloudrun/xiaopingu-api/package-lock.json": "4020e975f43efea72100e10a77062dbcf8125bee6e31a92b087d259a0cfcafb7",
+    "cloudrun/xiaopingu-api/Dockerfile": "d71c08eabfd370104debcab6a228f33f15e93e2d34e55c3cb58e324fb1255ea3",
+    "cloudrun/xiaopingu-api/.dockerignore": "9cdccdd059e8de45dce89607617cdd24ef2c391d21846582f2748b8febd2b6d6",
+    "cloudfunctions/xg-identity/package.json": "c27407d486b1b4dcbba186a737e90b291036b39f7e6d4f8886e0d908f06f06e4",
+    "cloudfunctions/xg-subscribe-send/package.json": "7be3dab6526d810006298df9f84476aa6bc21102a4720dd2a3eb3260434cba53"
+  },
+  "cloud_mutations": 0,
+  "deployment_performed": false,
+  "user_release_approval": "not_requested",
+  "limitations": [
+    "No release commit or image has been frozen",
+    "Frontend and real-client/channel acceptance incomplete",
+    "No production backup/rollback drill certified"
+  ]
+}

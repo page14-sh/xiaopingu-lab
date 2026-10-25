@@ -1,4 +1,5 @@
 const { miniLogin } = require('./utils/api');
+const { initXgCloud } = require('./utils/xg-api');
 
 App({
   globalData: {
@@ -6,6 +7,7 @@ App({
   },
 
   onLaunch() {
+    if (wx.cloud) initXgCloud();
     this.ensureVisitor();
   },
 

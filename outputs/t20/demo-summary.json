@@ -1,0 +1,847 @@
+{
+  "schema_version": "synthetic-t20-v1",
+  "synthetic": true,
+  "storage": "process_local_memory",
+  "importable": false,
+  "external_calls": 0,
+  "as_of": "2026-04-30T01:02:03.000Z",
+  "cases": [
+    {
+      "name": "main",
+      "match_id": "fixture-main",
+      "status": "closed",
+      "previous_match_id": null,
+      "followup_due": {
+        "1m": "2026-02-28T01:01:15.000Z",
+        "3m": "2026-04-30T01:01:15.000Z"
+      },
+      "profiles": {
+        "match_id": "fixture-main",
+        "baseline": {
+          "event_id": "f05264c1f40348cfeddf01e9cf40e2577eead53d0d9c91fa98105f63fd3e4211",
+          "session_no": 0,
+          "submitted_at": "2026-01-01T01:01:05.000Z",
+          "basis_ref": {
+            "item_version": "t20-items-v1",
+            "rule_version": "t20-rules-v1",
+            "basis_hash": "0a6859847e0011d6df74ccdc9ba51201e577dc921b55379e30662ded018999b4",
+            "config_revision": 0,
+            "focus_revision": 0,
+            "optional_enabled": false
+          },
+          "total": 52,
+          "ors_total": 30,
+          "supp_total": 20
+        },
+        "recheck": null,
+        "end": {
+          "event_id": "bd69b6550d9884dceb537b58c8a86cbef92a6715231b5c5b3dcbb4b64e02e2a5",
+          "session_no": 5,
+          "submitted_at": "2026-01-31T01:00:50.000Z",
+          "basis_ref": {
+            "item_version": "t20-items-v1",
+            "rule_version": "t20-rules-v1",
+            "basis_hash": "59f3dfe0d4968d2d4860fbe7ac74a8062fabb65e938d1a118399c7201f1495fa",
+            "config_revision": 0,
+            "focus_revision": null,
+            "optional_enabled": false
+          },
+          "total": 46,
+          "supp_total": 24
+        },
+        "follow_1m": {
+          "event_id": "fca53866d9f2a6b06d67c3901dff3bd2e9137fb2c2a2650f00029a495c5a6d05",
+          "session_no": 5,
+          "submitted_at": "2026-02-28T01:02:03.000Z",
+          "basis_ref": {
+            "item_version": "t20-items-v1",
+            "rule_version": "t20-rules-v1",
+            "basis_hash": "7af958b17fd767b6ef61026190b6b4bb2c8e4861a4f8d313a9577dcddd489bdc",
+            "config_revision": 0,
+            "focus_revision": null,
+            "optional_enabled": false
+          },
+          "total": 46,
+          "supp_total": 23
+        },
+        "follow_3m": {
+          "event_id": "a69f9639e903cd9e6711db5f86dff215b8b7a72c1d2acda8a8167aa0521e93ae",
+          "session_no": 5,
+          "submitted_at": "2026-04-30T01:02:03.000Z",
+          "basis_ref": {
+            "item_version": "t20-items-v1",
+            "rule_version": "t20-rules-v1",
+            "basis_hash": "ea84d20a16e6483710c60bfa3f3ffbe0e9767979d666825df1b2d2868bffd948",
+            "config_revision": 0,
+            "focus_revision": null,
+            "optional_enabled": false
+          },
+          "total": 48,
+          "supp_total": 25
+        }
+      },
+      "sessions": [
+        {
+          "session_no": 0,
+          "raw_signals": [],
+          "original_level": null,
+          "display_level": null,
+          "reason": "preserve_original"
+        },
+        {
+          "session_no": 1,
+          "raw_signals": [],
+          "original_level": null,
+          "display_level": null,
+          "reason": "first_session_not_comparable"
+        },
+        {
+          "session_no": 2,
+          "raw_signals": [
+            {
+              "rule_id": "OUT-SINGLE",
+              "level": "L1",
+              "event_id": "b183152bae26f3d143df4b35306ff230ecd46be8b46de7e2210bd5bfc1cd6cc6"
+            }
+          ],
+          "original_level": "L1",
+          "display_level": "L1",
+          "reason": "preserve_original"
+        },
+        {
+          "session_no": 3,
+          "raw_signals": [
+            {
+              "rule_id": "OUT-DROP",
+              "level": "L2",
+              "event_id": "60201849bbf39de8488d61ddb8b2225f85041cbd6cc7d8489fc22b2ad072c35b"
+            }
+          ],
+          "original_level": "L2",
+          "display_level": "L1",
+          "reason": "outcome_drop_alliance_stable"
+        },
+        {
+          "session_no": 4,
+          "raw_signals": [
+            {
+              "rule_id": "OUT-DROP",
+              "level": "L2",
+              "event_id": "c66084af58815e4c488e3fc8ca1693bcc45fefcf1602fc76fd1e014ee10cedb1"
+            },
+            {
+              "rule_id": "OUT-MONO",
+              "level": "L3",
+              "event_id": "c66084af58815e4c488e3fc8ca1693bcc45fefcf1602fc76fd1e014ee10cedb1"
+            }
+          ],
+          "original_level": "L3",
+          "display_level": "L3",
+          "reason": "preserve_l3"
+        },
+        {
+          "session_no": 5,
+          "raw_signals": [
+            {
+              "rule_id": "ALL-GAP",
+              "level": "L2",
+              "event_id": "0569b5887bba35996d43b6b5bfccef8b87ab37700ced97822e894cb35a386aa9"
+            },
+            {
+              "rule_id": "ALL-TOTAL",
+              "level": "L2",
+              "event_id": "0569b5887bba35996d43b6b5bfccef8b87ab37700ced97822e894cb35a386aa9"
+            }
+          ],
+          "original_level": "L2",
+          "display_level": "L2",
+          "reason": "awaiting_cards"
+        }
+      ]
+    },
+    {
+      "name": "new-cycle",
+      "match_id": "fixture-new-cycle",
+      "status": "active",
+      "previous_match_id": "fixture-main",
+      "followup_due": null,
+      "profiles": {
+        "match_id": "fixture-new-cycle",
+        "baseline": {
+          "event_id": "68c59d7dcc6451ca972ad8ab87e0980f372bdd201c78bf18efe4aecd6c2669ca",
+          "session_no": 0,
+          "submitted_at": "2026-02-28T01:04:03.000Z",
+          "basis_ref": {
+            "item_version": "t20-items-v1",
+            "rule_version": "t20-rules-v1",
+            "basis_hash": "1ecf590b459d10498295271adf496add62edc94093e4675c0de3be4f6f7e5ec3",
+            "config_revision": 0,
+            "focus_revision": 0,
+            "optional_enabled": false
+          },
+          "total": 42,
+          "ors_total": 24,
+          "supp_total": 20
+        },
+        "recheck": null,
+        "end": null,
+        "follow_1m": null,
+        "follow_3m": null
+      },
+      "sessions": [
+        {
+          "session_no": 0,
+          "raw_signals": [],
+          "original_level": null,
+          "display_level": null,
+          "reason": "preserve_original"
+        },
+        {
+          "session_no": 1,
+          "raw_signals": [],
+          "original_level": null,
+          "display_level": null,
+          "reason": "first_session_not_comparable"
+        }
+      ]
+    }
+  ],
+  "events": [
+    {
+      "label": "main/m0",
+      "event_id": "f05264c1f40348cfeddf01e9cf40e2577eead53d0d9c91fa98105f63fd3e4211",
+      "match_id": "fixture-main",
+      "scale_code": "xg_m0_baseline",
+      "session_no": 0,
+      "follow_round": "",
+      "started_at": "2026-01-01T01:00:00.000Z",
+      "submitted_at": "2026-01-01T01:01:05.000Z",
+      "duration_ms": 65000,
+      "quality_flag": "ok",
+      "scores": {
+        "total": 52,
+        "pct": 74.29,
+        "ors_total": 30,
+        "add_total": 7,
+        "supp_total": 20,
+        "resource_total": 15,
+        "dissoc_level": 0
+      },
+      "answers": {
+        "s1": 8,
+        "s2": 7,
+        "s3": 7,
+        "s4": 8,
+        "s5": 7,
+        "s6": 8,
+        "s7": 7,
+        "b1": 7,
+        "b2": 6,
+        "b3": 7,
+        "r1": 8,
+        "r2": 7,
+        "d1": 0
+      }
+    },
+    {
+      "label": "main/s1-feel",
+      "event_id": "8e5ff0febbe367e933435f1e643e7c4e694ebe3d048c3bd81c5f9ffba36675bf",
+      "match_id": "fixture-main",
+      "scale_code": "xg_m2_feel",
+      "session_no": 1,
+      "follow_round": "",
+      "started_at": "2026-01-03T01:00:00.000Z",
+      "submitted_at": "2026-01-03T01:00:38.000Z",
+      "duration_ms": 38000,
+      "quality_flag": "ok",
+      "scores": {
+        "total": 33,
+        "pct": 82.5
+      },
+      "answers": {
+        "f1": 8,
+        "f2": 8,
+        "f3": 8,
+        "f4": 9
+      }
+    },
+    {
+      "label": "main/s1-pro",
+      "event_id": "3a3ffa263c7adf56d33c5d2859af6c0be4d57bb893c89d6089ff9237d8390983",
+      "match_id": "fixture-main",
+      "scale_code": "xg_m3_pro",
+      "session_no": 1,
+      "follow_round": "",
+      "started_at": "2026-01-03T01:00:38.000Z",
+      "submitted_at": "2026-01-03T01:01:20.000Z",
+      "duration_ms": 42000,
+      "quality_flag": "ok",
+      "scores": {
+        "total": null,
+        "pct": null
+      },
+      "answers": {
+        "p1": 7,
+        "p2": 8,
+        "p3": 8,
+        "p4": 7,
+        "p5": 8
+      }
+    },
+    {
+      "label": "main/s2-state",
+      "event_id": "b183152bae26f3d143df4b35306ff230ecd46be8b46de7e2210bd5bfc1cd6cc6",
+      "match_id": "fixture-main",
+      "scale_code": "xg_m1_state",
+      "session_no": 2,
+      "follow_round": "",
+      "started_at": "2026-01-08T01:00:00.000Z",
+      "submitted_at": "2026-01-08T01:00:39.000Z",
+      "duration_ms": 39000,
+      "quality_flag": "ok",
+      "scores": {
+        "total": 45,
+        "pct": 64.29,
+        "ors_total": 26,
+        "add_total": 6,
+        "stability_total": null
+      },
+      "answers": {
+        "s1": 7,
+        "s2": 6,
+        "s3": 6,
+        "s4": 7,
+        "s5": 6,
+        "s6": 7,
+        "s7": 6
+      }
+    },
+    {
+      "label": "main/s2-feel",
+      "event_id": "f28f0030f23846c3d0836d185162dcbeaa845274b4626e6b772fea9015c5286b",
+      "match_id": "fixture-main",
+      "scale_code": "xg_m2_feel",
+      "session_no": 2,
+      "follow_round": "",
+      "started_at": "2026-01-08T01:00:39.000Z",
+      "submitted_at": "2026-01-08T01:01:16.000Z",
+      "duration_ms": 37000,
+      "quality_flag": "ok",
+      "scores": {
+        "total": 26,
+        "pct": 65
+      },
+      "answers": {
+        "f1": 6,
+        "f2": 7,
+        "f3": 6,
+        "f4": 7
+      }
+    },
+    {
+      "label": "main/s2-pro",
+      "event_id": "e0ee326ef0e3570da6e063657a225f8eadcabf5ab678b8c0978874d843fe7284",
+      "match_id": "fixture-main",
+      "scale_code": "xg_m3_pro",
+      "session_no": 2,
+      "follow_round": "",
+      "started_at": "2026-01-08T01:01:16.000Z",
+      "submitted_at": "2026-01-08T01:01:59.000Z",
+      "duration_ms": 43000,
+      "quality_flag": "ok",
+      "scores": {
+        "total": 40,
+        "pct": 66.67
+      },
+      "answers": {
+        "p1": 7,
+        "p2": 7,
+        "p3": 8,
+        "p4": 6,
+        "p5": 7,
+        "p6": 5
+      }
+    },
+    {
+      "label": "main/s3-state",
+      "event_id": "60201849bbf39de8488d61ddb8b2225f85041cbd6cc7d8489fc22b2ad072c35b",
+      "match_id": "fixture-main",
+      "scale_code": "xg_m1_state",
+      "session_no": 3,
+      "follow_round": "",
+      "started_at": "2026-01-15T01:00:00.000Z",
+      "submitted_at": "2026-01-15T01:00:39.000Z",
+      "duration_ms": 39000,
+      "quality_flag": "ok",
+      "scores": {
+        "total": 38,
+        "pct": 54.29,
+        "ors_total": 22,
+        "add_total": 5,
+        "stability_total": null
+      },
+      "answers": {
+        "s1": 6,
+        "s2": 5,
+        "s3": 5,
+        "s4": 6,
+        "s5": 5,
+        "s6": 6,
+        "s7": 5
+      }
+    },
+    {
+      "label": "main/s3-feel",
+      "event_id": "be751d616427e8caeb6d7cd1646c8dab47cc69a1210fbb5e3753e9aee5308eb9",
+      "match_id": "fixture-main",
+      "scale_code": "xg_m2_feel",
+      "session_no": 3,
+      "follow_round": "",
+      "started_at": "2026-01-15T01:00:39.000Z",
+      "submitted_at": "2026-01-15T01:01:16.000Z",
+      "duration_ms": 37000,
+      "quality_flag": "ok",
+      "scores": {
+        "total": 33,
+        "pct": 82.5
+      },
+      "answers": {
+        "f1": 8,
+        "f2": 8,
+        "f3": 9,
+        "f4": 8
+      }
+    },
+    {
+      "label": "main/s3-pro",
+      "event_id": "29e5cf8dd7dc01d14c16ee9f308fe747caaa3b0887b48ad8597e4f0780a75731",
+      "match_id": "fixture-main",
+      "scale_code": "xg_m3_pro",
+      "session_no": 3,
+      "follow_round": "",
+      "started_at": "2026-01-15T01:01:16.000Z",
+      "submitted_at": "2026-01-15T01:01:59.000Z",
+      "duration_ms": 43000,
+      "quality_flag": "ok",
+      "scores": {
+        "total": 44,
+        "pct": 73.33
+      },
+      "answers": {
+        "p1": 8,
+        "p2": 8,
+        "p3": 8,
+        "p4": 7,
+        "p5": 8,
+        "p6": 5
+      }
+    },
+    {
+      "label": "main/s4-state",
+      "event_id": "c66084af58815e4c488e3fc8ca1693bcc45fefcf1602fc76fd1e014ee10cedb1",
+      "match_id": "fixture-main",
+      "scale_code": "xg_m1_state",
+      "session_no": 4,
+      "follow_round": "",
+      "started_at": "2026-01-22T01:00:00.000Z",
+      "submitted_at": "2026-01-22T01:00:39.000Z",
+      "duration_ms": 39000,
+      "quality_flag": "ok",
+      "scores": {
+        "total": 34,
+        "pct": 48.57,
+        "ors_total": 21,
+        "add_total": 4,
+        "stability_total": null
+      },
+      "answers": {
+        "s1": 5,
+        "s2": 5,
+        "s3": 4,
+        "s4": 6,
+        "s5": 5,
+        "s6": 5,
+        "s7": 4
+      }
+    },
+    {
+      "label": "main/s4-feel",
+      "event_id": "1b673b5f7436376f46bb95377b07126351fd7fce679c1d78850690a1150725ee",
+      "match_id": "fixture-main",
+      "scale_code": "xg_m2_feel",
+      "session_no": 4,
+      "follow_round": "",
+      "started_at": "2026-01-22T01:00:39.000Z",
+      "submitted_at": "2026-01-22T01:01:16.000Z",
+      "duration_ms": 37000,
+      "quality_flag": "ok",
+      "scores": {
+        "total": 22,
+        "pct": 55
+      },
+      "answers": {
+        "f1": 5,
+        "f2": 6,
+        "f3": 6,
+        "f4": 5
+      }
+    },
+    {
+      "label": "main/s4-pro",
+      "event_id": "309ae4285924b501d96dda9ad0a4c3992c454576da4cdf84850013ccafdcfc28",
+      "match_id": "fixture-main",
+      "scale_code": "xg_m3_pro",
+      "session_no": 4,
+      "follow_round": "",
+      "started_at": "2026-01-22T01:01:16.000Z",
+      "submitted_at": "2026-01-22T01:01:59.000Z",
+      "duration_ms": 43000,
+      "quality_flag": "ok",
+      "scores": {
+        "total": 25,
+        "pct": 41.67
+      },
+      "answers": {
+        "p1": 3,
+        "p2": 4,
+        "p3": 5,
+        "p4": 4,
+        "p5": 4,
+        "p6": 5
+      }
+    },
+    {
+      "label": "main/s5-feel",
+      "event_id": "0569b5887bba35996d43b6b5bfccef8b87ab37700ced97822e894cb35a386aa9",
+      "match_id": "fixture-main",
+      "scale_code": "xg_m2_feel",
+      "session_no": 5,
+      "follow_round": "",
+      "started_at": "2026-01-29T01:00:00.000Z",
+      "submitted_at": "2026-01-29T01:00:37.000Z",
+      "duration_ms": 37000,
+      "quality_flag": "ok",
+      "scores": {
+        "total": 21,
+        "pct": 52.5
+      },
+      "answers": {
+        "f1": 5,
+        "f2": 5,
+        "f3": 6,
+        "f4": 5
+      }
+    },
+    {
+      "label": "main/s5-pro",
+      "event_id": "ea02381126ed43a36eb898e9974cfde12b4a4ee58e522606ea3591ae1f4f779e",
+      "match_id": "fixture-main",
+      "scale_code": "xg_m3_pro",
+      "session_no": 5,
+      "follow_round": "",
+      "started_at": "2026-01-29T01:00:37.000Z",
+      "submitted_at": "2026-01-29T01:01:20.000Z",
+      "duration_ms": 43000,
+      "quality_flag": "ok",
+      "scores": {
+        "total": 50,
+        "pct": 83.33
+      },
+      "answers": {
+        "p1": 10,
+        "p2": 9,
+        "p3": 9,
+        "p4": 8,
+        "p5": 9,
+        "p6": 5
+      }
+    },
+    {
+      "label": "main/end",
+      "event_id": "bd69b6550d9884dceb537b58c8a86cbef92a6715231b5c5b3dcbb4b64e02e2a5",
+      "match_id": "fixture-main",
+      "scale_code": "xg_m4_end",
+      "session_no": 5,
+      "follow_round": "",
+      "started_at": "2026-01-31T01:00:00.000Z",
+      "submitted_at": "2026-01-31T01:00:50.000Z",
+      "duration_ms": 50000,
+      "quality_flag": "ok",
+      "scores": {
+        "total": 46,
+        "pct": 76.67,
+        "supp_total": 24
+      },
+      "answers": {
+        "e1": 8,
+        "e2": 7,
+        "e3": 8,
+        "e4": 8,
+        "e5": 8,
+        "e6": 7
+      }
+    },
+    {
+      "label": "main/evaluation",
+      "event_id": "663db5f3e56bacc99e52628d0e3fb771251e700d9fdc223998aec989190223f1",
+      "match_id": "fixture-main",
+      "scale_code": "xg_m4_eval",
+      "session_no": 5,
+      "follow_round": "",
+      "started_at": "2026-01-31T01:00:50.000Z",
+      "submitted_at": "2026-01-31T01:01:15.000Z",
+      "duration_ms": 25000,
+      "quality_flag": "ok",
+      "scores": {
+        "total": 27,
+        "pct": 90
+      },
+      "answers": {
+        "v1": 8,
+        "v2": 9,
+        "v3": 10,
+        "o1": "合成评价：希望多讨论具体练习。"
+      }
+    },
+    {
+      "label": "main/follow-1m",
+      "event_id": "fca53866d9f2a6b06d67c3901dff3bd2e9137fb2c2a2650f00029a495c5a6d05",
+      "match_id": "fixture-main",
+      "scale_code": "xg_m4_follow",
+      "session_no": 5,
+      "follow_round": "1m",
+      "started_at": "2026-02-28T01:01:15.000Z",
+      "submitted_at": "2026-02-28T01:02:03.000Z",
+      "duration_ms": 48000,
+      "quality_flag": "ok",
+      "scores": {
+        "total": 46,
+        "pct": 76.67,
+        "supp_total": 23
+      },
+      "answers": {
+        "u1": 8,
+        "u2": 7,
+        "u3": 8,
+        "u4": 8,
+        "u5": 8,
+        "u6": 7
+      }
+    },
+    {
+      "label": "new-cycle/m0",
+      "event_id": "68c59d7dcc6451ca972ad8ab87e0980f372bdd201c78bf18efe4aecd6c2669ca",
+      "match_id": "fixture-new-cycle",
+      "scale_code": "xg_m0_baseline",
+      "session_no": 0,
+      "follow_round": "",
+      "started_at": "2026-02-28T01:02:03.000Z",
+      "submitted_at": "2026-02-28T01:04:03.000Z",
+      "duration_ms": 120000,
+      "quality_flag": "ok",
+      "scores": {
+        "total": 42,
+        "pct": 60,
+        "ors_total": 24,
+        "add_total": 7,
+        "supp_total": 20,
+        "resource_total": 15,
+        "dissoc_level": 0
+      },
+      "answers": {
+        "s1": 6,
+        "s2": 6,
+        "s3": 5,
+        "s4": 7,
+        "s5": 5,
+        "s6": 6,
+        "s7": 7,
+        "b1": 7,
+        "b2": 6,
+        "b3": 7,
+        "r1": 8,
+        "r2": 7,
+        "d1": 0
+      }
+    },
+    {
+      "label": "new-cycle/s1-feel",
+      "event_id": "39267f4b24459cbf1cf457b2e7e4d4613c1ac3a1c8a57d5079cec69f4ea6c464",
+      "match_id": "fixture-new-cycle",
+      "scale_code": "xg_m2_feel",
+      "session_no": 1,
+      "follow_round": "",
+      "started_at": "2026-02-28T01:04:03.000Z",
+      "submitted_at": "2026-02-28T01:06:03.000Z",
+      "duration_ms": 120000,
+      "quality_flag": "ok",
+      "scores": {
+        "total": 32,
+        "pct": 80
+      },
+      "answers": {
+        "f1": 7,
+        "f2": 8,
+        "f3": 9,
+        "f4": 8
+      }
+    },
+    {
+      "label": "new-cycle/s1-pro",
+      "event_id": "3bc4093108e3ab86ac6cdf996b44ed9411c4261da2791e8b00d0c4cbd48af095",
+      "match_id": "fixture-new-cycle",
+      "scale_code": "xg_m3_pro",
+      "session_no": 1,
+      "follow_round": "",
+      "started_at": "2026-02-28T01:06:03.000Z",
+      "submitted_at": "2026-02-28T01:08:03.000Z",
+      "duration_ms": 120000,
+      "quality_flag": "ok",
+      "scores": {
+        "total": null,
+        "pct": null
+      },
+      "answers": {
+        "p1": 7,
+        "p2": 8,
+        "p3": 8,
+        "p4": 7,
+        "p5": 8
+      }
+    },
+    {
+      "label": "main/follow-3m",
+      "event_id": "a69f9639e903cd9e6711db5f86dff215b8b7a72c1d2acda8a8167aa0521e93ae",
+      "match_id": "fixture-main",
+      "scale_code": "xg_m4_follow",
+      "session_no": 5,
+      "follow_round": "3m",
+      "started_at": "2026-04-30T01:01:15.000Z",
+      "submitted_at": "2026-04-30T01:02:03.000Z",
+      "duration_ms": 48000,
+      "quality_flag": "ok",
+      "scores": {
+        "total": 48,
+        "pct": 80,
+        "supp_total": 25
+      },
+      "answers": {
+        "u1": 7,
+        "u2": 8,
+        "u3": 8,
+        "u4": 9,
+        "u5": 8,
+        "u6": 8
+      }
+    }
+  ],
+  "notifications": [
+    {
+      "task_id": "e85913140d203639343617928aac40ea42c2a2b4a9a4471f2c00441e79243048",
+      "kind": "alert",
+      "status": "queued",
+      "delivery_result": null,
+      "primary_failed": false
+    },
+    {
+      "task_id": "11d85c52ee33448e40b6ba0f72644c49c441470e1a0e8d917c9c3673d6c89002",
+      "kind": "alert",
+      "status": "queued",
+      "delivery_result": null,
+      "primary_failed": false
+    },
+    {
+      "task_id": "4677d1937ee3d0cf03f1e68a75ddf5b26d0a0193bbd92f744db3ecf78e044453",
+      "kind": "alert",
+      "status": "queued",
+      "delivery_result": null,
+      "primary_failed": false
+    },
+    {
+      "task_id": "a2431bfbc290a54b2daeffc0ad33901ab21f061c3123c09fe34fa5ba9054cf76",
+      "kind": "alert",
+      "status": "queued",
+      "delivery_result": null,
+      "primary_failed": false
+    },
+    {
+      "task_id": "95ab0cc65cfdfce4df76ee5ab6e5adb62d26535a5cad905cbbccc277a4108bd8",
+      "kind": "alert",
+      "status": "queued",
+      "delivery_result": null,
+      "primary_failed": false
+    },
+    {
+      "task_id": "53f18449f194c9b0047404109c73dc1674577dabbaa3ba67270cf7495cc9d7ed",
+      "kind": "alert",
+      "status": "queued",
+      "delivery_result": null,
+      "primary_failed": false
+    },
+    {
+      "task_id": "943065cca8944ba59483abff5f739d911cf4e378251d38b51c34841767746b38",
+      "kind": "followup",
+      "status": "sent",
+      "delivery_result": "inapp_stored",
+      "primary_failed": true
+    }
+  ],
+  "llm": [
+    {
+      "event_id": "60201849bbf39de8488d61ddb8b2225f85041cbd6cc7d8489fc22b2ad072c35b",
+      "model": "synthetic-t20-no-network",
+      "summary": "合成样例的本节问卷已完成,可核对各项自评。",
+      "dim_scores": {
+        "ORS": 60,
+        "联盟": 60,
+        "稳定度": 60,
+        "目标进展": 60
+      }
+    }
+  ],
+  "collection_counts": {
+    "xg_matches": 2,
+    "xg_active_matches": 2,
+    "xg_assessment_events": 21,
+    "xg_submissions": 21,
+    "xg_baseline_profiles": 2,
+    "xg_end_profiles": 1,
+    "xg_visitors": 1,
+    "xg_identity_assertions": 0,
+    "xg_intake_owners": 0,
+    "xg_match_requests": 0,
+    "xg_case_switches": 0,
+    "xg_llm_results": 1,
+    "xg_llm_jobs": 21,
+    "xg_llm_attempts": 1,
+    "xg_llm_history": 1,
+    "xg_llm_audit": 0,
+    "xg_tag_weight_proposals": 0,
+    "xg_tag_weights": 0,
+    "xg_consent_policies": 2,
+    "xg_consent_documents": 2,
+    "xg_consent_states": 2,
+    "xg_consent_history": 2,
+    "xg_item_versions": 1,
+    "xg_rule_versions": 1,
+    "xg_assessment_release": 1,
+    "xg_case_assessment_configs": 0,
+    "xg_event_transitions": 42,
+    "xg_request_receipts": 42,
+    "xg_combination_jobs": 2,
+    "xg_raw_signals": 8,
+    "xg_session_combinations": 8,
+    "xg_combination_history": 17,
+    "xg_rollout_policy": 1,
+    "xg_rollout_history": 0,
+    "xg_followup_jobs": 2,
+    "xg_notification_tasks": 7,
+    "xg_notification_attempts": 1,
+    "xg_notification_inbox": 1,
+    "xg_notification_recipients": 0,
+    "xg_notification_audit": 0,
+    "xg_notification_bridge": 0,
+    "xg_alert_actions": 6,
+    "assessments": 0
+  }
+}

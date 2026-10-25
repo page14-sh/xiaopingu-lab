@@ -17,7 +17,7 @@ const CONTENT_TYPES = {
 
 function isApiPath(pathname) {
   return pathname === '/health' || pathname === '/wechat/login' ||
-    pathname.startsWith('/auth/') || pathname.startsWith('/rest/v1/');
+    pathname.startsWith('/auth/') || pathname.startsWith('/rest/v1/') || pathname.startsWith('/v1/xg/');
 }
 
 function createStaticHandler(publicRoot, apiHandler) {

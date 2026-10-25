@@ -1,0 +1,130 @@
+{
+  "schema_version": "release-readiness-t22-v1",
+  "decision": "NO_GO",
+  "deploy_allowed": false,
+  "approval_granted": false,
+  "evidence_consistent": true,
+  "checks": [
+    {
+      "id": "schema",
+      "passed": true,
+      "detail": "Known review artifact schemas"
+    },
+    {
+      "id": "t21_runtime_source_match",
+      "passed": true,
+      "detail": {
+        "changed_or_missing": []
+      }
+    },
+    {
+      "id": "t21_report_integrity_and_cleanup",
+      "passed": true,
+      "detail": {
+        "invalid_reports": []
+      }
+    },
+    {
+      "id": "t21_successful_scoped_integration",
+      "passed": true,
+      "detail": "Scoped backend evidence only"
+    },
+    {
+      "id": "closed_configuration_template",
+      "passed": true,
+      "detail": "Review template remains disabled and contains no secret values"
+    },
+    {
+      "id": "gate_evidence_references",
+      "passed": true,
+      "detail": {
+        "missing": []
+      }
+    },
+    {
+      "id": "resource_manifest",
+      "passed": true,
+      "detail": {
+        "collections": 42,
+        "declared_indexes": 18
+      }
+    }
+  ],
+  "open_gates": [
+    {
+      "id": "frontend",
+      "owner_role": "前端/产品",
+      "requirement": "完整四评Web/小程序表单、知情同意、阶段展示、通知和管理员审核页面实现并端到端验收"
+    },
+    {
+      "id": "candidate",
+      "owner_role": "开发/发布负责人",
+      "requirement": "冻结经过审阅的代码提交、依赖锁、构建产物摘要及目标环境/服务，排除凭据与业务导出"
+    },
+    {
+      "id": "resources",
+      "owner_role": "运维/后端",
+      "requirement": "目标环境42集合、18声明索引、现有两类依赖及客户端拒绝策略验证，冲突资源不得盲目覆盖"
+    },
+    {
+      "id": "native_identity",
+      "owner_role": "小程序/安全",
+      "requirement": "真实微信上下文、身份函数、合法域名、客户端直连数据库拒绝及角色权限验收"
+    },
+    {
+      "id": "consent",
+      "owner_role": "产品/业务审核",
+      "requirement": "正式assessment/followup同意文案、版本和哈希发布并由真实交互验证；合成文案不得发布"
+    },
+    {
+      "id": "channels",
+      "owner_role": "运营/后端",
+      "requirement": "真实微信/短信模板、订阅授权、测试收件人与回执验证；未通过的通道不得默认启用"
+    },
+    {
+      "id": "llm",
+      "owner_role": "后端/业务审核",
+      "requirement": "明确模型服务、额度、数据处理条件及真实结果质量；如关闭LLM发布，需另行明确范围和用户审核"
+    },
+    {
+      "id": "runtime",
+      "owner_role": "运维",
+      "requirement": "隔离CloudRun版本、端口8787、健康检查、路由/CORS、密钥注入及实际访问验证"
+    },
+    {
+      "id": "operations",
+      "owner_role": "运维/值班",
+      "requirement": "外部定时器、重试预算、告警接收与未知发送处理演练；告警负责人具体到人"
+    },
+    {
+      "id": "performance",
+      "owner_role": "测试/产品",
+      "requirement": "真实部署上的接口/首屏/反馈时延专项验收及上线指标确认，不能用混合本地请求P95替代"
+    },
+    {
+      "id": "rollback",
+      "owner_role": "运维/后端",
+      "requirement": "确定兼容回退版本、备份与恢复演练、RPO/RTO、任务暂停/恢复及数据保留验收"
+    },
+    {
+      "id": "signoff",
+      "owner_role": "产品/安全/运营/发布负责人",
+      "requirement": "所有门槛证据逐项审阅、负责人签字与发布窗口确认后，再请求用户发布批准"
+    }
+  ],
+  "missing_target": [
+    "environment_id",
+    "service_name",
+    "candidate_commit",
+    "image_digest",
+    "previous_compatible_version",
+    "release_window"
+  ],
+  "release_approval": "not_requested",
+  "automated_review_limit": "Checks hashes, references and declared gaps; does not certify truth of human signoff or authorize deployment.",
+  "verification_scope": {
+    "network_calls": 0,
+    "cloud_mutations": 0,
+    "credentials_read": false
+  }
+}

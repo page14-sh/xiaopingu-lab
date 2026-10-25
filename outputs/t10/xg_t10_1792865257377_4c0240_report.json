@@ -1,0 +1,211 @@
+{
+  "env": "xpg-demo-d3gzsswtcc3233ea0",
+  "prefix": "xg_t10_1792865257377_4c0240_",
+  "started_at": "2026-10-24T18:07:37.377Z",
+  "tests": [
+    {
+      "name": "ten concurrent identical starts and submissions",
+      "passed": true,
+      "duration_ms": 3726
+    },
+    {
+      "name": "ten distinct attempts compete for one business slot",
+      "passed": true,
+      "duration_ms": 14617
+    },
+    {
+      "name": "concurrent submit and abandon preserve one terminal state",
+      "passed": true,
+      "duration_ms": 2494
+    },
+    {
+      "name": "old rejected receipt cannot revert a corrected submission",
+      "passed": true,
+      "duration_ms": 3015
+    },
+    {
+      "name": "receipt write failure rolls back all dependent documents",
+      "passed": true,
+      "duration_ms": 3015
+    },
+    {
+      "name": "real commit with simulated lost response recovers via same-key receipt",
+      "passed": true,
+      "duration_ms": 2549
+    },
+    {
+      "name": "revocation races submit on consent revision anchor",
+      "passed": true,
+      "duration_ms": 2365
+    }
+  ],
+  "created": [
+    "xg_t10_1792865257377_4c0240_matches",
+    "xg_t10_1792865257377_4c0240_active_matches",
+    "xg_t10_1792865257377_4c0240_assessment_events",
+    "xg_t10_1792865257377_4c0240_submissions",
+    "xg_t10_1792865257377_4c0240_baseline_profiles",
+    "xg_t10_1792865257377_4c0240_end_profiles",
+    "xg_t10_1792865257377_4c0240_visitors",
+    "xg_t10_1792865257377_4c0240_identity_assertions",
+    "xg_t10_1792865257377_4c0240_intake_owners",
+    "xg_t10_1792865257377_4c0240_match_requests",
+    "xg_t10_1792865257377_4c0240_case_switches",
+    "xg_t10_1792865257377_4c0240_llm_results",
+    "xg_t10_1792865257377_4c0240_consent_policies",
+    "xg_t10_1792865257377_4c0240_consent_documents",
+    "xg_t10_1792865257377_4c0240_consent_states",
+    "xg_t10_1792865257377_4c0240_consent_history",
+    "xg_t10_1792865257377_4c0240_item_versions",
+    "xg_t10_1792865257377_4c0240_rule_versions",
+    "xg_t10_1792865257377_4c0240_assessment_release",
+    "xg_t10_1792865257377_4c0240_case_assessment_configs",
+    "xg_t10_1792865257377_4c0240_event_transitions",
+    "xg_t10_1792865257377_4c0240_request_receipts"
+  ],
+  "acl": {
+    "xg_t10_1792865257377_4c0240_matches": "ADMINONLY",
+    "xg_t10_1792865257377_4c0240_active_matches": "ADMINONLY",
+    "xg_t10_1792865257377_4c0240_assessment_events": "ADMINONLY",
+    "xg_t10_1792865257377_4c0240_submissions": "ADMINONLY",
+    "xg_t10_1792865257377_4c0240_baseline_profiles": "ADMINONLY",
+    "xg_t10_1792865257377_4c0240_end_profiles": "ADMINONLY",
+    "xg_t10_1792865257377_4c0240_visitors": "ADMINONLY",
+    "xg_t10_1792865257377_4c0240_identity_assertions": "ADMINONLY",
+    "xg_t10_1792865257377_4c0240_intake_owners": "ADMINONLY",
+    "xg_t10_1792865257377_4c0240_match_requests": "ADMINONLY",
+    "xg_t10_1792865257377_4c0240_case_switches": "ADMINONLY",
+    "xg_t10_1792865257377_4c0240_llm_results": "ADMINONLY",
+    "xg_t10_1792865257377_4c0240_consent_policies": "ADMINONLY",
+    "xg_t10_1792865257377_4c0240_consent_documents": "ADMINONLY",
+    "xg_t10_1792865257377_4c0240_consent_states": "ADMINONLY",
+    "xg_t10_1792865257377_4c0240_consent_history": "ADMINONLY",
+    "xg_t10_1792865257377_4c0240_item_versions": "ADMINONLY",
+    "xg_t10_1792865257377_4c0240_rule_versions": "ADMINONLY",
+    "xg_t10_1792865257377_4c0240_assessment_release": "ADMINONLY",
+    "xg_t10_1792865257377_4c0240_case_assessment_configs": "ADMINONLY",
+    "xg_t10_1792865257377_4c0240_event_transitions": "ADMINONLY",
+    "xg_t10_1792865257377_4c0240_request_receipts": "ADMINONLY"
+  },
+  "cleanup": [
+    {
+      "collection": "xg_t10_1792865257377_4c0240_matches",
+      "deleted": true,
+      "record_count": 7
+    },
+    {
+      "collection": "xg_t10_1792865257377_4c0240_active_matches",
+      "deleted": true,
+      "record_count": 7
+    },
+    {
+      "collection": "xg_t10_1792865257377_4c0240_assessment_events",
+      "deleted": true,
+      "record_count": 16
+    },
+    {
+      "collection": "xg_t10_1792865257377_4c0240_submissions",
+      "deleted": true,
+      "record_count": 5
+    },
+    {
+      "collection": "xg_t10_1792865257377_4c0240_baseline_profiles",
+      "deleted": true,
+      "record_count": 5
+    },
+    {
+      "collection": "xg_t10_1792865257377_4c0240_end_profiles",
+      "deleted": true,
+      "record_count": 0
+    },
+    {
+      "collection": "xg_t10_1792865257377_4c0240_visitors",
+      "deleted": true,
+      "record_count": 7
+    },
+    {
+      "collection": "xg_t10_1792865257377_4c0240_identity_assertions",
+      "deleted": true,
+      "record_count": 0
+    },
+    {
+      "collection": "xg_t10_1792865257377_4c0240_intake_owners",
+      "deleted": true,
+      "record_count": 0
+    },
+    {
+      "collection": "xg_t10_1792865257377_4c0240_match_requests",
+      "deleted": true,
+      "record_count": 0
+    },
+    {
+      "collection": "xg_t10_1792865257377_4c0240_case_switches",
+      "deleted": true,
+      "record_count": 0
+    },
+    {
+      "collection": "xg_t10_1792865257377_4c0240_llm_results",
+      "deleted": true,
+      "record_count": 0
+    },
+    {
+      "collection": "xg_t10_1792865257377_4c0240_consent_policies",
+      "deleted": true,
+      "record_count": 1
+    },
+    {
+      "collection": "xg_t10_1792865257377_4c0240_consent_documents",
+      "deleted": true,
+      "record_count": 1
+    },
+    {
+      "collection": "xg_t10_1792865257377_4c0240_consent_states",
+      "deleted": true,
+      "record_count": 7
+    },
+    {
+      "collection": "xg_t10_1792865257377_4c0240_consent_history",
+      "deleted": true,
+      "record_count": 8
+    },
+    {
+      "collection": "xg_t10_1792865257377_4c0240_item_versions",
+      "deleted": true,
+      "record_count": 1
+    },
+    {
+      "collection": "xg_t10_1792865257377_4c0240_rule_versions",
+      "deleted": true,
+      "record_count": 1
+    },
+    {
+      "collection": "xg_t10_1792865257377_4c0240_assessment_release",
+      "deleted": true,
+      "record_count": 1
+    },
+    {
+      "collection": "xg_t10_1792865257377_4c0240_case_assessment_configs",
+      "deleted": true,
+      "record_count": 0
+    },
+    {
+      "collection": "xg_t10_1792865257377_4c0240_event_transitions",
+      "deleted": true,
+      "record_count": 23
+    },
+    {
+      "collection": "xg_t10_1792865257377_4c0240_request_receipts",
+      "deleted": true,
+      "record_count": 23
+    }
+  ],
+  "transaction_events": {
+    "committed": 74,
+    "rollback_failed": 143,
+    "conflict": 142,
+    "commit_unknown": 1
+  },
+  "client_retries": 4,
+  "passed": true,
+  "finished_at": "2026-10-24T18:09:11.592Z"
+}

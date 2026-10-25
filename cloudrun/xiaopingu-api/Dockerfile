@@ -6,6 +6,7 @@ COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
 
 COPY app.js index.js static.js ./
+COPY assessment ./assessment
 COPY public ./public
 
 ENV NODE_ENV=production

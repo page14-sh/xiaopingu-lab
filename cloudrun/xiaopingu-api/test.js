@@ -43,6 +43,27 @@ test('health endpoint is fixed and does not echo runtime data', async () => {
   });
 });
 
+test('assessment collections remain inaccessible through the legacy generic REST gateway', async () => {
+  await withServer(memoryStore(), async (baseUrl) => {
+    const login = await fetch(`${baseUrl}/auth/admin`, {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ password: 'correct-horse-battery-staple' })
+    });
+    const { token } = await login.json();
+    const { COLLECTIONS } = require('./assessment/model');
+    for (const collection of Object.values(COLLECTIONS)) {
+      for (const method of ['GET', 'POST', 'PATCH', 'DELETE']) {
+        const response = await fetch(`${baseUrl}/rest/v1/${collection}`, {
+          method, headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
+          ...(method === 'GET' ? {} : { body: '{}' })
+        });
+        assert.equal(response.status, 404, `${method} ${collection}`);
+      }
+    }
+    assert.equal((await fetch(`${baseUrl}/rest/v1/xg_assessment_events`)).status, 404);
+  });
+});
+
 test('public counselor listing hides private data', async () => {
   const store = memoryStore({ counselors: [{
     id: 'c1', name: 'Approved', is_active: true, review_status: 'approved',

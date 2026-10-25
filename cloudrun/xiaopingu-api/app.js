@@ -1,4 +1,18 @@
 const crypto = require('crypto');
+const { createCloudBaseAssessmentStore } = require('./assessment/cloudbase-store');
+const { createAssessmentRepository } = require('./assessment/repository');
+const { createIdentityRepository } = require('./assessment/identity-repository');
+const { createConsentRepository } = require('./assessment/consent');
+const { createProvenanceRepository } = require('./assessment/provenance');
+const { createEventLifecycle } = require('./assessment/event-lifecycle');
+const { createFollowupRepository } = require('./assessment/followups');
+const { createNotificationWorker } = require('./assessment/notification-worker');
+const { createNotificationService } = require('./assessment/notification-service');
+const { createStatisticsRepository } = require('./assessment/statistics');
+const { createLlmWorker } = require('./assessment/llm-worker');
+const { createLlmService } = require('./assessment/llm-service');
+const { createAssessmentHttp } = require('./assessment/http');
+const { AUDIENCE } = require('./assessment/authorization');
 
 const TABLES = new Set([
   'assessments',
@@ -93,7 +107,9 @@ function verifySession(token, secret) {
   if (!safeEqual(parts[1], expected)) return null;
   try {
     const payload = JSON.parse(Buffer.from(parts[0], 'base64url').toString('utf8'));
-    if (!payload || !payload.role || !payload.exp || payload.exp <= Date.now()) return null;
+    if (!payload || !['visitor', 'counselor', 'admin'].includes(payload.role) ||
+        typeof payload.subject !== 'string' || !payload.subject ||
+        !Number.isFinite(payload.exp) || payload.exp <= Date.now()) return null;
     return payload;
   } catch (_error) {
     return null;
@@ -255,6 +271,7 @@ function sanitizeCreate(table, input) {
   const now = new Date().toISOString();
   const row = sanitizePlainValue(input);
   delete row._id;
+  delete row.xg_managed;
   if (table === 'assessments') {
     row.id = row.id || uuid();
     row.view_token = row.id;
@@ -306,6 +323,9 @@ async function canCreate(store, table, row, session) {
 
 function createRequestHandler(options) {
   const { store, adminPassword, demoCounselorPassword, sessionSecret, demoMode } = options;
+  const xgHandler = createAssessmentHttp({ store, signSession, sessionSecret,
+    identityBridge: options.identityBridge, serviceSecrets: options.serviceSecrets, readJson, sendJson,
+    demoCounselorIds: Object.values(DEMO_COUNSELOR_ALIASES) });
 
   return async function handler(req, res) {
     try {
@@ -318,6 +338,8 @@ function createRequestHandler(options) {
       const url = new URL(req.url || '/', 'http://127.0.0.1');
       const session = sessionFromRequest(req, sessionSecret);
 
+      if (await xgHandler(req, res, url, session)) return;
+
       if (req.method === 'GET' && url.pathname === '/health') {
         sendJson(res, 200, { ok: true, mode: 'cloudbase-nosql' });
         return;
@@ -329,7 +351,8 @@ function createRequestHandler(options) {
           sendJson(res, 401, { message: '管理员凭据无效' });
           return;
         }
-        const token = signSession({ role: 'admin', subject: 'admin', exp: Date.now() + 2 * 60 * 60 * 1000 }, sessionSecret);
+        const token = signSession({ role: 'admin', subject: 'admin', aud: AUDIENCE,
+          auth_method: 'admin-password', demo: false, exp: Date.now() + 2 * 60 * 60 * 1000 }, sessionSecret);
         sendJson(res, 200, { token, expires_in: 7200 });
         return;
       }
@@ -337,16 +360,23 @@ function createRequestHandler(options) {
       if (req.method === 'POST' && url.pathname === '/auth/counselor') {
         const body = await readJson(req);
         const counselors = await store.list('counselors');
-        let counselor = counselors.find((item) => safeEqual(item.edit_token, body.credential));
+        let counselor = typeof body.credential === 'string' && body.credential.length > 0
+          ? counselors.find((item) => typeof item.edit_token === 'string' && item.edit_token.length > 0 && safeEqual(item.edit_token, body.credential))
+          : null;
+        let usedDemo = false;
         if (!counselor && demoMode && demoCounselorPassword && safeEqual(body.password, demoCounselorPassword)) {
           const counselorId = DEMO_COUNSELOR_ALIASES[String(body.credential || '').trim()];
           counselor = counselors.find((item) => item.id === counselorId);
+          usedDemo = true;
         }
         if (!counselor) {
           sendJson(res, 401, { message: '咨询师凭据无效' });
           return;
         }
-        const token = signSession({ role: 'counselor', subject: counselor.id, exp: Date.now() + 24 * 60 * 60 * 1000 }, sessionSecret);
+        const token = signSession({ role: 'counselor', subject: counselor.id, aud: AUDIENCE,
+          auth_method: usedDemo ? 'demo' : 'counselor-edit',
+          demo: usedDemo || counselor.is_demo === true || Object.values(DEMO_COUNSELOR_ALIASES).includes(counselor.id),
+          exp: Date.now() + 24 * 60 * 60 * 1000 }, sessionSecret);
         sendJson(res, 200, { token, counselor: publicRow(counselor), expires_in: 86400 });
         return;
       }
@@ -371,7 +401,7 @@ function createRequestHandler(options) {
       }
 
       if (req.method === 'GET') {
-        const rows = filterRows(await store.list(table), url.searchParams);
+        const rows = filterRows((await store.list(table)).filter((row) => !row.xg_managed), url.searchParams);
         const allowed = await authorizeRowsForRead(store, table, rows, url.searchParams, session);
         if (!allowed) {
           sendJson(res, 403, { message: '无权读取该资源' });
@@ -408,7 +438,11 @@ function createRequestHandler(options) {
         delete patch._id;
         delete patch.id;
         delete patch.edit_token;
+        delete patch.xg_managed;
         const rows = filterRows(await store.list(table), url.searchParams);
+        if (rows.some((row) => row.xg_managed)) {
+          sendJson(res, 403, { message: '四评来源记录须经专用接口操作' }); return;
+        }
         if (!(await authorizeMutation(store, table, rows, url.searchParams, session))) {
           sendJson(res, 403, { message: '无权修改该资源' });
           return;
@@ -429,6 +463,9 @@ function createRequestHandler(options) {
           return;
         }
         const rows = filterRows(await store.list(table), url.searchParams);
+        if (rows.some((row) => row.xg_managed)) {
+          sendJson(res, 403, { message: '四评来源记录须经专用接口操作' }); return;
+        }
         for (const row of rows) await store.remove(table, row._id);
         sendJson(res, 200, []);
         return;
@@ -447,8 +484,33 @@ function createRequestHandler(options) {
   };
 }
 
-function createCloudBaseStore(db) {
+function createCloudBaseStore(db, { notificationProvider, llmProvider } = {}) {
+  const xgStore = createCloudBaseAssessmentStore(db);
+  const consent = createConsentRepository(xgStore);
   return {
+    // Internal cycle-scoped persistence. Not exposed via TABLES / generic REST.
+    assessment: createAssessmentRepository(xgStore),
+    identity: createIdentityRepository(xgStore),
+    consent,
+    lifecycle: createEventLifecycle(xgStore, consent),
+    followups: createFollowupRepository(xgStore),
+    statistics: createStatisticsRepository(xgStore),
+    llmWorker: createLlmWorker(xgStore,{provider:llmProvider}),
+    llm: createLlmService(xgStore),
+    notificationWorker: createNotificationWorker(xgStore, { provider: notificationProvider }),
+    notifications: createNotificationService(xgStore, { validateCounselor: async (id) => {
+      const result = await db.collection('counselors').where({ id }).limit(2).get();
+      return !result.code && Array.isArray(result.data) && result.data.length === 1 && result.data[0].is_active === true &&
+        result.data[0].review_status === 'approved' && !result.data[0].is_demo && !Object.values(DEMO_COUNSELOR_ALIASES).includes(id);
+    } }),
+    provenance: createProvenanceRepository(xgStore),
+    async findById(table, id) {
+      if (!TABLES.has(table) || typeof id !== 'string') throw new Error('Invalid lookup');
+      const result = await db.collection(table).where({ id }).limit(2).get();
+      if (result.code || !Array.isArray(result.data)) throw new Error('Lookup failed');
+      if (result.data.length > 1) throw new Error('Ambiguous record identity');
+      return result.data[0] || null;
+    },
     async list(table) {
       const rows = [];
       const pageSize = 100;

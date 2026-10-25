@@ -44,3 +44,8 @@ url: 'http://127.0.0.1:8787'
 http://127.0.0.1:8080/counselor.html?cid=00000000-0000-4000-8000-000000000001
 http://127.0.0.1:8080/counselor.html?cid=00000000-0000-4000-8000-000000000002
 ```
+
+
+## 四评接口与上线状态（T21）
+
+当前四评新增后端使用`/v1/xg`，以[API契约](../specs/assessment-foundation/api-contract.md)及[数据契约](../specs/assessment-foundation/data-contract.md)为准，不能执行原包SQL初始化。现有Web页面主要仍是旧准入/PCOMS演示，后端测试通过不表示完整四评表单/审核页面已实现或发布。现网地址不作为本地新增功能部署成功的证据；实际联调层次见[T21记录](../specs/assessment-foundation/t21-integration.md)。

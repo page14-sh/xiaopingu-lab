@@ -1,0 +1,256 @@
+{
+  "schema_version": "acceptance-t20-v1",
+  "synthetic": true,
+  "environment": "process-local-memory",
+  "network_calls": 0,
+  "passed": 24,
+  "failed": 0,
+  "results": [
+    {
+      "id": "R01",
+      "title": "七题固定量程与选修分离",
+      "status": "passed",
+      "observed": {
+        "core": 42,
+        "optional": 30,
+        "delta": -7
+      }
+    },
+    {
+      "id": "R02",
+      "title": "缺节不拼接连续下降",
+      "status": "passed",
+      "observed": {
+        "rules": [
+          "OUT-SINGLE"
+        ]
+      }
+    },
+    {
+      "id": "R03",
+      "title": "缺联盟卡不能降级",
+      "status": "passed",
+      "observed": {
+        "level": "L2",
+        "missing": [
+          "xg_m2_feel",
+          "xg_m3_pro"
+        ]
+      }
+    },
+    {
+      "id": "R04",
+      "title": "齐卡后只派生展示L1",
+      "status": "passed",
+      "observed": {
+        "raw": "L2",
+        "display": "L1",
+        "diff": 0
+      }
+    },
+    {
+      "id": "R05",
+      "title": "三节单调下降L3不降级",
+      "status": "passed",
+      "observed": {
+        "rules": [
+          "OUT-ACCEL",
+          "OUT-DROP",
+          "OUT-MONO"
+        ],
+        "display": "L3"
+      }
+    },
+    {
+      "id": "R06",
+      "title": "20分独立绝对低分信号",
+      "status": "passed",
+      "observed": {
+        "total": 20,
+        "rules": [
+          "OUT-LOW"
+        ]
+      }
+    },
+    {
+      "id": "R07",
+      "title": "21分不命中绝对低分",
+      "status": "passed",
+      "observed": {
+        "total": 21,
+        "rules": [
+          "OUT-SINGLE"
+        ]
+      }
+    },
+    {
+      "id": "R08",
+      "title": "连续四节持平仍为L2",
+      "status": "passed",
+      "observed": {
+        "rules": [
+          "OUT-FLAT"
+        ],
+        "display": "L2"
+      }
+    },
+    {
+      "id": "R09",
+      "title": "六种提交顺序最终结果一致",
+      "status": "passed",
+      "observed": {
+        "orders": 6,
+        "display": "L1"
+      }
+    },
+    {
+      "id": "R10",
+      "title": "选修开启前的断档不补值",
+      "status": "passed",
+      "observed": {
+        "session3": false,
+        "session4": true
+      }
+    },
+    {
+      "id": "R11",
+      "title": "首节p6不适用且双向差为空",
+      "status": "passed",
+      "observed": {
+        "p6": "not_applicable",
+        "total": null,
+        "diff": null
+      }
+    },
+    {
+      "id": "R12",
+      "title": "旧周期随访与新周期首节隔离",
+      "status": "passed",
+      "observed": {
+        "oldBaseline": 52,
+        "newBaseline": 42,
+        "newEnd": null
+      }
+    },
+    {
+      "id": "R13",
+      "title": "补足分按阶段展示且不算跨量表差值",
+      "status": "passed",
+      "observed": {
+        "baseline": 20,
+        "end": 24,
+        "follow1m": 23
+      }
+    },
+    {
+      "id": "R14",
+      "title": "基线60秒接受但标低质量",
+      "status": "passed",
+      "observed": {
+        "status": "submitted",
+        "quality": "low",
+        "llmJobs": 0
+      }
+    },
+    {
+      "id": "N01",
+      "title": "版本升级阻断旧同意且不改旧题面",
+      "status": "passed",
+      "observed": {
+        "oldVersion": "t20-items-v1",
+        "newVersion": "t20-items-v2"
+      }
+    },
+    {
+      "id": "N02",
+      "title": "十路请求只占一个成功名额",
+      "status": "passed",
+      "observed": {
+        "requests": 10,
+        "events": 1,
+        "slots": 1,
+        "llmJobs": 1
+      }
+    },
+    {
+      "id": "N03",
+      "title": "迟到放弃不能覆盖提交",
+      "status": "passed",
+      "observed": {
+        "status": "submitted"
+      }
+    },
+    {
+      "id": "N04",
+      "title": "无人再访问的过期尝试由后台回收",
+      "status": "passed",
+      "observed": {
+        "status": "abandoned",
+        "revision": 2
+      }
+    },
+    {
+      "id": "N05",
+      "title": "拒绝留痕与修正提交不多占名额",
+      "status": "passed",
+      "observed": {
+        "first": "rejected",
+        "corrected": "submitted",
+        "total": 25
+      }
+    },
+    {
+      "id": "N06",
+      "title": "未到期随访不允许提前创建",
+      "status": "passed",
+      "observed": {
+        "due": "2026-02-01T01:02:00.000Z",
+        "created": false
+      }
+    },
+    {
+      "id": "N07",
+      "title": "外部发送失败不伪装服务商受理",
+      "status": "passed",
+      "observed": {
+        "providerAccepted": false,
+        "inappStored": true,
+        "duplicateSend": false
+      }
+    },
+    {
+      "id": "N08",
+      "title": "LLM全挂不改主分与预警",
+      "status": "passed",
+      "observed": {
+        "job": "failed",
+        "submission": "submitted",
+        "scoresUnchanged": true
+      }
+    },
+    {
+      "id": "N09",
+      "title": "多份事件但只有一名来访仍隐藏统计",
+      "status": "passed",
+      "observed": {
+        "events": 21,
+        "distinctVisitors": 1,
+        "statistics": "suppressed"
+      }
+    },
+    {
+      "id": "N10",
+      "title": "紧急回滚仍保留独立安全线",
+      "status": "passed",
+      "observed": {
+        "safetyVisible": true
+      }
+    }
+  ],
+  "limits": [
+    "not_cloud_mvcc",
+    "not_live_provider",
+    "not_frontend_performance",
+    "not_release_approval"
+  ]
+}

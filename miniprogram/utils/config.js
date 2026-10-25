@@ -1,4 +1,6 @@
 module.exports = {
+  cloudEnv: 'xpg-demo-d3gzsswtcc3233ea0',
+  identityFunction: 'xg-identity',
   // 推荐正式接入自己的 API / 云函数，避免小程序直接持有数据库 key。
   apiBase: 'https://xiaopingu-api-xpg-demo-d3gzsswtcc3233ea0-1300577165.ap-shanghai.run.wxcloudrun.com',
   supabaseUrl: 'https://xiaopingu-api-xpg-demo-d3gzsswtcc3233ea0-1300577165.ap-shanghai.run.wxcloudrun.com',

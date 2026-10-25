@@ -1,0 +1,22 @@
+{
+  "schema_version": "release-config-template-t22-v1",
+  "deployable": false,
+  "note": "仅供审阅的配置清单；null必须由目标环境实际配置替换。不得把真实密钥填入仓库。",
+  "cloudrun": { "environment_id": null, "service_name": null, "region": null, "image_digest": null, "previous_compatible_version": null, "container_port": 8787, "health_path": "/health", "ingress_plan": null, "min_instances": null, "max_instances": null },
+  "non_secret_environment": { "TCB_ENV": null, "PORT": "8787", "NODE_ENV": "production", "XPG_DEMO_MODE": "0", "XPG_MINIPROGRAM_APPID": null, "XPG_IDENTITY_AUDIENCE": null, "XPG_NOTIFY_FUNCTION": "xg-subscribe-send", "XPG_NOTIFY_TEMPLATES": null, "XPG_SMS_CONFIG": null, "XG_LLM_BASE_URL": null, "XG_LLM_MODEL": null },
+  "secret_references_only": { "CLOUDBASE_APIKEY": null, "XPG_ADMIN_PASSWORD": null, "XPG_SESSION_SECRET": null, "XPG_MATCH_SERVICE_SECRET": null, "XPG_SCHEDULER_SECRET": null, "XPG_IDENTITY_BRIDGE_SECRET": null, "XPG_NOTIFY_BRIDGE_SECRET": null, "XPG_SMS_SECRET_ID": null, "XPG_SMS_SECRET_KEY": null, "XPG_SMS_TOKEN": null, "XG_LLM_API_KEY": null },
+  "initial_policy_to_publish_before_exposure": { "enable_reminder": false, "enable_cst": false, "emergency_stop": true, "collection_paused": true },
+  "functions": [
+    { "name": "xg-identity", "source": "cloudfunctions/xg-identity", "environment_id": null, "appid": null, "verified": false },
+    { "name": "xg-subscribe-send", "source": "cloudfunctions/xg-subscribe-send", "environment_id": null, "verified": false }
+  ],
+  "schedulers": [
+    { "name": "followup", "script": "scripts/dispatch-followups.cjs", "suggested_schedule": "每天09:00", "timezone": "Asia/Shanghai", "enabled": false },
+    { "name": "notification", "script": "scripts/deliver-notifications.cjs", "suggested_schedule": "每分钟", "timezone": "Asia/Shanghai", "enabled": false },
+    { "name": "expiry", "script": "scripts/reap-expired-events.cjs", "suggested_schedule": "每5分钟", "timezone": "Asia/Shanghai", "enabled": false },
+    { "name": "llm", "script": "scripts/run-llm-jobs.cjs run", "suggested_schedule": "按已核验额度确定扫描频率", "timezone": "Asia/Shanghai", "enabled": false },
+    { "name": "llm-recovery", "script": "scripts/run-llm-jobs.cjs recover", "suggested_schedule": "每天04:00", "timezone": "Asia/Shanghai", "enabled": false }
+  ],
+  "recovery_objectives": { "rpo": null, "rto": null, "backup_reference": null, "restore_drill_evidence": null },
+  "contacts": { "release_owner": null, "on_call": null, "business_reviewer": null }
+}

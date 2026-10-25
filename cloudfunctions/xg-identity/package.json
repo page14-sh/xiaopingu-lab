@@ -1,0 +1,7 @@
+{
+  "name": "xpg-identity",
+  "version": "1.0.0",
+  "private": true,
+  "main": "index.js",
+  "dependencies": { "wx-server-sdk": "3.0.1", "@cloudbase/node-sdk": "3.18.3" }
+}

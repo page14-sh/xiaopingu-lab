@@ -3,6 +3,8 @@ const path = require('path');
 const cloudbase = require('@cloudbase/node-sdk');
 const { createCloudBaseStore, createRequestHandler } = require('./app');
 const { createStaticHandler } = require('./static');
+const { providerFromEnvironment } = require('./assessment/notification-provider');
+const { llmProviderFromEnvironment } = require('./assessment/llm-provider');
 
 const env = process.env.TCB_ENV;
 const accessKey = process.env.CLOUDBASE_APIKEY;
@@ -15,12 +17,18 @@ if (!env || !accessKey || !adminPassword || !sessionSecret) {
 }
 
 const app = cloudbase.init({ env, accessKey });
-const store = createCloudBaseStore(app.database());
+const store = createCloudBaseStore(app.database(), { notificationProvider: providerFromEnvironment(app), llmProvider: llmProviderFromEnvironment() });
 const apiHandler = createRequestHandler({
   store,
   adminPassword,
   demoCounselorPassword,
   sessionSecret,
+  serviceSecrets: { matching: process.env.XPG_MATCH_SERVICE_SECRET, scheduler: process.env.XPG_SCHEDULER_SECRET },
+  identityBridge: {
+    secret: process.env.XPG_IDENTITY_BRIDGE_SECRET,
+    appId: process.env.XPG_MINIPROGRAM_APPID,
+    audience: process.env.XPG_IDENTITY_AUDIENCE
+  },
   demoMode: process.env.XPG_DEMO_MODE === '1'
 });
 const handler = createStaticHandler(path.join(__dirname, 'public'), apiHandler);

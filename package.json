@@ -5,6 +5,8 @@
     "docker:server": "docker compose -f server/docker-compose.yml up --build",
     "prepare:cloudrun": "node scripts/prepare-cloudrun-web.js",
     "test:cloudbase": "npm test --prefix cloudrun/xiaopingu-api",
-    "sync:cloudbase:data": "node scripts/sync-cloudbase-data.js"
+    "sync:cloudbase:data": "node scripts/sync-cloudbase-data.js",
+    "demo:assessment": "node scripts/verify-assessment-demo.cjs",
+    "check:assessment:release": "node scripts/check-assessment-release.cjs"
   }
 }
