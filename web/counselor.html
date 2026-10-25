@@ -1845,14 +1845,8 @@ function submitProfile() {
   if (_isSubmitting) return;
 
   var d = collectData();
-  d.is_active = true;
-  // 审核状态处理
-  if (!currentEditToken) {
-    d.review_status = 'pending';
-    d.edit_token = generateToken();
-  } else if (currentReviewStatus === 'rejected') {
-    d.review_status = 'pending'; // 被拒绝后重新提交，重置为待审核
-  }
+  // 审批、启用状态和编辑凭据由服务端管理；被拒绝后的重提由服务端转换。
+  delete d.needs_deep_review;
   // Merge standard + other into single arrays for storage and matching
   d.approaches = d.approaches.concat(d.approaches_other);
   d.specialties = d.specialties.concat(d.specialties_other);
@@ -2819,7 +2813,7 @@ function renderClientList(records, pcomsMap) {
 
     // 操作按钮
     html += '<div class="client-actions">';
-    html += '<span class="req-btn req-btn-blue">📱 PCOMS 追踪请使用小程序</span>';
+    html += '<span class="req-btn req-btn-blue">四评工作台请从当前线上站点登录进入</span>';
     html += '<button class="req-btn req-btn-outline" onclick="copyContact(\'' + esc(a.match_request_contact || '') + '\')">📋 复制联系方式</button>';
     if (status === 'approved') {
       html += '<button class="req-btn req-btn-outline" onclick="markContacted(\'' + a.id + '\')">📞 标记已联系</button>';
@@ -2983,7 +2977,7 @@ function loadPanelRequests() {
 
       html += '<div class="req-actions">';
       html += '<button class="req-btn req-btn-outline" id="assessment-detail-btn-' + a.id + '" onclick="toggleAssessmentDetail(\'' + a.id + '\')">查看详情</button>';
-      html += '<span class="req-btn req-btn-blue">📱 PCOMS 追踪请使用小程序</span>';
+      html += '<span class="req-btn req-btn-blue">四评工作台请从当前线上站点登录进入</span>';
       html += '<button class="req-btn req-btn-outline" onclick="copyContact(\'' + esc(a.match_request_contact || '') + '\')">📋 复制联系方式</button>';
       // 审批按钮（仅 pending 状态）
       if (status === 'pending') {

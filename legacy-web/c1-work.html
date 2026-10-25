@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>工作台 · 小平菇四评</title>
+<link rel="stylesheet" href="assets/xg-ui.css">
+</head>
+<body>
+<div id="xg-err" class="err" style="display:none;margin:12px 18px 0"></div>
+<div class="wrap">
+  <h2 class="t">个案工作台</h2>
+  <p class="lead" id="ctx"></p>
+
+  <div class="grid" id="kpi"></div>
+
+  <h2 class="t" style="font-size:16px">本节点待办</h2>
+  <div id="todo"></div>
+
+  <div style="margin-top:16px">
+    <a class="btn" href="c3-inbox.html">提醒收件箱</a>
+  </div>
+  <div style="margin-top:10px"><a class="btn ghost" href="c5-trend.html">曲线与对比</a></div>
+  <div style="margin-top:10px"><a class="btn ghost" href="c6-switch.html">单案开关</a></div>
+</div>
+
+<script src="assets/xg-config.js"></script>
+<script src="assets/xg-api.js"></script>
+<script src="assets/xg-ui.js"></script>
+<script>
+(function(){
+  var U = XG.UI, A = XG.API, I = XG.Identity;
+
+  if (I.getRole() !== 'counselor' || !I.getToken('counselor')) { location.replace('counselor.html'); return; }
+
+  var NAME = {
+    xg_m0_baseline:'基线卡', xg_m1_state:'状态卡', xg_m2_feel:'感受卡',
+    xg_m3_pro:'对照卡', xg_m4_end:'结案卡', xg_m4_eval:'服务评价',
+    xg_m4_follow:'随访卡', xg_risk_recheck:'风险复查卡'
+  };
+  var WHY = { pre_session:'节前', post_session:'节后', at_close:'结案', after_close:'随访' };
+
+  U.el('ctx').textContent = '来访 ' + (I.getFocusUser() || '（未指定）') +
+    ' · 第 ' + I.getSessionNo() + ' 节' + (I.getMatchId() ? ' · 单号 ' + I.getMatchId() : '');
+
+  function load(){
+    // 待办：本节要填/要收的卡
+    var q = { role:'counselor', session_no: I.getSessionNo() };
+    if (I.getMatchId()) q.match_id = I.getMatchId();
+    if (I.getFocusUser()) q.user_id = I.getFocusUser();
+
+    A.getPrompts(q).then(function(d){
+      var ps = d.prompts || [];
+      var box = U.el('todo');
+      if (!ps.length){ box.innerHTML = '<div class="empty">本节没有待办</div>'; return; }
+      var h = '';
+      ps.forEach(function(p){
+        var fill = p.fill_role === 'counselor';
+        var url = fill ? ('c2-fill.html?scale=' + encodeURIComponent(p.scale_code) + '&session_no=' + (d.session_no||0)) : null;
+        h += '<div class="card' + (url?' tap':'') + '"' + (url? ' onclick="location.href=\'' + url + '\'"' : '') + '>' +
+             '<h3>' + U.esc(NAME[p.scale_code] || p.scale_code) + '</h3>' +
+             '<div class="meta">' + U.esc(WHY[p.reason] || p.reason || '') + ' · ' +
+             (fill ? '我来填' : '等来访填') + '</div></div>';
+      });
+      box.innerHTML = h;
+    }).catch(function(e){ U.err(e); });
+
+    // 未处理提醒数
+    A.getInbox({ status:'open' }).then(function(d){
+      var items = d.items || [];
+      var l3 = items.filter(function(x){ return x.alert_level === 'L3'; }).length;
+      var l2 = items.filter(function(x){ return x.alert_level === 'L2'; }).length;
+      U.el('kpi').innerHTML =
+        '<div class="kpi"><div class="n">' + items.length + '</div><div class="l">待处理提醒</div></div>' +
+        '<div class="kpi"><div class="n" style="color:' + (l3 ? '#B4543F' : 'inherit') + '">' + l3 + '</div><div class="l">其中安全线 / L3</div></div>' +
+        '<div class="kpi"><div class="n">' + l2 + '</div><div class="l">L2 需回写</div></div>' +
+        '<div class="kpi"><div class="n">' + I.getSessionNo() + '</div><div class="l">当前节次</div></div>';
+    }).catch(function(e){
+      U.el('kpi').innerHTML = '<div class="kpi"><div class="l">提醒加载失败：' + U.esc(e.code || e.message) + '</div></div>';
+    });
+  }
+
+  load();
+  U.head('个案工作台', 'C1 · 咨询师端', 'xg.html');
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+{
+  "scope": "isolated synthetic preview only",
+  "self_approval_status": 403,
+  "expected_status": 403,
+  "collection_paused": true,
+  "emergency_stop": true
+}

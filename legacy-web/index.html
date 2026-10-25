@@ -1,0 +1,3043 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#5C7A52">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="小平菇">
+<title>小平菇 · 心理咨询自助评估</title>
+<link rel="manifest" href="manifest.json">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+    background: #F7F4EF; color: #3D3831; font-size: 15px; line-height: 1.65;
+    -webkit-font-smoothing: antialiased; min-height: 100vh;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+  .page-header {
+    background: rgba(255,255,255,0.95); border-bottom: 1px solid #E8E4DC;
+    padding: 16px 20px; display: flex; align-items: center; gap: 12px;
+    position: sticky; top: 0; z-index: 100;
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  }
+  .logo-wrap {
+    display: flex; align-items: center; justify-content: center;
+    width: 44px; height: 44px;
+    background: linear-gradient(135deg, #E8F0E4 0%, #D4E4CC 100%);
+    border-radius: 12px; flex-shrink: 0;
+  }
+  .logo-wrap svg { width: 32px; height: 32px; }
+  .brand-name { font-size: 18px; font-weight: 600; color: #5C7A52; letter-spacing: 1px; }
+  .page-header h1 { font-size: 14px; font-weight: 400; color: #6B635A; margin-top: 1px; }
+  .page-header p { font-size: 11px; color: #A09889; margin-top: 1px; }
+  .header-right { margin-left: auto; flex-shrink: 0; }
+  .header-link {
+    color: #5C7A52; text-decoration: none; font-size: 12px; font-weight: 500;
+    padding: 6px 12px; border: 1px solid #C8DCC0; border-radius: 8px;
+    display: inline-block;
+  }
+  /* 来访者我的评估弹窗 */
+  #my-assessment-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.35);
+    z-index: 9000; align-items: center; justify-content: center;
+  }
+  #my-assessment-overlay.show { display: flex; }
+  #my-assessment-box {
+    background: #fff; border-radius: 16px; padding: 28px 24px; width: 90%; max-width: 360px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18); position: relative;
+  }
+  #my-assessment-box h3 { font-size: 16px; font-weight: 700; color: #3D3831; margin-bottom: 6px; }
+  #my-assessment-box p { font-size: 12px; color: #9B9489; margin-bottom: 16px; line-height: 1.6; }
+  #my-assessment-input {
+    width: 100%; box-sizing: border-box; padding: 10px 14px; border: 1px solid #D4CFC8;
+    border-radius: 10px; font-size: 14px; color: #3D3831; outline: none;
+    transition: border-color 0.2s; margin-bottom: 12px;
+  }
+  #my-assessment-input:focus { border-color: #5C7A52; }
+
+  /* 咨询师登录弹窗 */
+  #counselor-login-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.35);
+    z-index: 9000; align-items: center; justify-content: center;
+  }
+  #counselor-login-overlay.show { display: flex; }
+  #counselor-login-box {
+    background: #fff; border-radius: 16px; padding: 28px 24px; width: 90%; max-width: 360px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18); position: relative;
+  }
+  #counselor-login-box h3 { font-size: 16px; font-weight: 700; color: #3D3831; margin-bottom: 6px; }
+  #counselor-login-box p { font-size: 12px; color: #9B9489; margin-bottom: 16px; line-height: 1.6; }
+  #counselor-login-input,
+  #counselor-login-password {
+    width: 100%; box-sizing: border-box; padding: 10px 14px; border: 1px solid #D4CFC8;
+    border-radius: 10px; font-size: 14px; color: #3D3831; outline: none; margin-bottom: 10px;
+    transition: border-color 0.2s;
+  }
+  #counselor-login-input:focus,
+  #counselor-login-password:focus { border-color: #5C7A52; }
+  .counselor-login-demo {
+    background: #F6FAF3; border: 1px solid #DCEAD5; border-radius: 10px;
+    color: #5C7A52; font-size: 12px; line-height: 1.6; padding: 9px 10px; margin-bottom: 12px;
+  }
+  .counselor-login-btns { display: flex; gap: 10px; margin-top: 14px; }
+  .counselor-login-btns button {
+    flex: 1; padding: 11px; border-radius: 10px; font-size: 14px;
+    font-weight: 600; cursor: pointer; border: none; transition: background 0.2s;
+  }
+  .btn-cl-cancel { background: #F2EDE7; color: #6B635A; }
+  .btn-cl-cancel:hover { background: #E8E2DB; }
+  .btn-cl-go { background: #5C7A52; color: #fff; }
+  .btn-cl-go:hover { background: #4A6342; }
+  .btn-cl-register { width: 100%; margin-top: 10px; padding: 9px; border-radius: 10px;
+    background: none; border: 1px solid #C8DCC0; color: #5C7A52; font-size: 13px;
+    cursor: pointer; font-weight: 500; }
+  .btn-cl-register:hover { background: #F0F7EC; }
+  .main { max-width: 860px; margin: 0 auto; padding: 20px 16px 40px; }
+  .progress-bar-wrap { margin-bottom: 24px; }
+  .progress-steps { display: flex; gap: 0; margin-bottom: 8px; }
+  .step-item {
+    flex: 1; text-align: center; font-size: 12px; color: #B4B2A9;
+    padding-bottom: 8px; border-bottom: 2px solid #E8E8E3; transition: all 0.25s;
+  }
+  .step-item.active { color: #5C7A52; border-bottom-color: #5C7A52; font-weight: 600; }
+  .step-item.done { color: #8AAF7D; border-bottom-color: #C8DCC0; }
+  .card {
+    background: #fff; border: 1px solid #E8E4DC; border-radius: 14px;
+    padding: 24px 20px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .card-title { font-size: 16px; font-weight: 600; margin-bottom: 4px; color: #3D3831; }
+  .card-sub { font-size: 13px; color: #A09889; margin-bottom: 20px; padding-bottom: 14px; border-bottom: 1px solid #F0ECE5; }
+  .form-row { margin-bottom: 18px; }
+  .form-row label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 6px; color: #6B635A; }
+  .required::after { content: " *"; color: #C4654A; }
+  input[type="text"], input[type="number"], input[type="tel"], select, textarea {
+    width: 100%; padding: 12px 14px; border: 1.5px solid #D5D0C8; border-radius: 10px;
+    font-size: 16px; color: #3D3831; background: #fff; outline: none; transition: border-color 0.2s;
+    -webkit-appearance: none; appearance: none;
+  }
+  input:focus, select:focus, textarea:focus { border-color: #5C7A52; box-shadow: 0 0 0 3px rgba(92,122,82,0.1); }
+  textarea { resize: vertical; min-height: 88px; font-size: 16px; }
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23A09889' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px;
+  }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .option-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+  .opt-card {
+    border: 1.5px solid #E8E4DC; border-radius: 12px; padding: 14px; cursor: pointer;
+    transition: all 0.2s; background: #fff; user-select: none; -webkit-user-select: none; touch-action: manipulation;
+  }
+  .opt-card:active { transform: scale(0.97); }
+  .opt-card.selected { border-color: #5C7A52; background: #E8F0E4; }
+  .opt-card input { display: none; }
+  .opt-card .opt-icon { font-size: 22px; margin-bottom: 6px; }
+  .opt-card .opt-label { font-size: 14px; font-weight: 500; color: #3D3831; }
+  .opt-card .opt-desc { font-size: 11px; color: #A09889; margin-top: 3px; line-height: 1.4; }
+  .opt-card.selected .opt-label { color: #5C7A52; }
+  .cnip-options { display: flex; gap: 8px; flex-wrap: wrap; }
+  .cnip-btn {
+    padding: 8px 16px; border-radius: 10px; border: 1.5px solid #D5D0C8; background: #fff;
+    font-size: 13px; cursor: pointer; transition: all 0.2s; color: #6B635A;
+    font-family: inherit;
+  }
+  .cnip-btn:hover { border-color: #5C7A52; color: #5C7A52; }
+  .cnip-btn.active { border-color: #5C7A52; background: #E8F0E4; color: #5C7A52; font-weight: 500; }
+  .scale-row { display: flex; gap: 8px; align-items: center; margin-top: 10px; }
+  .scale-btn {
+    width: 44px; height: 44px; border-radius: 10px; border: 1.5px solid #D5D0C8; background: #fff;
+    font-size: 15px; cursor: pointer; font-weight: 600; transition: all 0.2s; color: #6B635A;
+    touch-action: manipulation; display: flex; align-items: center; justify-content: center;
+  }
+  .scale-btn:active { transform: scale(0.92); }
+  .scale-btn.sel { background: #5C7A52; color: #fff; border-color: #5C7A52; transform: scale(1.05); }
+  .scale-label { display: flex; justify-content: space-between; font-size: 11px; color: #A09889; margin-top: 6px; }
+  .crisis-alert {
+    display: none; background: #FCEBEB; border: 1px solid #F7C1C1;
+    border-radius: 12px; padding: 16px; margin-top: 14px;
+  }
+  .crisis-alert .alert-title { font-size: 14px; font-weight: 600; color: #A32D2D; margin-bottom: 6px; }
+  .crisis-alert p { font-size: 13px; color: #791F1F; }
+  .crisis-alert.show { display: block; animation: slideDown 0.3s ease; }
+  .result-panel {
+    display: none; background: #fff; border: 1px solid #E8E8E3; border-radius: 14px;
+    overflow: hidden; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .result-panel.show { display: block; animation: fadeIn 0.4s ease; }
+  .result-header {
+    background: linear-gradient(135deg, #E8F0E4 0%, #D4E4CC 100%);
+    padding: 20px 22px; border-bottom: 1px solid #C8DCC0;
+  }
+  .result-header h2 { font-size: 16px; font-weight: 600; color: #5C7A52; margin-bottom: 4px; }
+  .result-header p { font-size: 12px; color: #5C7A52; opacity: 0.75; }
+  .result-body { padding: 20px 22px; }
+  .result-section { margin-bottom: 18px; }
+  .result-section h3 { font-size: 14px; font-weight: 600; color: #6B635A; margin-bottom: 10px; padding-left: 10px; border-left: 3px solid #5C7A52; }
+  .match-card {
+    border: 1px solid #E8E4DC; border-radius: 12px; padding: 16px; margin-bottom: 12px; position: relative; transition: all 0.2s;
+  }
+  .match-card.top { border-color: #5C7A52; border-width: 1.5px; }
+  .match-badge {
+    position: absolute; top: 12px; right: 14px; font-size: 11px; padding: 3px 10px; border-radius: 12px; font-weight: 500;
+  }
+  .badge-green { background: #E8F0E4; color: #5C7A52; }
+  .badge-amber { background: #FAEEDA; color: #854F0B; }
+  .badge-red { background: #FCEBEB; color: #C4654A; }
+  .badge-blue { background: #E0EAF5; color: #4A6FA5; }
+  .match-card h4 { font-size: 14px; font-weight: 600; margin-bottom: 6px; color: #3D3831; padding-right: 80px; }
+  .match-card p { font-size: 13px; color: #6B635A; line-height: 1.75; }
+  .tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .tag { font-size: 11px; padding: 3px 10px; border-radius: 12px; background: #F0ECE5; color: #6B635A; white-space: nowrap; }
+  .tag.blue { background: #E0EAF5; color: #4A6FA5; }
+  .tag.teal { background: #E8F0E4; color: #5C7A52; }
+  .tag.amber { background: #FAEEDA; color: #854F0B; }
+  .tag.coral { background: #FAECE7; color: #C4654A; }
+  .tag.purple { background: #EEEDFE; color: #534AB7; }
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 10px; }
+  .info-item { background: #F7F4EF; border-radius: 10px; padding: 12px 14px; }
+  .info-item .info-label { font-size: 11px; color: #A09889; margin-bottom: 3px; }
+  .info-item .info-val { font-size: 14px; font-weight: 600; color: #3D3831; }
+
+  /* Counselor match cards */
+  .counselor-card {
+    border: 1.5px solid #E8E4DC; border-radius: 14px; padding: 18px; margin-bottom: 14px;
+    background: #fff; transition: all 0.2s; position: relative;
+  }
+  .counselor-card:active { transform: scale(0.98); }
+  .counselor-card.match-high { border-color: #5C7A52; }
+  .counselor-card.match-mid { border-color: #C8DCC0; }
+  .counselor-card.match-low { border-color: #E8E4DC; }
+  .counselor-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+  .counselor-header .c-head-left { display: flex; align-items: center; gap: 10px; }
+  .counselor-photo { width: 46px; height: 46px; border-radius: 50%; object-fit: cover; flex-shrink: 0; border: 2px solid #F0EDE6; }
+  .counselor-name { font-size: 16px; font-weight: 600; color: #3D3831; }
+  .match-score-badge {
+    font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 14px;
+  }
+  .match-high-badge { background: #E8F0E4; color: #5C7A52; }
+  .match-mid-badge { background: #FAEEDA; color: #854F0B; }
+  .match-low-badge { background: #F0ECE5; color: #6B635A; }
+  .counselor-bio { font-size: 13px; color: #6B635A; line-height: 1.7; margin-bottom: 10px; }
+  .counselor-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .meta-item { font-size: 12px; color: #6B635A; background: #F5F5F0; padding: 3px 10px; border-radius: 6px; white-space: nowrap; }
+  .loading-hint { text-align: center; padding: 30px; color: #A09889; font-size: 13px; }
+  .loading-hint .spinner {
+    display: inline-block; width: 20px; height: 20px; border: 2px solid #E8E4DC;
+    border-top-color: #5C7A52; border-radius: 50%; animation: spin 0.8s linear infinite;
+    margin-bottom: 8px;
+  }
+
+  /* Enhanced counselor card */
+  .counselor-welfare-badge {
+    display: inline-flex; align-items: center; gap: 3px;
+    font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 10px;
+    background: #E8F5E2; color: #3D7A2E;
+  }
+  .counselor-specialty-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+  .counselor-specialty-tag {
+    font-size: 11px; padding: 2px 8px; border-radius: 10px;
+    background: #F0ECE5; color: #6B635A;
+  }
+  .counselor-contact {
+    margin-top: 10px; padding: 10px 14px; background: #F7F9F5; border-radius: 10px;
+    font-size: 13px; color: #5C7A52; display: flex; align-items: center; gap: 8px;
+    border: 1px solid #D4E8CC;
+  }
+  .counselor-contact.no-contact {
+    background: #FFF8E1; border-color: #FFE0B2; color: #E65100;
+    flex-wrap: wrap;
+  }
+  .btn-match-apply {
+    margin-left: auto; padding: 6px 14px; border-radius: 8px; border: 1.5px solid #5C7A52;
+    background: #5C7A52; color: #fff; font-size: 12px; font-weight: 500; cursor: pointer;
+  }
+  .btn-match-apply:active { background: #4A6342; }
+
+  /* 我的咨询师卡片 */
+  .my-counselor-card {
+    background: linear-gradient(135deg, #F0F7EC 0%, #E8F0E4 100%);
+    border: 1.5px solid #5C7A52; border-radius: 16px;
+    padding: 20px; margin-bottom: 16px; position: relative;
+  }
+  .my-counselor-card .mc-header {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
+  }
+  .my-counselor-card .mc-badge {
+    font-size: 11px; font-weight: 600; padding: 2px 10px; border-radius: 12px;
+    background: #5C7A52; color: #fff;
+  }
+  .my-counselor-card .mc-name { font-size: 17px; font-weight: 700; color: #3D3831; }
+  .my-counselor-card .mc-score { font-size: 12px; font-weight: 600; color: #5C7A52; margin-left: auto; }
+  .my-counselor-card .mc-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .my-counselor-card .mc-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+  .my-counselor-card .mc-btn {
+    padding: 8px 16px; border-radius: 10px; font-size: 13px; font-weight: 500;
+    cursor: pointer; border: 1.5px solid #C8DCC0; background: #fff; color: #5C7A52;
+    transition: all 0.2s; text-decoration: none;
+  }
+  .my-counselor-card .mc-btn:hover { background: #5C7A52; color: #fff; border-color: #5C7A52; }
+  .my-counselor-card .mc-btn-primary { background: #5C7A52; color: #fff; border-color: #5C7A52; }
+  .my-counselor-card .mc-btn-primary:hover { background: #4A6342; }
+  .my-counselor-card .mc-change {
+    font-size: 12px; color: #7A8B72; cursor: pointer; margin-top: 10px;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .my-counselor-card .mc-change:hover { color: #5C7A52; }
+
+  /* 选择咨询师按钮 */
+  .btn-select-counselor {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 5px 12px; border-radius: 8px; font-size: 12px; font-weight: 500;
+    cursor: pointer; border: 1.5px solid #5C7A52; background: transparent; color: #5C7A52;
+    transition: all 0.2s; margin-top: 8px;
+  }
+  .btn-select-counselor:hover { background: #5C7A52; color: #fff; }
+  .btn-select-counselor.selected {
+    background: #5C7A52; color: #fff; cursor: default; border-color: #5C7A52;
+  }
+  .counselor-card.is-selected { border-color: #5C7A52; background: #FAFDF8; box-shadow: 0 2px 12px rgba(92,122,82,0.12); }
+  .counselor-expand-btn {
+    display: inline-flex; align-items: center; gap: 4px;
+    margin-top: 10px; font-size: 12px; color: #5C7A52; cursor: pointer;
+    padding: 4px 0; border: none; background: none; font-weight: 500;
+  }
+  .counselor-expand-btn:hover { color: #4A6342; }
+  .counselor-expand-btn .arrow { transition: transform 0.2s; display: inline-block; font-size: 10px; }
+  .counselor-expand-btn.open .arrow { transform: rotate(90deg); }
+  .counselor-detail {
+    max-height: 0; overflow: hidden; transition: max-height 0.3s ease, padding 0.3s ease;
+    font-size: 13px; color: #5F5E5A; line-height: 1.8;
+  }
+  .counselor-detail.open {
+    max-height: 500px; padding-top: 10px;
+    border-top: 1px dashed #E8E4DC; margin-top: 10px;
+  }
+  .counselor-detail .detail-row { display: flex; gap: 8px; margin-bottom: 4px; }
+  .counselor-detail .detail-label { color: #A09889; min-width: 72px; flex-shrink: 0; }
+
+  .action-bar { display: flex; gap: 10px; justify-content: flex-end; padding-top: 10px; flex-wrap: wrap; }
+  .btn {
+    padding: 12px 24px; border-radius: 10px; font-size: 15px; font-weight: 500; cursor: pointer;
+    border: 1.5px solid transparent; transition: all 0.2s; touch-action: manipulation;
+    -webkit-appearance: none; appearance: none;
+  }
+  .btn:active { transform: scale(0.96); }
+  .btn-outline { background: #fff; border-color: #D5D0C8; color: #6B635A; }
+  .btn-primary { background: #5C7A52; color: #fff; border-color: #5C7A52; }
+  .btn-primary:hover { background: #4A6342; }
+  .divider { border: none; border-top: 1px solid #F0ECE5; margin: 18px 0; }
+  .section-block { display: none; animation: fadeIn 0.35s ease; }
+  .section-block.active { display: block; }
+  .gate-opt.selected { border-color: #5C7A52 !important; background: #F0F7EC !important; }
+  .gate-opt.selected .gate-dot { border-color: #5C7A52; background: #5C7A52; box-shadow: inset 0 0 0 4px #fff; }
+  .toast {
+    position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: rgba(61,56,49,0.92); color: #fff; padding: 10px 24px; border-radius: 20px;
+    font-size: 14px; z-index: 999; opacity: 0; transition: all 0.3s; pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ===== 首页 Landing ===== */
+  .landing { min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 20px 32px; background:linear-gradient(180deg,#F7F4EF 0%,#EEF2E9 100%); }
+  /* ===== 展示页 Showcase ===== */
+  #showcase {
+    display: block;
+    background: linear-gradient(180deg, #F0F7EC 0%, #F7F4EF 100%);
+    min-height: 100vh;
+  }
+  #showcase.hidden { display: none; }
+
+  /* Hero 区 */
+  .sc-hero {
+    text-align: center;
+    padding: 56px 20px 44px;
+    background: linear-gradient(180deg, #E8F3E2 0%, #F0F7EC 100%);
+  }
+  .sc-logo {
+    width: 80px; height: 80px; margin: 0 auto 20px;
+    background: linear-gradient(135deg, #D4E8CC 0%, #C0D9B4 100%);
+    border-radius: 24px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 6px 20px rgba(92,122,82,0.20);
+  }
+  .sc-logo svg { width: 56px; height: 56px; }
+  .sc-hero h1 { font-size: 32px; font-weight: 700; color: #3D3831; margin: 0 0 8px; letter-spacing: 1.5px; }
+  .sc-hero .sc-subtitle {
+    font-size: 15px; color: #7A7265; margin: 0 0 10px; line-height: 1.6;
+  }
+  .sc-hero .sc-badge-row {
+    display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin: 16px 0 0;
+  }
+  .sc-badge {
+    background: rgba(92,122,82,0.10); color: #4A6342;
+    padding: 4px 14px; border-radius: 20px; font-size: 12px; font-weight: 500;
+  }
+
+  /* 数据统计 */
+  .sc-stats {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 12px; max-width: 480px; margin: 0 auto; padding: 28px 20px 20px;
+  }
+  .sc-stat-item {
+    background: #fff; border-radius: 14px; padding: 16px 12px; text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  }
+  .sc-stat-num { font-size: 26px; font-weight: 700; color: #5C7A52; line-height: 1.2; }
+  .sc-stat-label { font-size: 11px; color: #A09889; margin-top: 4px; }
+
+  /* 功能介绍 */
+  .sc-section { max-width: 480px; margin: 0 auto; padding: 8px 20px 24px; }
+  .sc-section-title {
+    font-size: 16px; font-weight: 700; color: #3D3831;
+    margin-bottom: 16px; padding-bottom: 10px; border-bottom: 2px solid #D4E4CC;
+  }
+  .sc-section-desc {
+    font-size: 13px; line-height: 1.8; color: #6B655C;
+    margin: 12px 0 14px;
+  }
+  .sc-feature-list { display: flex; flex-direction: column; gap: 14px; }
+  .sc-feature-item {
+    display: flex; align-items: flex-start; gap: 14px;
+    background: #fff; border-radius: 14px; padding: 16px 16px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  }
+  .sc-feature-icon {
+    width: 44px; height: 44px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; font-size: 22px;
+  }
+  .sc-feature-icon.green { background: #E8F3E2; }
+  .sc-feature-icon.blue  { background: #E3EEF8; }
+  .sc-feature-icon.warm  { background: #FFF0E3; }
+  .sc-feature-icon.purple { background: #EFE8F5; }
+  .sc-feature-body h3 { font-size: 14px; font-weight: 600; color: #3D3831; margin: 0 0 4px; }
+  .sc-feature-body p { font-size: 12px; color: #8A8278; margin: 0; line-height: 1.55; }
+
+  /* 专家背书 */
+  .sc-expert-list { display: flex; flex-direction: column; gap: 16px; }
+  .sc-expert-card {
+    background: #fff; border-radius: 16px; padding: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+  }
+  .sc-expert-quote {
+    font-size: 13px; color: #5A5350; line-height: 1.7; font-style: italic;
+    margin-bottom: 14px; padding-left: 12px;
+    border-left: 3px solid #5C7A52;
+  }
+  .sc-expert-profile { display: flex; align-items: center; gap: 12px; }
+  .sc-expert-avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: linear-gradient(135deg, #C8DCC0 0%, #A8C89A 100%);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 700; color: #4A6342; flex-shrink: 0;
+  }
+  .sc-expert-name { font-size: 14px; font-weight: 600; color: #3D3831; }
+  .sc-expert-title { font-size: 11px; color: #A09889; margin-top: 2px; }
+
+  /* 循证依据 */
+  .sc-evidence-card {
+    background: linear-gradient(135deg, #E8F3E2 0%, #F0F7EC 100%);
+    border: 1px solid #C8DCC0; border-radius: 16px; padding: 20px;
+    margin-bottom: 14px;
+  }
+  .sc-evidence-card h3 { font-size: 14px; font-weight: 700; color: #3D3831; margin: 0 0 8px; }
+  .sc-evidence-card p { font-size: 12px; color: #6B7A64; line-height: 1.6; margin: 0; }
+  .sc-evidence-source { font-size: 11px; color: #A09889; margin-top: 8px; font-style: italic; }
+
+  /* CTA */
+  .sc-cta-wrap {
+    max-width: 360px; margin: 8px auto 0; padding: 20px 20px 48px;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .sc-cta-btn {
+    display: block; text-align: center; padding: 16px 24px;
+    border-radius: 14px; font-size: 16px; font-weight: 600;
+    cursor: pointer; border: none; font-family: inherit;
+    transition: transform 0.15s, box-shadow 0.15s; text-decoration: none;
+  }
+  .sc-cta-btn:active { transform: scale(0.97); }
+  .sc-cta-primary {
+    background: #5C7A52; color: #fff;
+    box-shadow: 0 4px 14px rgba(92,122,82,0.25);
+  }
+  .sc-cta-primary:hover { background: #4A6342; box-shadow: 0 6px 18px rgba(92,122,82,0.3); }
+  .sc-cta-secondary {
+    background: #fff; color: #5C7A52; border: 1.5px solid #C8DCC0 !important;
+  }
+  .sc-cta-secondary:hover { background: #F0F5ED; }
+  .sc-footer-text {
+    font-size: 11px; color: #B8AFA3; text-align: center;
+    line-height: 1.6; padding: 0 20px 20px;
+  }
+
+  /* 响应式 */
+  @media(min-width: 640px) {
+    .sc-hero { padding: 72px 40px 56px; }
+    .sc-hero h1 { font-size: 38px; }
+    .sc-stats { max-width: 560px; }
+    .sc-section { max-width: 560px; }
+    .sc-cta-wrap { max-width: 420px; }
+  }
+
+  .landing.hidden { display:none; }
+  .landing-hero { text-align:center; margin-bottom:36px; }
+  .landing-logo { width:80px; height:80px; margin:0 auto 16px; }
+  .landing-logo svg { width:100%; height:100%; }
+  .landing h1 { font-size:28px; font-weight:700; color:#3D3831; margin:0 0 6px; letter-spacing:1px; }
+  .landing .landing-slogan { font-size:15px; color:#7A7265; margin:0; }
+  .landing-features { display:grid; grid-template-columns:1fr 1fr; gap:14px; max-width:440px; width:100%; margin-bottom:36px; }
+  .landing-card { background:#fff; border:0.5px solid #E8E4DC; border-radius:12px; padding:18px 16px; text-align:center; }
+  .landing-card-icon { font-size:28px; margin-bottom:8px; }
+  .landing-card h3 { font-size:14px; font-weight:600; color:#3D3831; margin:0 0 4px; }
+  .landing-card p { font-size:12px; color:#8A8278; margin:0; line-height:1.5; }
+  .landing-cta { display:flex; flex-direction:column; gap:12px; width:100%; max-width:320px; margin-bottom:28px; }
+  .landing-btn { display:block; text-align:center; padding:16px 24px; border-radius:14px; font-size:16px; font-weight:600; cursor:pointer; transition:transform 0.15s,box-shadow 0.15s; text-decoration:none; }
+  .landing-btn:active { transform:scale(0.97); }
+  .landing-btn-primary { background:#5C7A52; color:#fff; box-shadow:0 4px 14px rgba(92,122,82,0.25); }
+  .landing-btn-primary:hover { background:#4A6342; box-shadow:0 6px 18px rgba(92,122,82,0.3); }
+  .landing-btn-secondary { background:#fff; color:#5C7A52; border:1.5px solid #C8DCC0; }
+  .landing-btn-secondary:hover { background:#F0F5ED; }
+  .landing-footer { font-size:11px; color:#B8AFA3; text-align:center; line-height:1.6; max-width:360px; }
+  @media(max-width:480px){
+    .landing { padding:32px 16px 24px; }
+    .landing h1 { font-size:24px; }
+    .landing-features { grid-template-columns:1fr 1fr; gap:10px; }
+    .landing-card { padding:14px 10px; }
+    .landing-btn { font-size:15px; padding:14px 20px; }
+  }
+
+  /* Puzzle CAPTCHA */
+  .puzzle-box { background:#fff;border-radius:16px;padding:24px 20px;box-shadow:0 8px 30px rgba(0,0,0,0.12);width:340px;max-width:90vw;text-align:center; }
+  .puzzle-title { font-size:16px;font-weight:600;color:#3D3831;margin-bottom:14px; }
+  .puzzle-canvas { border-radius:10px;border:1px solid #E8E4DC;display:block;margin:0 auto 14px; }
+  .puzzle-track { position:relative;height:40px;background:#F7F4EF;border-radius:20px;border:1.5px solid #E8E4DC;margin:0 auto;width:300px;overflow:hidden;user-select:none;-webkit-user-select:none;touch-action:none; }
+  .puzzle-progress { position:absolute;top:0;left:0;height:100%;width:0;background:linear-gradient(90deg,#E8F0E4,#C8DCC0);border-radius:20px;transition:none; }
+  .puzzle-slider { position:absolute;top:-1px;left:0;width:40px;height:40px;background:#5C7A52;border-radius:50%;cursor:grab;box-shadow:0 2px 8px rgba(92,122,82,0.3);display:flex;align-items:center;justify-content:center;transition:left 0s; }
+  .puzzle-slider:active { cursor:grabbing; }
+  .puzzle-slider.success { background:#4CAF50; }
+  .puzzle-slider.fail { animation:shake 0.4s ease; }
+  .puzzle-hint { font-size:12px;color:#A09889;margin-top:10px; }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)} 40%{transform:translateX(6px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)} }
+
+  /* Term tooltip */
+  .term-tip {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 16px; height: 16px; border-radius: 50%; background: #E8F0E4;
+    color: #5C7A52; font-size: 10px; font-weight: 700; cursor: help;
+    margin-left: 4px; vertical-align: middle; flex-shrink: 0;
+    position: relative;
+  }
+  .term-tip:hover::after, .term-tip:active::after {
+    content: attr(data-tip);
+    position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+    background: #3D3831; color: #F7F4EF; padding: 10px 14px; border-radius: 10px;
+    font-size: 12px; font-weight: 400; line-height: 1.7; width: 220px; max-width: 80vw;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.18); z-index: 100; pointer-events: none;
+    white-space: normal; text-align: left;
+  }
+  .term-tip:hover::before, .term-tip:active::before {
+    content: ''; position: absolute; bottom: calc(100% + 2px); left: 50%; transform: translateX(-50%);
+    border: 6px solid transparent; border-top-color: #3D3831; z-index: 100;
+  }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes slideDown { from { opacity: 0; max-height: 0; } to { opacity: 1; max-height: 500px; } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media print {
+    body { background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .progress-bar-wrap, .action-bar, .toast { display: none !important; }
+    .page-header { border-bottom: 2px solid #5C7A52; position: static; background: #fff; }
+    .card { border: 1px solid #ddd; break-inside: avoid; }
+    .result-panel { display: block !important; box-shadow: none; }
+    .match-card, .counselor-card { break-inside: avoid; }
+  }
+  @media (min-width: 768px) {
+    .main { padding: 28px 32px 48px; }
+    .card { padding: 28px 32px; }
+    .result-body { padding: 24px 28px; }
+    .page-header { padding: 20px 40px; }
+  }
+  @media (max-width: 374px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .option-grid { grid-template-columns: 1fr 1fr; }
+    .info-grid { grid-template-columns: 1fr 1fr; }
+  }
+
+  /* ===== 知情同意弹窗 ===== */
+  #consent-overlay {
+    position: fixed; top:0; left:0; right:0; bottom:0;
+    background: rgba(0,0,0,0.55);
+    z-index: 99999;
+    display: flex; justify-content: center; align-items: center;
+    padding: 16px;
+  }
+  #consent-overlay.hidden { display: none; }
+  .consent-modal {
+    background: #fff; border-radius: 18px;
+    max-width: 600px; width: 100%; max-height: 90vh;
+    overflow-y: auto; padding: 32px 28px 28px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    animation: consentFadeIn 0.4s ease;
+  }
+  @keyframes consentFadeIn { from { opacity:0; transform: translateY(30px); } to { opacity:1; transform: translateY(0); } }
+  .consent-modal h2 { font-size: 20px; color: #5C7A52; margin-bottom: 4px; }
+  .consent-modal .consent-sub { font-size: 13px; color: #A09889; margin-bottom: 20px; }
+  .consent-section { margin-bottom: 18px; }
+  .consent-section h3 { font-size: 14px; font-weight: 600; color: #5C7A52; margin-bottom: 8px; padding-left: 10px; border-left: 3px solid #5C7A52; }
+  .consent-section p, .consent-section li { font-size: 13px; color: #444; line-height: 1.8; }
+  .consent-section ul { padding-left: 20px; }
+  .consent-section li { margin-bottom: 4px; }
+  .consent-section .highlight { background: #FFF8E1; padding: 12px 14px; border-radius: 8px; font-size: 13px; color: #5C7A52; line-height: 1.8; }
+  .consent-check { display: flex; align-items: flex-start; gap: 10px; margin: 20px 0; padding: 14px; background: #F7F4EF; border-radius: 10px; }
+  .consent-check input[type="checkbox"] { width: 18px; height: 18px; margin-top: 2px; flex-shrink: 0; accent-color: #5C7A52; }
+  .consent-check label { font-size: 14px; color: #3D3831; cursor: pointer; line-height: 1.6; }
+  .consent-btn {
+    width: 100%; padding: 14px; border: none; border-radius: 10px;
+    font-size: 16px; font-weight: 600; cursor: pointer;
+    background: #C8DCC0; color: #fff; transition: all 0.3s;
+  }
+  .consent-btn.active { background: #5C7A52; }
+  .consent-btn.active:hover { background: #4A6342; }
+  .consent-btn:not(.active) { cursor: not-allowed; }
+  .crisis-resources {
+    background: #FFF8E1; border: 1px solid #FFE0B2; border-radius: 10px;
+    padding: 14px; margin-top: 14px;
+  }
+  .crisis-resources h4 { font-size: 13px; color: #E65100; margin-bottom: 8px; }
+  .crisis-resources p { font-size: 12px; color: #5D4037; line-height: 1.8; }
+  #match-apply-overlay {
+    position: fixed; top:0; left:0; right:0; bottom:0;
+    background: rgba(0,0,0,0.55); z-index: 99999;
+    display: flex; justify-content: center; align-items: center; padding: 20px;
+  }
+  #match-apply-overlay.hidden { display: none; }
+  .match-apply-modal {
+    background: #fff; border-radius: 18px; max-width: 420px; width: 100%;
+    padding: 28px 24px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    animation: consentFadeIn 0.4s ease;
+  }
+  .match-apply-modal h3 { font-size: 18px; color: #5C7A52; margin-bottom: 4px; }
+  .match-apply-modal .modal-sub { font-size: 13px; color: #A09889; margin-bottom: 16px; }
+  .match-apply-modal .counselor-name-display {
+    background: #F7F4EF; padding: 10px 14px; border-radius: 10px;
+    font-size: 14px; color: #5C7A52; margin-bottom: 16px;
+  }
+  .apply-form-row { margin-bottom: 12px; }
+  .apply-form-row label { display: block; font-size: 13px; color: #6B635A; margin-bottom: 4px; font-weight: 500; }
+  .apply-form-row input {
+    width: 100%; padding: 10px 12px; border: 1.5px solid #D5D0C8; border-radius: 10px;
+    font-size: 14px; box-sizing: border-box;
+  }
+  .apply-success { display: none; text-align: center; padding: 20px 0; }
+  .apply-success.show { display: block; }
+  .apply-form.show { display: block; }
+  .apply-form { display: block; }
+</style>
+</head>
+<body>
+
+<!-- ===== 知情同意弹窗 ===== -->
+<!-- ===== 首页 ===== -->
+<!-- ===== 展示页 Showcase ===== -->
+<div id="showcase">
+
+  <!-- Hero -->
+  <div class="sc-hero">
+    <div class="sc-logo">
+      <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="scCapGrad" cx="50%" cy="40%" r="60%">
+            <stop offset="0%" stop-color="#7EB3E8"/>
+            <stop offset="100%" stop-color="#4A7DB5"/>
+          </radialGradient>
+          <linearGradient id="scStemGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#F5EDE0"/>
+            <stop offset="100%" stop-color="#E8D9C8"/>
+          </linearGradient>
+        </defs>
+        <ellipse cx="24" cy="22" rx="18" ry="14" fill="url(#scCapGrad)"/>
+        <circle cx="16" cy="17" r="3.5" fill="#fff" opacity="0.5"/>
+        <circle cx="28" cy="14" r="2.5" fill="#fff" opacity="0.4"/>
+        <circle cx="32" cy="22" r="3" fill="#fff" opacity="0.35"/>
+        <circle cx="20" cy="25" r="2" fill="#fff" opacity="0.3"/>
+        <path d="M18 24 Q18 38 20 42 L28 42 Q30 38 30 24" fill="url(#scStemGrad)"/>
+        <ellipse cx="24" cy="43" rx="12" ry="2" fill="#5B8FC9" opacity="0.15"/>
+      </svg>
+    </div>
+    <h1>小平菇</h1>
+    <p class="sc-subtitle">专业评估 · 智能匹配 · 循证追踪</p>
+    <p style="font-size:13px;color:#9B9489;line-height:1.6;max-width:300px;margin:0 auto 0;">循心数科</p>
+    <div class="sc-badge-row">
+      <span class="sc-badge">📊 循证咨询</span>
+      <span class="sc-badge">🔒 匿名评估</span>
+      <span class="sc-badge">🎯 20维智能匹配</span>
+    </div>
+  </div>
+
+  <!-- 数据统计 -->
+  <div class="sc-stats">
+    <div class="sc-stat-item">
+      <div class="sc-stat-num">55+</div>
+      <div class="sc-stat-label">入驻咨询师</div>
+    </div>
+    <div class="sc-stat-item">
+      <div class="sc-stat-num">23</div>
+      <div class="sc-stat-label">咨询取向</div>
+    </div>
+    <div class="sc-stat-item">
+      <div class="sc-stat-num">15+</div>
+      <div class="sc-stat-label">覆盖城市</div>
+    </div>
+  </div>
+
+  <!-- 循证咨询 -->
+  <div class="sc-section">
+    <div class="sc-section-title">🔬 循证咨询</div>
+    <div class="sc-evidence-card">
+      <h3>什么是循证咨询</h3>
+      <p>循证咨询，是指咨询中的每一个环节——怎么评估、怎么匹配、怎么调整——都依据可查证的研究证据和你的真实反馈来进行，而不是只凭感觉和经验。</p>
+    </div>
+    <div class="sc-evidence-card">
+      <h3>它对你有什么用</h3>
+      <p>每次咨询后，你只需填写一份简短反馈，系统会持续追踪你的变化：进展顺利就继续，连续不顺就及时提醒调整。你不需要凭感觉猜「有没有用」，每一步是否在变好，都有数据帮你看着。</p>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="sc-cta-wrap">
+    <button class="sc-cta-btn sc-cta-primary" onclick="enterAssessment()">开始匹配评估 →</button>
+    <button class="sc-cta-btn sc-cta-secondary" onclick="openCounselorLogin()" style="background:#fff;border:1.5px solid #C8DCC0;color:#5C7A52;font-family:inherit;">咨询师登录</button>
+    <a href="counselor.html" class="sc-cta-btn sc-cta-secondary">咨询师入驻 →</a>
+  </div>
+
+  <p class="sc-footer-text">本系统为心理自助评估工具，评估结果<strong>不构成专业医学诊断或治疗建议</strong>。<br>如您正在经历严重心理困扰，请拨打<a href="tel:12356" style="color:#5C7A52;">心理援助热线 12356</a>。</p>
+</div>
+
+<!-- ===== 评估着陆页 ===== -->
+<div class="landing hidden" id="landing">
+  <div class="landing-hero">
+    <div class="landing-logo">
+      <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="capGrad2" cx="50%" cy="40%" r="60%">
+            <stop offset="0%" stop-color="#7EB3E8"/>
+            <stop offset="100%" stop-color="#4A7DB5"/>
+          </radialGradient>
+          <linearGradient id="stemGrad2" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#F5EDE0"/>
+            <stop offset="100%" stop-color="#E8D9C8"/>
+          </linearGradient>
+        </defs>
+        <ellipse cx="24" cy="22" rx="18" ry="14" fill="url(#capGrad2)"/>
+        <circle cx="16" cy="17" r="3.5" fill="#fff" opacity="0.5"/>
+        <circle cx="28" cy="14" r="2.5" fill="#fff" opacity="0.4"/>
+        <circle cx="32" cy="22" r="3" fill="#fff" opacity="0.35"/>
+        <circle cx="20" cy="25" r="2" fill="#fff" opacity="0.3"/>
+        <path d="M18 24 Q18 38 20 42 L28 42 Q30 38 30 24" fill="url(#stemGrad2)"/>
+        <ellipse cx="24" cy="43" rx="12" ry="2" fill="#5B8FC9" opacity="0.15"/>
+      </svg>
+    </div>
+    <h1>小平菇</h1>
+    <p class="landing-slogan">专业匹配评估，帮你找到最合适的心理支持</p>
+  </div>
+
+  <div class="landing-features">
+    <div class="landing-card">
+      <div class="landing-card-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#5C7A52" stroke-width="2" stroke-linecap="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+      </div>
+      <h3>科学评估</h3>
+      <p>4步结构化问卷，覆盖情绪、焦虑、睡眠等多维症状</p>
+    </div>
+    <div class="landing-card">
+      <div class="landing-card-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#5C7A52" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      </div>
+      <h3>精准匹配</h3>
+      <p>11维度100分制加权算法，匹配最适合你的咨询师</p>
+    </div>
+    <div class="landing-card">
+      <div class="landing-card-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#5C7A52" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+      </div>
+      <h3>隐私保护</h3>
+      <p>数据加密传输，匿名评估，你掌控自己的信息</p>
+    </div>
+    <div class="landing-card">
+      <div class="landing-card-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#5C7A52" stroke-width="2" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      </div>
+      <h3>循证追踪</h3>
+      <p>PCOMS联盟评分，持续追踪咨询进展与临床变化</p>
+    </div>
+  </div>
+
+  <div class="landing-cta">
+    <button id="btn-start" class="landing-btn landing-btn-primary">开始匹配评估</button>
+    <a href="counselor.html" class="landing-btn landing-btn-secondary">咨询师入驻 →</a>
+    <button onclick="openCounselorLogin()" class="landing-btn landing-btn-secondary" style="background:#fff;color:#5C7A52;border:1px solid #C8DCC0;cursor:pointer;font-family:inherit;margin-top:8px;">咨询师登录</button>
+  </div>
+
+  <div class="landing-footer">
+    本系统为心理自助评估工具，评估结果<strong>不构成专业医学诊断或治疗建议</strong>。<br>
+    如您正在经历严重心理困扰，请及时联系持证心理咨询师或拨打<a href="tel:12356" style="color:#5C7A52;">心理援助热线 12356</a>。
+  </div>
+</div>
+
+<!-- 知情同意 -->
+<div id="consent-overlay" class="hidden">
+  <div class="consent-modal">
+    <h2>📋 心理咨询评估 · 知情同意书</h2>
+    <p class="consent-sub">在您开始匹配评估之前，请仔细阅读以下条款</p>
+
+    <div class="consent-section">
+      <h3>一、评估目的</h3>
+      <p>本评估旨在帮助您了解当前心理状态，并为您匹配最合适的心理咨询师。评估结果仅供参考，不构成医学诊断。</p>
+    </div>
+
+    <div class="consent-section">
+      <h3>二、数据收集与使用</h3>
+      <p>您填写的所有信息（包括基本信息、评估答案、文字描述）将被用于：</p>
+      <ul>
+        <li>生成您的匹配评估报告</li>
+        <li>为您匹配最合适的心理咨询师</li>
+        <li>改进本系统的评估算法和服务质量</li>
+      </ul>
+      <div class="highlight">
+        ⚠️ 我们承诺：您的数据仅用于上述用途，不会被出售、出租或用于任何商业广告推送。
+      </div>
+    </div>
+
+    <div class="consent-section">
+      <h3>三、数据存储与安全</h3>
+      <ul>
+        <li>数据存储于加密的云端数据库（Supabase），传输过程采用 SSL 加密</li>
+        <li>我们采取了行业标准的技术措施保护您的数据安全</li>
+        <li>您有权随时要求删除您的全部数据，请联系管理员处理</li>
+      </ul>
+    </div>
+
+    <div class="consent-section">
+      <h3>四、您的权利</h3>
+      <ul>
+        <li>您可以随时中止评估，已填写的内容将保存在浏览器本地</li>
+        <li>您可以要求查看、修改或删除您的个人数据</li>
+        <li>如您处于危机状态（有自伤或自杀风险），本系统会自动提供危机干预热线</li>
+      </ul>
+    </div>
+
+    <div class="consent-section">
+      <h3>五、免责声明</h3>
+      <p>本评估工具不能替代专业精神科诊断或心理治疗。如果您正在经历严重的心理危机，或有自伤/自杀念头，请立即联系专业机构（见下方危机干预资源）。</p>
+      <div class="crisis-resources">
+        <h4>🆘 危机干预资源</h4>
+        <p>全国心理援助热线：<strong>12356</strong>（24小时）</p>
+        <p>青少年心理咨询热线：<strong>12355</strong></p>
+      </div>
+    </div>
+
+    <div class="consent-section">
+      <h3>六、联系我们</h3>
+      <p>如对本评估有任何疑问，或需要查阅/删除您的个人数据，请通过系统管理员联系我们。</p>
+    </div>
+
+    <div class="consent-check">
+      <input type="checkbox" id="consent-checkbox" onchange="toggleConsentBtn()">
+      <label for="consent-checkbox">
+        我已仔细阅读并理解上述内容，同意我的个人信息被用于心理咨询匹配评估，并知晓我有权随时撤回此同意。
+      </label>
+    </div>
+
+    <button class="consent-btn" id="consent-btn" disabled onclick="handleConsent()">请先勾选同意条款</button>
+  </div>
+</div>
+
+<!-- ===== 主内容区 ===== -->
+
+<!-- 咨询师登录弹窗 -->
+<div id="counselor-login-overlay" onclick="if(event.target===this)closeCounselorLogin()">
+  <div id="counselor-login-box">
+    <h3>🖥️ 咨询师工作台</h3>
+    <p>微信扫码关注「小平菇」公众号，关注即登录。</p>
+    <div style="text-align:center;margin:4px 0 12px">
+      <div id="cl-qr" style="width:180px;height:180px;margin:0 auto;border:1px solid #E8E4DC;border-radius:12px;display:flex;align-items:center;justify-content:center;background:#FAF9F6;color:#A09889;font-size:13px;padding:10px;box-sizing:border-box;line-height:1.6">二维码生成中…</div>
+      <p id="cl-qr-tip" style="font-size:12px;color:#7A7268;margin:8px 0 0">用微信「扫一扫」，关注后自动登录</p>
+    </div>
+    <details id="cl-alt">
+      <summary style="font-size:12px;color:#A09889;cursor:pointer;margin-bottom:8px">其他登录方式（凭咨询师 ID / 编辑码）</summary>
+      <input id="counselor-login-input" type="text" placeholder="咨询师 ID / 编辑码" autocomplete="off"
+        onkeydown="if(event.key==='Enter')doCounselorLogin()" />
+      <input id="counselor-login-password" type="password" placeholder="密码（ID / 编辑码登录可留空）" autocomplete="off" style="display:none" />
+      <div class="counselor-login-btns">
+        <button class="btn-cl-cancel" onclick="closeCounselorLogin()">取消</button>
+        <button class="btn-cl-go" onclick="doCounselorLogin()">进入工作台</button>
+      </div>
+    </details>
+    <button class="btn-cl-register" onclick="location.href='counselor.html'">还没注册？点此入驻 →</button>
+  </div>
+</div>
+
+<!-- 我的评估弹窗 -->
+<div id="my-assessment-overlay" onclick="if(event.target===this)closeMyAssessment()">
+  <div id="my-assessment-box">
+    <h3>📋 查看我的评估</h3>
+    <p id="my-assessment-hint">输入评估完成后显示的<strong>评估号</strong>（8 位短编号，如 K7M2-9X4T），查看评估结果、匹配状态和咨询跟踪信息。</p>
+    <div id="my-assessment-auto" style="display:none;background:#E8F5E9;border-radius:10px;padding:12px;margin-bottom:12px">
+      <div style="font-size:13px;color:#2E7D32;font-weight:500;margin-bottom:8px">🔍 检测到本设备的评估记录</div>
+      <div id="my-assessment-auto-asid" style="font-size:11px;color:#4A6741;word-break:break-all;background:#F5F9F2;padding:6px 10px;border-radius:6px;margin-bottom:8px"></div>
+      <button class="btn-cl-go" style="width:100%" onclick="goMyAssessment()">📋 查看我的评估</button>
+      <div style="font-size:11px;color:#81A076;margin-top:6px;text-align:center">—— 或手动输入 ——</div>
+    </div>
+    <input id="my-assessment-input" type="text" placeholder="输入 8 位评估号（如 K7M2-9X4T）…" autocomplete="off"
+      onkeydown="if(event.key==='Enter')goMyAssessmentManual()" />
+    <div class="counselor-login-btns">
+      <button class="btn-cl-cancel" onclick="closeMyAssessment()">取消</button>
+      <button class="btn-cl-go" onclick="goMyAssessmentManual()">查询</button>
+    </div>
+    <div style="font-size:11px;color:#A09889;text-align:center;margin-top:10px;line-height:1.5">
+      💡 <strong>找不到评估号？</strong><br>可以回评估结果页复制，或重新评估获取新号
+    </div>
+    <div id="my-assessment-wx" style="display:flex;gap:10px;align-items:center;margin-top:12px;padding-top:10px;border-top:1px solid #EEE9E0">
+      <div style="flex:1;min-width:120px">
+        <div style="font-size:12px;color:#5C7A52;font-weight:600;margin-bottom:2px">关注后不用再输号</div>
+        <div style="font-size:11px;color:#A09889;line-height:1.5">关注「小平菇」公众号，下次从菜单「我的评估」直接进来。</div>
+      </div>
+      <img src="wx-qr.jpg" alt="小平菇公众号二维码" style="width:60px;height:60px;border-radius:8px;border:1px solid #E0DACF;background:#fff;flex-shrink:0">
+    </div>
+  </div>
+</div>
+<script>
+// ===== 展示页 → 评估页切换 =====
+function enterAssessment() {
+  // 首页（介绍页）→ 第二页：危机筛查
+  document.getElementById('showcase').classList.add('hidden');
+  startGateFlow();
+}
+
+function openMyAssessment() {
+  var aid = getAsid() || localStorage.getItem('xiaopingu_my_asid');
+  var autoDiv = document.getElementById('my-assessment-auto');
+  var hint = document.getElementById('my-assessment-hint');
+  if (aid) {
+    // 有缓存的 ASID，展示一键直达
+    document.getElementById('my-assessment-auto-asid').textContent = aid;
+    autoDiv.style.display = 'block';
+    hint.style.display = 'none';
+  } else {
+    autoDiv.style.display = 'none';
+    hint.style.display = 'block';
+  }
+  // 本机已有记录时是一键直达，不需要再引导关注；只在要手输号码时才提示
+  var wxBox = document.getElementById('my-assessment-wx');
+  if (wxBox) wxBox.style.display = aid ? 'none' : 'flex';
+  var overlay = document.getElementById('my-assessment-overlay');
+  overlay.classList.add('show');
+  if (!aid) {
+    setTimeout(function(){ document.getElementById('my-assessment-input').focus(); }, 100);
+  }
+}
+function closeMyAssessment() {
+  document.getElementById('my-assessment-overlay').classList.remove('show');
+  document.getElementById('my-assessment-input').value = '';
+}
+function goMyAssessment() {
+  var aid = getAsid() || localStorage.getItem('xiaopingu_my_asid');
+  if (aid) { location.href = 'my-assessment.html?aid=' + encodeURIComponent(aid); }
+}
+function goMyAssessmentManual() {
+  var inp = document.getElementById('my-assessment-input');
+  var val = inp.value.trim();
+  if (!val) { inp.style.borderColor='#E53935'; return; }
+  inp.style.borderColor='';
+  var isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
+  if (isUuid) {
+    sessionStorage.setItem('xiaopingu_assessment_capability', val);
+    localStorage.setItem('xiaopingu_my_asid', val);
+    location.href = 'my-assessment.html?aid=' + encodeURIComponent(val);
+    return;
+  }
+  // 8 位短编号：先调 /resolve 解析成完整评估号再跳转
+  var norm = val.toUpperCase().replace(/[^0-9A-Z]/g, '');
+  if (norm.length !== 8) { showToast('评估号格式不对：请输入 8 位短编号（如 K7M2-9X4T）或完整编号', 'error'); return; }
+  fetch(SUPABASE_CONFIG.url + '/resolve?code=' + encodeURIComponent(norm), { headers: { 'x-assessment-token': sessionStorage.getItem('xiaopingu_assessment_capability') || localStorage.getItem('xiaopingu_assessment_id') || localStorage.getItem('xiaopingu_my_asid') || '' } })
+    .then(function(r){ return r.json().then(function(d){ return { ok: r.ok, d: d }; }); })
+    .then(function(res){
+      if (res.ok && res.d && res.d.id) {
+        localStorage.setItem('xiaopingu_my_asid', res.d.id);
+        location.href = 'my-assessment.html?aid=' + encodeURIComponent(res.d.id);
+      } else {
+        showToast((res.d && res.d.message) || '评估号不存在，请核对后重试', 'error');
+      }
+    })
+    .catch(function(){ showToast('网络异常，请稍后重试', 'error'); });
+}
+</script>
+<script>
+function openCounselorLogin() {
+  var overlay = document.getElementById('counselor-login-overlay');
+  overlay.classList.add('show');
+  startWxLoginQr();
+}
+var WX_API = 'https://xpg-demo-d3gzsswtcc3233ea0-1300577165.ap-shanghai.app.tcloudbase.com/xpg-rest';
+var _clPollTimer = null;
+function startWxLoginQr() {
+  var box = document.getElementById('cl-qr');
+  var tip = document.getElementById('cl-qr-tip');
+  box.innerHTML = '二维码生成中…';
+  tip.textContent = '用微信「扫一扫」，关注后自动登录';
+  fetch(WX_API + '/wx/qrcode?kind=clogin').then(function(r){ return r.json(); }).then(function(d){
+    if (!d.configured) {
+      box.innerHTML = '<img src="wx-qr.jpg" style="width:100%;height:100%;object-fit:contain" alt="小平菇公众号">';
+      tip.innerHTML = '扫码关注「小平菇」公众号<br><span style="color:#A09889">自动登录开通中，现在请先用下方凭码登录</span>';
+      document.getElementById('cl-alt').open = true;
+      return;
+    }
+    box.innerHTML = '<img src="' + d.qr_url + '" style="width:100%;height:100%;object-fit:contain" alt="扫码登录">';
+    pollWxLogin(d.scene);
+  }).catch(function(){ box.textContent = '二维码加载失败，请稍后重试'; });
+}
+function pollWxLogin(scene) {
+  clearInterval(_clPollTimer);
+  _clPollTimer = setInterval(function() {
+    fetch(WX_API + '/wx/session?scene=' + scene).then(function(r){ return r.json(); }).then(function(d){
+      if (d.status === 'done') {
+        clearInterval(_clPollTimer);
+        if (d.counselor_id) {
+          location.href = 'counselor.html?cid=' + encodeURIComponent(d.counselor_id);
+        } else {
+          document.getElementById('cl-qr-tip').textContent = '已关注成功，但未找到绑定的咨询师档案——新咨询师请先点下方入驻注册';
+        }
+      }
+    }).catch(function(){});
+  }, 2000);
+}
+function closeCounselorLogin() {
+  clearInterval(_clPollTimer);
+  document.getElementById('counselor-login-overlay').classList.remove('show');
+}
+function doCounselorLogin() {
+  var val = document.getElementById('counselor-login-input').value.trim();
+  if (!val) { document.getElementById('counselor-login-input').style.borderColor='#E53935'; return; }
+  // 判断是 edit token（不含 -）还是 UUID（含 -）
+  if (val.indexOf('-') >= 0) {
+    // UUID → ?cid=
+    location.href = 'counselor.html?cid=' + encodeURIComponent(val);
+  } else {
+    // 编辑码 → ?edit=
+    location.href = 'counselor.html?edit=' + encodeURIComponent(val);
+  }
+}
+</script>
+
+<div id="main-app" style="display:none;">
+
+<div class="page-header">
+  <div class="logo-wrap">
+    <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="24" cy="22" rx="18" ry="14" fill="#5B8FC9"/>
+      <circle cx="16" cy="17" r="3.5" fill="#fff" opacity="0.5"/>
+      <circle cx="28" cy="14" r="2.5" fill="#fff" opacity="0.4"/>
+      <circle cx="32" cy="22" r="3" fill="#fff" opacity="0.35"/>
+      <circle cx="20" cy="25" r="2" fill="#fff" opacity="0.3"/>
+      <path d="M18 24 Q18 38 20 42 L28 42 Q30 38 30 24" fill="#F5EDE0"/>
+      <ellipse cx="24" cy="43" rx="12" ry="2" fill="#5B8FC9" opacity="0.15"/>
+      <defs>
+        <radialGradient id="capGrad" cx="50%" cy="40%" r="60%">
+          <stop offset="0%" stop-color="#7EB3E8"/>
+          <stop offset="100%" stop-color="#4A7DB5"/>
+        </radialGradient>
+        <linearGradient id="stemGrad" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#F5EDE0"/>
+          <stop offset="100%" stop-color="#E8D9C8"/>
+        </linearGradient>
+      </defs>
+    </svg>
+  </div>
+  <div>
+    <div class="brand-name">小平菇</div>
+    <h1>心理咨询自助评估</h1>
+    <p>专业匹配评估，帮你找到最合适的心理支持 · v1.2 Lab</p>
+  </div>
+  <div class="header-right" style="display:flex;gap:8px;align-items:center;">
+    <button onclick="openMyAssessment()" class="header-link" style="cursor:pointer;background:none;font-family:inherit;white-space:nowrap">📋 我的评估</button>
+    <button onclick="openCounselorLogin()" class="header-link" style="cursor:pointer;background:none;font-family:inherit;white-space:nowrap">咨询师登录</button>
+    <a href="counselor.html" class="header-link" style="white-space:nowrap">入驻 →</a>
+  </div>
+</div>
+
+<div class="main">
+  <div class="progress-bar-wrap">
+    <div class="progress-steps">
+      <div class="step-item active" id="step1-bar">① 基本信息</div>
+      <div class="step-item" id="step2-bar">② 主诉评估</div>
+      <div class="step-item" id="step3-bar">③ 程度评估</div>
+      <div class="step-item" id="step4-bar">④ 转介建议</div>
+    </div>
+  </div>
+
+  <!-- STEP 0 · 危机安全排查（同意后、信息录入前的单页门槛） -->
+  <div class="section-block" id="section0">
+    <div class="card" id="gate_question_card">
+      <p class="card-title" style="font-size:22px;">危机安全排查</p>
+      <p class="card-sub" style="font-size:16px;line-height:1.8;">开始填写前，先确认一件事：你现在的状态，是否适合用本工具做评估匹配。请如实作答，这直接关系你的安全。</p>
+      <p style="font-size:18px;font-weight:600;color:#3d3a34;line-height:1.8;margin:18px 0 14px;">近三个月内，你有没有过下面这些想法或行为？<br>请选择最符合你现状的一项：</p>
+      <div id="gate_options" style="display:grid;gap:12px;">
+        <div class="gate-opt" data-value="safe" onclick="selectGate(this)" role="radio" aria-checked="false" style="display:flex;gap:12px;align-items:flex-start;padding:16px;border:2px solid #E8E4DC;border-radius:12px;cursor:pointer;background:#fff;">
+          <span class="gate-dot" style="width:22px;height:22px;border-radius:50%;border:2px solid #C4BBA8;background:#fff;flex-shrink:0;margin-top:2px;"></span>
+          <div>
+            <p style="margin:0;font-size:17px;font-weight:600;color:#3d3a34;">没有</p>
+            <p style="margin:4px 0 0;font-size:15px;color:#7A7268;line-height:1.7;">我没有自伤或自杀的想法</p>
+          </div>
+        </div>
+        <div class="gate-opt" data-value="passive" onclick="selectGate(this)" role="radio" aria-checked="false" style="display:flex;gap:12px;align-items:flex-start;padding:16px;border:2px solid #E8E4DC;border-radius:12px;cursor:pointer;background:#fff;">
+          <span class="gate-dot" style="width:22px;height:22px;border-radius:50%;border:2px solid #C4BBA8;background:#fff;flex-shrink:0;margin-top:2px;"></span>
+          <div>
+            <p style="margin:0;font-size:17px;font-weight:600;color:#3d3a34;">有念头，没有计划</p>
+            <p style="margin:4px 0 0;font-size:15px;color:#7A7268;line-height:1.7;">有过「不想活了 / 活着没意思」的念头，但没有具体计划</p>
+          </div>
+        </div>
+        <div class="gate-opt" data-value="active" onclick="selectGate(this)" role="radio" aria-checked="false" style="display:flex;gap:12px;align-items:flex-start;padding:16px;border:2px solid #E8E4DC;border-radius:12px;cursor:pointer;background:#fff;">
+          <span class="gate-dot" style="width:22px;height:22px;border-radius:50%;border:2px solid #C4BBA8;background:#fff;flex-shrink:0;margin-top:2px;"></span>
+          <div>
+            <p style="margin:0;font-size:17px;font-weight:600;color:#3d3a34;">有计划，或有过行为</p>
+            <p style="margin:4px 0 0;font-size:15px;color:#7A7268;line-height:1.7;">我有具体计划，或近期有过自伤、自杀的行为</p>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:20px;padding:14px 16px;background:#FFF8E8;border:1.5px solid #E8C4B8;border-radius:12px;">
+        <p style="font-size:15px;color:#8A5A2B;line-height:1.8;margin:0 0 10px;"><strong>确认前请知悉：</strong>你所填写的信息须真实、准确。这项排查直接关系你的人身安全与后续服务安排，<strong>如因隐瞒真实情况造成后果，你需承担相应法律责任</strong>。</p>
+        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:16px;color:#3d3a34;line-height:1.7;">
+          <input type="checkbox" id="gate_truth_checkbox" style="width:20px;height:20px;margin-top:2px;accent-color:#5C7A52;flex-shrink:0;" onchange="toggleGateBtn()">
+          我确认以上选择真实、准确
+        </label>
+      </div>
+      <button type="button" class="btn btn-primary" id="gate_confirm_btn" disabled onclick="confirmGate()" style="width:100%;margin-top:16px;font-size:17px;padding:14px;">请先完成选择并勾选确认</button>
+      <select id="crisis_screen" style="display:none"><option value="safe">近三个月内没有自伤或自杀的想法</option><option value="passive">有不想活了/活着没意思的念头，但没有具体计划</option><option value="active">有具体计划，或近期有过自伤/自杀行为</option></select>
+      <p style="text-align:center;margin-top:14px;"><a href="javascript:void(0)" onclick="backToShowcase()" style="font-size:13px;color:#A09889;text-decoration:underline;">← 返回首页</a></p>
+    </div>
+    <div class="card" id="crisis_stop_card" style="display:none;">
+      <p class="card-title" style="font-size:20px;color:#9A3F2A;">这个情况，需要的是能直接接住你的支持</p>
+      <p style="font-size:16px;line-height:1.9;color:#5a4a3f;margin:0 0 14px;">你刚才告诉我们的情况，我们收到了。你现在的状态需要有人当面评估、及时接住你——<strong>这不适合用问卷评估</strong>，所以本次填写到此为止，不会给出任何评估结果。</p>
+      <div style="display:grid;gap:10px;margin:0 0 14px;">
+        <a href="tel:12356" style="display:block;padding:16px;background:#FDF3EF;border:1.5px solid #E8C4B8;border-radius:12px;text-decoration:none;">
+          <span style="font-size:22px;font-weight:700;color:#9A3F2A;">12356</span>
+          <span style="display:block;font-size:14px;color:#8A7069;margin-top:2px;">全国心理援助热线 · 24 小时 · 现在就可以打</span>
+        </a>
+        <a href="tel:120" style="display:block;padding:16px;background:#FDF3EF;border:1.5px solid #E8C4B8;border-radius:12px;text-decoration:none;">
+          <span style="font-size:22px;font-weight:700;color:#9A3F2A;">120</span>
+          <span style="display:block;font-size:14px;color:#8A7069;margin-top:2px;">急救 · 需要就医或有人陪你去医院时</span>
+        </a>
+        <a href="tel:110" style="display:block;padding:16px;background:#FDF3EF;border:1.5px solid #E8C4B8;border-radius:12px;text-decoration:none;">
+          <span style="font-size:22px;font-weight:700;color:#9A3F2A;">110</span>
+          <span style="display:block;font-size:14px;color:#8A7069;margin-top:2px;">正在发生危险、需要马上有人到场时</span>
+        </a>
+      </div>
+      <p style="font-size:15px;line-height:1.8;color:#5a4a3f;margin:0 0 10px;">也可以直接前往最近医院的<strong>精神科 / 心理科门诊或急诊</strong>。如果身边有你信任的人，现在就告诉 ta，请 ta 陪你一起去。</p>
+      <p style="font-size:13px;line-height:1.8;color:#A09889;margin:0;">本工具不提供诊断，也不做危机处理。等状态稳定、医生评估之后，随时可以回来使用。</p>
+      <p style="text-align:center;margin:16px 0 0;"><a href="javascript:void(0)" onclick="gateBack()" style="font-size:13px;color:#A09889;text-decoration:underline;">我刚才选错了，返回重新选择</a></p>
+      <p style="text-align:center;margin:8px 0 0;"><a href="javascript:void(0)" onclick="backToShowcase()" style="font-size:13px;color:#A09889;text-decoration:underline;">返回首页</a></p>
+    </div>
+  </div>
+
+  <!-- 安全验证（知情同意后、进入问卷前） -->
+  <div class="section-block" id="section-captcha">
+    <div class="card" style="max-width:520px;margin:0 auto;">
+      <p class="card-title" style="text-align:center;">安全验证</p>
+      <p class="card-sub" style="text-align:center;">为保障你的数据安全，请先完成一个简单验证</p>
+      <div id="captcha-inline" style="display:none;max-width:480px;margin:12px auto 0;padding:16px 20px;background:#fff;border-radius:12px;border:1.5px solid #E8E4DC;">
+        <p style="font-size:15px;color:#3D3831;margin:0 0 14px;text-align:center;">安全验证：<span id="captcha-question" style="font-weight:bold;"></span></p>
+        <div style="display:flex;gap:10px;justify-content:center;margin-bottom:10px;">
+          <input type="text" id="captcha-input" inputmode="numeric" autocomplete="off" placeholder="请输入答案"
+            style="width:120px;padding:10px 14px;border:1.5px solid #E8E4DC;border-radius:10px;font-size:16px;text-align:center;outline:none;transition:border-color 0.2s;"
+            onfocus="this.style.borderColor='#5C7A52'" onblur="this.style.borderColor='#E8E4DC'" />
+          <button onclick="verifyCaptcha()" style="padding:10px 20px;background:#5C7A52;color:#fff;border:none;border-radius:10px;font-size:15px;cursor:pointer;transition:background 0.2s;" onmouseover="this.style.background='#4a6542'" onmouseout="this.style.background='#5C7A52'">验证</button>
+        </div>
+        <p style="font-size:12px;color:#A09889;text-align:center;" id="captcha-hint">计算结果并输入</p>
+        <p style="text-align:center;margin-top:6px;"><a href="javascript:void(0)" onclick="generateCaptcha()" style="font-size:12px;color:#5C7A52;text-decoration:underline;">换一题</a></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 1 -->
+  <div class="section-block" id="section1">
+    <div class="card">
+      <p class="card-title">来访者基本信息</p>
+      <p class="card-sub">所有信息仅用于咨询匹配，严格保密。标「选填」的项目可留空——填写它们有利于更精准的匹配，也让咨询师更了解你的具体情况</p>
+      <div class="form-grid">
+        <div class="form-row"><label class="required">姓名（可填化名）</label><input type="text" id="name" placeholder="请输入您的姓名或化名" autocomplete="off"></div>
+        <div class="form-row"><label class="required">年龄</label><input type="number" id="age" placeholder="请输入年龄" min="6" max="99" inputmode="numeric" oninput="toggleMinorNotice()"><p id="minor_notice" style="display:none;margin:4px 0 0;font-size:12px;color:#E65100;line-height:1.6;background:#FFF3E0;padding:8px 10px;border-radius:8px;">⚠️ 如果您未满 18 周岁，请在填写本问卷前取得监护人的同意和知晓。未成年人寻求心理咨询服务需要监护人知情并配合。</p></div>
+        <div class="form-row"><label>填写身份</label><select id="filled_by"><option value="self">本人填写</option><option value="parent">家长 / 监护人代填</option></select><p style="margin:4px 0 0;font-size:12px;color:#A09889;line-height:1.6;">如为家长代未成年人填写，请选择「家长 / 监护人代填」，系统会优先推荐擅长儿童青少年方向的咨询师。</p></div>
+        <div class="form-row"><label class="required">性别</label><select id="gender"><option value="">请选择</option><option value="male">男</option><option value="female">女</option><option value="ta">TA</option><option value="lgbtq">LGBTQ+</option><option value="other">其他/不便透露</option></select></div>
+        <div class="form-row"><label class="required">职业身份</label><select id="occupation" onchange="toggleOccupationOther()"><option value="">请选择</option><option value="student_k12">在校学生（中小学）</option><option value="student_college">在校学生（大学及以上）</option><option value="worker">在职人员</option><option value="parent_role">家长</option><option value="freelance">自由职业 / 待业</option><option value="retired">退休人员</option><option value="other">其他</option></select><input type="text" id="occupation_other" placeholder="请填写您的职业" style="display:none;margin-top:8px;font-size:14px;padding:10px 12px;border:1.5px solid #E8E4DC;border-radius:8px" autocomplete="off"></div>
+        <div class="form-row"><label>所在城市 <span style="font-size:12px;color:#A09889;font-weight:400">（选填，用于匹配同城咨询师）</span></label><input type="text" id="city" placeholder="例如：浙江省 杭州市、上海市 上海市" autocomplete="off"></div>
+      </div>
+      <div class="form-row"><label>是否接受过心理健康服务？</label><select id="prev_counseling"><option value="no">否，这是第一次</option><option value="yes_brief">是，接受过简短咨询（5次以内）</option><option value="yes_long">是，接受过系统咨询（5次以上）</option><option value="psychiatric">是，曾就诊精神科或接受心理治疗</option></select></div>
+      <div class="form-row"><label>经济承受能力 <span style="font-size:12px;color:#A09889;font-weight:400">（选填，帮助匹配收费合适的咨询师）</span></label><select id="budget"><option value="">不介意 / 未考虑</option><option value="low">希望控制在 300元/次 以内</option><option value="mid">可接受 300-600元/次</option><option value="high">可接受 600-1000元/次</option><option value="premium">1000元/次 以上均可</option></select></div>
+      <div class="form-row"><label>对咨询师的性别偏好 <span style="font-size:12px;color:#A09889;font-weight:400">（选填，不填写则随机匹配）</span></label><select id="gender_pref"><option value="">不限 / 随机匹配</option><option value="male">希望是男性咨询师</option><option value="female">希望是女性咨询师</option><option value="any">咨询师性别不重要</option></select></div>
+      <div class="form-grid">
+        <div class="form-row"><label>对咨询师的年龄偏好 <span style="font-size:12px;color:#A09889;font-weight:400">（选填）</span></label><select id="age_pref"><option value="">不限</option><option value="older">偏年长（更有经验感）</option><option value="younger">偏年轻（更容易亲近）</option><option value="peer">同龄相仿（更易共情）</option></select></div>
+        <div class="form-row"><label>性取向友善需求 <span style="font-size:12px;color:#A09889;font-weight:400">（选填）</span></label><select id="orientation_pref"><option value="">不需要</option><option value="friendly">希望咨询师对 LGBTQ+ 友善</option><option value="experienced">需要性少数相关经验的咨询师</option></select></div>
+      </div>
+      <div class="form-row"><label>希望咨询师的沟通风格 <span style="font-size:12px;color:#A09889;font-weight:400">（选填）</span></label><select id="comm_style"><option value="">不限</option><option value="talkative">我想多说，希望咨询师多听</option><option value="guided">我不知道从哪说起，需要咨询师引导</option><option value="shy">我不太善于表达，需要咨询师带动</option><option value="collaborative">我想和咨询师平等交流、一起探讨</option><option value="directive">我希望咨询师多给建议和反馈</option></select></div>
+
+      <!-- C-NIP 偏好画像（基于 Cooper-Norcross 偏好问卷） -->
+      <div style="margin-top:16px;padding:16px;background:#F0F7EC;border-radius:12px;border:1px solid #C8DCC0">
+        <div style="font-size:14px;font-weight:600;color:#5C7A52;margin-bottom:12px;display:flex;align-items:center;gap:6px">🎨 咨询风格偏好 <span style="font-size:11px;font-weight:400;color:#7A8B72">（选填，帮助匹配更适合你的咨询师 · 基于C-NIP循证工具）</span></div>
+
+        <div class="cnip-row" style="margin-bottom:14px">
+          <div style="font-size:13px;color:#444441;margin-bottom:6px">1. 你希望咨询更有方向感，还是更自由探索？</div>
+          <div class="cnip-options" data-field="cnip_structure">
+            <button type="button" class="cnip-btn" data-value="structured" onclick="selectCnip(this)">🎯 有方向感</button>
+            <button type="button" class="cnip-btn" data-value="balanced" onclick="selectCnip(this)">⚖️ 适度引导</button>
+            <button type="button" class="cnip-btn" data-value="open" onclick="selectCnip(this)">🌱 自由探索</button>
+          </div>
+        </div>
+
+        <div class="cnip-row" style="margin-bottom:14px">
+          <div style="font-size:13px;color:#444441;margin-bottom:6px">2. 希望深入感受情绪，还是聚焦解决具体问题？</div>
+          <div class="cnip-options" data-field="cnip_emotion">
+            <button type="button" class="cnip-btn" data-value="emotional" onclick="selectCnip(this)">💧 深入感受</button>
+            <button type="button" class="cnip-btn" data-value="balanced" onclick="selectCnip(this)">⚖️ 两者兼顾</button>
+            <button type="button" class="cnip-btn" data-value="rational" onclick="selectCnip(this)">🧩 聚焦解决</button>
+          </div>
+        </div>
+
+        <div class="cnip-row" style="margin-bottom:14px">
+          <div style="font-size:13px;color:#444441;margin-bottom:6px">3. 更想探讨过去的经历，还是关注当下和未来？</div>
+          <div class="cnip-options" data-field="cnip_timefocus">
+            <button type="button" class="cnip-btn" data-value="past" onclick="selectCnip(this)">🕰️ 探讨过去</button>
+            <button type="button" class="cnip-btn" data-value="balanced" onclick="selectCnip(this)">⚖️ 两者兼顾</button>
+            <button type="button" class="cnip-btn" data-value="present" onclick="selectCnip(this)">📌 关注当下</button>
+          </div>
+        </div>
+
+        <div class="cnip-row" style="margin-bottom:14px">
+          <div style="font-size:13px;color:#444441;margin-bottom:6px">4. 希望咨询师温和支持，还是坦诚直接地给出反馈？</div>
+          <div class="cnip-options" data-field="cnip_warmth">
+            <button type="button" class="cnip-btn" data-value="warm" onclick="selectCnip(this)">🤗 温和支持</button>
+            <button type="button" class="cnip-btn" data-value="balanced" onclick="selectCnip(this)">⚖️ 两者兼顾</button>
+            <button type="button" class="cnip-btn" data-value="direct" onclick="selectCnip(this)">💡 坦诚直接</button>
+          </div>
+        </div>
+
+        <div class="cnip-row" style="margin-bottom:14px">
+          <div style="font-size:13px;color:#444441;margin-bottom:6px">5. 愿意在咨询之间做练习或记录吗？</div>
+          <div class="cnip-options" data-field="cnip_homework">
+            <button type="button" class="cnip-btn" data-value="yes" onclick="selectCnip(this)">📝 愿意</button>
+            <button type="button" class="cnip-btn" data-value="neutral" onclick="selectCnip(this)">🤷 无所谓</button>
+            <button type="button" class="cnip-btn" data-value="no" onclick="selectCnip(this)">🚫 不太愿意</button>
+          </div>
+        </div>
+
+        <div class="cnip-row">
+          <div style="font-size:13px;color:#444441;margin-bottom:6px">6. 想讨论你和咨询师之间的关系吗？</div>
+          <div class="cnip-options" data-field="cnip_relational">
+            <button type="button" class="cnip-btn" data-value="discuss" onclick="selectCnip(this)">💬 想讨论</button>
+            <button type="button" class="cnip-btn" data-value="neutral" onclick="selectCnip(this)">🤷 无所谓</button>
+            <button type="button" class="cnip-btn" data-value="skip" onclick="selectCnip(this)">➡️ 不需要</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <span class="required" style="display:block;font-size:14px;font-weight:500;margin-bottom:6px;color:#444441">期望的咨询方式（可多选，点击选择）</span>
+        <div class="option-grid" id="format_grid">
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="format" value="线下面询"><div class="opt-icon">🏥</div><div class="opt-label">线下面询</div><div class="opt-desc">到咨询室面对面</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="format" value="视频咨询"><div class="opt-icon">💻</div><div class="opt-label">视频咨询</div><div class="opt-desc">在线视频沟通</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="format" value="语音咨询"><div class="opt-icon">📞</div><div class="opt-label">语音咨询</div><div class="opt-desc">电话或语音通话</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="format" value="文字咨询"><div class="opt-icon">💬</div><div class="opt-label">文字咨询</div><div class="opt-desc">文字消息交流</div></div>
+        </div>
+      </div>
+      <div class="form-row">
+        <span class="required" style="display:block;font-size:14px;font-weight:500;margin-bottom:6px;color:#444441">您的咨询预期是（可多选，点击选择）</span>
+        <div class="option-grid" id="expect_grid">
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="expect" value="understand"><div class="opt-icon">💡</div><div class="opt-label">了解自己</div><div class="opt-desc">探索内心与自我成长</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="expect" value="solve"><div class="opt-icon">🎯</div><div class="opt-label">解决问题</div><div class="opt-desc">针对具体困扰找方案</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="expect" value="support"><div class="opt-icon">🤝</div><div class="opt-label">情感支持</div><div class="opt-desc">需要被倾听和理解</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="expect" value="relationship_improve"><div class="opt-icon">❤️</div><div class="opt-label">改善关系</div><div class="opt-desc">修复亲密关系或家庭关系</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="expect" value="emotion_manage"><div class="opt-icon">🧘</div><div class="opt-label">情绪管理</div><div class="opt-desc">学习调节焦虑、抑郁等情绪</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="expect" value="career_develop"><div class="opt-icon">💼</div><div class="opt-label">职业发展</div><div class="opt-desc">职场困惑、倦怠或转型决策</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="expect" value="crisis"><div class="opt-icon">🚨</div><div class="opt-label">危机处理</div><div class="opt-desc">当前处于困难紧急状态</div></div>
+        </div>
+      </div>
+      <div class="action-bar"><button class="btn btn-primary" onclick="saveAndGo(2)">下一步 →</button></div>
+    </div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="section-block" id="section2">
+    <div class="card">
+      <p class="card-title">主要求助诉求</p>
+      <p class="card-sub">请选择最符合您当前状态的诉求类型（必答，可多选；没有匹配项可在下方补充）</p>
+      <div class="option-grid" id="issue_grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));">
+        <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="issue" value="emotion"><div class="opt-icon">😔</div><div class="opt-label">情绪困扰</div><div class="opt-desc">抑郁、焦虑、恐慌、情绪失调</div></div>
+        <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="issue" value="relationship"><div class="opt-icon">💔</div><div class="opt-label">关系困境</div><div class="opt-desc">亲密关系、亲子、社交困扰</div></div>
+        <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="issue" value="trauma"><div class="opt-icon">🩹</div><div class="opt-label">创伤经历<span class="term-tip" data-tip="指经历重大创伤事件（如事故、暴力、自然灾害等）后遗留的心理阴影，可能反复出现闪回、噩梦、回避等症状，专业术语为 PTSD（创伤后应激障碍）">?</span></div><div class="opt-desc">PTSD、童年创伤、重大应激事件</div></div>
+        <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="issue" value="growth"><div class="opt-icon">🌱</div><div class="opt-label">自我成长</div><div class="opt-desc">自我认同、人生意义、价值观探索</div></div>
+        <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="issue" value="adolescent"><div class="opt-icon">🎒</div><div class="opt-label">青少年问题</div><div class="opt-desc">学业压力、叛逆期、同伴关系</div></div>
+        <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="issue" value="marriage"><div class="opt-icon">👫</div><div class="opt-label">婚姻/伴侣</div><div class="opt-desc">婚姻危机、出轨、离婚、伴侣冲突</div></div>
+        <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="issue" value="personality"><div class="opt-icon">🧩</div><div class="opt-label">人格成长/发展性议题<span class="term-tip" data-tip="指长期形成的僵化思维和行为模式（如边缘型人格、自恋型人格等），导致人际关系困难、情绪剧烈波动，通常需要长程专业咨询干预">?</span></div><div class="opt-desc">人格成长、发展性议题</div></div>
+        <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="issue" value="crisis"><div class="opt-icon">🚨</div><div class="opt-label">危机状态</div><div class="opt-desc">自伤、自杀念头、紧急危机</div></div>
+        <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="issue" value="workplace"><div class="opt-icon">💼</div><div class="opt-label">职场困扰</div><div class="opt-desc">倦怠、人际冲突、职场霸凌、转型</div></div>
+        <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="issue" value="eating"><div class="opt-icon">🍽️</div><div class="opt-label">进食障碍<span class="term-tip" data-tip="一类以异常进食行为为核心的心理障碍，包括神经性厌食（过度节食、体重过低）、神经性暴食（反复暴食后催吐/泻药），常与身材焦虑、完美主义、情绪调节困难相关">?</span></div><div class="opt-desc">厌食、暴食、节食焦虑、体像困扰</div></div>
+        <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="issue" value="addiction"><div class="opt-icon">🚫</div><div class="opt-label">成瘾行为<span class="term-tip" data-tip="指对某种物质或行为产生依赖，无法自主控制使用频率和剂量，常见包括酒精依赖、网络/游戏成瘾、赌博成瘾、性成瘾等，常需要专业干预">?</span></div><div class="opt-desc">酒精、网络、游戏、赌博、性等成瘾</div></div>
+        <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="issue" value="grief"><div class="opt-icon">🕊️</div><div class="opt-label">丧亲哀伤<span class="term-tip" data-tip="指因亲人离世、关系断裂等重大丧失而产生的悲伤反应，正常的哀伤会随时间缓解，但若持续过久或过于强烈（复杂性哀伤），建议寻求专业帮助">?</span></div><div class="opt-desc">亲人离世、失恋分手、重大丧失</div></div>
+        <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="issue" value="sexual"><div class="opt-icon">🌸</div><div class="opt-label">性心理议题<span class="term-tip" data-tip="涵盖性认同困惑、性取向焦虑、性功能障碍（如性欲低下、性疼痛等）、以及亲密关系中的性问题，需在安全信任的咨询环境中探讨">?</span></div><div class="opt-desc">性认同、性功能障碍、亲密性困扰</div></div>
+        <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="issue" value="somatic"><div class="opt-icon">🫀</div><div class="opt-label">心身困扰<span class="term-tip" data-tip="指长期心理压力表现为身体不适（如头痛、胃痛、胸闷），去医院检查却没有器质性病变。心理学上称为「躯体化」，说明身心是紧密关联的">?</span></div><div class="opt-desc">躯体化症状、慢性疼痛、健康焦虑</div></div>
+        <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="issue" value="family"><div class="opt-icon">👨‍👩‍👧</div><div class="opt-label">家庭系统<span class="term-tip" data-tip="家庭系统理论认为，家庭中一个人的问题往往是整个家庭互动模式的结果。家庭治疗不只关注「患者」本人，而是帮助家庭成员理解彼此的关系模式">?</span></div><div class="opt-desc">原生家庭、家庭矛盾、代际冲突、再婚家庭、重组家庭</div></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:10px">
+        <input type="text" id="issue_other_input" placeholder="没有找到匹配选项？请补充您的诉求…" style="flex:1;font-size:14px;padding:10px 12px;border:1.5px solid #E8E4DC;border-radius:8px" autocomplete="off">
+        <button type="button" class="btn btn-outline" style="padding:10px 16px;font-size:13px;white-space:nowrap" onclick="addOtherIssue()">+ 补充</button>
+      </div>
+      <div id="issue_other_tags" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px"></div>
+      <div class="form-row" style="margin-top:20px"><label>用您自己的话描述主要困扰（选填——填写有利于更精准的匹配，也让咨询师更了解你的具体情况）</label><textarea id="description" placeholder="简短描述您希望咨询解决的问题…"></textarea></div>
+      <div class="form-row"><label>困扰持续时间</label><select id="duration"><option value="recent">近期才出现（1个月以内）</option><option value="months">几个月（1-6个月）</option><option value="half_year">半年到一年</option><option value="years">1年以上</option><option value="childhood">从小就有（儿童/青少年期开始）</option></select></div>
+      <div class="action-bar"><button class="btn btn-outline" onclick="saveAndGo(1)">← 上一步</button><button class="btn btn-primary" onclick="saveAndGo(3)">下一步 →</button></div>
+    </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="section-block" id="section3">
+    <div class="card">
+      <p class="card-title">程度评估</p>
+      <p class="card-sub">请根据过去两周的状态，为以下项目评分（0=完全没有，5=极明显/几乎每天）。5 项均为必答，全部完成后才能生成转介建议</p>
+      <div class="form-row"><label>1. 情绪低落、悲伤或空洞感</label><div class="scale-row" id="scale_mood"><button class="scale-btn" onclick="setScale('mood',0,this)">0</button><button class="scale-btn" onclick="setScale('mood',1,this)">1</button><button class="scale-btn" onclick="setScale('mood',2,this)">2</button><button class="scale-btn" onclick="setScale('mood',3,this)">3</button><button class="scale-btn" onclick="setScale('mood',4,this)">4</button><button class="scale-btn" onclick="setScale('mood',5,this)">5</button></div><div class="scale-label"><span>完全没有</span><span>几乎持续存在</span></div></div>
+      <div class="form-row"><label>2. 持续焦虑、担忧或紧张感</label><div class="scale-row" id="scale_anxiety"><button class="scale-btn" onclick="setScale('anxiety',0,this)">0</button><button class="scale-btn" onclick="setScale('anxiety',1,this)">1</button><button class="scale-btn" onclick="setScale('anxiety',2,this)">2</button><button class="scale-btn" onclick="setScale('anxiety',3,this)">3</button><button class="scale-btn" onclick="setScale('anxiety',4,this)">4</button><button class="scale-btn" onclick="setScale('anxiety',5,this)">5</button></div><div class="scale-label"><span>完全没有</span><span>难以自控</span></div></div>
+      <div class="form-row"><label>3. 睡眠困难（入睡难/早醒/多梦）</label><div class="scale-row" id="scale_sleep"><button class="scale-btn" onclick="setScale('sleep',0,this)">0</button><button class="scale-btn" onclick="setScale('sleep',1,this)">1</button><button class="scale-btn" onclick="setScale('sleep',2,this)">2</button><button class="scale-btn" onclick="setScale('sleep',3,this)">3</button><button class="scale-btn" onclick="setScale('sleep',4,this)">4</button><button class="scale-btn" onclick="setScale('sleep',5,this)">5</button></div><div class="scale-label"><span>完全没有</span><span>严重影响休息</span></div></div>
+      <div class="form-row"><label>4. 日常生活/工作/学业受影响程度</label><div class="scale-row" id="scale_function"><button class="scale-btn" onclick="setScale('function',0,this)">0</button><button class="scale-btn" onclick="setScale('function',1,this)">1</button><button class="scale-btn" onclick="setScale('function',2,this)">2</button><button class="scale-btn" onclick="setScale('function',3,this)">3</button><button class="scale-btn" onclick="setScale('function',4,this)">4</button><button class="scale-btn" onclick="setScale('function',5,this)">5</button></div><div class="scale-label"><span>完全没有</span><span>难以维持日常</span></div></div>
+      <div class="form-row"><label>5. 人际关系紧张、冲突或回避</label><div class="scale-row" id="scale_relation"><button class="scale-btn" onclick="setScale('relation',0,this)">0</button><button class="scale-btn" onclick="setScale('relation',1,this)">1</button><button class="scale-btn" onclick="setScale('relation',2,this)">2</button><button class="scale-btn" onclick="setScale('relation',3,this)">3</button><button class="scale-btn" onclick="setScale('relation',4,this)">4</button><button class="scale-btn" onclick="setScale('relation',5,this)">5</button></div><div class="scale-label"><span>完全没有</span><span>严重回避社交</span></div></div>
+      <hr class="divider">
+      <div class="form-row">
+        <label>是否有以下特殊情况？（可多选）</label>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:8px">
+          <div style="display:flex;align-items:center;gap:8px;font-size:14px;padding:10px;border:1.5px solid #E8E4DC;border-radius:10px;cursor:pointer" onclick="toggleSimple(this)" class="opt-simple"><input type="checkbox" name="special" value="medication" style="width:18px;height:18px;flex-shrink:0"> 目前正在服用精神类药物<span class="term-tip" data-tip="指精神科医生开具的处方药物，如抗抑郁药（如百忧解、左洛复）、抗焦虑药（如阿普唑仑）、情绪稳定剂等，用于缓解心理症状">?</span></div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:14px;padding:10px;border:1.5px solid #E8E4DC;border-radius:10px;cursor:pointer" onclick="toggleSimple(this)" class="opt-simple"><input type="checkbox" name="special" value="diagnosed" style="width:18px;height:18px;flex-shrink:0"> 已有精神科诊断<span class="term-tip" data-tip="指曾在医院精神科或心理科就诊并获得正式诊断，如抑郁症、焦虑症、双相情感障碍、ADHD等。有诊断不代表不能做心理咨询，但建议让咨询师了解">?</span></div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:14px;padding:10px;border:1.5px solid #E8E4DC;border-radius:10px;cursor:pointer" onclick="toggleSimple(this)" class="opt-simple"><input type="checkbox" name="special" value="substance" style="width:18px;height:18px;flex-shrink:0"> 存在物质滥用/成瘾<span class="term-tip" data-tip="指对酒精、药物或其他精神活性物质的使用超出了社交或医疗范围，且无法自行停止。可能需要先进行脱毒治疗，再配合心理咨询">?</span></div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:14px;padding:10px;border:1.5px solid #E8E4DC;border-radius:10px;cursor:pointer" onclick="toggleSimple(this)" class="opt-simple"><input type="checkbox" name="special" value="medical" style="width:18px;height:18px;flex-shrink:0"> 有慢性躯体疾病<span class="term-tip" data-tip="指需要长期治疗的身体疾病，如糖尿病、高血压、慢性疼痛、自身免疫疾病等。心理咨询可以帮助改善心理状态，从而辅助身体健康管理">?</span></div>
+        </div>
+      </div>
+      <div class="action-bar"><button class="btn btn-outline" onclick="saveAndGo(2)">← 上一步</button><button class="btn btn-primary" onclick="generateResult()">生成转介建议 →</button></div>
+    </div>
+  </div>
+
+  <!-- STEP 4: Result -->
+  <div class="section-block" id="section4">
+    <div class="result-panel show" id="result_panel">
+      <div class="result-header">
+        <h2 id="result_title">转介评估报告</h2>
+        <p id="result_time"></p>
+        <div id="disclaimer_banner" style="margin-top:12px;padding:12px 16px;background:linear-gradient(135deg,#FFF8E1 0%,#FFF3E0 100%);border:1px solid #FFE0B2;border-radius:10px;font-size:13px;color:#5D4037;line-height:1.7">
+          <strong style="color:#E65100">⚠️ 重要提示</strong><br>
+          <span>本评估仅用于了解您当前的心理状态并辅助匹配咨询师，<strong>不构成任何医学诊断或临床结论</strong>。评估分数不能替代专业精神科医生的诊断。如果您感到痛苦难以承受，请拨打<a href="tel:12356" style="color:#BF360C;font-weight:600;text-decoration:none">心理援助热线 12356</a> 或前往最近的精神卫生中心。</span>
+        </div>
+      </div>
+      <div class="result-body">
+        <div class="result-section"><h3>来访者基本信息</h3><div class="info-grid" id="info_summary"></div></div>
+        <hr class="divider">
+        <div class="result-section"><h3>主诉议题分析</h3><div id="issue_summary"></div></div>
+        <hr class="divider">
+        <div class="result-section"><h3>程度评分</h3><div class="info-grid" id="score_summary"></div></div>
+        <hr class="divider">
+        <div class="result-section"><h3>转介匹配建议</h3><div id="referral_cards"></div></div>
+        <hr class="divider">
+        <div class="result-section" id="my_counselor_section" style="display:none"><h3>我的咨询师</h3><div id="my_counselor_card"></div></div>
+        <div class="result-section" id="counselor_match_section" style="display:none"><h3>推荐咨询师</h3><div id="counselor_match_list"></div></div>
+        <div id="counselor_loading" style="display:none"><div class="loading-hint"><div class="spinner"></div><br>正在匹配咨询师…</div></div>
+        <hr class="divider">
+        <div class="result-section"><h3>咨询前注意事项</h3><div id="notes_section"></div></div>
+        <div class="result-section" id="xg_entry_section" style="display:none">
+          <h3>咨询过程记录</h3>
+          <div id="xg_entry_card"></div>
+        </div>
+      </div>
+    </div>
+    <div id="view_link_wrap" style="margin:0 0 16px;padding:16px;background:#F0F7EC;border:1px solid #C8DCC0;border-radius:10px;display:none;text-align:left">
+      <p style="font-size:13px;color:#5A6B52;margin-bottom:8px;line-height:1.7">
+        📝 <strong>您的评估报告永久入口</strong><br>
+        <span style="font-size:12px;color:#7A8B72">收藏此链接随时回看 · 也可点首页「📋 我的评估」输入评估号</span>
+      </p>
+      <div style="margin-bottom:10px">
+        <div style="font-size:12px;color:#7A8B72;margin-bottom:2px">你的评估号（凭它随时回看）</div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <span id="shortid-display" style="font-size:26px;font-weight:700;letter-spacing:3px;color:#5C7A52;font-family:Menlo,'SF Mono',monospace">生成中…</span>
+          <button type="button" class="btn btn-outline" style="padding:6px 14px;font-size:12px;white-space:nowrap" onclick="copyShortId()">复制编号</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <input type="text" id="view_link_input" style="flex:1;padding:8px 12px;font-size:12px;border:1px solid #C8DCC0;border-radius:8px;background:#fff;color:#5A6B52;min-width:0;overflow:hidden;text-overflow:ellipsis" readonly>
+        <button type="button" class="btn btn-outline" style="padding:8px 16px;font-size:13px;white-space:nowrap" onclick="copyViewLink()">复制链接</button>
+        <button type="button" class="btn btn-outline" style="padding:8px 12px;font-size:12px;white-space:nowrap" onclick="copyAsidLink(window.xiaopinguAsid||'')">🔗 复制评估号与链接</button>
+      </div>
+      <div style="display:flex;gap:12px;align-items:center;margin-top:12px;padding-top:12px;border-top:1px dashed #C8DCC0">
+        <div style="flex:1;min-width:150px">
+          <div style="font-size:13px;color:#5C7A52;font-weight:600;margin-bottom:2px">更省事的办法：关注「小平菇」公众号</div>
+          <div style="font-size:12px;color:#7A8B72;line-height:1.6">下次从公众号菜单「我的评估」直接进来，不用记这串号。</div>
+        </div>
+        <img src="wx-qr.jpg" alt="小平菇公众号二维码" style="width:80px;height:80px;border-radius:8px;border:1px solid #C8DCC0;background:#fff;flex-shrink:0">
+      </div>
+    </div>
+    <div class="action-bar" id="result_action_bar">
+      <button class="btn btn-outline" id="btn_modify" onclick="saveAndGo(3)">← 修改答案</button>
+      <button class="btn btn-outline" onclick="saveAsImage()">📱 保存/分享</button>
+      <button class="btn btn-outline" onclick="exportToExcel()">📋 导出 Excel</button>
+      <button class="btn btn-outline" onclick="exportToPDF()">📄 导出 PDF 报告</button>
+      <button class="btn btn-primary" onclick="resetForm()">重新填写</button>
+    </div>
+  </div>
+</div>
+
+<div style="text-align:center;padding:24px 20px 12px;color:#B8AFA3;font-size:11px;">
+  <svg width="22" height="22" viewBox="0 0 48 48" fill="none" style="vertical-align:middle;margin-right:4px;"><ellipse cx="24" cy="22" rx="18" ry="14" fill="#5B8FC9"/><circle cx="16" cy="17" r="3" fill="#fff" opacity="0.3"/><circle cx="28" cy="15" r="2" fill="#fff" opacity="0.25"/><path d="M19 24 Q19 36 21 40 L27 40 Q29 36 29 24" fill="#F5EDE0"/></svg>
+  小平菇心理 · 用心倾听，自然疗愈
+</div>
+<div style="text-align:center;padding:0 20px 32px;color:#C5BEB3;font-size:10px;line-height:1.6;">
+  本系统为心理自助评估工具，评估结果<strong>不构成专业医学诊断、精神障碍诊断或治疗建议</strong>。如您正在经历严重心理困扰，请及时联系持证心理咨询师、精神科医生或拨打心理援助热线。如遇紧急危险，请立即拨打 110 或 120。
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="web-auth.js"></script>
+<script src="supabase-config.js"></script>
+<script>
+var scores = { mood:0, anxiety:0, sleep:0, function:0, relation:0 };
+var scaleAnswered = { mood:false, anxiety:false, sleep:false, function:false, relation:false };
+var currentStep = 1;
+var currentViewToken = null;
+window.xiaopinguAsid = null;
+var STORAGE_KEY = 'xiaopingu_draft';
+var currentRecommendedApproaches = [];
+var currentMinYears = 1;
+var currentMinCredential = '二级';
+var lastResultData = null; // 用于导出
+var puzzleVerified = false; // 验证码状态
+var _captchaAnswer = 0;
+var SKIP_CAPTCHA_FOR_LOCAL_DEBUG = true;
+
+function isLocalDebugHost() {
+  var host = location.hostname;
+  return ['127.0.0.1', 'localhost', '::1'].indexOf(host) >= 0 ||
+    /^192\.168\./.test(host) ||
+    /^10\./.test(host) ||
+    /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(host);
+}
+
+function hasAdminDebugSession() {
+  return !!(window.XPG_WEB_AUTH && XPG_WEB_AUTH.getSession('admin'));
+}
+
+/* ===== 数学验证码 ===== */
+function generateCaptcha() {
+  var ops = ['+', '-', '×'];
+  var op = ops[Math.floor(Math.random() * ops.length)];
+  var a, b, answer;
+  if (op === '+') {
+    a = Math.floor(Math.random() * 50) + 1;
+    b = Math.floor(Math.random() * 50) + 1;
+    answer = a + b;
+  } else if (op === '-') {
+    a = Math.floor(Math.random() * 50) + 10;
+    b = Math.floor(Math.random() * a) + 1;
+    answer = a - b;
+  } else {
+    a = Math.floor(Math.random() * 12) + 2;
+    b = Math.floor(Math.random() * 12) + 2;
+    answer = a * b;
+  }
+  _captchaAnswer = answer;
+  var qEl = document.getElementById('captcha-question');
+  if (qEl) qEl.textContent = a + ' ' + op + ' ' + b + ' = ?';
+  var input = document.getElementById('captcha-input');
+  if (input) { input.value = ''; }
+  var hint = document.getElementById('captcha-hint');
+  if (hint) hint.textContent = '计算结果并输入';
+  hint && (hint.style.color = '#A09889');
+}
+
+function showCaptcha(cb) {
+  try {
+    window._captchaCallback = cb;
+    generateCaptcha();
+    var box = document.getElementById('captcha-inline');
+    if (box) box.style.display = 'block';
+    // 隐藏按钮防止重复点击
+    var btn = document.querySelector('.landing-btn-primary');
+    if (btn) btn.style.display = 'none';
+    setTimeout(function() {
+      var input = document.getElementById('captcha-input');
+      if (input) input.focus();
+    }, 100);
+  } catch(e) {
+    console.error('[小平菇] 验证码初始化失败:', e);
+    puzzleVerified = true;
+    if (cb) cb();
+  }
+}
+
+function verifyCaptcha() {
+  var input = document.getElementById('captcha-input');
+  var hint = document.getElementById('captcha-hint');
+  if (!input) return;
+  var val = parseInt(input.value);
+  if (isNaN(val)) {
+    if (hint) { hint.textContent = '请输入数字'; hint.style.color = '#E24B4A'; }
+    return;
+  }
+  if (val === _captchaAnswer) {
+    // 成功
+    puzzleVerified = true;
+    var box = document.getElementById('captcha-inline');
+    if (box) box.style.display = 'none';
+    showToast('验证成功');
+    if (window._captchaCallback) {
+      try { window._captchaCallback(); } catch(e) { console.error('[小平菇] 验证回调失败:', e); }
+    }
+    window._captchaCallback = null;
+  } else {
+    // 失败
+    if (hint) { hint.textContent = '答案不正确，请重试'; hint.style.color = '#E24B4A'; }
+    generateCaptcha();
+    var newInput = document.getElementById('captcha-input');
+    if (newInput) newInput.focus();
+  }
+}
+
+// 回车键提交验证码
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    var box = document.getElementById('captcha-inline');
+    if (box && box.style.display === 'block') {
+      verifyCaptcha();
+    }
+  }
+});
+
+(function init() {
+  var params = new URLSearchParams(window.location.search);
+  var viewToken = params.get('view');
+  if (viewToken) {
+    enterViewMode(viewToken);
+    return;
+  }
+
+  // 绑定按钮事件（防抖：避免 touch+click 双发，防止重复点击）
+  var btn = document.querySelector('.landing-btn-primary');
+  if (btn) {
+    var btnLocked = false;
+    function onBtnTap(e) {
+      e.preventDefault();
+      if (btnLocked) return;
+      btnLocked = true;
+      btn.disabled = true;
+      btn.textContent = '正在启动...';
+      setTimeout(function() {
+        try { startVisitorFlow(); }
+        catch(err) {
+          console.error('[小平菇] 启动失败:', err);
+          btn.textContent = '开始评估';
+          btn.disabled = false;
+          btnLocked = false;
+        }
+      }, 50);
+    }
+    btn.addEventListener('click', onBtnTap, false);
+  }
+})();
+
+// ===== 页面可见性恢复时自动重试保存 =====
+// 移动端 Safari 在切后台时会中止未完成的 fetch，等切回前台时重试
+(function setupSaveRetry() {
+  var retried = false;
+  document.addEventListener('visibilitychange', function() {
+    if (document.hidden) return;
+    if (retried) return;
+    if (!window._xpg_save_pending) return;
+    var data = window._xiaopinguAssessmentData;
+    if (!data || Object.keys(data).length <= 3) {
+      // 尝试从 sessionStorage 恢复
+      try {
+        var ss = sessionStorage.getItem('xiaopingu_assessment_data');
+        if (ss) data = JSON.parse(ss);
+      } catch(e) {}
+    }
+    if (!data || Object.keys(data).length <= 3) return;
+    retried = true;
+    console.log('[小平菇] 页面恢复可见，重试保存评估记录...');
+    if (typeof saveAssessment === 'function') {
+      saveAssessment(data).then(function(r) {
+        if (r) {
+          console.log('[小平菇] 重试保存成功');
+          window._xpg_save_pending = false;
+        } else {
+          console.warn('[小平菇] 重试保存仍失败');
+          retried = false; // 允许再次重试
+        }
+      });
+    }
+  });
+})();
+
+function afterPuzzle() {
+  // 安全验证通过 → 进入问卷（此时同意与危机筛查均已通过）
+  try {
+    try { showToast('正在加载评估...'); } catch(e) {}
+    var sc = document.getElementById('section-captcha');
+    if (sc) sc.classList.remove('active');
+    var consentOverlay = document.getElementById('consent-overlay');
+    if (consentOverlay) consentOverlay.classList.add('hidden');
+    var mainApp = document.getElementById('main-app');
+    if (mainApp) mainApp.style.display = 'block';
+    initApp();
+  } catch(e) {
+    console.error('[小平菇] afterPuzzle 失败:', e);
+    try { showToast('加载失败: ' + e.message); } catch(e2) {}
+    try { initApp(); } catch(e2) { console.error('[小平菇] 兜底也失败:', e2); }
+  }
+}
+
+function startVisitorFlow() {
+  if ((SKIP_CAPTCHA_FOR_LOCAL_DEBUG && isLocalDebugHost()) || hasAdminDebugSession()) {
+    puzzleVerified = true;
+    afterPuzzle();
+    return;
+  }
+  // 显示安全验证步骤（同意书之后、问卷之前）
+  document.querySelectorAll('.section-block').forEach(function(el){ el.classList.remove('active'); });
+  var sc = document.getElementById('section-captcha');
+  if (sc) sc.classList.add('active');
+  window.scrollTo(0, 0);
+  showCaptcha(function() {
+    afterPuzzle();
+  });
+}
+
+function initApp() {
+  try {
+    var saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      var d = JSON.parse(saved);
+      var gatePassed = false;
+      try { gatePassed = sessionStorage.getItem(GATE_KEY) === 'passed'; } catch(e) {}
+      // 必须先过危机筛查门槛，才允许恢复到信息填写页（否则一律回筛查页）
+      if (d.step && d.step > 1 && gatePassed && d.crisis_screen !== 'active' && d.crisis_screen !== 'action') {
+        if (d.name) document.getElementById('name').value = d.name;
+        if (d.age) document.getElementById('age').value = d.age;
+        if (d.gender) document.getElementById('gender').value = d.gender;
+        if (d.occupation) { document.getElementById('occupation').value = d.occupation; toggleOccupationOther(); }
+        if (d.occupation_other) document.getElementById('occupation_other').value = d.occupation_other;
+        if (d.filled_by) document.getElementById('filled_by').value = d.filled_by;
+        if (d.city) document.getElementById('city').value = d.city;
+        if (d.prev_counseling) document.getElementById('prev_counseling').value = d.prev_counseling;
+        if (d.budget) document.getElementById('budget').value = d.budget;
+        if (d.gender_pref) document.getElementById('gender_pref').value = d.gender_pref;
+        if (d.age_pref) document.getElementById('age_pref').value = d.age_pref;
+        if (d.orientation_pref) document.getElementById('orientation_pref').value = d.orientation_pref;
+        if (d.comm_style) document.getElementById('comm_style').value = d.comm_style;
+        if (d.formats) d.formats.forEach(function(v) { var cards = document.querySelectorAll('#format_grid .opt-card'); cards.forEach(function(c) { var cb = c.querySelector('input[value="'+v+'"]'); if (cb) { cb.checked = true; c.classList.add('selected'); } }); });
+        if (d.duration) document.getElementById('duration').value = d.duration;
+        if (d.description) document.getElementById('description').value = d.description;
+        if (d.crisis_screen) document.getElementById('crisis_screen').value = d.crisis_screen;
+        if (d.expects) d.expects.forEach(function(v) { var cards = document.querySelectorAll('#expect_grid .opt-card'); cards.forEach(function(c) { var cb = c.querySelector('input[value="'+v+'"]'); if (cb) { cb.checked = true; c.classList.add('selected'); } }); });
+        if (d.issues) d.issues.forEach(function(v) { var cards = document.querySelectorAll('#issue_grid .opt-card'); cards.forEach(function(c) { var cb = c.querySelector('input[value="'+v+'"]'); if (cb) { cb.checked = true; c.classList.add('selected'); } }); });
+        if (d.specials) d.specials.forEach(function(v) { var cbs = document.querySelectorAll('input[name="special"]'); cbs.forEach(function(cb) { if (cb.value === v) { cb.checked = true; var el = cb.closest('.opt-simple'); if(el){el.style.borderColor='#5C7A52';el.style.background='#E8F0E4';} } }); });
+        if (d.scores) { Object.keys(d.scores).forEach(function(k) { scores[k] = d.scores[k]; var row = document.getElementById('scale_'+k); if(row){var btns=row.querySelectorAll('.scale-btn');btns.forEach(function(b,i){b.classList.toggle('sel',i<=d.scores[k]);});} }); }
+        if (d.scaleAnswered) { Object.keys(d.scaleAnswered).forEach(function(k){ scaleAnswered[k]=d.scaleAnswered[k]; }); }
+        if (d.cnip) setCnipValues(d.cnip);
+        currentStep = d.step;
+        document.querySelectorAll('.section-block').forEach(function(el){el.classList.toggle('active',el.id==='section'+currentStep);});
+        for(var i=1;i<=4;i++){var bar=document.getElementById('step'+i+'-bar');bar.classList.remove('active','done');if(i<currentStep)bar.classList.add('done');if(i===currentStep)bar.classList.add('active');}
+        showToast('已恢复上次填写的进度');
+      } else {
+        // 无进度、或草稿属危机范围：先过危机排查门槛
+        showGateOrStep1();
+      }
+    } else {
+      showGateOrStep1();
+    }
+  } catch(e) { console.warn('[小平菇] initApp:', e); }
+}
+
+function toggleConsentBtn() {
+  var cb = document.getElementById('consent-checkbox');
+  var btn = document.getElementById('consent-btn');
+  if (cb.checked) {
+    btn.disabled = false;
+    btn.classList.add('active');
+    btn.textContent = '我已同意，开始评估 ✅';
+  } else {
+    btn.disabled = true;
+    btn.classList.remove('active');
+    btn.textContent = '请先勾选同意条款';
+  }
+}
+
+function handleConsent() {
+  var cb = document.getElementById('consent-checkbox');
+  if (!cb.checked) return;
+  try {
+    sessionStorage.setItem('xiaopingu_consent', 'given');
+  } catch(e) {
+    console.warn('[小平菇] sessionStorage 写入失败:', e);
+  }
+  document.getElementById('consent-overlay').classList.add('hidden');
+  document.getElementById('main-app').style.display = 'block';
+  startVisitorFlow(); // 知情同意后：安全验证 → 进入问卷
+}
+
+function showToast(msg){var t=document.getElementById('toast');if(!t)return;t.textContent=msg;t.classList.add('show');setTimeout(function(){if(t)t.classList.remove('show');},2200);}
+function saveDraft(){try{var expects=[];document.querySelectorAll('#expect_grid input:checked').forEach(function(el){expects.push(el.value);});var issues=[];document.querySelectorAll('#issue_grid input:checked').forEach(function(el){issues.push(el.value);});var specials=[];document.querySelectorAll('input[name="special"]:checked').forEach(function(el){specials.push(el.value);});var formats=[];document.querySelectorAll('input[name="format"]:checked').forEach(function(el){formats.push(el.value);});localStorage.setItem(STORAGE_KEY,JSON.stringify({step:currentStep,name:document.getElementById('name').value,age:document.getElementById('age').value,gender:document.getElementById('gender').value,occupation:document.getElementById('occupation').value,occupation_other:document.getElementById('occupation_other').value,filled_by:document.getElementById('filled_by').value,city:document.getElementById('city').value,prev_counseling:document.getElementById('prev_counseling').value,budget:document.getElementById('budget').value,gender_pref:document.getElementById('gender_pref').value,age_pref:document.getElementById('age_pref').value,orientation_pref:document.getElementById('orientation_pref').value,comm_style:document.getElementById('comm_style').value,cnip:getCnipValues(),formats:formats,duration:document.getElementById('duration').value,description:document.getElementById('description').value,crisis_screen:document.getElementById('crisis_screen').value,expects:expects,issues:issues,issues_other:otherIssues,specials:specials,scores:scores,scaleAnswered:scaleAnswered}));}catch(e){}}
+function validateStepRequired(step){
+  var missing=[];
+  if(step===1){
+    if(!document.getElementById('name').value.trim())missing.push('姓名');
+    if(!document.getElementById('age').value.trim())missing.push('年龄');
+    if(!document.getElementById('gender').value)missing.push('性别');
+    var occ=document.getElementById('occupation').value;
+    if(!occ)missing.push('职业身份');
+    else if(occ==='other'&&!document.getElementById('occupation_other').value.trim())missing.push('职业身份（其他）补充说明');
+    if(!document.querySelectorAll('input[name="format"]:checked').length)missing.push('期望的咨询方式');
+    if(!document.querySelectorAll('#expect_grid input:checked').length)missing.push('咨询预期');
+  }
+  if(step===2){
+    if(!document.querySelectorAll('#issue_grid input:checked').length&&!otherIssues.length)missing.push('诉求类型（或补充其他诉求）');
+  }
+  if(step===3){
+    var names={mood:'第1题 情绪低落',anxiety:'第2题 焦虑担忧',sleep:'第3题 睡眠困难',function:'第4题 日常受影响',relation:'第5题 人际关系'};
+    Object.keys(names).forEach(function(k){if(!scaleAnswered[k])missing.push(names[k]);});
+  }
+  return missing;
+}
+function saveAndGo(n){if(n>currentStep){var missing=validateStepRequired(currentStep);if(missing.length){showToast('还有必填项未完成：'+missing.join('、'));return;}}saveDraft();goStep(n);}
+function goStep(n){document.getElementById('section'+currentStep).classList.remove('active');document.getElementById('step'+currentStep+'-bar').classList.remove('active');document.getElementById('step'+currentStep+'-bar').classList.add('done');currentStep=n;document.getElementById('section'+n).classList.add('active');document.getElementById('step'+n+'-bar').classList.add('active');document.getElementById('step'+n+'-bar').classList.remove('done');window.scrollTo({top:0,behavior:'smooth'});}
+function toggleOpt(el){el.classList.toggle('selected');var cb=el.querySelector('input[type="checkbox"]');if(cb)cb.checked=el.classList.contains('selected');}
+
+// C-NIP 三档选择器
+function selectCnip(btn){
+  var row=btn.parentElement;
+  row.querySelectorAll('.cnip-btn').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+}
+function getCnipValues(){
+  var vals={};
+  document.querySelectorAll('.cnip-options').forEach(function(row){
+    var field=row.getAttribute('data-field');
+    var active=row.querySelector('.cnip-btn.active');
+    vals[field]=active?active.getAttribute('data-value'):'';
+  });
+  return vals;
+}
+function setCnipValues(vals){
+  document.querySelectorAll('.cnip-options').forEach(function(row){
+    var field=row.getAttribute('data-field');
+    var val=vals[field];
+    row.querySelectorAll('.cnip-btn').forEach(function(b){
+      b.classList.toggle('active',b.getAttribute('data-value')===val);
+    });
+  });
+}
+function toggleSimple(el){var cb=el.querySelector('input[type="checkbox"]');cb.checked=!cb.checked;if(cb.checked){el.style.borderColor='#5C7A52';el.style.background='#E8F0E4';}else{el.style.borderColor='#E8E4DC';el.style.background='#fff';}}
+function setScale(key,val,btn){scores[key]=val;scaleAnswered[key]=true;var row=document.getElementById('scale_'+key);var btns=row.querySelectorAll('.scale-btn');btns.forEach(function(b,i){b.classList.toggle('sel',i<=val);});}
+// ===== 危机安全排查门槛（同意后、STEP1 信息录入前）=====
+var GATE_KEY = 'xiaopingu_gate';
+function showGateOrStep1(){
+  var passed = false;
+  try { passed = sessionStorage.getItem(GATE_KEY) === 'passed'; } catch(e) {}
+  if (passed) {
+    var pb0 = document.querySelector('.progress-bar-wrap');
+    if (pb0) pb0.style.display = 'block';
+    document.getElementById('section1').classList.add('active');
+    document.getElementById('step1-bar').classList.add('active');
+  } else {
+    var pb = document.querySelector('.progress-bar-wrap');
+    if (pb) pb.style.display = 'none';
+    document.querySelectorAll('.section-block').forEach(function(el){ el.classList.remove('active'); });
+    document.getElementById('section0').classList.add('active');
+  }
+}
+function startGateFlow(){
+  // 首页「进入评估」→ 危机筛查页；本会话已过门槛则直进知情同意
+  document.getElementById('main-app').style.display = 'block';
+  var passed = false;
+  try { passed = sessionStorage.getItem(GATE_KEY) === 'passed'; } catch(e) {}
+  if (passed) { proceedToConsent(); return; }
+  document.querySelectorAll('.section-block').forEach(function(el){ el.classList.remove('active'); });
+  var pb = document.querySelector('.progress-bar-wrap');
+  if (pb) pb.style.display = 'none';
+  document.getElementById('section0').classList.add('active');
+  window.scrollTo(0, 0);
+}
+function proceedToConsent(){
+  // 危机筛查通过 → 知情同意页
+  var consentGiven = false;
+  try { consentGiven = sessionStorage.getItem('xiaopingu_consent') === 'given'; } catch(e) {}
+  if (consentGiven) { startQuestionnaire(); return; }
+  document.getElementById('consent-overlay').classList.remove('hidden');
+  window.scrollTo(0, 0);
+}
+function startQuestionnaire(){
+  document.getElementById('main-app').style.display = 'block';
+  initApp();
+}
+function backToShowcase(){
+  document.getElementById('main-app').style.display = 'none';
+  document.getElementById('showcase').classList.remove('hidden');
+  window.scrollTo(0, 0);
+}
+function selectGate(el){
+  document.querySelectorAll('#gate_options .gate-opt').forEach(function(o){ o.classList.remove('selected'); o.setAttribute('aria-checked','false'); });
+  el.classList.add('selected');
+  el.setAttribute('aria-checked','true');
+  document.getElementById('crisis_screen').value = el.getAttribute('data-value');
+  toggleGateBtn();
+}
+function toggleGateBtn(){
+  var cb = document.getElementById('gate_truth_checkbox');
+  var sel = document.querySelector('#gate_options .gate-opt.selected');
+  var btn = document.getElementById('gate_confirm_btn');
+  var ready = !!(cb && cb.checked && sel);
+  btn.disabled = !ready;
+  btn.textContent = ready ? '确认，开始填写 →' : '请先完成选择并勾选确认';
+}
+function confirmGate(){
+  var v = document.getElementById('crisis_screen').value;
+  var sel = document.querySelector('#gate_options .gate-opt.selected');
+  if (!sel) { showToast('请先选择最符合你现状的一项'); return; }
+  if (v === 'active' || v === 'action') {
+    // 红线：不在评估范围——只展示紧急支持警示页，终止评估（不采集信息、不进匹配、不能进入后续任何页面）
+    try { sessionStorage.removeItem(GATE_KEY); sessionStorage.removeItem('xiaopingu_consent'); } catch(e) {}
+    var ov = document.getElementById('consent-overlay');
+    if (ov) ov.classList.add('hidden');
+    document.getElementById('gate_question_card').style.display = 'none';
+    document.getElementById('crisis_stop_card').style.display = 'block';
+    window.scrollTo({top:0, behavior:'smooth'});
+    return;
+  }
+  try { sessionStorage.setItem(GATE_KEY, 'passed'); } catch(e) {}
+  if (v === 'passive') showToast('已记录。为你匹配时会优先安排。');
+  // 适合 → 进入知情同意页
+  proceedToConsent();
+}
+function gateBack(){
+  document.getElementById('crisis_stop_card').style.display = 'none';
+  document.getElementById('gate_question_card').style.display = 'block';
+}
+
+// --- "其他" 自定义议题标签 ---
+var otherIssues = [];
+function addOtherIssue() {
+  var input = document.getElementById('issue_other_input');
+  var val = input.value.trim();
+  if (!val) return;
+  if (otherIssues.indexOf(val) >= 0) { showToast('该诉求已添加'); return; }
+  otherIssues.push(val);
+  input.value = '';
+  renderOtherIssueTags();
+}
+function removeOtherIssue(idx) {
+  otherIssues.splice(idx, 1);
+  renderOtherIssueTags();
+}
+function renderOtherIssueTags() {
+  var container = document.getElementById('issue_other_tags');
+  container.innerHTML = '';
+  otherIssues.forEach(function(val, idx) {
+    var tag = document.createElement('span');
+    tag.className = 'tag teal';
+    tag.style.cssText = 'display:inline-flex;align-items:center;gap:4px;padding:4px 10px;font-size:13px;border-radius:6px;';
+    tag.innerHTML = val + ' <span style="cursor:pointer;margin-left:2px;color:#888" onclick="removeOtherIssue(' + idx + ')">×</span>';
+    container.appendChild(tag);
+  });
+}
+function saveAsImage(){if(navigator.share){navigator.share({title:'小平菇 · 转介评估报告',text:document.getElementById('result_title').innerText+'\n'+document.getElementById('result_time').innerText,url:window.location.href}).catch(function(){});}else{window.scrollTo({top:document.getElementById('result_panel').offsetTop-80,behavior:'smooth'});setTimeout(function(){window.print();},400);}}
+
+// ===== 导出 Excel =====
+function exportToExcel(){
+  if(!lastResultData){showToast('请先生成评估报告');return;}
+  var d=lastResultData;
+  // BOM + CSV 内容（Excel 可直接打开 UTF-8 CSV）
+  var csv='\uFEFF'; // BOM for Excel UTF-8
+  csv+='小平菇 · 转介评估报告\n';
+  csv+='评估时间,'+d.date+'\n';
+  csv+='来访者姓名,'+d.name+'\n';
+  csv+='年龄,'+d.age+'\n';
+  csv+='性别,'+d.gender+'\n';
+  csv+='职业身份,'+d.occupation+'\n';
+  csv+='填写身份,'+(d.filledBy==='parent'?'家长/监护人代填':'本人填写')+'\n';
+  csv+='困扰持续,'+d.duration+'\n';
+  csv+='既往咨询,'+d.prevCounseling+'\n';
+  if(d.city)csv+='所在城市,'+d.city+'\n';
+  if(d.budget)csv+='经济承受,'+d.budgetText+'\n';
+  if(d.formats&&d.formats.length)csv+='咨询方式,'+d.formats.join('、')+'\n';
+  csv+='\n--- 程度评分（0-5分）---\n';
+  csv+='情绪困扰,'+d.scores.mood+'\n';
+  csv+='焦虑程度,'+d.scores.anxiety+'\n';
+  csv+='睡眠质量,'+d.scores.sleep+'\n';
+  csv+='社会功能,'+d.scores.function+'\n';
+  csv+='人际关系,'+d.scores.relation+'\n';
+  csv+='总分,'+d.totalScore+'/25\n';
+  csv+='程度评估,'+d.severity+'\n';
+  csv+='匹配分级,'+d.severityStandard+'\n';
+  csv+='\n--- 主诉议题 ---\n';
+  if(d.issues&&d.issues.length)d.issues.forEach(function(i){csv+=i+'\n';});
+  if(d.description)csv+='详细描述,'+d.description+'\n';
+  csv+='\n--- 推荐取向 ---\n';
+  if(d.recommendedApproaches&&d.recommendedApproaches.length)d.recommendedApproaches.forEach(function(a){csv+=a+'\n';});
+  csv+='\n--- 危机筛查 ---\n';
+  csv+='危机等级,'+d.crisisLevel+'\n';
+  csv+='\n--- 注意事项 ---\n';
+  if(d.notes)d.notes.forEach(function(n){csv+=n.replace(/<[^>]*>/g,'')+'\n';});
+  csv+='\n--- 免责声明 ---\n';
+  csv+='本评估仅用于了解心理状态并辅助匹配咨询师，不构成任何医学诊断或临床结论。\n';
+  csv+='生成时间,'+new Date().toLocaleString('zh-CN')+'\n';
+
+  var blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;
+  a.download='小平菇_评估报告_'+d.name+'_'+d.date+'.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('Excel 文件已下载');
+}
+
+// ===== 导出 PDF 报告 =====
+function exportToPDF(){
+  if(!lastResultData){showToast('请先生成评估报告');return;}
+  var d=lastResultData;
+  var issueMap={emotion:'情绪困扰',relationship:'关系困境',trauma:'创伤经历',growth:'自我成长',adolescent:'青少年问题',marriage:'婚姻/伴侣',personality:'人格成长/发展性议题',crisis:'危机状态',workplace:'职场困扰',eating:'进食障碍',addiction:'成瘾行为',grief:'丧亲哀伤',sexual:'性心理议题',somatic:'心身困扰',family:'家庭系统'};
+  var sevColor=d.totalScore>=20?'#A03030':d.totalScore>=15?'#C4654A':d.totalScore>=8?'#854F0B':'#5C7A52';
+
+  var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>小平菇 · 转介评估报告</title>';
+  html+='<style>';
+  html+='*{margin:0;padding:0;box-sizing:border-box}';
+  html+='body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue",Arial,sans-serif;color:#3D3831;font-size:13px;line-height:1.7;padding:40px 48px;max-width:800px;margin:0 auto}';
+  html+='h1{font-size:20px;color:#5C7A52;text-align:center;margin-bottom:4px}';
+  html+'.subtitle{text-align:center;color:#A09889;font-size:12px;margin-bottom:24px}';
+  html+'.disclaimer{background:#FFF8E1;border:1px solid #FFE0B2;border-radius:8px;padding:10px 14px;font-size:11px;color:#5D4037;margin-bottom:20px;line-height:1.6}';
+  html+='h2{font-size:15px;color:#5C7A52;border-bottom:1px solid #E8E4DC;padding-bottom:6px;margin:20px 0 10px}';
+  html+'.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 16px}';
+  html+'.info-item{display:flex;font-size:12px}.info-label{color:#A09889;min-width:70px;flex-shrink:0}.info-val{color:#3D3831;font-weight:500}';
+  html='.score-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #F0ECE4}';
+  html='.tag{display:inline-block;padding:3px 10px;border-radius:6px;font-size:11px;margin:2px;background:#F0F7EC;color:#5C7A52}';
+  html='.tag-coral{background:#FFF0EC;color:#C4654A}.tag-amber{background:#FFF8E1;color:#854F0B}.tag-blue{background:#EBF5FF;color:#378ADD}.tag-purple{background:#F3E8FF;color:#7C3AED}.tag-pink{background:#FCE7F3;color:#DB2777}.tag-teal{background:#E0F2F1;color:#00897B}.tag-gray{background:#F5F5F0;color:#888780}';
+  html='.note{font-size:12px;color:#5F5E5A;padding-left:16px;margin:4px 0}';
+  html='.footer{text-align:center;margin-top:32px;padding-top:16px;border-top:1px solid #E8E4DC;font-size:10px;color:#C5BEB3;line-height:1.6}';
+  html+='@media print{body{padding:20px 24px}}';
+  html+='</style></head><body>';
+
+  html+='<h1>🍄 小平菇 · 转介评估报告</h1>';
+  html+='<div class="subtitle">'+d.name+' · '+d.date+'</div>';
+  html+='<div class="disclaimer"><strong>⚠️ 重要提示：</strong>本评估仅用于了解当前心理状态并辅助匹配咨询师，<strong>不构成任何医学诊断或临床结论</strong>。如感痛苦难以承受，请拨打心理援助热线 <strong>12356</strong>。</div>';
+
+  html+='<h2>一、来访者基本信息</h2>';
+  html+='<div class="info-grid">';
+  html+='<div class="info-item"><span class="info-label">姓名</span><span class="info-val">'+d.name+'</span></div>';
+  html+='<div class="info-item"><span class="info-label">年龄/性别</span><span class="info-val">'+d.age+'岁 / '+d.gender+'</span></div>';
+  html+='<div class="info-item"><span class="info-label">填写身份</span><span class="info-val">'+(d.filledBy==='parent'?'家长/监护人代填':'本人填写')+'</span></div>';
+  html+='<div class="info-item"><span class="info-label">职业身份</span><span class="info-val">'+d.occupation+'</span></div>';
+  html+='<div class="info-item"><span class="info-label">困扰持续</span><span class="info-val">'+d.duration+'</span></div>';
+  html+='<div class="info-item"><span class="info-label">既往咨询</span><span class="info-val">'+d.prevCounseling+'</span></div>';
+  if(d.city)html+='<div class="info-item"><span class="info-label">所在城市</span><span class="info-val">'+d.city+'</span></div>';
+  if(d.budget)html+='<div class="info-item"><span class="info-label">经济承受</span><span class="info-val">'+d.budgetText+'</span></div>';
+  html+='</div>';
+
+  html+='<h2>二、程度评分</h2>';
+  var dims=[['情绪困扰',d.scores.mood],['焦虑程度',d.scores.anxiety],['睡眠质量',d.scores.sleep],['社会功能',d.scores.function],['人际关系',d.scores.relation]];
+  dims.forEach(function(dim){
+    html+='<div class="score-row"><span>'+dim[0]+'</span><span style="font-weight:700;color:'+sevColor+'">'+dim[1]+'/5</span></div>';
+  });
+  html+='<div class="score-row" style="border-top:2px solid #E8E4DC;padding-top:8px;margin-top:4px"><span style="font-weight:700">总分</span><span style="font-size:18px;font-weight:700;color:'+sevColor+'">'+d.totalScore+'/25</span></div>';
+  html+='<div style="margin-top:8px;font-size:13px;font-weight:600;color:'+sevColor+'">'+d.severity+'<span style="font-weight:400;color:#A09889;font-size:11px;margin-left:8px">（自评分数，非诊断结论）</span></div>';
+
+  html+='<h2>三、主诉议题</h2>';
+  if(d.issues&&d.issues.length){
+    d.issues.forEach(function(i){
+      var c=(i==='crisis'||i==='trauma'||i==='addiction')?'coral':(i==='personality'||i==='eating')?'purple':(i==='emotion'||i==='somatic'||i==='grief')?'blue':(i==='sexual')?'pink':(i==='workplace'||i==='family')?'amber':'teal';
+      html+='<span class="tag tag-'+c+'">'+(issueMap[i]||i)+'</span>';
+    });
+  }
+  if(d.description)html+='<p style="margin-top:8px;font-size:12px;color:#5F5E5A;background:#F7F4EF;padding:10px;border-radius:8px">'+d.description+'</p>';
+
+  if(d.recommendedApproaches&&d.recommendedApproaches.length){
+    html+='<h2>四、推荐咨询取向</h2>';
+    d.recommendedApproaches.forEach(function(a){html+='<span class="tag">'+a+'</span>';});
+  }
+
+  html+='<h2>五、咨询前注意事项</h2>';
+  if(d.notes)d.notes.forEach(function(n){html+='<div class="note">• '+n.replace(/<[^>]*>/g,'')+'</div>';});
+
+  html+='<div class="footer">';
+  html+='本评估为心理自助评估工具，评估结果<strong>不构成专业医学诊断、精神障碍诊断或治疗建议</strong>。<br>';
+  html+='如您正在经历严重心理困扰，请及时联系持证心理咨询师、精神科医生或拨打心理援助热线。<br>';
+  html+='生成时间：'+new Date().toLocaleString('zh-CN')+' · 小平菇心理 · 用心倾听，自然疗愈';
+  html+='</div>';
+
+  html+='</body></html>';
+
+  var w=window.open('','_blank');
+  w.document.write(html);
+  w.document.close();
+  setTimeout(function(){w.print();},300);
+  showToast('PDF 报告窗口已打开，请保存或打印');
+}
+
+// ===== 未成年人提示 =====
+function toggleMinorNotice(){
+  var age=parseInt(document.getElementById('age').value);
+  var notice=document.getElementById('minor_notice');
+  if(notice)notice.style.display=(age>0&&age<18)?'block':'none';
+}
+
+// ===== 职业身份"其他"输入框 =====
+function toggleOccupationOther(){
+  var sel=document.getElementById('occupation');
+  var inp=document.getElementById('occupation_other');
+  inp.style.display=(sel.value==='other')?'block':'none';
+  if(sel.value!=='other')inp.value='';
+}
+
+// 辅助函数：安全获取 DOM 属性（兼容 iOS 13-，替代可选链 ?.）
+function _attr(sel, attr) {
+  var el = document.querySelector(sel);
+  return el && el.getAttribute ? el.getAttribute(attr) : null;
+}
+
+function generateResult() {
+  var m1=validateStepRequired(1),m2=validateStepRequired(2),m3=validateStepRequired(3);
+  if(m1.length||m2.length||m3.length){
+    showToast('还有必填项未完成：'+m1.concat(m2,m3).join('、'));
+    saveDraft();goStep(m1.length?1:(m2.length?2:3));
+    return;
+  }
+  if(!currentViewToken) saveDraft();
+  var name=document.getElementById('name').value||'来访者',age=document.getElementById('age').value||'—';
+  var gender=document.getElementById('gender'),genderText=gender.options[gender.selectedIndex].text;
+  var occupation=document.getElementById('occupation'),occText=occupation.value==='other'?document.getElementById('occupation_other').value.trim()||'其他':occupation.options[occupation.selectedIndex].text;
+  var duration=document.getElementById('duration'),durationText=duration.options[duration.selectedIndex].text;
+  var description=document.getElementById('description').value,crisisVal=document.getElementById('crisis_screen').value;
+  var prev=document.getElementById('prev_counseling'),prevText=prev.options[prev.selectedIndex].text;
+  var budget=document.getElementById('budget'),budgetVal=budget.value,budgetText=budget.options[budget.selectedIndex].text;
+  var cityVal=document.getElementById('city').value.trim();
+  var filledBy=document.getElementById('filled_by').value; // 'self' or 'parent'
+  var isParentFilled = filledBy === 'parent';
+  var isMinor = parseInt(age) < 18;
+  var formats=[];document.querySelectorAll('input[name="format"]:checked').forEach(function(el){formats.push(el.value);});
+  var issues=[];document.querySelectorAll('#issue_grid input:checked').forEach(function(el){issues.push(el.value);});
+  issues = issues.concat(otherIssues);
+  var specials=[];document.querySelectorAll('input[name="special"]:checked').forEach(function(el){specials.push(el.value);});
+  var totalScore=scores.mood+scores.anxiety+scores.sleep+scores.function+scores.relation;
+  var severity='一般心理困扰',severityColor='teal';
+  if(totalScore>=20){severity='需精神科就医';severityColor='coral';}else if(totalScore>=15){severity='需要心理治疗介入';severityColor='coral';}else if(totalScore>=8){severity='需要外力介入';severityColor='amber';}
+  // 标准三级制 severity（用于匹配算法）
+  var severityStandard='轻度';
+  if(totalScore>=15)severityStandard='重度';else if(totalScore>=8)severityStandard='中度';
+  var now=new Date();var dateStr=now.getFullYear()+'-'+(now.getMonth()+1).toString().padStart(2,'0')+'-'+now.getDate().toString().padStart(2,'0');
+  document.getElementById('result_time').innerText='评估时间：'+dateStr+'  总分：'+totalScore+'/25  程度：'+severity;
+  document.getElementById('result_title').innerText='小平菇 · 转介评估报告 — '+name;
+
+  var genderPref=document.getElementById('gender_pref'),genderPrefText=genderPref.options[genderPref.selectedIndex].text;
+  document.getElementById('info_summary').innerHTML=
+    (isParentFilled ? '<div style="grid-column:1/-1;background:#FFF3E0;border-radius:10px;padding:10px 14px;font-size:13px;color:#E65100;line-height:1.6;margin-bottom:6px">📋 本次评估由家长 / 监护人代为填写，部分主观症状（如情绪、睡眠、社会功能等）可能存在观察偏差，评估结果仅供参考。</div>' : '')+
+    '<div class="info-item"><div class="info-label">姓名</div><div class="info-val">'+name+'</div></div>'+
+    '<div class="info-item"><div class="info-label">年龄/性别</div><div class="info-val">'+age+'岁 / '+genderText+'</div></div>'+
+    '<div class="info-item"><div class="info-label">填写身份</div><div class="info-val">'+(isParentFilled?'家长 / 监护人代填':'本人填写')+'</div></div>'+
+    '<div class="info-item"><div class="info-label">职业身份</div><div class="info-val">'+occText+'</div></div>'+
+    (genderPref.value&&genderPref.value!=='any' ? '<div class="info-item"><div class="info-label">性别偏好</div><div class="info-val">'+genderPrefText+'</div></div>' : '')+
+    '<div class="info-item"><div class="info-label">困扰持续</div><div class="info-val">'+durationText+'</div></div>'+
+    '<div class="info-item"><div class="info-label">既往咨询</div><div class="info-val">'+prevText+'</div></div>'+
+    (budgetVal ? '<div class="info-item"><div class="info-label">经济承受</div><div class="info-val">'+budgetText+'</div></div>' : '')+
+    (cityVal ? '<div class="info-item"><div class="info-label">所在城市</div><div class="info-val">📍 '+cityVal+'</div></div>' : '')+
+    (formats.length ? '<div class="info-item"><div class="info-label">咨询方式</div><div class="info-val">'+formats.join('、')+'</div></div>' : '')+
+    '<div class="info-item"><div class="info-label">程度评估</div><div class="info-val" style="color:'+(totalScore>=20?'#A03030':totalScore>=15?'#C4654A':totalScore>=8?'#854F0B':'#5C7A52')+'">'+severity+'（'+totalScore+'/25）<span style="display:block;font-size:11px;font-weight:400;color:#A09889;margin-top:2px">自评分数，非诊断结论</span></div></div>';
+
+  var issueMap={emotion:'情绪困扰',relationship:'关系困境',trauma:'创伤经历',growth:'自我成长',adolescent:'青少年问题',marriage:'婚姻/伴侣',personality:'人格成长/发展性议题',crisis:'危机状态',workplace:'职场困扰',eating:'进食障碍',addiction:'成瘾行为',grief:'丧亲哀伤',sexual:'性心理议题',somatic:'心身困扰',family:'家庭系统'};
+  var issueHtml='<div class="tag-row">';
+  if(issues.length===0&&otherIssues.length===0){issueHtml+='<span style="color:#888780;font-size:13px">未选择具体议题</span>';}
+  else{
+    issues.forEach(function(v){var c=(v==='crisis'||v==='trauma'||v==='addiction')?'coral':(v==='personality'||v==='eating')?'purple':(v==='emotion'||v==='somatic'||v==='grief')?'blue':(v==='sexual')?'pink':(v==='workplace'||v==='family')?'amber':'teal';issueHtml+='<span class="tag '+c+'">'+(issueMap[v]||v)+'</span>';});
+    otherIssues.forEach(function(v){issueHtml+='<span class="tag gray">'+v+'</span>';});
+  }
+  issueHtml+='</div>';
+  if(description)issueHtml+='<p style="margin-top:10px;font-size:13px;color:#5F5E5A;background:#F5F5F0;padding:12px 14px;border-radius:10px;line-height:1.7">'+description+'</p>';
+  document.getElementById('issue_summary').innerHTML=issueHtml;
+
+  document.getElementById('score_summary').innerHTML=
+    '<div class="info-item"><div class="info-label">情绪低落</div><div class="info-val">'+scores.mood+'/5</div></div>'+
+    '<div class="info-item"><div class="info-label">焦虑紧张</div><div class="info-val">'+scores.anxiety+'/5</div></div>'+
+    '<div class="info-item"><div class="info-label">睡眠困难</div><div class="info-val">'+scores.sleep+'/5</div></div>'+
+    '<div class="info-item"><div class="info-label">功能受损</div><div class="info-val">'+scores.function+'/5</div></div>'+
+    '<div class="info-item"><div class="info-label">人际紧张</div><div class="info-val">'+scores.relation+'/5</div></div>'+
+    '<div class="info-item"><div class="info-label">总分</div><div class="info-val" style="color:'+(totalScore>=15?'#C4654A':totalScore>=8?'#854F0B':'#5C7A52')+'">'+totalScore+'/25</div></div>'+
+    // DOM 分数存档（页刷后仍可恢复，作为 rebuildAssessmentFromDOM 的首选数据源）
+    '<div id="scores-archive" style="display:none" data-mood="'+scores.mood+'" data-anxiety="'+scores.anxiety+'" data-sleep="'+scores.sleep+'" data-function="'+scores.function+'" data-relation="'+scores.relation+'" data-total="'+totalScore+'" data-severity="'+severity+'" data-severity-standard="'+severityStandard+'"></div>';
+
+  // ===== Referral logic =====
+  var cards=[];
+  currentRecommendedApproaches=[];
+  currentMinYears=1;
+  currentMinCredential='二级';
+
+  if(crisisVal==='active'||crisisVal==='action'){cards.push({top:true,badge:'⚠ 紧急转介',badgeClass:'badge-red',title:'立即转介：危机干预专业机构',desc:'当前存在自伤/自杀风险，普通心理咨询不适用。建议立即联系危机干预机构或精神科急诊。',tags:['危机干预资质','注册心理师','精神科联动','安全评估'],require:['从业年限：8年+','危机干预专项培训','精神科医疗团队协作']});currentMinYears=8;currentMinCredential='注册心理师';currentRecommendedApproaches.push('DBT');}
+  else if(crisisVal==='passive'){cards.push({top:true,badge:'优先处理',badgeClass:'badge-amber',title:'优先安排：有危机倾向的支持性咨询',desc:'存在消极念头，需优先安排具备危机风险评估能力的咨询师。',tags:['DBT取向','危机风险评估','安全计划制定'],require:['从业年限：5年+','危机评估培训','DBT/CBT取向优先']});currentMinYears=5;currentRecommendedApproaches.push('DBT','CBT');}
+
+  if(specials.includes('diagnosed')||specials.includes('medication')||issues.includes('personality')){cards.push({top:!cards.length,badge:'医心联动',badgeClass:'badge-amber',title:'建议：精神科-咨询联合模式',desc:'存在精神科诊断或人格成长/发展性议题，建议采用联合工作模式。',tags:['DBT取向','精神动力学','精神科协作','长程咨询'],require:['从业年限：8年+','注册心理师级别','需与精神科协作']});currentMinYears=Math.max(currentMinYears,8);currentMinCredential='注册心理师';currentRecommendedApproaches.push('DBT','精神动力学');}
+
+  if(issues.includes('trauma')){cards.push({top:!cards.length,badge:'强烈推荐',badgeClass:'badge-green',title:'推荐取向：创伤聚焦咨询（EMDR / TF-CBT）',desc:'创伤类议题需要受过专项创伤训练的咨询师。',tags:['EMDR取向','TF-CBT','创伤专项培训'],require:['从业年限：5年+','创伤专项培训认证','督导≥200小时']});currentMinYears=Math.max(currentMinYears,5);currentRecommendedApproaches.push('EMDR','CBT');}
+
+  if(issues.includes('relationship')||issues.includes('marriage')){cards.push({top:!cards.length,badge:'推荐',badgeClass:'badge-green',title:'推荐取向：关系/婚姻咨询',desc:'关系类议题推荐具备家庭治疗培训背景的咨询师。',tags:['家庭治疗取向','EFT婚姻治疗','系统式治疗'],require:['从业年限：3年+','家庭/婚姻咨询专项培训']});currentMinYears=Math.max(currentMinYears,3);currentRecommendedApproaches.push('家庭治疗','EFT');}
+
+  if(issues.includes('adolescent')||document.getElementById('occupation').value==='student_k12'){cards.push({top:!cards.length,badge:'推荐',badgeClass:'badge-green',title:'推荐取向：青少年专项咨询',desc:'青少年问题推荐具备儿童青少年专项培训的咨询师。',tags:['青少年专项','家庭治疗','CBT取向'],require:['从业年限：3年+','青少年/儿童专项培训']});currentMinYears=Math.max(currentMinYears,3);currentRecommendedApproaches.push('家庭治疗','CBT');}
+
+  if(issues.includes('emotion')||(scores.mood>=3||scores.anxiety>=3)){cards.push({top:!cards.length,badge:totalScore>=15?'建议优先':'推荐',badgeClass:totalScore>=15?'badge-amber':'badge-green',title:'推荐取向：CBT / ACT 认知行为疗法',desc:'情绪困扰首选循证证据最充分的认知行为疗法。',tags:['CBT取向','ACT取向','短程结构化','循证支持'],require:['从业年限：1年+','二级咨询师及以上',totalScore>=15?'建议先精神科评估':'无特殊限制']});currentRecommendedApproaches.push('CBT','ACT');}
+
+  if(issues.includes('growth')||(!issues.length&&!cards.length)){cards.push({top:!cards.length,badge:'推荐',badgeClass:'badge-green',title:'推荐取向：人本主义 / 存在主义咨询',desc:'自我成长类议题适合人本主义或存在主义取向。',tags:['人本主义','存在主义','来访者中心','中长程'],require:['从业年限：1年+','二/三级咨询师均可','无特殊限制']});currentRecommendedApproaches.push('人本主义');}
+
+  if(issues.includes('workplace')){cards.push({top:!cards.length,badge:'推荐',badgeClass:'badge-green',title:'推荐取向：EAP / 组织心理学方向',desc:'职场困扰（倦怠、霸凌、转型）推荐具备EAP或组织心理学背景的咨询师。',tags:['EAP经验','CBT取向','职业规划'],require:['从业年限：3年+','EAP或企业心理服务经验']});currentMinYears=Math.max(currentMinYears,3);currentRecommendedApproaches.push('CBT');}
+
+  if(issues.includes('eating')){cards.push({top:!cards.length,badge:'建议优先',badgeClass:'badge-amber',title:'建议：进食障碍专项咨询',desc:'进食障碍涉及身心双重因素，建议寻求具备专项训练的咨询师，必要时配合精神科评估。',tags:['进食障碍专项','CBT-E','精神科协作'],require:['从业年限：5年+','进食障碍专项培训','建议精神科联合评估']});currentMinYears=Math.max(currentMinYears,5);currentRecommendedApproaches.push('CBT','DBT');}
+
+  if(issues.includes('addiction')){cards.push({top:!cards.length,badge:'建议优先',badgeClass:'badge-amber',title:'建议：成瘾行为专项咨询',desc:'成瘾类议题建议寻求具备成瘾干预专项训练的咨询师，配合精神科评估。',tags:['成瘾干预专项','CBT取向','精神科协作'],require:['从业年限：5年+','成瘾行为专项培训','需排除共病']});currentMinYears=Math.max(currentMinYears,5);currentRecommendedApproaches.push('CBT','DBT');}
+
+  if(issues.includes('grief')){cards.push({top:!cards.length,badge:'推荐',badgeClass:'badge-green',title:'推荐取向：哀伤辅导 / 存在主义咨询',desc:'丧亲哀伤类议题推荐具备哀伤辅导训练的咨询师。',tags:['哀伤辅导','存在主义','人本主义'],require:['从业年限：2年+','哀伤辅导专项培训']});currentRecommendedApproaches.push('人本主义');}
+
+  if(issues.includes('sexual')){cards.push({top:!cards.length,badge:'推荐',badgeClass:'badge-green',title:'推荐取向：性心理专项咨询',desc:'性心理议题需要受过性心理专项训练的咨询师。',tags:['性心理专项培训','CBT取向','系统式治疗'],require:['从业年限：3年+','性心理专项培训认证','尊重多元性别认同']});currentMinYears=Math.max(currentMinYears,3);currentRecommendedApproaches.push('CBT');}
+
+  if(issues.includes('somatic')){cards.push({top:!cards.length,badge:'推荐',badgeClass:'badge-green',title:'推荐取向：身心整合 / CBT / 正念',desc:'心身困扰（躯体化、健康焦虑）推荐具备身心整合或正念训练的咨询师。',tags:['正念减压(MBSR)','CBT取向','精神科协作'],require:['从业年限：3年+','正念或身心训练','建议先排除器质性病变']});currentMinYears=Math.max(currentMinYears,3);currentRecommendedApproaches.push('CBT');}
+
+  if(issues.includes('family')){cards.push({top:!cards.length,badge:'推荐',badgeClass:'badge-green',title:'推荐取向：家庭系统治疗',desc:'家庭系统议题推荐具备家庭治疗培训背景的咨询师。',tags:['家庭治疗取向','系统式治疗','鲍恩家庭系统'],require:['从业年限：5年+','家庭治疗专项培训','建议家庭成员参与']});currentMinYears=Math.max(currentMinYears,5);currentRecommendedApproaches.push('家庭治疗');}
+
+  if(!cards.length){cards.push({top:true,badge:'通用推荐',badgeClass:'badge-green',title:'推荐进行初始评估咨询',desc:'建议先预约1-2次初始评估。',tags:['初始评估','1-2次探索'],require:['从业年限：2年+','二级咨询师及以上']});}
+
+  var html='';
+  cards.slice(0,3).forEach(function(c){
+    html+='<div class="match-card'+(c.top?' top':'')+'">';
+    html+='<span class="match-badge '+c.badgeClass+'">'+c.badge+'</span>';
+    html+='<h4>'+c.title+'</h4><p>'+c.desc+'</p>';
+    html+='<div class="tag-row">';c.tags.forEach(function(t){html+='<span class="tag teal">'+t+'</span>';});html+='</div>';
+    html+='<div class="tag-row" style="margin-top:6px">';c.require.forEach(function(r){html+='<span class="tag amber">▪ '+r+'</span>';});html+='</div></div>';
+  });
+  document.getElementById('referral_cards').innerHTML=html;
+
+  // Notes
+  var notes=['<strong>评估非诊断：</strong>本问卷仅作参考，不构成医学诊断。最终转介决策需由专业咨询师根据实际情况判断。','请携带本报告前往咨询，帮助咨询师快速了解您的基本情况。','初次咨询前，可以提前了解咨询师的受训背景和擅长议题。','心理咨询需要一定时间，建议做好连续4-8次咨询的准备。'];
+  if(totalScore>=15)notes.unshift('<strong style="color:#A03030">建议先行精神科评估：</strong>症状评分较高（'+totalScore+'/25），建议在开始系统心理咨询前，先前往精神卫生中心或三甲医院心理/精神科进行专业诊断，排除或确诊可能的精神障碍。');
+  if(crisisVal!=='safe')notes.unshift('<strong style="color:#A03030">危机安全提醒：</strong>检测到危机风险信号。如果您正处于危险中，请立即拨打 <a href="tel:12356" style="color:#BF360C">12356（心理援助）</a> 或 <a href="tel:110" style="color:#BF360C">110（紧急求助）</a>，并确保告知身边信任的人。请将危机状态如实告知咨询师。');
+  var notesHtml='<ul style="padding-left:18px;font-size:13px;color:#5F5E5A;line-height:2">';notes.forEach(function(n){notesHtml+='<li>'+n+'</li>';});notesHtml+='</ul>';
+  document.getElementById('notes_section').innerHTML=notesHtml;
+
+  // C-NIP 咨询风格偏好画像展示
+  var cnip=getCnipValues();
+  var cnipLabels={cnip_structure:'咨询结构',cnip_emotion:'情感深度',cnip_timefocus:'时间取向',cnip_warmth:'咨询师风格',cnip_homework:'课后作业',cnip_relational:'咨访关系'};
+  var cnipValueLabels={structured:'🎯 有方向感',balanced:'⚖️ 适度引导',open:'🌱 自由探索',emotional:'💧 深入感受',rational:'🧩 聚焦解决',past:'🕰️ 探讨过去',present:'📌 关注当下',warm:'🤗 温和支持',direct:'💡 坦诚直接',yes:'📝 愿意',neutral:'🤷 无所谓',no:'🚫 不太愿意',discuss:'💬 想讨论',skip:'➡️ 不需要'};
+  var cnipFilled=false;Object.keys(cnipLabels).forEach(function(k){if(cnip[k])cnipFilled=true;});
+  if(cnipFilled){
+    var cnipHtml='<div style="padding:12px 16px;background:linear-gradient(135deg,#F0F7EC 0%,#E8F0E4 100%);border:1px solid #C8DCC0;border-radius:10px;margin-bottom:6px">';
+    cnipHtml+='<div style="font-size:13px;font-weight:600;color:#5C7A52;margin-bottom:8px">🎨 咨询风格偏好</div>';
+    cnipHtml+='<div class="info-grid" style="gap:6px">';
+    Object.keys(cnipLabels).forEach(function(k){
+      if(cnip[k]){
+        cnipHtml+='<div class="info-item" style="padding:4px 0"><div class="info-label" style="font-size:12px">'+cnipLabels[k]+'</div><div class="info-val" style="font-size:13px">'+(cnipValueLabels[cnip[k]]||cnip[k])+'</div></div>';
+      }
+    });
+    cnipHtml+='</div></div>';
+    // 插入到 score_summary 后面
+    var scoreEl=document.getElementById('score_summary');
+    if(scoreEl&&scoreEl.parentElement){
+      var cnipDiv=document.createElement('div');
+      cnipDiv.innerHTML=cnipHtml;
+      cnipDiv.id='cnip_profile';
+      scoreEl.parentElement.insertBefore(cnipDiv,scoreEl.parentElement.children[3]||null);
+    }
+  }
+
+  // 存储结果数据用于导出
+  lastResultData = {
+    name: name, age: age, gender: genderText, occupation: occText,
+    filledBy: filledBy, isMinor: isMinor, duration: durationText,
+    prevCounseling: prevText, budget: budgetVal, budgetText: budgetText,
+    city: cityVal, formats: formats, genderPref: genderPrefText,
+    issues: issues, description: description, specials: specials,
+    crisisLevel: crisisVal, cnip: cnip,
+    scores: { mood: scores.mood, anxiety: scores.anxiety, sleep: scores.sleep, function: scores.function, relation: scores.relation },
+    totalScore: totalScore, severity: severity, severityStandard: severityStandard,
+    recommendedApproaches: currentRecommendedApproaches,
+    date: dateStr, viewToken: currentViewToken,
+    notes: notes
+  };
+
+  goStep(4);
+  showToast('评估报告已生成');
+
+  // Try to match counselors from Supabase
+  if(typeof matchCounselors==='function'&&SUPABASE_CONFIG.enableDataCollection&&SUPABASE_CONFIG.url){
+    document.getElementById('counselor_loading').style.display='block';
+    matchCounselors({
+      issues: issues,
+      severity: severityStandard,
+      recommendedApproaches: currentRecommendedApproaches,
+      minYears: currentMinYears,
+      minCredential: currentMinCredential,
+      budget: budgetVal,
+      visitor_city: document.getElementById('city').value.trim(),
+      visitor_formats: formats,
+      gender_pref: document.getElementById('gender_pref').value,
+      visitor_gender: genderText,
+      visitor_age: age,
+      age_pref: document.getElementById('age_pref').value,
+      orientation_pref: document.getElementById('orientation_pref').value,
+      comm_style: document.getElementById('comm_style').value,
+      filled_by: filledBy,
+      is_minor: isMinor,
+      cnip: getCnipValues()
+    }).then(function(results){
+      document.getElementById('counselor_loading').style.display='none';
+      if(results.length>0){
+        document.getElementById('counselor_match_section').style.display='block';
+        var chtml='<div style="padding:10px 14px;background:#F0F7EC;border-radius:10px;font-size:12px;color:#5A6B52;line-height:1.7;margin-bottom:12px">💡 以下推荐基于您的评估信息自动匹配，仅供参考。建议结合咨询师的专业背景、个人感受和实际情况综合选择，匹配度不等于适合度。</div>';
+        results.slice(0,3).forEach(function(r,idx){
+          var c=r.counselor;
+          var cls=r.matchScore>=70?'match-high':r.matchScore>=45?'match-mid':'match-low';
+          var badgeCls=r.matchScore>=70?'match-high-badge':r.matchScore>=45?'match-mid-badge':'match-low-badge';
+          // XSS防护：转义用户输入字段
+          function esc(s){if(!s)return '';var d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+          chtml+='<div class="counselor-card '+cls+'">';
+
+          // 头部：日常照片 + 姓名 + 匹配度 + 公益标识
+          chtml+='<div class="counselor-header"><span class="c-head-left">';
+          if(c.photo_daily&&c.photo_daily[0]) chtml+='<img class="counselor-photo" src="'+c.photo_daily[0]+'" alt="咨询师照片">';
+          chtml+='<span class="counselor-name">'+esc(c.name);
+          if(c.public_welfare) chtml+=' <span class="counselor-welfare-badge">🌿 公益</span>';
+          chtml+='</span></span>';
+          chtml+='<span class="match-score-badge '+badgeCls+'">匹配度 '+r.matchScore+'%</span></div>';
+
+          // 简介
+          if(c.bio_short)chtml+='<div class="counselor-bio">'+esc(c.bio_short)+'</div>';
+
+          // 基本信息（统一格式：图标+内容，每项一行）
+          chtml+='<div class="counselor-meta">';
+          var metaItems=[];
+          if(c.credential_level)metaItems.push('🎓 '+esc(c.credential_level)+' · '+esc(String(c.years_experience))+'年');
+          if(c.city)metaItems.push('📍 '+esc(c.city));
+          if(c.fee_min)metaItems.push('💰 '+esc(String(c.fee_min))+'元/次');
+          if(c.session_formats&&c.session_formats.length)metaItems.push('💻 '+c.session_formats.slice(0,2).map(esc).join(' · '));
+          metaItems.forEach(function(m){chtml+='<div class="meta-item">'+m+'</div>';});
+          chtml+='</div>';
+
+          // 擅长议题标签
+          if(c.specialties&&c.specialties.length>0){
+            chtml+='<div class="counselor-specialty-tags">';
+            var specMap={emotion:'情绪困扰',relationship:'关系困境',trauma:'创伤经历',growth:'自我成长',adolescent:'青少年问题',marriage:'婚姻/伴侣',personality:'人格成长/发展性议题',crisis:'危机状态',workplace:'职场困扰',eating:'进食障碍',addiction:'成瘾行为',grief:'丧亲哀伤',sexual:'性心理议题',somatic:'心身困扰',family:'家庭系统'};
+            c.specialties.slice(0,4).forEach(function(s){chtml+='<span class="counselor-specialty-tag">'+esc(specMap[s]||s)+'</span>';});
+            if(c.specialties.length>4)chtml+='<span class="counselor-specialty-tag">+'+(c.specialties.length-4)+'</span>';
+            chtml+='</div>';
+          }
+
+          // 匹配详情
+          if(r.matchDetails.length>0){
+            chtml+='<div class="tag-row" style="margin-top:8px">';
+            r.matchDetails.forEach(function(d){chtml+='<span class="tag teal">'+esc(d)+'</span>';});
+            chtml+='</div>';
+          }
+
+          // 联系方式（有公布微信→显示；无→显示申请匹配按钮）
+          if(c.contact_wechat&&c.contact_wechat_public!==false){
+            chtml+='<div class="counselor-contact">💬 微信：'+esc(c.contact_wechat)+'</div>';
+          } else {
+            chtml+='<div class="counselor-contact no-contact"><span>📞 联系方式不公开</span><button class="btn-match-apply" onclick="openMatchApply(\''+c.id+'\',\''+esc(c.name)+'\')">申请匹配</button></div>';
+          }
+
+          // PCOMS 效果追踪入口
+          var asid=getAsid();
+          if(asid){
+            var trackUrl='session.html?aid='+asid+'&cid='+c.id+'&name='+encodeURIComponent(name||'来访者')+'&sn=1';
+            chtml+='<div class="counselor-contact" style="margin-top:8px"><a href="'+trackUrl+'" style="color:#5C7A52;text-decoration:none;font-size:13px">📊 开始咨询效果追踪（PCOMS）</a></div>';
+  chtml+='<div class="counselor-contact" style="margin-top:4px"><a href="session-dashboard.html?aid='+asid+'" style="color:#7A8B72;text-decoration:none;font-size:12px">📈 查看追踪面板</a></div>';
+          }
+
+          // 展开详情按钮
+          if(c.bio_full||c.education||c.training_background||c.available_slots){
+            chtml+='<button class="counselor-expand-btn" onclick="this.classList.toggle(\'open\');this.nextElementSibling.classList.toggle(\'open\')">';
+            chtml+='<span class="arrow">▶</span> 查看详细介绍</button>';
+            chtml+='<div class="counselor-detail">';
+            if(c.education)chtml+='<div class="detail-row"><span class="detail-label">学历</span><span>'+esc(c.education)+'</span></div>';
+            if(c.training_background)chtml+='<div class="detail-row"><span class="detail-label">受训背景</span><span>'+esc(c.training_background)+'</span></div>';
+            if(c.available_slots)chtml+='<div class="detail-row"><span class="detail-label">可预约</span><span>'+esc(c.available_slots)+'</span></div>';
+            if(c.bio_full)chtml+='<div style="margin-top:6px">'+esc(c.bio_full)+'</div>';
+            chtml+='</div>';
+          }
+
+          // 选为我的咨询师按钮
+          var asid=getAsid();
+          if(!asid && currentViewToken) asid = currentViewToken;
+          if(!asid){
+            if(crypto && crypto.randomUUID){ asid = crypto.randomUUID(); }
+            else { asid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,function(c){var r=Math.random()*16|0;return(c==='x'?r:(r&0x3|0x8)).toString(16);}); }
+            window.xiaopinguAsid = asid;
+            sessionStorage.setItem('xiaopingu_assessment_id', asid);
+            localStorage.setItem('xiaopingu_assessment_id', asid);
+          }
+          var selMeta = { credential: c.credential_level, city: c.city, fee: c.fee_min ? c.fee_min+'元/次' : '' };
+          var metaStr=JSON.stringify(selMeta).replace(/"/g,'&quot;').replace(/'/g,"\\'");
+          chtml+='<button class="btn-select-counselor" data-cid="'+c.id+'" onclick="selectCounselor(\''+asid+'\',\''+c.id+'\',\''+esc(c.name).replace(/'/g,"\\'")+'\',\''+r.matchScore+'\',\''+metaStr+'\')">✓ 选为我的咨询师</button>';
+
+          chtml+='</div>';
+        });
+        document.getElementById('counselor_match_list').innerHTML=chtml;
+        document.getElementById('counselor_match_section').scrollIntoView({behavior:'smooth'});
+        // 恢复已选咨询师状态
+        var _asid = getAsid();
+        refreshCounselorButtons(_asid);
+        renderMyCounselorCard(_asid);
+      } else {
+        document.getElementById('counselor_match_section').style.display='block';
+        document.getElementById('counselor_match_list').innerHTML='<div style="text-align:center;padding:24px;color:#A09889;font-size:14px;background:#F7F4EF;border-radius:12px">暂无匹配的咨询师<br><span style="font-size:12px;margin-top:6px;display:inline-block">系统正在招募更多咨询师，请稍后再试</span></div>';
+        document.getElementById('counselor_match_section').scrollIntoView({behavior:'smooth'});
+      }
+    }).catch(function(e){
+      console.error('[小平菇] 咨询师匹配失败:', e);
+      document.getElementById('counselor_loading').style.display='none';
+      document.getElementById('counselor_match_section').style.display='block';
+      var isFileProtocol = window.location.protocol === 'file:';
+      document.getElementById('counselor_match_list').innerHTML=
+        '<div style="text-align:center;padding:24px;color:#C4654A;font-size:14px;background:#FFF5F0;border-radius:12px">' +
+        '⚠ 咨询师匹配加载失败<br>' +
+        '<span style="font-size:12px;margin:8px 0;display:inline-block;color:#999">' + (isFileProtocol
+          ? '检测到你正在用 file:// 打开<br>请改用 localhost 访问：<br><code style="background:#f5f5f5;padding:2px 8px;border-radius:4px;font-size:13px">http://127.0.0.1:8080/index.html</code>'
+          : '网络连接异常: ' + (e.message || '未知错误')) + '</span><br>' +
+        '<button onclick="location.reload()" style="padding:8px 24px;border:1px solid #C4654A;background:#fff;color:#C4654A;border-radius:8px;cursor:pointer;font-size:14px;margin-top:8px">🔄 重试</button>' +
+        '</div>';
+    });
+  }
+
+  // Save assessment data (skip in view mode)
+  var viewToken = (crypto.randomUUID || function(){return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,function(c){var r=Math.random()*16|0;return(c==='x'?r:(r&0x3|0x8)).toString(16);});})();
+  var assessmentPayload = {
+    id:viewToken,
+    view_token:viewToken,
+    visitor_name:name,visitor_age:parseInt(age)||null,visitor_gender:genderText,
+    visitor_occupation:occText,visitor_city:cityVal,filled_by:filledBy,prev_counseling:prevText,budget:budgetVal,preferred_formats:formats,
+    gender_pref:document.getElementById('gender_pref').value,
+    age_pref:document.getElementById('age_pref').value,
+    orientation_pref:document.getElementById('orientation_pref').value,
+    comm_style:document.getElementById('comm_style').value,
+    cnip_structure:_attr('[data-field="cnip_structure"] .cnip-btn.active','data-value'),
+    cnip_emotion:_attr('[data-field="cnip_emotion"] .cnip-btn.active','data-value'),
+    cnip_timefocus:_attr('[data-field="cnip_timefocus"] .cnip-btn.active','data-value'),
+    cnip_warmth:_attr('[data-field="cnip_warmth"] .cnip-btn.active','data-value'),
+    cnip_homework:_attr('[data-field="cnip_homework"] .cnip-btn.active','data-value'),
+    cnip_relational:_attr('[data-field="cnip_relational"] .cnip-btn.active','data-value'),
+    expects:Array.from(document.querySelectorAll('#expect_grid input:checked')).map(function(e){return e.value;}),
+    issues:issues,description:description,duration:durationText,
+    score_mood:scores.mood,score_anxiety:scores.anxiety,score_sleep:scores.sleep,
+    score_function:scores.function,score_relation:scores.relation,
+    total_score:totalScore,severity:severity,specials:specials,crisis_level:crisisVal,
+    user_agent:navigator.userAgent.substring(0,200)
+  };
+  // 无条件写入评估ID（三层：内存→sessionStorage→localStorage），确保后续匹配申请始终可用
+  window.xiaopinguAsid = viewToken;
+  console.log('[小平菇] 前置写入评估ID:', viewToken);
+  try { sessionStorage.setItem('xiaopingu_assessment_id', viewToken); localStorage.setItem('xiaopingu_assessment_id', viewToken); } catch(e) {}
+  try { sessionStorage.setItem('xiaopingu_assessment_data', JSON.stringify(assessmentPayload)); } catch(e) {}
+  try { localStorage.setItem('xiaopingu_assessment_backup', JSON.stringify(assessmentPayload)); } catch(e) {}
+  window._xiaopinguAssessmentData = assessmentPayload; // 内存兜底，不受 localStorage 限制
+  if(typeof saveAssessment==='function'&&!currentViewToken){
+    window._xpg_save_pending = true; // 标记尚未确认保存成功
+    saveAssessment(assessmentPayload).then(function(result){
+      if(result){
+        console.log('[小平菇] DB评估记录已创建，ID:', viewToken);
+        window._xpg_save_pending = false; // 确认保存成功
+      } else {
+        console.warn('[小平菇] DB保存失败，使用本地ID回退:', viewToken);
+        // pending 保持 true，等待页面可见性恢复时重试
+      }
+      showViewLink(viewToken);
+    });
+  } else {
+    showViewLink(viewToken);
+  }
+}
+
+// ===== 查看链接功能 =====
+function copyViewLink(){
+  var inp=document.getElementById('view_link_input');
+  if(!inp)return;
+  inp.select();inp.setSelectionRange(0,99999);
+  document.execCommand('copy');
+  showToast('链接已复制');
+}
+function showViewLink(token){
+  if(!token)return;
+  var wrap=document.getElementById('view_link_wrap');
+  var inp=document.getElementById('view_link_input');
+  if(wrap)wrap.style.display='block';
+  if(inp)inp.value=window.location.origin+window.location.pathname+'?view='+encodeURIComponent(token);
+  renderXgEntry();
+  fetchShortId();
+}
+
+/* ===== 短编号：8 位好记评估号（服务端生成，/resolve 解析） ===== */
+window.xiaopinguShortId = null;
+function fetchShortId(){
+  var asid = getAsid();
+  if(!asid || typeof SUPABASE_CONFIG==='undefined' || !SUPABASE_CONFIG.url) return;
+  fetch(SUPABASE_CONFIG.url + '/resolve?code=' + encodeURIComponent(asid))
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(d){
+      var el = document.getElementById('shortid-display');
+      if(d && d.short_id){
+        window.xiaopinguShortId = d.short_id;
+        if(el) el.textContent = d.short_id;
+        var as = document.getElementById('apply-shortid');
+        if(as) as.textContent = d.short_id;
+        try{ localStorage.setItem('xiaopingu_short_id', d.short_id); }catch(e){}
+      } else if(el) { el.textContent = '生成中，稍后刷新可见'; }
+    }).catch(function(){});
+}
+function copyShortId(){
+  var sid = window.xiaopinguShortId;
+  if(!sid){ showToast('编号还在生成中，请稍后再试','error'); return; }
+  var done = function(){ showToast('✅ 评估号 ' + sid + ' 已复制'); };
+  if(navigator.clipboard){ navigator.clipboard.writeText(sid).then(done); }
+  else { var ta=document.createElement('textarea'); ta.value=sid; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); done(); }
+}
+
+/* ===== 原问卷 → 四评 入口（A 方案：串成一条链路）===== */
+var XG_API_BASE='https://xpg-demo-d3gzsswtcc3233ea0-1300577165.ap-shanghai.app.tcloudbase.com/xg-api';
+
+function renderXgEntry(){
+  var sec=document.getElementById('xg_entry_section');
+  var card=document.getElementById('xg_entry_card');
+  if(!sec||!card)return;
+  var asid=getAsid();
+  if(!asid){sec.style.display='none';return;}
+  sec.style.display='block';
+  var cachedMatchId='';
+  try{cachedMatchId=localStorage.getItem('xg_match_id')||'';}catch(e){}
+  card.innerHTML=
+    '<div style="padding:14px 16px;background:#F0F7EC;border:1px solid #C8DCC0;border-radius:10px">'+
+      '<p style="font-size:13px;color:#5A6B52;line-height:1.7;margin-bottom:10px">'+
+        '评估已完成。若您已开始咨询，可在这里记录每节的感受变化——咨询师会据此了解你的进展，'+
+        '<strong>记录内容不会以分数形式展示给你</strong>，仅用于支持你的咨询过程。'+
+      '</p>'+
+      (cachedMatchId?'<p style="font-size:12px;color:#7A8B72;margin-bottom:10px">个案号：'+esc(cachedMatchId)+'</p>':'')+
+      '<button type="button" id="xg_enter_btn" class="btn btn-primary" onclick="enterXgProcess()">进入咨询过程记录 →</button>'+
+    '</div>';
+}
+
+function enterXgProcess(){
+  var asid=getAsid();
+  if(!asid){showToast('请先完成评估');return;}
+  var btn=document.getElementById('xg_enter_btn');
+  if(btn){btn.disabled=true;btn.textContent='正在进入…';}
+  fetch(XG_API_BASE+'/v1/xg/bridge/enter',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({asid:asid})
+  }).then(function(r){return r.json().then(function(d){return {ok:r.ok,d:d};});})
+  .then(function(x){
+    if(!x.ok||!x.d||!x.d.visitor_token){
+      // 红线：不在评估范围 → 走拒评页（不写入任何四评身份、不进四评）
+      if(x.d&&x.d.out_of_scope){
+        location.href='x1-out-of-scope.html';
+        return;
+      }
+      throw new Error((x.d&&x.d.message)||'进入失败');
+    }
+    var d=x.d;
+    try{
+      localStorage.setItem('xg_role','visitor');
+      localStorage.setItem('xg_visitor_openid',d.visitor_token);
+      localStorage.setItem('xg_match_id',d.match_id||'');
+      localStorage.setItem('xg_session_no','0');
+      if(d.visitor_id)localStorage.setItem('xg_focus_user',d.visitor_id);
+    }catch(e){}
+    if(btn){btn.textContent='已进入，正在跳转…';}
+    location.href=(d.next_page||'v1-consent.html')+'?match_id='+encodeURIComponent(d.match_id||'');
+  }).catch(function(e){
+    if(btn){btn.disabled=false;btn.textContent='进入咨询过程记录 →';}
+    showToast('进入失败：'+e.message);
+  });
+}
+function enterViewMode(token){
+  currentViewToken=token;
+  document.getElementById('landing').classList.add('hidden');
+  document.getElementById('consent-overlay').classList.add('hidden');
+  document.getElementById('main-app').style.display='block';
+  if(typeof getAssessmentByToken==='function'){
+    document.getElementById('result_panel').innerHTML='<div class="loading-hint" style="padding:60px 20px"><div class="spinner"></div><br>正在加载评估记录…</div>';
+    goStep(4);
+    document.getElementById('result_action_bar').style.display='none';
+    getAssessmentByToken(token).then(function(d){
+      if(!d){
+        document.getElementById('result_panel').innerHTML='<div style="text-align:center;padding:60px 20px;color:#888"><div style="font-size:32px;margin-bottom:12px">🔍</div><p>未找到该评估记录</p><p style="font-size:12px;margin-top:8px;color:#aaa">链接可能已失效或不存在</p></div>';
+        return;
+      }
+      // 回填表单数据
+      if(d.visitor_name)document.getElementById('name').value=d.visitor_name;
+      if(d.visitor_age)document.getElementById('age').value=d.visitor_age;
+      if(d.visitor_gender){
+        var g=document.getElementById('gender');
+        for(var i=0;i<g.options.length;i++){if(g.options[i].text===d.visitor_gender){g.selectedIndex=i;break;}}
+      }
+      if(d.visitor_occupation){
+        var occ=document.getElementById('occupation');
+        var found=false;
+        for(var i=0;i<occ.options.length;i++){
+          if(occ.options[i].text===d.visitor_occupation||(occ.value==='other'&&!found)){occ.selectedIndex=i;found=true;if(occ.value==='other')document.getElementById('occupation_other').value=d.visitor_occupation;}
+        }
+        if(occ.value==='other')toggleOccupationOther();
+      }
+      if(d.visitor_city)document.getElementById('city').value=d.visitor_city;
+      if(d.filled_by)document.getElementById('filled_by').value=d.filled_by;
+      if(d.prev_counseling){
+        var pv=document.getElementById('prev_counseling');
+        for(var i=0;i<pv.options.length;i++){if(pv.options[i].text===d.prev_counseling){pv.selectedIndex=i;break;}}
+      }
+      if(d.budget)document.getElementById('budget').value=d.budget;
+      if(d.duration){
+        var du=document.getElementById('duration');
+        for(var i=0;i<du.options.length;i++){if(du.options[i].text===d.duration){du.selectedIndex=i;break;}}
+      }
+      if(d.crisis_level)document.getElementById('crisis_screen').value=d.crisis_level;
+      if(d.gender_pref)document.getElementById('gender_pref').value=d.gender_pref;
+      if(d.age_pref)document.getElementById('age_pref').value=d.age_pref;
+      if(d.orientation_pref)document.getElementById('orientation_pref').value=d.orientation_pref;
+      if(d.comm_style)document.getElementById('comm_style').value=d.comm_style;
+      if(d.description)document.getElementById('description').value=d.description;
+      // 回填 C-NIP 偏好
+      var cnipVals={};
+      if(d.cnip_structure)cnipVals.cnip_structure=d.cnip_structure;
+      if(d.cnip_emotion)cnipVals.cnip_emotion=d.cnip_emotion;
+      if(d.cnip_timefocus)cnipVals.cnip_timefocus=d.cnip_timefocus;
+      if(d.cnip_warmth)cnipVals.cnip_warmth=d.cnip_warmth;
+      if(d.cnip_homework)cnipVals.cnip_homework=d.cnip_homework;
+      if(d.cnip_relational)cnipVals.cnip_relational=d.cnip_relational;
+      if(Object.keys(cnipVals).length>0)setCnipValues(cnipVals);
+      // 回填 scores
+      if(d.score_mood!=null)scores.mood=d.score_mood;
+      if(d.score_anxiety!=null)scores.anxiety=d.score_anxiety;
+      if(d.score_sleep!=null)scores.sleep=d.score_sleep;
+      if(d.score_function!=null)scores.function=d.score_function;
+      if(d.score_relation!=null)scores.relation=d.score_relation;
+      Object.keys(scores).forEach(function(k){var row=document.getElementById('scale_'+k);if(row){var btns=row.querySelectorAll('.scale-btn');btns.forEach(function(b,i){b.classList.toggle('sel',i<=scores[k]);});}});
+      // 回填 checkbox 组（issues / expects / specials / formats）
+      // 恢复 otherIssues（自定义议题）
+      otherIssues = [];
+      if(d.issues){
+        d.issues.forEach(function(v){
+          var found = false;
+          document.querySelectorAll('#issue_grid .opt-card').forEach(function(c){
+            var cb = c.querySelector('input[value="'+v+'"]');
+            if(cb){ cb.checked=true; c.classList.add('selected'); found=true; }
+          });
+          if(!found) otherIssues.push(v);
+        });
+        renderOtherIssueTags();
+      }
+      if(d.expects){d.expects.forEach(function(v){var cards=document.querySelectorAll('#expect_grid .opt-card');cards.forEach(function(c){var cb=c.querySelector('input[value="'+v+'"]');if(cb){cb.checked=true;c.classList.add('selected');}});});}
+      if(d.specials){d.specials.forEach(function(v){var cbs=document.querySelectorAll('input[name="special"]');cbs.forEach(function(cb){if(cb.value===v){cb.checked=true;var el=cb.closest('.opt-simple');if(el){el.style.borderColor='#5C7A52';el.style.background='#E8F0E4';}}});});}
+      if(d.preferred_formats){d.preferred_formats.forEach(function(v){var cards=document.querySelectorAll('#format_grid .opt-card');cards.forEach(function(c){var cb=c.querySelector('input[value="'+v+'"]');if(cb){cb.checked=true;c.classList.add('selected');}});});}
+      // 恢复 result_panel HTML（被 loading 替换了）
+      restoreResultPanel();
+      // 生成报告（不保存数据）
+      generateResult();
+      // 显示查看链接、隐藏修改按钮
+      if(d.id) window.xiaopinguAsid = d.id; // view 模式下补齐 ASID，供 fetchShortId/copyAsidLink 使用
+      if(d.short_id){
+        window.xiaopinguShortId = d.short_id;
+        var _se = document.getElementById('shortid-display'); if(_se) _se.textContent = d.short_id;
+      }
+      showViewLink(d.view_token);
+      var btnModify=document.getElementById('btn_modify');
+      if(btnModify)btnModify.style.display='none';
+      document.getElementById('result_action_bar').style.display='flex';
+    });
+  }
+}
+function restoreResultPanel(){
+  var rp=document.getElementById('result_panel');
+  rp.innerHTML='<div class="result-header"><h2 id="result_title">转介评估报告</h2><p id="result_time"></p>'+
+    '<div style="margin-top:12px;padding:12px 16px;background:linear-gradient(135deg,#FFF8E1 0%,#FFF3E0 100%);border:1px solid #FFE0B2;border-radius:10px;font-size:13px;color:#5D4037;line-height:1.7"><strong style="color:#E65100">⚠️ 重要提示</strong><br><span>本评估仅用于了解您当前的心理状态并辅助匹配咨询师，<strong>不构成任何医学诊断或临床结论</strong>。如果您感到痛苦难以承受，请拨打<a href="tel:12356" style="color:#BF360C;font-weight:600;text-decoration:none">心理援助热线 12356</a>。</span></div></div>'+
+    '<div class="result-body">'+
+    '<div class="result-section"><h3>来访者基本信息</h3><div class="info-grid" id="info_summary"></div></div><hr class="divider">'+
+    '<div class="result-section"><h3>主诉议题分析</h3><div id="issue_summary"></div></div><hr class="divider">'+
+    '<div class="result-section"><h3>程度评分</h3><div class="info-grid" id="score_summary"></div></div><hr class="divider">'+
+    '<div class="result-section"><h3>转介匹配建议</h3><div id="referral_cards"></div></div><hr class="divider">'+
+    '<div class="result-section" id="my_counselor_section" style="display:none"><h3>我的咨询师</h3><div id="my_counselor_card"></div></div>'+
+    '<div class="result-section" id="counselor_match_section" style="display:none"><h3>推荐咨询师</h3><div id="counselor_match_list"></div></div>'+
+    '<div id="counselor_loading" style="display:none"><div class="loading-hint"><div class="spinner"></div><br>正在匹配咨询师…</div></div><hr class="divider">'+
+    '<div class="result-section"><h3>咨询前注意事项</h3><div id="notes_section"></div></div>'+
+    '</div>';
+}
+
+function resetForm(){if(confirm('确认重新填写问卷？当前数据将被清除。')){localStorage.removeItem(STORAGE_KEY);try{sessionStorage.removeItem('xiaopingu_gate');}catch(e){}currentViewToken=null;window.xiaopinguAsid=null;window.history.replaceState(null,'',window.location.pathname);location.reload();}}
+
+// ===== 获取评估ID（三层回退：内存→sessionStorage→localStorage） =====
+function getAsid() {
+  var asid = window.xiaopinguAsid || sessionStorage.getItem('xiaopingu_assessment_id') || localStorage.getItem('xiaopingu_assessment_id');
+  if(!asid) console.error('[小平菇] getAsid 三层都为空！window:',window.xiaopinguAsid,'sessionStorage:',sessionStorage.getItem('xiaopingu_assessment_id'),'localStorage:',localStorage.getItem('xiaopingu_assessment_id'));
+  return asid;
+}
+
+// ===== 申请匹配弹窗 =====
+function openMatchApply(cid,cname){
+  document.getElementById('apply-cname').textContent=cname||'';
+  document.getElementById('apply-cid').value=cid;
+  document.getElementById('apply-form').classList.add('show');
+  document.getElementById('apply-success').classList.remove('show');
+  document.getElementById('match-apply-overlay').classList.remove('hidden');
+  // 重置按钮状态
+  var btn = document.getElementById('btn-submit-match');
+  if(btn){ btn.style.display=''; btn.disabled = false; btn.textContent = '提交申请'; }
+}
+function closeMatchApply(){
+  document.getElementById('match-apply-overlay').classList.add('hidden');
+  document.getElementById('apply-name').value='';
+  document.getElementById('apply-contact').value='';
+}
+
+/* ===== 我的咨询师 ===== */
+var SELECTED_COUNSELOR_KEY = 'xiaopingu_selected_counselor';
+
+function getSelectedCounselor(aid) {
+  try {
+    var data = JSON.parse(localStorage.getItem(SELECTED_COUNSELOR_KEY) || '{}');
+    return aid && data[aid] ? data[aid] : null;
+  } catch(e) { return null; }
+}
+
+function selectCounselor(aid, cId, cName, cScore, cMeta) {
+  if(typeof SUPABASE_CONFIG==='undefined'){ alert('配置未加载，请通过 localhost 访问'); return; }
+  // 解析 meta（从 onclick 传入时双引号被 HTML-encoded 为 &quot;）
+  var metaObj = null;
+  if(cMeta && typeof cMeta==='string'){
+    try { metaObj = JSON.parse(cMeta.replace(/&quot;/g,'"')); } catch(e){ metaObj = null; }
+  }
+  // 本地缓存（快速访问）
+  var data = JSON.parse(localStorage.getItem(SELECTED_COUNSELOR_KEY) || '{}');
+  data[aid] = { id: cId, name: cName, score: cScore, meta: metaObj || cMeta };
+  localStorage.setItem(SELECTED_COUNSELOR_KEY, JSON.stringify(data));
+
+  // 同步到数据库（先尝试 PATCH，若记录不存在则 POST 创建）
+  // 关键：无论记录是否存在，PATCH 都要同时写入备份分数（防止旧空壳记录覆盖）
+  if (aid && cId) {
+    (function doSelectSync(){
+      var backupData = (typeof getAssessmentBackupData === 'function') ? getAssessmentBackupData() : {};
+      // 合并备份分数 + 已选咨询师信息 → PATCH 时一箭双雕
+      var body = { selected_counselor_id:cId, selected_counselor_name:cName, selected_at:new Date().toISOString() };
+      console.log('[小平菇] selectCounselor PATCH: total_score=', body.total_score, 'mood=', body.score_mood);
+      fetch(SUPABASE_CONFIG.url + '/rest/v1/assessments?id=eq.' + aid, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_CONFIG.anonKey, 'Authorization': 'Bearer ' + SUPABASE_CONFIG.anonKey, 'Prefer': 'return=representation' },
+        body: JSON.stringify(body)
+      }).then(function(r){
+        return r.ok ? r.json() : null;
+      }).then(function(d){
+        if (Array.isArray(d) && d.length === 0) {
+          // 记录不存在 → POST 创建（带完整备份数据）
+          var createBody = Object.assign({ id: aid }, backupData, body, { updated_at: new Date().toISOString() });
+          console.log('[小平菇] selectCounselor fallback POST: total_score=', createBody.total_score);
+          return fetch(SUPABASE_CONFIG.url + '/rest/v1/assessments', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_CONFIG.anonKey, 'Authorization': 'Bearer ' + SUPABASE_CONFIG.anonKey, 'Prefer': 'return=minimal' },
+            body: JSON.stringify(createBody)
+          });
+        }
+      }).catch(function(e){ console.warn('[小平菇] 选咨询师同步:', e.message); });
+    })();
+  }
+
+  renderMyCounselorCard(aid);
+  refreshCounselorButtons(aid);
+  showToast('已选择 ' + cName + ' 为您的咨询师');
+}
+
+function deselectCounselor(aid) {
+  var data = JSON.parse(localStorage.getItem(SELECTED_COUNSELOR_KEY) || '{}');
+  delete data[aid];
+  localStorage.setItem(SELECTED_COUNSELOR_KEY, JSON.stringify(data));
+
+  // 同步清除数据库中的选择
+  if (aid) {
+    fetch(SUPABASE_CONFIG.url + '/rest/v1/assessments?id=eq.' + aid, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_CONFIG.anonKey,
+        'Authorization': 'Bearer ' + SUPABASE_CONFIG.anonKey,
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify({
+        selected_counselor_id: null,
+        selected_counselor_name: null,
+        selected_at: null
+      })
+    }).catch(function(e) {
+      console.warn('[小平菇] 取消选择同步失败:', e);
+    });
+  }
+
+  document.getElementById('my_counselor_section').style.display = 'none';
+  refreshCounselorButtons(aid);
+}
+
+// 全局 XSS 转义函数（闭包内也有同名版本，功能一致）
+function esc(s) { if (!s) return ''; var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+function renderMyCounselorCard(aid) {
+  var sel = getSelectedCounselor(aid);
+  if (!sel) { document.getElementById('my_counselor_section').style.display = 'none'; return; }
+
+  document.getElementById('my_counselor_section').style.display = 'block';
+  var asid = getAsid() || aid;
+  var visitorName = document.getElementById('name') ? document.getElementById('name').value : '来访者';
+  var trackUrl = 'session.html?aid=' + asid + '&cid=' + sel.id + '&name=' + encodeURIComponent(visitorName) + '&sn=1';
+  var counselorUrl = trackUrl + '&role=counselor';
+  var dashboardUrl = 'session-dashboard.html?aid=' + asid;
+
+  var metaHtml = '';
+  if (sel.meta) {
+    if (sel.meta.credential) metaHtml += '<span class="meta-item">🎓 ' + esc(sel.meta.credential) + '</span>';
+    if (sel.meta.city) metaHtml += '<span class="meta-item">📍 ' + esc(sel.meta.city) + '</span>';
+    if (sel.meta.fee) metaHtml += '<span class="meta-item">💰 ' + esc(sel.meta.fee) + '</span>';
+  }
+
+  var html = '<div class="my-counselor-card">';
+  html += '<div class="mc-header"><span class="mc-badge">✓ 已选择</span><span class="mc-name">' + esc(sel.name) + '</span><span class="mc-score">匹配度 ' + sel.score + '%</span></div>';
+  html += '<div class="mc-meta">' + metaHtml + '</div>';
+  html += '<div class="mc-actions">';
+  html += '<a href="' + trackUrl + '" class="mc-btn mc-btn-primary">📊 开始追踪评分</a>';
+  html += '<a href="' + dashboardUrl + '" class="mc-btn">📈 查看追踪面板</a>';
+  html += '<a href="my-assessment.html?aid=' + aid + '" class="mc-btn">📋 查看申请状态</a>';
+  html += '<button class="mc-btn" onclick="copyAsidLink(\'' + asid + '\')">🔗 复制评估链接</button>';
+  html += '</div>';
+  html += '<span class="mc-change" onclick="deselectCounselor(\'' + aid + '\')">✕ 更换咨询师</span>';
+  html += '</div>';
+
+  document.getElementById('my_counselor_card').innerHTML = html;
+}
+
+function copyCounselorLink(url) {
+  var fullUrl = location.origin + '/' + url;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(fullUrl).then(function() { showToast('链接已复制，可发送给咨询师'); });
+  } else {
+    var ta = document.createElement('textarea');
+    ta.value = fullUrl; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    showToast('链接已复制');
+  }
+}
+
+function copyAsidLink(asid) {
+  var fullUrl = location.origin + location.pathname.replace(/[^/]*$/, '') + 'my-assessment.html?aid=' + asid;
+  var code = window.xiaopinguShortId || asid;
+  var text = '评估号：' + code + '\n查看链接：' + fullUrl;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(function() { showToast('✅ 评估号和链接已复制，可保存到备忘录'); });
+  } else {
+    var ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    showToast('✅ 评估号和链接已复制');
+  }
+}
+
+function refreshCounselorButtons(aid) {
+  var sel = getSelectedCounselor(aid);
+  var btns = document.querySelectorAll('.btn-select-counselor');
+  btns.forEach(function(btn) {
+    var btnCid = btn.getAttribute('data-cid');
+    if (sel && sel.id === btnCid) {
+      btn.classList.add('selected');
+      btn.textContent = '✓ 已选择';
+      btn.closest('.counselor-card') && btn.closest('.counselor-card').classList.add('is-selected');
+    } else {
+      btn.classList.remove('selected');
+      btn.textContent = '✓ 选为我的咨询师';
+      btn.closest('.counselor-card') && btn.closest('.counselor-card').classList.remove('is-selected');
+    }
+  });
+}
+
+function getAssessmentBackupData(){
+  // 第1层：内存变量（最新，同一页面会话）
+  var backup = window._xiaopinguAssessmentData;
+  if(backup && Object.keys(backup).length > 3){ console.log('[小平菇] backup from window._xiaopinguAssessmentData'); return backup; }
+
+  // 第2层：sessionStorage（页面刷新后仍存在）
+  try {
+    var ssRaw = sessionStorage.getItem('xiaopingu_assessment_data');
+    if(ssRaw){
+      var ssData = JSON.parse(ssRaw);
+      if(ssData && Object.keys(ssData).length > 3){ console.log('[小平菇] backup from sessionStorage'); return ssData; }
+    }
+  } catch(e) {}
+
+  // 第3层：localStorage
+  try {
+    var lsRaw = localStorage.getItem('xiaopingu_assessment_backup');
+    if(lsRaw){
+      var lsData = JSON.parse(lsRaw);
+      if(lsData && Object.keys(lsData).length > 3){ console.log('[小平菇] backup from localStorage'); return lsData; }
+    }
+  } catch(e) {}
+
+  // 第4层（最后兜底）：从当前页面 DOM 元素重建评估数据
+  console.warn('[小平菇] 所有存储备份均失效，从页面DOM重建评估数据');
+  return rebuildAssessmentFromDOM();
+}
+
+function rebuildAssessmentFromDOM(){
+  try {
+    var name = document.getElementById('name');
+    var nameVal = name ? (name.value || '来访者') : '来访者';
+    var ageEl = document.getElementById('age');
+    var age = ageEl ? (parseInt(ageEl.value) || null) : null;
+    var gender = document.getElementById('gender');
+    var genderText = gender ? gender.options[gender.selectedIndex].text : '';
+    var occupation = document.getElementById('occupation');
+    var occText = occupation ? (occupation.value === 'other' ? (document.getElementById('occupation_other')?.value?.trim() || '其他') : occupation.options[occupation.selectedIndex].text) : '';
+    var cityVal = document.getElementById('city') ? document.getElementById('city').value.trim() : '';
+    var filledBy = document.getElementById('filled_by') ? document.getElementById('filled_by').value : 'self';
+    var prev = document.getElementById('prev_counseling');
+    var prevText = prev ? prev.options[prev.selectedIndex].text : '';
+    var budgetEl = document.getElementById('budget');
+    var budgetVal = budgetEl ? budgetEl.value : '';
+    var durationEl = document.getElementById('duration');
+    var durationText = durationEl ? durationEl.options[durationEl.selectedIndex].text : '';
+    var descEl = document.getElementById('description');
+    var description = descEl ? descEl.value : '';
+    var crisisEl = document.getElementById('crisis_screen');
+    var crisisVal = crisisEl ? crisisEl.value : 'none';
+
+    var formats = [];
+    document.querySelectorAll('input[name=\"format\"]:checked').forEach(function(el){ formats.push(el.value); });
+    var issues = [];
+    document.querySelectorAll('#issue_grid input:checked').forEach(function(el){ issues.push(el.value); });
+    var specials = [];
+    document.querySelectorAll('input[name=\"special\"]:checked').forEach(function(el){ specials.push(el.value); });
+
+    // 从 result 区域读取分数（优先 DOM 存档 → 全局变量 → 结果面板文本解析）
+    var moodScore = 0, anxietyScore = 0, sleepScore = 0, funcScore = 0, relScore = 0, totalScore = 0, severity = '一般心理困扰';
+    // 第1优先：DOM 隐藏存档（generateResult 写入，页刷后仍存在）
+    var archiveEl = document.getElementById('scores-archive');
+    if (archiveEl) {
+      moodScore = parseInt(archiveEl.getAttribute('data-mood')) || 0;
+      anxietyScore = parseInt(archiveEl.getAttribute('data-anxiety')) || 0;
+      sleepScore = parseInt(archiveEl.getAttribute('data-sleep')) || 0;
+      funcScore = parseInt(archiveEl.getAttribute('data-function')) || 0;
+      relScore = parseInt(archiveEl.getAttribute('data-relation')) || 0;
+      totalScore = parseInt(archiveEl.getAttribute('data-total')) || 0;
+      severity = archiveEl.getAttribute('data-severity') || severity;
+      console.log('[小平菇] DOM重建：从分数存档恢复 scores='+moodScore+','+anxietyScore+','+sleepScore);
+    }
+    // 第2优先：全局 scores 变量
+    else if(typeof scores !== 'undefined' && scores){
+      moodScore = scores.mood || 0;
+      anxietyScore = scores.anxiety || 0;
+      sleepScore = scores.sleep || 0;
+      funcScore = scores.function || 0;
+      relScore = scores.relation || 0;
+      totalScore = moodScore + anxietyScore + sleepScore + funcScore + relScore;
+      if(totalScore >= 20) severity = '需精神科就医';
+      else if(totalScore >= 15) severity = '需要心理治疗介入';
+      else if(totalScore >= 8) severity = '需要外力介入';
+    }
+    // 第3优先：从结果面板 HTML 文本解析（兜底）
+    else {
+      var resultBox = document.getElementById('score_summary');
+      if (resultBox) {
+        var txt = resultBox.textContent || '';
+        var moodMatch = txt.match(/情绪低落\s*(\d+)/);
+        var anxietyMatch = txt.match(/焦虑紧张\s*(\d+)/);
+        var sleepMatch = txt.match(/睡眠困难\s*(\d+)/);
+        var funcMatch = txt.match(/功能受损\s*(\d+)/);
+        var relMatch = txt.match(/人际紧张\s*(\d+)/);
+        if (moodMatch) moodScore = parseInt(moodMatch[1]) || 0;
+        if (anxietyMatch) anxietyScore = parseInt(anxietyMatch[1]) || 0;
+        if (sleepMatch) sleepScore = parseInt(sleepMatch[1]) || 0;
+        if (funcMatch) funcScore = parseInt(funcMatch[1]) || 0;
+        if (relMatch) relScore = parseInt(relMatch[1]) || 0;
+        totalScore = moodScore + anxietyScore + sleepScore + funcScore + relScore;
+        if(totalScore >= 20) severity = '需精神科就医';
+        else if(totalScore >= 15) severity = '需要心理治疗介入';
+        else if(totalScore >= 8) severity = '需要外力介入';
+        console.log('[小平菇] DOM重建：从结果面板文本解析 scores='+moodScore+','+anxietyScore+','+sleepScore);
+      }
+    }
+
+    console.log('[小平菇] DOM重建成功: name='+nameVal+' scores='+moodScore+','+anxietyScore+','+sleepScore);
+
+    return {
+      visitor_name: nameVal,
+      visitor_age: age,
+      visitor_gender: genderText,
+      visitor_occupation: occText,
+      visitor_city: cityVal,
+      filled_by: filledBy,
+      prev_counseling: prevText,
+      budget: budgetVal,
+      preferred_formats: formats,
+      issues: issues,
+      specials: specials,
+      description: description,
+      duration: durationText,
+      crisis_level: crisisVal,
+      score_mood: moodScore,
+      score_anxiety: anxietyScore,
+      score_sleep: sleepScore,
+      score_function: funcScore,
+      score_relation: relScore,
+      total_score: totalScore,
+      severity: severity,
+      gender_pref: (document.getElementById('gender_pref') || {}).value || 'any',
+      age_pref: (document.getElementById('age_pref') || {}).value || '',
+      orientation_pref: (document.getElementById('orientation_pref') || {}).value || 'any',
+      comm_style: (document.getElementById('comm_style') || {}).value || '',
+      cnip_structure: _attr('[data-field=\"cnip_structure\"] .cnip-btn.active','data-value') || 'balanced',
+      cnip_emotion: _attr('[data-field=\"cnip_emotion\"] .cnip-btn.active','data-value') || 'balanced',
+      cnip_timefocus: _attr('[data-field=\"cnip_timefocus\"] .cnip-btn.active','data-value') || 'balanced',
+      cnip_warmth: _attr('[data-field=\"cnip_warmth\"] .cnip-btn.active','data-value') || 'warm',
+      cnip_homework: _attr('[data-field=\"cnip_homework\"] .cnip-btn.active','data-value') || 'neutral',
+      cnip_relational: _attr('[data-field=\"cnip_relational\"] .cnip-btn.active','data-value') || 'neutral',
+      expects: Array.from(document.querySelectorAll('#expect_grid input:checked') || []).map(function(e){ return e.value; }),
+      user_agent: navigator.userAgent.substring(0,200)
+    };
+  } catch(e) {
+    console.error('[小平菇] DOM重建失败:', e);
+    return {};
+  }
+}
+
+function submitMatchApply(){
+  console.log('[小平菇] submitMatchApply');
+  var nameEl=document.getElementById('apply-name');
+  var name=nameEl?nameEl.value.trim():'';
+  var contactEl=document.getElementById('apply-contact');
+  var contact=contactEl?contactEl.value.trim():'';
+  if(!name||!contact){alert('请填写姓名和联系方式');return;}
+  var asid=getAsid();
+  var isFallbackAsid = false;
+  if(!asid){
+    try { var fb = JSON.parse(localStorage.getItem('xiaopingu_assessment_backup')||'{}'); if(fb.view_token) asid = fb.view_token; } catch(e) {}
+  }
+  if(!asid && currentViewToken) asid = currentViewToken;
+  if(!asid){
+    isFallbackAsid = true;
+    if(crypto && crypto.randomUUID){
+      asid = crypto.randomUUID();
+    } else {
+      asid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,function(c){var r=Math.random()*16|0;return(c==='x'?r:(r&0x3|0x8)).toString(16);});
+    }
+    window.xiaopinguAsid = asid;
+    console.warn('[小平菇] fallback ASID:', asid);
+  }
+  if(typeof SUPABASE_CONFIG==='undefined'){ console.error('SUPABASE_CONFIG 未加载'); alert('系统异常，请刷新重试'); return; }
+  var applyBtn=document.getElementById('btn-submit-match');
+  if(applyBtn){applyBtn.disabled=true;applyBtn.textContent='提交中...';}
+  var applyCid = document.getElementById('apply-cid').value;
+  var patchBody={match_request_name:name,match_request_contact:contact,match_request_cid:applyCid,updated_at:new Date().toISOString()};
+  function onSuccess(){
+    document.getElementById('apply-form').classList.remove('show');
+    document.getElementById('apply-success').classList.add('show');
+    document.getElementById('btn-submit-match').style.display='none';
+    var _as = document.getElementById('apply-shortid');
+    if (_as) _as.textContent = window.xiaopinguShortId || getAsid() || '—';
+    if (!window.xiaopinguShortId) fetchShortId();
+  }
+  function doPatch(){
+    // 始终带备份分数 PATCH（防止旧空壳记录覆盖）
+    var backup = typeof getAssessmentBackupData === 'function' ? getAssessmentBackupData() : {};
+    var fullPatchBody = Object.assign({}, patchBody);
+    return fetch(SUPABASE_CONFIG.url+'/rest/v1/assessments?id=eq.'+asid,{
+      method:'PATCH',
+      headers:{'Content-Type':'application/json','apikey':SUPABASE_CONFIG.anonKey,'Authorization':'Bearer '+SUPABASE_CONFIG.anonKey,'Prefer':'return=representation'},
+      body:JSON.stringify(fullPatchBody)
+    }).then(function(r){
+      if(r.status===404){ return []; }  // 记录不存在（缓存页/旧数据/保存失败）→ 走下方回退创建，不自报失败
+      if(!r.ok){throw new Error('HTTP '+r.status);}
+      return r.json();
+    }).then(function(d){
+      // PATCH 成功但返回空 → 记录不存在（saveAssessment 可能没执行成功）
+      // 回退：用完整备份数据创建记录
+      if(Array.isArray(d) && d.length === 0){
+        console.warn('[小平菇] PATCH 未找到记录 (id='+asid+')，回退创建');
+        // 三层数据恢复：内存变量 → sessionStorage → localStorage → DOM回退
+        var backup = getAssessmentBackupData();
+        console.log('[小平菇] 回退创建使用 backup keys:', Object.keys(backup).join(','));
+        // 分数安全检查：记录是否为 0
+        var bScores = {m:backup.score_mood, a:backup.score_anxiety, s:backup.score_sleep, f:backup.score_function, r:backup.score_relation};
+        console.log('[小平菇] 回退分数:', JSON.stringify(bScores), '总分:', backup.total_score);
+        if (!backup.total_score) { console.error('[小平菇] ⚠ 回退数据无有效分数！mood='+backup.score_mood+' anxiety='+backup.score_anxiety+' sleep='+backup.score_sleep); }
+        var createBody = Object.assign({id:asid}, backup, patchBody, {created_at: new Date().toISOString(),view_token:asid});
+        console.log('[小平菇] 回退创建体 total_score:', createBody.total_score);
+        return fetch(SUPABASE_CONFIG.url+'/rest/v1/assessments',{
+          method:'POST',
+          headers:{'Content-Type':'application/json','apikey':SUPABASE_CONFIG.anonKey,'Authorization':'Bearer '+SUPABASE_CONFIG.anonKey,'Prefer':'return=minimal'},
+          body:JSON.stringify(createBody)
+        }).then(function(r2){
+          if(!r2.ok && r2.status!==409){ throw new Error('创建失败 HTTP '+r2.status); }
+          onSuccess();
+        });
+      }
+      onSuccess();
+    });
+  }
+  doPatch().then(function(){
+    alert('已收到您的申请，咨询师将在1个工作日内联系您');
+  }).catch(function(e){
+    console.error('[小平菇] 申请提交失败:', e);
+    alert('提交失败：'+(e.message||'网络错误')+'。请刷新页面后重试，多次失败请截图联系平台');
+  }).finally(function(){
+    if(applyBtn){applyBtn.disabled=false;applyBtn.textContent='提交申请';}
+  });
+}
+</script>
+</div>
+
+<!-- 申请匹配弹窗 -->
+<div id="match-apply-overlay" class="hidden">
+  <div class="match-apply-modal">
+    <h3>📞 申请匹配咨询师</h3>
+    <p class="modal-sub">请填写您的联系方式，咨询师会尽快与您联系</p>
+    <div id="apply-form" class="apply-form">
+      <div class="apply-form-row">
+        <label>咨询师</label>
+        <div id="apply-cname" style="padding:8px 12px;background:#F7F4EF;border-radius:8px;font-size:14px;color:#5C7A52;"></div>
+      </div>
+      <div class="apply-form-row">
+        <label>您的姓名（或化名）</label>
+        <input type="text" id="apply-name" placeholder="请输入您的姓名" autocomplete="off">
+      </div>
+      <div class="apply-form-row">
+        <label>联系方式（微信或电话）</label>
+        <input type="text" id="apply-contact" placeholder="微信号或手机号码" autocomplete="off">
+      </div>
+      <input type="hidden" id="apply-cid" value="">
+    </div>
+    <div id="apply-success" class="apply-success">
+      <div style="font-size:28px;margin-bottom:8px">✅</div>
+      <div style="font-size:14px;color:#5C7A52;font-weight:500">申请已提交</div>
+      <div style="font-size:13px;color:#5A6B52;margin-top:8px">你的评估号：<b id="apply-shortid" style="letter-spacing:1px;font-family:Menlo,monospace">—</b></div>
+      <div style="font-size:12px;color:#A09889;margin-top:4px">咨询师审核后，点击下方按钮查看结果</div>
+      <button class="btn btn-outline" style="width:100%;margin-top:12px" onclick="window.open('my-assessment.html?aid='+getAsid())">📋 查看申请状态</button>
+      <button class="btn btn-outline" style="width:100%;margin-top:8px;background:#F7F4EF" onclick="copyAsidLink(getAsid())">🔗 复制评估号与链接</button>
+      <div style="display:flex;gap:12px;align-items:center;margin-top:12px;padding-top:10px;border-top:1px solid #EDE8DE;text-align:left">
+        <div style="flex:1;min-width:140px">
+          <div style="font-size:12px;color:#5C7A52;font-weight:600;margin-bottom:2px">下次怎么回来</div>
+          <div style="font-size:11px;color:#A09889;line-height:1.5">收藏上面的链接，或关注公众号后从菜单「我的评估」直接进来。</div>
+        </div>
+        <img src="wx-qr.jpg" alt="小平菇公众号二维码" style="width:64px;height:64px;border-radius:8px;border:1px solid #E0DACF;background:#fff;flex-shrink:0">
+      </div>
+      <button class="btn btn-outline" style="width:100%;margin-top:8px;background:#F7F4EF" onclick="closeMatchApply()">关闭</button>
+    </div>
+    <button id="btn-submit-match" class="btn btn-primary" style="width:100%;margin-top:8px" onclick="submitMatchApply()">提交申请</button>
+  </div>
+</div>
+
+</body>
+</html>

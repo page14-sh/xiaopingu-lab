@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const { mutationPatch } = require('./legacy-security');
 const { createCloudBaseAssessmentStore } = require('./assessment/cloudbase-store');
 const { createAssessmentRepository } = require('./assessment/repository');
 const { createIdentityRepository } = require('./assessment/identity-repository');
@@ -173,6 +174,9 @@ function publicCounselor(row) {
   delete output.license_number;
   delete output.review_note;
   delete output.reviewed_by;
+  delete output.photo_license;
+  delete output.wx_openid;
+  delete output.wx_bind_token;
   if (!output.contact_wechat_public) delete output.contact_wechat;
   if (!output.contact_phone_public) delete output.contact_phone;
   if (!output.contact_email_public) delete output.contact_email;
@@ -250,6 +254,8 @@ async function authorizeMutation(store, table, rows, params, session) {
   if (session && session.role === 'admin') return true;
   if (session && session.role === 'counselor') {
     if (table === 'counselors') return rows.every((row) => row.id === session.subject);
+    const owner=(await store.list('counselors')).find(row=>row.id===session.subject);
+    if(!owner||owner.is_active!==true||owner.review_status!=='approved')return false;
     if (table === 'assessments') {
       return rows.every((row) => row.match_request_cid === session.subject || row.selected_counselor_id === session.subject);
     }
@@ -277,11 +283,17 @@ function sanitizeCreate(table, input) {
     row.id = row.id || uuid();
     row.view_token = row.id;
     row.created_at = row.created_at || now;
+    for(const key of ['visitor_user_id','visitor_id','match_id','match_request_reviewed_by','match_request_reviewed_at','match_request_reviewed_note'])delete row[key];
+    row.match_request_status = row.match_request_cid ? 'pending' : null;
   } else if (table === 'counselors') {
     row.id = row.id || uuid();
     row.edit_token = crypto.randomBytes(24).toString('base64url');
     row.review_status = 'pending';
     row.is_active = false;
+    row.is_demo = false;
+    delete row.role;
+    delete row.permissions;
+    row.needs_deep_review = row.has_violation === '是' || row.has_incident === '是';
     row.created_at = row.created_at || now;
     row.updated_at = now;
     delete row.review_note;
@@ -311,14 +323,6 @@ async function canCreate(store, table, row, session) {
     return false;
   }
   if (table === 'assessments' || table === 'counselors') return true;
-  if (table === 'sessions') {
-    const assessments = await store.list('assessments');
-    return assessments.some((item) => item.id === row.assessment_id && item.view_token === row.assessment_id);
-  }
-  if (table === 'pcoms_ratings') {
-    const sessions = await store.list('sessions');
-    return sessions.some((item) => item.id === row.session_id);
-  }
   return false;
 }
 
@@ -448,9 +452,10 @@ function createRequestHandler(options) {
           sendJson(res, 403, { message: '无权修改该资源' });
           return;
         }
+        const permittedPatch = mutationPatch(table, patch, rows, session);
         const updated = [];
         for (const row of rows) {
-          const next = { ...patch, updated_at: new Date().toISOString() };
+          const next = { ...permittedPatch, updated_at: new Date().toISOString() };
           await store.update(table, row._id, next);
           updated.push(publicRow({ ...row, ...next }));
         }

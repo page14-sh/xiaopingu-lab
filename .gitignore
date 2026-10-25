@@ -2,6 +2,7 @@ node_modules/
 .vercel/
 .netlify/
 .env*
+.private/
 .DS_Store
 *.rtf
 *.xlsx

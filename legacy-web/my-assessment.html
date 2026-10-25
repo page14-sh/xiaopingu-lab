@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>我的评估 · 小平菇</title>
+<style>
+  :root{
+    --green:#5C7A52; --green-d:#4a6542; --green-l:#F0F7EC;
+    --ink:#3d3a34; --gray:#7A7268; --line:#E8E4DC; --bg:#FAF9F6;
+    --amber:#E8A33D; --amber-bg:#FFF8E8; --coral:#C4654A; --coral-bg:#FDF3EF;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue",Arial,sans-serif;line-height:1.7;font-size:16px}
+  .head{background:#fff;border-bottom:1px solid var(--line);padding:14px 18px;display:flex;align-items:center;justify-content:space-between}
+  .head h1{margin:0;font-size:19px;font-weight:600}
+  .head .sub{font-size:12px;color:var(--gray);margin-top:1px}
+  .head a{font-size:14px;color:var(--green);text-decoration:none}
+  .wrap{max-width:680px;margin:0 auto;padding:18px 16px 60px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px}
+  .card h2{margin:0 0 4px;font-size:18px;font-weight:600}
+  .card .desc{margin:0 0 14px;font-size:14px;color:var(--gray)}
+  .asid-bar{background:var(--green-l);border:1px solid #C8DCC0;border-radius:12px;padding:12px 14px;margin-bottom:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .asid-bar .k{font-size:12px;color:var(--gray);display:block}
+  .asid-bar .v{font-size:14px;font-weight:600;word-break:break-all;color:var(--green-d)}
+  .btn{display:inline-block;padding:11px 18px;border-radius:10px;border:none;font-size:15px;font-family:inherit;cursor:pointer;background:var(--green);color:#fff;text-decoration:none}
+  .btn:hover{background:var(--green-d)}
+  .btn.ghost{background:#fff;color:var(--green);border:1.5px solid #C8DCC0}
+  .btn.block{display:block;width:100%;text-align:center;margin-top:10px}
+  .btn[disabled]{background:#D8D3C8;cursor:not-allowed}
+  input[type=text]{width:100%;padding:13px 14px;border:1.5px solid var(--line);border-radius:10px;font-size:16px;font-family:inherit;outline:none;background:#fff}
+  input[type=text]:focus{border-color:var(--green)}
+  .kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:15px}
+  .kv dt{color:var(--gray);white-space:nowrap}
+  .kv dd{margin:0;color:var(--ink)}
+  .scale{display:flex;align-items:center;gap:10px;margin:8px 0}
+  .scale .n{width:96px;font-size:14px;color:var(--gray);flex-shrink:0}
+  .scale .bar{flex:1;height:10px;background:#EFEDE7;border-radius:6px;overflow:hidden}
+  .scale .fill{height:100%;background:var(--green);border-radius:6px}
+  .scale .v{width:34px;text-align:right;font-size:14px;font-weight:600}
+  .badge{display:inline-block;padding:5px 12px;border-radius:20px;font-size:14px;font-weight:600}
+  .badge.pending{background:var(--amber-bg);color:#8A5A2B;border:1px solid #E8C4B8}
+  .badge.approved{background:var(--green-l);color:var(--green-d);border:1px solid #C8DCC0}
+  .badge.rejected{background:#F5F3EF;color:#8A8378;border:1px solid var(--line)}
+  .badge.contacted{background:#E8F0F4;color:#3B6B7A;border:1px solid #C3DCE4}
+  .badge.none{background:#F5F3EF;color:#8A8378;border:1px solid var(--line)}
+  .note{font-size:13px;color:var(--gray);margin:10px 0 0;line-height:1.7}
+  .lock{background:#F5F3EF;border-radius:12px;padding:16px;text-align:center;color:var(--gray);font-size:14px}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .err{background:var(--coral-bg);border:1px solid #E8C4B8;color:#8A5A2B;padding:12px 14px;border-radius:12px;font-size:14px;margin-bottom:14px;display:none}
+  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:32px;background:rgba(61,58,52,.94);color:#fff;padding:11px 20px;border-radius:22px;font-size:15px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:99}
+  .toast.show{opacity:1}
+  .sec-title{font-size:15px;font-weight:600;margin:0 0 10px;color:var(--ink)}
+  .divider{height:1px;background:var(--line);margin:14px 0}
+  .todo{background:var(--amber-bg);border:1px solid #F0D9A8;border-radius:12px;padding:14px 16px;margin-bottom:16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  .todo .todo-i{font-size:22px;line-height:1}
+  .todo .todo-t{flex:1;min-width:180px}
+  .todo .todo-t b{font-size:15px;color:#8A5A2B;font-weight:600}
+  .todo .todo-t p{margin:2px 0 0;font-size:13px;color:#A08050;line-height:1.6}
+  .todo .btn{padding:9px 16px;font-size:14px;white-space:nowrap}
+  .wx{display:flex;gap:14px;align-items:center;background:var(--green-l);border:1px solid #C8DCC0;border-radius:12px;padding:14px}
+  .wx .wx-t{flex:1;min-width:150px}
+  .wx .wx-t b{display:block;font-size:15px;color:var(--green-d);margin-bottom:3px}
+  .wx .wx-t p{margin:0;font-size:13px;color:#6B7F62;line-height:1.6}
+  .wx img{width:88px;height:88px;border-radius:8px;flex-shrink:0;border:1px solid #DCE8D6;background:#fff}
+</style>
+</head>
+<body>
+<div class="head">
+  <div>
+    <h1>我的评估</h1>
+    <div class="sub">小平菇 · 评估报告与匹配进度</div>
+  </div>
+  <a href="index.html">← 返回首页</a>
+</div>
+
+<div class="wrap">
+  <div class="err" id="err"></div>
+
+  <!-- 凭号进入 -->
+  <div class="card" id="gate">
+    <h2>凭评估号进入</h2>
+    <p class="desc">评估号是你完成评估后拿到的一串编号。输入它，就能看到你的评估报告、匹配进度和四评入口。</p>
+    <input type="text" id="aid-input" placeholder="输入 8 位评估号（如 K7M2-9X4T）" autocomplete="off">
+    <button class="btn block" onclick="enterWithInput()">进入 →</button>
+    <div class="divider"></div>
+    <div class="wx">
+      <div class="wx-t">
+        <b>关注「小平菇」公众号</b>
+        <p>下次从公众号菜单「我的评估」直接进来，不用再记这串号。</p>
+      </div>
+      <img src="wx-qr.jpg" alt="小平菇公众号二维码">
+    </div>
+    <p class="note">评估号在完成评估的页面上可以看到并复制。忘记号码也可以在公众号里找回。</p>
+  </div>
+
+  <!-- 工作台 -->
+  <div id="panel" style="display:none">
+    <div class="asid-bar">
+      <div style="flex:1;min-width:200px">
+        <span class="k">我的评估号</span>
+        <span class="v" id="aid-text" style="font-size:20px;letter-spacing:2px;font-family:Menlo,'SF Mono',monospace">—</span>
+        <span class="k" id="aid-full" style="margin-top:2px;word-break:break-all"></span>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn ghost" style="padding:8px 14px;font-size:14px" onclick="copyAid()">复制</button>
+        <button class="btn ghost" style="padding:8px 14px;font-size:14px" onclick="switchAid()">换个号</button>
+      </div>
+    </div>
+
+    <!-- 待办：有待填问卷时置顶提醒，不用翻到 ③ -->
+    <div class="todo" id="xg-todo" style="display:none">
+      <span class="todo-i">📝</span>
+      <div class="todo-t"><b id="todo-title"></b><p id="todo-desc"></p></div>
+      <button class="btn" id="todo-btn" onclick="goXg()">去填写 →</button>
+    </div>
+
+    <!-- ① 评估报告 -->
+    <div class="card">
+      <h2>① 我的评估报告</h2>
+      <p class="desc">你提交时的评估结果与基本情况</p>
+      <dl class="kv" id="basic"></dl>
+      <div class="divider"></div>
+      <p class="sec-title">程度评估（0–5 分）</p>
+      <div id="scores"></div>
+      <div class="divider"></div>
+      <dl class="kv" id="summary"></dl>
+      <a class="btn ghost block" id="full-report" href="#">查看完整转介报告 →</a>
+    </div>
+
+    <!-- ② 匹配状态 -->
+    <div class="card">
+      <h2>② 匹配进度</h2>
+      <p class="desc">你申请的咨询师是否通过匹配</p>
+      <div id="match-status"></div>
+    </div>
+
+    <!-- ③ 四评 -->
+    <div class="card">
+      <h2>③ 四评（循证评估）</h2>
+      <p class="desc">匹配通过后开放。每次咨询前后填写，你的咨询师会同步看到，用来把咨询做得更适合你。</p>
+      <div id="xg-entry"></div>
+    </div>
+
+    <!-- 下次怎么回来 -->
+    <div class="card">
+      <h2>下次怎么回来</h2>
+      <p class="desc">两种方式都能回到这个页面，不用记任何东西。</p>
+      <button class="btn ghost block" style="margin-top:0" onclick="copyLink()">🔗 复制本页链接（可收藏）</button>
+      <div class="divider"></div>
+      <div class="wx">
+        <div class="wx-t">
+          <b>关注「小平菇」公众号</b>
+          <p>下次从公众号菜单「我的评估」直接进来，不用输号。</p>
+        </div>
+        <img src="wx-qr.jpg" alt="小平菇公众号二维码">
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var API = 'https://xpg-demo-d3gzsswtcc3233ea0-1300577165.ap-shanghai.app.tcloudbase.com/xpg-rest/rest/v1';
+var REST = 'https://xpg-demo-d3gzsswtcc3233ea0-1300577165.ap-shanghai.app.tcloudbase.com/xpg-rest';
+var XG_API = 'https://xpg-demo-d3gzsswtcc3233ea0-1300577165.ap-shanghai.app.tcloudbase.com/xg-api';
+var AID = '';
+var DATA = null;
+
+function param(n){ var m = new URLSearchParams(location.search).get(n); return m ? m.trim() : ''; }
+function toast(m){ var t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); setTimeout(function(){t.classList.remove('show');},2200); }
+function errBox(m){ var e=document.getElementById('err'); e.textContent=m; e.style.display='block'; }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+
+var STATUS = {
+  pending:  {t:'待审批', c:'pending',   d:'已收到你的匹配申请，平台正在核对并联系咨询师。'},
+  approved: {t:'已通过', c:'approved',  d:'匹配通过。你的咨询师已确认，四评入口已开放。'},
+  rejected: {t:'未通过', c:'rejected',  d:'这次匹配未通过，可以重新挑选其他咨询师提交申请。'},
+  contacted:{t:'已联系', c:'contacted', d:'咨询师已与你取得联系，可以开始安排咨询。'}
+};
+
+function boot(){
+  AID = param('aid') || param('asid') ||
+        localStorage.getItem('xiaopingu_my_asid') ||
+        localStorage.getItem('xiaopingu_assessment_id') || '';
+  if (!AID) { document.getElementById('gate').style.display='block'; return; }
+  // 支持 8 位短编号：先解析成完整评估号
+  var isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(AID);
+  if (!isUuid) {
+    var norm = AID.toUpperCase().replace(/[^0-9A-Z]/g, '');
+    if (norm.length !== 8) { document.getElementById('gate').style.display='block'; return; }
+    fetch(REST + '/resolve?code=' + encodeURIComponent(norm), { headers: { 'x-assessment-token': sessionStorage.getItem('xiaopingu_assessment_capability') || localStorage.getItem('xiaopingu_assessment_id') || localStorage.getItem('xiaopingu_my_asid') || '' } })
+      .then(function(r){ return r.json().then(function(d){ return { ok:r.ok, d:d }; }); })
+      .then(function(res){
+        if (res.ok && res.d && res.d.id) { AID = res.d.id; bootEnter(); }
+        else { errBox((res.d && res.d.message) || '评估号不存在，请核对后重试。'); switchAidBox(); }
+      })
+      .catch(function(){ errBox('网络异常，请稍后重试。'); });
+    return;
+  }
+  bootEnter();
+}
+function bootEnter(){
+  sessionStorage.setItem('xiaopingu_assessment_capability', AID);
+  document.getElementById('gate').style.display='none';
+  document.getElementById('aid-text').textContent = AID;
+  document.getElementById('full-report').href = 'index.html?view=' + encodeURIComponent(AID);
+  try { localStorage.setItem('xiaopingu_my_asid', AID); } catch(e){}
+  load();
+}
+
+function enterWithInput(){
+  var v = document.getElementById('aid-input').value.trim();
+  if (!v) { document.getElementById('aid-input').style.borderColor='#E53935'; toast('请输入评估号'); return; }
+  document.getElementById('aid-input').style.borderColor='';
+  location.href = 'my-assessment.html?aid=' + encodeURIComponent(v);
+}
+
+function copyAid(){
+  var code = (DATA && DATA.short_id) || AID;
+  try {
+    if (navigator.clipboard) { navigator.clipboard.writeText(code); toast('评估号 ' + code + ' 已复制'); }
+    else { toast('请长按上方编号复制'); }
+  } catch(e){ toast('请长按上方编号复制'); }
+}
+// 复制带评估号的完整链接：这是"下次怎么回来"最可靠的一份凭证，可收藏或发给自己
+function copyLink(){
+  var link = location.origin + location.pathname.replace(/[^/]*$/, '') + 'my-assessment.html?aid=' + encodeURIComponent(AID);
+  try {
+    if (navigator.clipboard) { navigator.clipboard.writeText(link); toast('链接已复制，可收藏或发给自己'); return; }
+  } catch(e){}
+  var ta = document.createElement('textarea');
+  ta.value = link; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); toast('链接已复制，可收藏或发给自己'); } catch(e){ toast('请长按地址栏复制链接'); }
+  document.body.removeChild(ta);
+}
+function switchAid(){
+  try { localStorage.removeItem('xiaopingu_my_asid'); } catch(e){}
+  location.href = 'my-assessment.html';
+}
+
+function load(){
+  var url = API + '/assessments?id=eq.' + encodeURIComponent(AID) + '&select=*';
+  fetch(url).then(function(r){ return r.json(); }).then(function(rows){
+    if (!Array.isArray(rows) || !rows.length) {
+      // 兼容：可能只存了 view_token
+      return fetch(API + '/assessments?view_token=eq.' + encodeURIComponent(AID) + '&select=*')
+        .then(function(r2){ return r2.json(); });
+    }
+    return rows;
+  }).then(function(rows){
+    if (!Array.isArray(rows) || !rows.length) { errBox('没有找到这个评估号对应的记录，请确认后重试。'); switchAidBox(); return; }
+    DATA = rows[0];
+    if (DATA.short_id) {
+      document.getElementById('aid-text').textContent = DATA.short_id;
+      document.getElementById('aid-full').textContent = '完整编号：' + AID;
+    } else {
+      document.getElementById('aid-text').textContent = AID;
+      document.getElementById('aid-text').style.fontSize = '13px';
+    }
+    render();
+  }).catch(function(e){
+    errBox('加载失败：' + (e && e.message ? e.message : e) + '。请稍后重试。');
+  });
+}
+function switchAidBox(){
+  document.getElementById('panel').style.display='none';
+  document.getElementById('gate').style.display='block';
+}
+
+function render(){
+  var d = DATA;
+  document.getElementById('panel').style.display='block';
+
+  // 基本信息
+  var basic = [
+    ['姓名', d.visitor_name], ['年龄', d.visitor_age], ['性别', d.visitor_gender],
+    ['职业身份', d.visitor_occupation], ['所在城市', d.visitor_city],
+    ['填写身份', d.filled_by === 'parent' ? '家长 / 监护人代填' : '本人填写'],
+    ['困扰持续', d.duration], ['主要诉求', [].concat(d.issues||[]).join('、')]
+  ];
+  document.getElementById('basic').innerHTML = basic.map(function(p){
+    if (p[1] === null || p[1] === undefined || p[1] === '') return '';
+    return '<dt>'+esc(p[0])+'</dt><dd>'+esc(p[1])+'</dd>';
+  }).join('');
+
+  // 五维分数
+  var dims = [['情绪低落','score_mood'],['焦虑担忧','score_anxiety'],['睡眠困难','score_sleep'],
+              ['日常受影响','score_function'],['人际关系','score_relation']];
+  document.getElementById('scores').innerHTML = dims.map(function(p){
+    var v = Number(d[p[1]] || 0);
+    var pct = Math.round(v / 5 * 100);
+    return '<div class="scale"><span class="n">'+p[0]+'</span>'+
+           '<span class="bar"><span class="fill" style="width:'+pct+'%"></span></span>'+
+           '<span class="v">'+v+'</span></div>';
+  }).join('');
+
+  // 总分与程度
+  var total = d.total_score;
+  var sev = d.severity;
+  document.getElementById('summary').innerHTML =
+    (total!=null ? '<dt>总分</dt><dd><strong>'+esc(total)+'</strong> / 25</dd>' : '') +
+    (sev ? '<dt>程度</dt><dd>'+esc(sev)+'</dd>' : '') +
+    (d.crisis_level ? '<dt>安全排查</dt><dd>'+esc(d.crisis_level)+'</dd>' : '');
+
+  // 匹配状态
+  var st = d.match_request_status || '';
+  var box = document.getElementById('match-status');
+  var head;
+  if (!st) {
+    head = '<span class="badge none">尚未提交匹配申请</span>'+
+           '<p class="note">你还没有申请匹配咨询师。回到评估报告页挑选咨询师并提交申请后，这里会显示进度。</p>';
+  } else {
+    var s = STATUS[st] || {t:st, c:'none', d:''};
+    head = '<span class="badge '+s.c+'">'+s.t+'</span><p class="note" style="margin-top:8px">'+s.d+'</p>';
+  }
+  box.innerHTML = head +
+    (d.match_request_cid ? '<div id="c-info" class="note">咨询师信息加载中…</div>' : '') +
+    (d.match_id ? '<p class="note">匹配单号：'+esc(d.match_id)+'</p>' : '') +
+    (d.match_request_reviewed_at ? '<p class="note">审批时间：'+esc(String(d.match_request_reviewed_at).replace('T',' ').slice(0,16))+'</p>' : '');
+
+  if (d.match_request_cid) {
+    fetch(API + '/counselors?id=eq.' + encodeURIComponent(d.match_request_cid) + '&select=*')
+      .then(function(r){ return r.json(); })
+      .then(function(cs){
+        var c = (cs && cs[0]) || null;
+        var el = document.getElementById('c-info');
+        if (!el) return;
+        if (!c) { el.textContent = '咨询师：' + esc(d.selected_counselor_name || '（已申请）'); return; }
+        el.innerHTML = '<div class="divider"></div>' +
+          '<p class="sec-title">你的咨询师</p>' +
+          (c.photo_daily && c.photo_daily[0] ? '<img src="'+c.photo_daily[0]+'" alt="咨询师照片" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid #F0EDE6;margin-bottom:8px">' : '') +
+          '<dl class="kv">' +
+          '<dt>姓名</dt><dd>'+esc(c.name)+'</dd>' +
+          (c.city ? '<dt>城市</dt><dd>'+esc(c.city)+'</dd>' : '') +
+          (c.years_experience ? '<dt>从业年限</dt><dd>'+esc(c.years_experience)+' 年</dd>' : '') +
+          ([].concat(c.approaches||[]).length ? '<dt>咨询取向</dt><dd>'+esc(c.approaches.join('、'))+'</dd>' : '') +
+          '</dl>' +
+          (st === 'approved' || st === 'contacted'
+            ? '<p class="note">咨询师会通过你留下的联系方式与你联系。你的联系方式只给到这位咨询师。</p>'
+            : '');
+      }).catch(function(){});
+  }
+
+  // 四评入口 + 顶部待办条
+  renderXg(st, d.match_id);
+  loadXgTodo(st, d.match_id);
+}
+
+function renderXg(st, matchId){
+  var box = document.getElementById('xg-entry');
+  var opened = (st === 'approved' || st === 'contacted') && !!matchId;
+  if (!opened) {
+    box.innerHTML = '<div class="lock">🔒 匹配通过后开放<br><span style="font-size:13px">'+
+      (st === 'pending' ? '等平台审批通过，这里就会自动开放。' :
+       st === 'rejected' ? '这次匹配未通过，重新申请并通过后开放。' :
+       '先提交匹配申请，通过后可在这里填写四评。')+'</span></div>';
+    return;
+  }
+  box.innerHTML =
+    '<button class="btn block" style="margin-top:0" onclick="goXg()">进入四评 →</button>' +
+    '<button class="btn ghost block" onclick="goXg(\'v5-records.html\')">我的填写记录</button>' +
+    '<p class="note">你填的每一张卡，你的咨询师都能同步看到；分数不会直接显示给你，避免打分影响你的感受。</p>';
+}
+
+// ========== 顶部待办条 ==========
+// 来访者回访频次最高的动作是"填四评"，不是"看报告"。
+// 所以待办条置顶：一进页面就知道有没有要填的，不用滑到 ③。
+// 复用 goXg 的桥接链路拿 visitor_token，再查待推卡片。
+function loadXgTodo(st, matchId){
+  var bar = document.getElementById('xg-todo');
+  if (!bar) return;
+  var opened = (st === 'approved' || st === 'contacted') && !!matchId;
+  if (!opened) { bar.style.display = 'none'; return; }
+  fetch(XG_API + '/v1/xg/bridge/enter', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ asid: AID })
+  }).then(function(r){ return r.json(); })
+    .then(function(d){
+      if (!d || !d.visitor_token) { bar.style.display = 'none'; return null; }
+      try {
+        localStorage.setItem('xg_visitor_openid', d.visitor_token);
+        localStorage.setItem('xg_match_id', d.match_id || '');
+        localStorage.setItem('xg_focus_user', d.visitor_id || '');
+        localStorage.setItem('xg_session_no', '0');
+      } catch(e){}
+      return fetch(XG_API + '/v1/xg/prompts/next?user_id=' + encodeURIComponent(d.visitor_id || '') + '&session_no=0',
+        { headers: { Authorization: 'Bearer ' + d.visitor_token } })
+        .then(function(r){ return r.json(); })
+        .then(function(p){ renderTodo(bar, p || {}); });
+    })
+    .catch(function(){ bar.style.display = 'none'; });
+}
+
+function renderTodo(bar, p){
+  // 危机红线个案：不推任何卡，也不要在首页提醒，避免造成困扰
+  if (p.out_of_scope) { bar.style.display = 'none'; return; }
+  var t = document.getElementById('todo-title');
+  var s = document.getElementById('todo-desc');
+  var b = document.getElementById('todo-btn');
+  if (p.consent_required) {
+    t.textContent = '先完成一次知情同意';
+    s.textContent = '同意后就能开始填写问卷，大约 1 分钟。';
+    b.textContent = '去签署 →';
+    b.setAttribute('onclick', 'goXg()');
+  } else if (p.prompts && p.prompts.length) {
+    t.textContent = '你有 ' + p.prompts.length + ' 张待填的问卷';
+    s.textContent = '填完你的咨询师就能同步看到，用来把咨询调整得更合适。';
+    b.textContent = '去填写 →';
+    b.setAttribute('onclick', 'goXg()');
+  } else {
+    t.textContent = '本轮问卷已填完';
+    s.textContent = '下次咨询后，这里会再出现新的待填问卷。';
+    b.textContent = '查看记录';
+    b.setAttribute('onclick', "goXg('v5-records.html')");
+  }
+  bar.style.display = 'flex';
+}
+
+// 进入四评：先走桥接（建档来访身份 / 取匹配单号 / 建个案），再带参跳转
+// 桥接与咨询师端共用同一 match_id，因此来访填的内容咨询师端能直接看到
+function goXg(page){
+  toast('正在进入…');
+  fetch(XG_API + '/v1/xg/bridge/enter', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ asid: AID })
+  }).then(function(r){ return r.json(); }).then(function(d){
+    if (d && d.out_of_scope) { location.href = 'x1-out-of-scope.html'; return; }
+    if (!d || !d.visitor_token) { errBox('四评入口暂时不可用（' + ((d && (d.error && d.error.message)) || '未知') + '），请稍后重试。'); return; }
+    try {
+      localStorage.setItem('xg_role', 'visitor');
+      localStorage.setItem('xg_visitor_openid', d.visitor_token);
+      localStorage.setItem('xg_match_id', d.match_id || '');
+      localStorage.setItem('xg_session_no', '0');
+      localStorage.setItem('xg_focus_user', d.visitor_id || '');
+    } catch(e){}
+    var target = page || d.next_page || 'v1-consent.html';
+    location.href = target + '?match_id=' + encodeURIComponent(d.match_id || '') +
+                    '&session_no=0&user_id=' + encodeURIComponent(d.visitor_id || '');
+  }).catch(function(e){ errBox('进入四评失败：' + (e && e.message ? e.message : e)); });
+}
+
+boot();
+</script>
+</body>
+</html>

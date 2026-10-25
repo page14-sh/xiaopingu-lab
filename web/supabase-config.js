@@ -178,11 +178,14 @@ function currentApiToken() {
   var nativeFetch = window.fetch.bind(window);
   window.fetch = function(resource, options) {
     var requestUrl = typeof resource === 'string' ? resource : (resource && resource.url) || '';
-    if (requestUrl.indexOf(SUPABASE_CONFIG.url) !== 0) return nativeFetch(resource, options);
+    var target, api;
+    try { target = new URL(requestUrl, window.location.href); api = new URL(SUPABASE_CONFIG.url, window.location.href); } catch (_) { return nativeFetch(resource, options); }
+    if (target.origin !== api.origin || (target.pathname !== api.pathname && target.pathname.indexOf(api.pathname.replace(/\/$/, '') + '/') !== 0)) return nativeFetch(resource, options);
     var next = Object.assign({}, options || {});
     var headers = new Headers(next.headers || {});
     var token = currentApiToken();
-    if (token) headers.set('Authorization', 'Bearer ' + token);
+    var supplied = headers.get('Authorization') || '';
+    if (token && (!supplied || /^Bearer\s*$/.test(supplied) || supplied === 'Bearer dev-local-key' || supplied === 'Bearer ' + SUPABASE_CONFIG.anonKey)) headers.set('Authorization', 'Bearer ' + token);
     next.headers = headers;
     return nativeFetch(resource, next);
   };
@@ -211,6 +214,7 @@ function loginCounselor(credential, password) {
     if (!response.ok) throw new Error('咨询师账号或编辑码无效');
     return response.json();
   }).then(function(data) {
+    sessionStorage.removeItem(XPG_ADMIN_TOKEN_KEY);
     localStorage.setItem(XPG_COUNSELOR_TOKEN_KEY, data.token);
     return data;
   });

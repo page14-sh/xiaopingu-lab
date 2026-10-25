@@ -1,0 +1,32 @@
+{
+  "env": "xpg-demo-d3gzsswtcc3233ea0",
+  "phase": "applied",
+  "functions": {
+    "xpg-rest": {
+      "previous_modified": "2026-10-25 10:14:57",
+      "previous_status": "Active",
+      "configuration_applied": true
+    },
+    "xg-api": {
+      "previous_modified": "2026-10-24 20:58:23",
+      "previous_status": "UpdateFailed",
+      "configuration_applied": true
+    }
+  },
+  "variables": {
+    "xpg-rest": [
+      "XPG_ADMIN_PASSWORD"
+    ],
+    "xg-api": [
+      "XG_ADMIN_TOKEN",
+      "XG_SERVICE_TOKEN"
+    ]
+  },
+  "preserve_admin_password": true,
+  "real_wechat_configured": false,
+  "applied_at": "2026-10-25T03:46:58.863Z",
+  "admin_password_rotation": "deferred_by_user",
+  "unresolved_risks": [
+    "administrator_credential_review_pending_user_action"
+  ]
+}

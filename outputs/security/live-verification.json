@@ -1,0 +1,26 @@
+{
+  "checked_at": "2026-10-25T03:55:37.934Z",
+  "tests": [
+    {
+      "name": "administrator password remains valid; no record read",
+      "passed": true
+    },
+    {
+      "name": "live static files match the tested sources",
+      "passed": true
+    },
+    {
+      "name": "deployed cloud function code matches reviewed files",
+      "passed": true
+    },
+    {
+      "name": "final credential-boundary script matches live hosting",
+      "sha256": "efc98a7cd3c7029e512cf5fff977b851045cd97e6679f2de7a57300af2091ffc",
+      "passed": true
+    }
+  ],
+  "business_records_written": 0,
+  "passed": true,
+  "finished_at": "2026-10-25T03:57:45.742Z",
+  "admin_password_rotation": "deferred_by_user"
+}

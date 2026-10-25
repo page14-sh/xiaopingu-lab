@@ -1,0 +1,97 @@
+{
+  "scope": "legacy security compatibility and isolated preview",
+  "cloudrun": [
+    {
+      "name": "xiaopingu-api",
+      "online": [
+        {
+          "VersionName": "xiaopingu-api-006",
+          "ImageUrl": "ccr.ccs.tencentyun.com/tcb-100011945138-yyiq/ca-kqwojftr_xiaopingu-api:xiaopingu-api-006-20261025115204",
+          "FlowRatio": "100"
+        }
+      ],
+      "latest": {
+        "DeployId": "006",
+        "DeployTime": "2026-10-25 11:51:56",
+        "Status": "normal",
+        "RunId": "multi_tenant_1xKpH2wmqbBwem",
+        "BuildId": 2609388615,
+        "FlowRatio": 100,
+        "ImageUrl": "ccr.ccs.tencentyun.com/tcb-100011945138-yyiq/ca-kqwojftr_xiaopingu-api:xiaopingu-api-006-20261025115204",
+        "ScaleStatus": "",
+        "HasTraffic": true,
+        "TrafficType": "FLOW",
+        "IsReleasing": false
+      }
+    },
+    {
+      "name": "xiaopingu-assessment-preview",
+      "online": [
+        {
+          "VersionName": "xiaopingu-assessment-preview-002",
+          "ImageUrl": "ccr.ccs.tencentyun.com/tcb-100011945138-yyiq/ca-kqwojftr_xiaopingu-assessment-preview:xiaopingu-assessment-preview-002-20261025115058",
+          "FlowRatio": "100"
+        }
+      ],
+      "latest": {
+        "DeployId": "002",
+        "DeployTime": "2026-10-25 11:50:51",
+        "Status": "normal",
+        "RunId": "multi_tenant_1xKpFzELMvDcKe",
+        "BuildId": 2609388430,
+        "FlowRatio": 100,
+        "ImageUrl": "ccr.ccs.tencentyun.com/tcb-100011945138-yyiq/ca-kqwojftr_xiaopingu-assessment-preview:xiaopingu-assessment-preview-002-20261025115058",
+        "ScaleStatus": "",
+        "HasTraffic": true,
+        "TrafficType": "FLOW",
+        "IsReleasing": false
+      }
+    }
+  ],
+  "functions": [
+    {
+      "name": "xpg-rest",
+      "status": "Active",
+      "modified": "2026-10-25 11:47:34",
+      "triggers": []
+    },
+    {
+      "name": "xg-api",
+      "status": "Active",
+      "modified": "2026-10-25 11:54:49",
+      "triggers": []
+    }
+  ],
+  "builds": [
+    {
+      "name": "xiaopingu-api",
+      "build_id": 2609388615,
+      "image_digest": "sha256:3f5dbeab0cb7f89a46cc9e2795881b7b37fdbc5f2357da2b5a361b5e387b357a",
+      "status": "normal"
+    },
+    {
+      "name": "xiaopingu-assessment-preview",
+      "build_id": 2609388430,
+      "image_digest": "sha256:64785b1e01d72754671eae2d18f3cbd9d6d1263056c34e5635349e1890080114",
+      "status": "normal"
+    }
+  ],
+  "hosting_files": [
+    "counselor.html",
+    "index.html",
+    "supabase-config.js",
+    "my-assessment.html",
+    "c1-work.html",
+    "assets/xg-config.js",
+    "session.html"
+  ],
+  "real_wechat_enabled": false,
+  "notifications_enabled": false,
+  "llm_enabled": false,
+  "new_schedulers_created": false,
+  "local_tests": {
+    "backend": 517,
+    "security": 18,
+    "failed": 0
+  }
+}

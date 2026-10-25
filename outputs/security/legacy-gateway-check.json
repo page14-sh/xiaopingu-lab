@@ -1,0 +1,31 @@
+{
+  "checked_at": "2026-10-25T03:54:50.177Z",
+  "tests": [
+    {
+      "path": "/health",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "path": "/rest/v1/counselors?id=eq.ffffffff-ffff-4fff-8fff-ffffffffffff",
+      "status": 403,
+      "passed": true
+    },
+    {
+      "path": "/rest/v1/assessments?match_request_cid=eq.ffffffff-ffff-4fff-8fff-ffffffffffff",
+      "status": 403,
+      "passed": true
+    },
+    {
+      "path": "/auth/counselor",
+      "status": 401,
+      "passed": true
+    },
+    {
+      "path": "/",
+      "status": 302,
+      "passed": true
+    }
+  ],
+  "passed": true
+}

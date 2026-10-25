@@ -1,0 +1,15 @@
+{
+  "read_only_baseline": {
+    "counselor.html": "558c1340516eeee32511d14d63b1747b09183b79fd5242606e92692670bcc99e",
+    "index.html": "38f7f3a0d7317907ccca7ef8e8a62c9035786919bbb1a9a631c52e3c62855b9f",
+    "supabase-config.js": "fb6ad7c8af30b127f8efdc0bb796534e03c87fb119c4bb3a938b726a8ed6415e",
+    "my-assessment.html": "25c923eb59ab66925905de7543e1362b6768e22f7e6b1b4ee4d9bed3ad8c8b08",
+    "c1-work.html": "5097b02796792d3b9f257d37488d501262e18d053f1d4ecfee6bb3d31ff13bb7",
+    "assets/xg-config.js": "bdc3cf5e40e2573aa4cc54b523a379fde1c4ab5d9ebb02eb13a76b871cc392b3",
+    "xpg-rest/app.js": "09c3a43f4dfe07cc96a0f83348733748f3ca0e5bb94bdd68d0b9461a1b58a98c",
+    "xpg-rest/index.js": "4a274a41f6564b79cdbc67a9616a0a58148c17693ac228a8ce108f59b45e26a0",
+    "xg-api/app-core.js": "390fdd1e85ba319ea626524ee25253318a01f29b4dff3fccb42459271cc67380",
+    "xg-api/index.js": "a9e0ff2e7b9d50183a30a26e8c8109d6ee598bcb30d575b7165652b7f5964c4b"
+  },
+  "contains_user_data": false
+}

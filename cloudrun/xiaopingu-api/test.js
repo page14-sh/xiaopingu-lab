@@ -22,7 +22,7 @@ async function withServer(store, run, options = {}) {
   const server = http.createServer(createRequestHandler({
     store,
     adminPassword: 'correct-horse-battery-staple',
-    demoCounselorPassword: 'xiaopingu2026',
+    demoCounselorPassword: 'unit-test-demo-password-only',
     sessionSecret: 'test-session-secret-with-enough-entropy',
     demoMode: true,
     ...options
@@ -111,7 +111,7 @@ test('admin and demo passwords cannot be interchanged', async () => {
       ['counselor', '00000000-0000-4000-8000-000000000001'],
       ['counselor2', '00000000-0000-4000-8000-000000000002']
     ]) {
-      const allowed = await login('counselor', { credential, password: 'xiaopingu2026' });
+      const allowed = await login('counselor', { credential, password: 'unit-test-demo-password-only' });
       assert.equal(allowed.status, 200);
       const session = await allowed.json();
       assert.equal(session.counselor.id, id);
@@ -122,7 +122,7 @@ test('admin and demo passwords cannot be interchanged', async () => {
       });
       assert.equal(adminData.status, 403);
     }
-    assert.equal((await login('admin', { password: 'xiaopingu2026' })).status, 401);
+    assert.equal((await login('admin', { password: 'unit-test-demo-password-only' })).status, 401);
     assert.equal((await login('admin', { password: 'correct-horse-battery-staple' })).status, 200);
   });
 });
@@ -132,7 +132,7 @@ test('missing demo password or disabled demo mode fails closed while edit codes 
     await withServer(memoryStore({ counselors: [
       { id: '00000000-0000-4000-8000-000000000001', edit_token: 'edit-demo-1' }
     ] }), async (baseUrl) => {
-      for (const password of ['', 'xiaopingu2026', 'correct-horse-battery-staple']) {
+      for (const password of ['', 'unit-test-demo-password-only', 'correct-horse-battery-staple']) {
         const denied = await fetch(`${baseUrl}/auth/counselor`, {
           method: 'POST', headers: { 'content-type': 'application/json' },
           body: JSON.stringify({ credential: 'counselor', password })
@@ -221,4 +221,37 @@ test('combined CloudRun handler serves the homepage and integrated admin route',
     await new Promise((resolve) => server.close(resolve));
     fs.rmSync(publicRoot, { recursive: true, force: true });
   }
+});
+
+test('own counselor profile cannot change approval, identity or activation fields', async()=>{
+  const store=memoryStore({counselors:[{id:'c1',edit_token:'edit-c1',review_status:'pending',is_active:false}]});
+  await withServer(store,async base=>{
+    const login=await fetch(base+'/auth/counselor',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({credential:'edit-c1'})});
+    const {token}=await login.json();
+    for(const key of ['review_status','is_active','is_demo','role','permissions','reviewed_by','unknown_field']){
+      const before=await store.list('counselors');
+      const result=await fetch(base+'/rest/v1/counselors?id=eq.c1',{method:'PATCH',headers:{authorization:'Bearer '+token,'content-type':'application/json'},body:JSON.stringify({bio_short:'must not persist',[key]:'forged'})});
+      assert.equal(result.status,403,key);assert.deepEqual(await store.list('counselors'),before);
+    }
+    const valid=await fetch(base+'/rest/v1/counselors?id=eq.c1',{method:'PATCH',headers:{authorization:'Bearer '+token,'content-type':'application/json'},body:JSON.stringify({bio_short:'new profile',photo_daily:[]})});
+    assert.equal(valid.status,200);assert.equal((await store.list('counselors'))[0].review_status,'pending');
+  });
+});
+
+test('public registration stays pending and anonymous legacy clinical writes are denied',async()=>{
+  await withServer(memoryStore(),async base=>{
+    const post=(table,body)=>fetch(base+'/rest/v1/'+table,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});
+    const created=await post('counselors',{name:'Synthetic',review_status:'approved',is_active:true,is_demo:true,role:'admin'});
+    const [row]=await created.json();assert.equal(row.review_status,'pending');assert.equal(row.is_active,false);assert.equal(row.is_demo,false);assert.equal(row.role,undefined);
+    for(const table of ['sessions','pcoms_ratings','visitor_users'])assert.equal((await post(table,{assessment_id:'a1',session_id:'s1'})).status,403);
+  });
+});
+
+test('legacy visitor cannot approve a match or rebind its identity using an assessment capability',async()=>{
+  const store=memoryStore({assessments:[{id:'a1',view_token:'a1',match_request_status:'pending'}]});
+  await withServer(store,async base=>{
+    for(const patch of [{match_request_status:'approved'},{visitor_user_id:'forged'},{view_token:'stolen'},{match_id:'invented'}]){
+      const before=await store.list('assessments');const r=await fetch(base+'/rest/v1/assessments?id=eq.a1',{method:'PATCH',headers:{'content-type':'application/json'},body:JSON.stringify(patch)});assert.equal(r.status,403);assert.deepEqual(await store.list('assessments'),before);
+    }
+  });
 });
