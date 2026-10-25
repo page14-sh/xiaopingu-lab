@@ -7,3 +7,6 @@
 真实数据仍在旧集合，旧链路分别使用 `xpg-rest` 与 `xg-api`。新版四评后端在独立预览服务中，不能仅改 API URL 就把这些页面切到新版契约。
 
 详见 [安全闭环记录](../specs/assessment-foundation/security-closure.md)。
+
+
+2026-10-25：本目录现为新版统一入口的发布源码；API 指向 `xiaopingu-assessment`。新旧身份、迁移证据、运行限制与凭证交付见 `specs/v2-cutover/operations.md`。默认域名有平台浏览器访问限制，正式访问需绑定已备案自定义域名。

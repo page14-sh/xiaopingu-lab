@@ -3,6 +3,8 @@
   "status": "declaration-only-not-provisioned",
   "client_access": { "read": false, "write": false },
   "collections": [
+    {"name": "xg_legacy_records", "document_id": "sha256(JSON([source_collection,source_document_id]))", "immutable": true, "indexes": [{"name": "assessment_source_id", "unique": false, "fields": [{"name": "assessment_id", "direction": "asc"}, {"name": "source_collection", "direction": "asc"}, {"name": "_id", "direction": "asc"}]}, {"name": "counselor_id", "unique": false, "fields": [{"name": "counselor_id", "direction": "asc"}, {"name": "_id", "direction": "asc"}]}]},
+    {"name": "xg_migration_runs", "document_id": "migration_id", "scope": "source hashes, import verification and cutover ledger"},
     {"name": "xg_matches", "document_id": "match_id"},
     {"name": "xg_active_matches", "document_id": "sha256(JSON([visitor_id,counselor_id]))"},
     {"name": "xg_assessment_events", "document_id": "event_id", "indexes": [{"name": "match_session_id", "unique": false, "fields": [{"name": "match_id", "direction": "asc"}, {"name": "session_no", "direction": "asc"}, {"name": "_id", "direction": "asc"}]}, {"name": "stats_id_time", "unique": false, "fields": [{"name": "_id", "direction": "asc"}, {"name": "started_at", "direction": "asc"}]}, {"name": "status_expiry_id", "unique": false, "fields": [{"name": "status", "direction": "asc"}, {"name": "expires_at", "direction": "asc"}, {"name": "_id", "direction": "asc"}]}]},

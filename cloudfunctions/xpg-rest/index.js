@@ -22,7 +22,8 @@ exports.main = async (event) => {
     end(body) { __resolve({ statusCode: this.statusCode, headers: this.__headers, body: body || '' }); }
   };
 
-  await core.handleRequest(req, res);
+  try {if(!await require('./cutover').handleCutover(req,res))await core.handleRequest(req,res);}
+  catch(_error){res.writeHead(502,{'Content-Type':'application/json','Access-Control-Allow-Origin':'*','Cache-Control':'no-store'});res.end(JSON.stringify({message:'服务切换暂时不可用，请稍后重试'}));}
   const result = await resPromise;
   return { statusCode: result.statusCode, headers: { ...result.headers }, body: result.body, isBase64Encoded: false };
 };

@@ -1,0 +1,336 @@
+{
+  "env": "xpg-demo-d3gzsswtcc3233ea0",
+  "prefix": "xg_v2_59875df34c_",
+  "resources": [
+    {
+      "collection": "xg_v2_59875df34c_legacy_records",
+      "acl": "ADMINONLY",
+      "indexes": [
+        "assessment_source_id",
+        "counselor_id"
+      ],
+      "count": 0
+    },
+    {
+      "collection": "xg_v2_59875df34c_migration_runs",
+      "acl": "ADMINONLY",
+      "indexes": [],
+      "count": 0
+    },
+    {
+      "collection": "xg_v2_59875df34c_matches",
+      "acl": "ADMINONLY",
+      "indexes": [],
+      "count": 0
+    },
+    {
+      "collection": "xg_v2_59875df34c_active_matches",
+      "acl": "ADMINONLY",
+      "indexes": [],
+      "count": 0
+    },
+    {
+      "collection": "xg_v2_59875df34c_assessment_events",
+      "acl": "ADMINONLY",
+      "indexes": [
+        "match_session_id",
+        "stats_id_time",
+        "status_expiry_id"
+      ],
+      "count": 0
+    },
+    {
+      "collection": "xg_v2_59875df34c_submissions",
+      "acl": "ADMINONLY",
+      "indexes": [],
+      "count": 0
+    },
+    {
+      "collection": "xg_v2_59875df34c_baseline_profiles",
+      "acl": "ADMINONLY",
+      "indexes": [],
+      "count": 0
+    },
+    {
+      "collection": "xg_v2_59875df34c_end_profiles",
+      "acl": "ADMINONLY",
+      "indexes": [],
+      "count": 0
+    },
+    {
+      "collection": "xg_v2_59875df34c_visitors",
+      "acl": "ADMINONLY",
+      "indexes": [],
+      "count": 0
+    },
+    {
+      "collection": "xg_v2_59875df34c_identity_assertions",
+      "acl": "ADMINONLY",
+      "indexes": [],
+      "count": 0
+    },
+    {
+      "collection": "xg_v2_59875df34c_intake_owners",
+      "acl": "ADMINONLY",
+      "indexes": [],
+      "count": 0
+    },
+    {
+      "collection": "xg_v2_59875df34c_match_requests",
+      "acl": "ADMINONLY",
+      "indexes": [],
+      "count": 0
+    },
+    {
+      "collection": "xg_v2_59875df34c_case_switches",
+      "acl": "ADMINONLY",
+      "indexes": [],
+      "count": 0
+    },
+    {
+      "collection": "xg_v2_59875df34c_llm_results",
+      "acl": "ADMINONLY",
+      "indexes": [
+        "match_result_id"
+      ],
+      "count": 0
+    },
+    {
+      "collection": "xg_v2_59875df34c_consent_policies",
+      "acl": "ADMINONLY",
+      "indexes": [],
+      "count": 0
+    },
+    {
+      "collection": "xg_v2_59875df34c_consent_documents",
+      "acl": "ADMINONLY",
+      "indexes": [],
+      "count": 0
+    },
+    {
+      "collection": "xg_v2_59875df34c_consent_states",
+      "acl": "ADMINONLY",
+      "indexes": [],
+      "count": 0
+    },
+    {
+      "collection": "xg_v2_59875df34c_consent_history",
+      "acl": "ADMINONLY",
+      "indexes": [
+        "visitor_scope_revision"
+      ],
+      "count": 0
+    },
+    {
+      "collection": "xg_v2_59875df34c_item_versions",
+      "acl": "ADMINONLY",
+      "indexes": [],
+      "count": 0
+    },
+    {
+      "collection": "xg_v2_59875df34c_rule_versions",
+      "acl": "ADMINONLY",
+      "indexes": [],
+      "count": 0
+    },
+    {
+      "collection": "xg_v2_59875df34c_assessment_release",
+      "acl": "ADMINONLY",
+      "indexes": [],
+      "count": 0
+    },
+    {
+      "collection": "xg_v2_59875df34c_case_assessment_configs",
+      "acl": "ADMINONLY",
+      "indexes": [],
+      "count": 0
+    },
+    {
+      "collection": "xg_v2_59875df34c_event_transitions",
+      "acl": "ADMINONLY",
+      "indexes": [],
+      "count": 0
+    },
+    {
+      "collection": "xg_v2_59875df34c_request_receipts",
+      "acl": "ADMINONLY",
+      "indexes": [],
+      "count": 0
+    },
+    {
+      "collection": "xg_v2_59875df34c_combination_jobs",
+      "acl": "ADMINONLY",
+      "indexes": [],
+      "count": 0
+    },
+    {
+      "collection": "xg_v2_59875df34c_raw_signals",
+      "acl": "ADMINONLY",
+      "indexes": [],
+      "count": 0
+    },
+    {
+      "collection": "xg_v2_59875df34c_session_combinations",
+      "acl": "ADMINONLY",
+      "indexes": [],
+      "count": 0
+    },
+    {
+      "collection": "xg_v2_59875df34c_combination_history",
+      "acl": "ADMINONLY",
+      "indexes": [],
+      "count": 0
+    },
+    {
+      "collection": "xg_v2_59875df34c_rollout_policy",
+      "acl": "ADMINONLY",
+      "indexes": [],
+      "count": 0
+    },
+    {
+      "collection": "xg_v2_59875df34c_rollout_history",
+      "acl": "ADMINONLY",
+      "indexes": [],
+      "count": 0
+    },
+    {
+      "collection": "xg_v2_59875df34c_followup_jobs",
+      "acl": "ADMINONLY",
+      "indexes": [
+        "status_check_id",
+        "stats_id_time"
+      ],
+      "count": 0
+    },
+    {
+      "collection": "xg_v2_59875df34c_notification_tasks",
+      "acl": "ADMINONLY",
+      "indexes": [
+        "status_attempt_id",
+        "stats_id_time"
+      ],
+      "count": 0
+    },
+    {
+      "collection": "xg_v2_59875df34c_notification_attempts",
+      "acl": "ADMINONLY",
+      "indexes": [
+        "scoped_order",
+        "stats_id_time"
+      ],
+      "count": 0
+    },
+    {
+      "collection": "xg_v2_59875df34c_notification_inbox",
+      "acl": "ADMINONLY",
+      "indexes": [
+        "scoped_order",
+        "stats_id_time"
+      ],
+      "count": 0
+    },
+    {
+      "collection": "xg_v2_59875df34c_notification_recipients",
+      "acl": "ADMINONLY",
+      "indexes": [],
+      "count": 0
+    },
+    {
+      "collection": "xg_v2_59875df34c_notification_audit",
+      "acl": "ADMINONLY",
+      "indexes": [],
+      "count": 0
+    },
+    {
+      "collection": "xg_v2_59875df34c_notification_bridge",
+      "acl": "ADMINONLY",
+      "indexes": [],
+      "count": 0
+    },
+    {
+      "collection": "xg_v2_59875df34c_alert_actions",
+      "acl": "ADMINONLY",
+      "indexes": [
+        "stats_id_time"
+      ],
+      "count": 0
+    },
+    {
+      "collection": "xg_v2_59875df34c_llm_jobs",
+      "acl": "ADMINONLY",
+      "indexes": [
+        "status_attempt_id",
+        "status_recovery_id",
+        "status_id",
+        "stats_id_time"
+      ],
+      "count": 0
+    },
+    {
+      "collection": "xg_v2_59875df34c_llm_attempts",
+      "acl": "ADMINONLY",
+      "indexes": [],
+      "count": 0
+    },
+    {
+      "collection": "xg_v2_59875df34c_llm_history",
+      "acl": "ADMINONLY",
+      "indexes": [],
+      "count": 0
+    },
+    {
+      "collection": "xg_v2_59875df34c_llm_audit",
+      "acl": "ADMINONLY",
+      "indexes": [],
+      "count": 0
+    },
+    {
+      "collection": "xg_v2_59875df34c_tag_weight_proposals",
+      "acl": "ADMINONLY",
+      "indexes": [],
+      "count": 0
+    },
+    {
+      "collection": "xg_v2_59875df34c_tag_weights",
+      "acl": "ADMINONLY",
+      "indexes": [],
+      "count": 0
+    },
+    {
+      "collection": "xg_v2_59875df34c_risk_states",
+      "acl": "ADMINONLY",
+      "indexes": [],
+      "count": 0
+    },
+    {
+      "collection": "xg_v2_59875df34c_assessments",
+      "acl": "ADMINONLY",
+      "indexes": [],
+      "count": 0
+    },
+    {
+      "collection": "xg_v2_59875df34c_counselors",
+      "acl": "ADMINONLY",
+      "indexes": [],
+      "count": 0
+    },
+    {
+      "collection": "xg_v2_59875df34c_sessions",
+      "acl": "ADMINONLY",
+      "indexes": [],
+      "count": 0
+    },
+    {
+      "collection": "xg_v2_59875df34c_pcoms_ratings",
+      "acl": "ADMINONLY",
+      "indexes": [],
+      "count": 0
+    },
+    {
+      "collection": "xg_v2_59875df34c_visitor_users",
+      "acl": "ADMINONLY",
+      "indexes": [],
+      "count": 0
+    }
+  ]
+}

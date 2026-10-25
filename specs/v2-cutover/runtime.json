@@ -1,0 +1,9 @@
+{
+  "env": "xpg-demo-d3gzsswtcc3233ea0",
+  "prefix": "xg_v2_59875df34c_",
+  "service": "xiaopingu-assessment",
+  "portal_enabled": true,
+  "external_notifications": false,
+  "llm": false,
+  "api_url": "https://xiaopingu-assessment-308810-6-1300577165.sh.run.tcloudbase.com"
+}

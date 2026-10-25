@@ -2,6 +2,8 @@ const { createHash } = require('node:crypto');
 
 const COLLECTIONS = Object.freeze({
   matches: 'xg_matches',
+  legacyRecords: 'xg_legacy_records',
+  migrationRuns: 'xg_migration_runs',
   riskStates: 'xg_risk_states',
   activeMatches: 'xg_active_matches',
   events: 'xg_assessment_events',

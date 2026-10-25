@@ -161,10 +161,11 @@
 
 <div class="toast" id="toast"></div>
 
+<script src="supabase-config.js?v=20261025-v2"></script>
 <script>
-var API = 'https://xpg-demo-d3gzsswtcc3233ea0-1300577165.ap-shanghai.app.tcloudbase.com/xpg-rest/rest/v1';
-var REST = 'https://xpg-demo-d3gzsswtcc3233ea0-1300577165.ap-shanghai.app.tcloudbase.com/xpg-rest';
-var XG_API = 'https://xpg-demo-d3gzsswtcc3233ea0-1300577165.ap-shanghai.app.tcloudbase.com/xg-api';
+var API = SUPABASE_CONFIG.url+'/rest/v1';
+var REST = SUPABASE_CONFIG.url;
+var XG_API = 'https://xiaopingu-assessment-308810-6-1300577165.sh.run.tcloudbase.com';
 var AID = '';
 var DATA = null;
 
@@ -349,98 +350,9 @@ function render(){
   loadXgTodo(st, d.match_id);
 }
 
-function renderXg(st, matchId){
-  var box = document.getElementById('xg-entry');
-  var opened = (st === 'approved' || st === 'contacted') && !!matchId;
-  if (!opened) {
-    box.innerHTML = '<div class="lock">🔒 匹配通过后开放<br><span style="font-size:13px">'+
-      (st === 'pending' ? '等平台审批通过，这里就会自动开放。' :
-       st === 'rejected' ? '这次匹配未通过，重新申请并通过后开放。' :
-       '先提交匹配申请，通过后可在这里填写四评。')+'</span></div>';
-    return;
-  }
-  box.innerHTML =
-    '<button class="btn block" style="margin-top:0" onclick="goXg()">进入四评 →</button>' +
-    '<button class="btn ghost block" onclick="goXg(\'v5-records.html\')">我的填写记录</button>' +
-    '<p class="note">你填的每一张卡，你的咨询师都能同步看到；分数不会直接显示给你，避免打分影响你的感受。</p>';
-}
-
-// ========== 顶部待办条 ==========
-// 来访者回访频次最高的动作是"填四评"，不是"看报告"。
-// 所以待办条置顶：一进页面就知道有没有要填的，不用滑到 ③。
-// 复用 goXg 的桥接链路拿 visitor_token，再查待推卡片。
-function loadXgTodo(st, matchId){
-  var bar = document.getElementById('xg-todo');
-  if (!bar) return;
-  var opened = (st === 'approved' || st === 'contacted') && !!matchId;
-  if (!opened) { bar.style.display = 'none'; return; }
-  fetch(XG_API + '/v1/xg/bridge/enter', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ asid: AID })
-  }).then(function(r){ return r.json(); })
-    .then(function(d){
-      if (!d || !d.visitor_token) { bar.style.display = 'none'; return null; }
-      try {
-        localStorage.setItem('xg_visitor_openid', d.visitor_token);
-        localStorage.setItem('xg_match_id', d.match_id || '');
-        localStorage.setItem('xg_focus_user', d.visitor_id || '');
-        localStorage.setItem('xg_session_no', '0');
-      } catch(e){}
-      return fetch(XG_API + '/v1/xg/prompts/next?user_id=' + encodeURIComponent(d.visitor_id || '') + '&session_no=0',
-        { headers: { Authorization: 'Bearer ' + d.visitor_token } })
-        .then(function(r){ return r.json(); })
-        .then(function(p){ renderTodo(bar, p || {}); });
-    })
-    .catch(function(){ bar.style.display = 'none'; });
-}
-
-function renderTodo(bar, p){
-  // 危机红线个案：不推任何卡，也不要在首页提醒，避免造成困扰
-  if (p.out_of_scope) { bar.style.display = 'none'; return; }
-  var t = document.getElementById('todo-title');
-  var s = document.getElementById('todo-desc');
-  var b = document.getElementById('todo-btn');
-  if (p.consent_required) {
-    t.textContent = '先完成一次知情同意';
-    s.textContent = '同意后就能开始填写问卷，大约 1 分钟。';
-    b.textContent = '去签署 →';
-    b.setAttribute('onclick', 'goXg()');
-  } else if (p.prompts && p.prompts.length) {
-    t.textContent = '你有 ' + p.prompts.length + ' 张待填的问卷';
-    s.textContent = '填完你的咨询师就能同步看到，用来把咨询调整得更合适。';
-    b.textContent = '去填写 →';
-    b.setAttribute('onclick', 'goXg()');
-  } else {
-    t.textContent = '本轮问卷已填完';
-    s.textContent = '下次咨询后，这里会再出现新的待填问卷。';
-    b.textContent = '查看记录';
-    b.setAttribute('onclick', "goXg('v5-records.html')");
-  }
-  bar.style.display = 'flex';
-}
-
-// 进入四评：先走桥接（建档来访身份 / 取匹配单号 / 建个案），再带参跳转
-// 桥接与咨询师端共用同一 match_id，因此来访填的内容咨询师端能直接看到
-function goXg(page){
-  toast('正在进入…');
-  fetch(XG_API + '/v1/xg/bridge/enter', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ asid: AID })
-  }).then(function(r){ return r.json(); }).then(function(d){
-    if (d && d.out_of_scope) { location.href = 'x1-out-of-scope.html'; return; }
-    if (!d || !d.visitor_token) { errBox('四评入口暂时不可用（' + ((d && (d.error && d.error.message)) || '未知') + '），请稍后重试。'); return; }
-    try {
-      localStorage.setItem('xg_role', 'visitor');
-      localStorage.setItem('xg_visitor_openid', d.visitor_token);
-      localStorage.setItem('xg_match_id', d.match_id || '');
-      localStorage.setItem('xg_session_no', '0');
-      localStorage.setItem('xg_focus_user', d.visitor_id || '');
-    } catch(e){}
-    var target = page || d.next_page || 'v1-consent.html';
-    location.href = target + '?match_id=' + encodeURIComponent(d.match_id || '') +
-                    '&session_no=0&user_id=' + encodeURIComponent(d.visitor_id || '');
-  }).catch(function(e){ errBox('进入四评失败：' + (e && e.message ? e.message : e)); });
-}
+function renderXg(){var box=document.getElementById('xg-entry');box.innerHTML='<button class="btn block" onclick="goXg()">新版咨询档案与历史记录 →</button><p class="note">旧链接可查历史；新的申请和作答需要本人新版填写凭证。</p>';}
+function loadXgTodo(){var bar=document.getElementById('xg-todo');if(bar)bar.style.display='none';}
+function goXg(){location.href='portal.html?asid='+encodeURIComponent(AID||'');}
 
 boot();
 </script>

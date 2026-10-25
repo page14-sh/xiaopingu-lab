@@ -3,7 +3,7 @@ const { DATASETS } = require('./statistics-source');
 
 // Legacy assessments are written only by the trusted intake service, in a transaction
 // with its private ownership record. They are not exposed as arbitrary xg writes.
-const allowedCollections = new Set([...Object.values(COLLECTIONS), 'assessments']);
+const allowedCollections = new Set([...Object.values(COLLECTIONS), 'assessments', 'counselors']);
 
 function checkCollection(name) {
   if (!allowedCollections.has(name)) throw new Error('Unknown assessment collection');

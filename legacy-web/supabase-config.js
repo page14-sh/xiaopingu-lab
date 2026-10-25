@@ -9,152 +9,11 @@
 
 var SUPABASE_CONFIG = {
   enableDataCollection: true,
-  url: 'https://xpg-demo-d3gzsswtcc3233ea0-1300577165.ap-shanghai.app.tcloudbase.com/xpg-rest',
+  url: 'https://xiaopingu-assessment-308810-6-1300577165.sh.run.tcloudbase.com',
   anonKey: ''
 };
 
-/*
-===========================================
-  Supabase SQL — 复制到 SQL Editor 执行
-===========================================
 
--- 1. 来访者评估数据表
-CREATE TABLE assessments (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  visitor_name TEXT,
-  visitor_age INTEGER,
-  visitor_gender TEXT,
-  visitor_occupation TEXT,
-  prev_counseling TEXT,
-  budget TEXT,                       -- low/mid/high/premium/空
-  preferred_formats TEXT[],          -- ['线下面询','视频咨询','语音咨询','文字咨询']
-  expects TEXT[],
-  issues TEXT[],
-  description TEXT,
-  duration TEXT,
-  score_mood INTEGER DEFAULT 0,
-  score_anxiety INTEGER DEFAULT 0,
-  score_sleep INTEGER DEFAULT 0,
-  score_function INTEGER DEFAULT 0,
-  score_relation INTEGER DEFAULT 0,
-  total_score INTEGER DEFAULT 0,
-  severity TEXT,
-  specials TEXT[],
-  crisis_level TEXT,
-  user_agent TEXT,
-  -- 偏好与扩展字段
-  filled_by TEXT,                     -- 本人/家长/监护人/其他
-  is_minor BOOLEAN DEFAULT false,
-  visitor_city TEXT,
-  gender_pref TEXT,                   -- male/female/any
-  age_pref TEXT,                      -- senior/mid/peer
-  orientation_pref TEXT,              -- friendly/experienced/any
-  comm_style TEXT,                    -- warm/direct/professional
-  view_token TEXT UNIQUE,
-  -- C-NIP 偏好
-  cnip_structure TEXT,                -- structured/balanced/open
-  cnip_emotion TEXT,                  -- emotional/balanced/rational
-  cnip_timefocus TEXT,                -- past/balanced/present
-  cnip_warmth TEXT,                   -- warm/balanced/direct
-  cnip_homework TEXT,                 -- yes/neutral/no
-  cnip_relational TEXT                -- discuss/neutral/skip
-);
-
--- 2. 咨询师档案表
-CREATE TABLE counselors (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW(),
-  -- 基本信息
-  name TEXT NOT NULL,
-  credential_level TEXT,          -- 三级/二级/注册心理师/精神科医生
-  years_experience INTEGER DEFAULT 0,
-  education TEXT,                 -- 学士/硕士/博士/医学学位
-  license_number TEXT,
-  city TEXT,
-  -- 咨询取向
-  approaches TEXT[],              -- ['CBT','ACT','DBT','EMDR'...]
-  service_settings TEXT[],         -- ['个体咨询','伴侣咨询','家庭治疗','团体咨询']
-  training_background TEXT,       -- 受训背景
-  supervision_hours INTEGER DEFAULT 0,
-  personal_therapy_hours INTEGER DEFAULT 0,
-  ethics_training TEXT,               -- 是/否/进行中
-  certifications TEXT[],          -- ['危机干预','EMDR认证'...]
-  -- 擅长领域
-  specialties TEXT[],             -- ['情绪困扰','关系困境'...]
-  populations TEXT[],             -- ['成人','青少年'...]
-  severity_levels TEXT[],         -- ['轻度','中度','重度','需精神科联合']
-  -- 咨询方式
-  session_formats TEXT[],         -- ['线下面询','视频咨询','语音咨询']
-  session_duration TEXT,          -- 50分钟/60分钟/90分钟
-  fee_min INTEGER DEFAULT 0,            -- 单次费用（元）
-  fee_budget_level TEXT,               -- low/mid/high/premium
-  available_slots TEXT,           -- 可预约时段
-  -- 简介
-  bio_short TEXT,                 -- 一句话简介
-  bio_full TEXT,                  -- 详细介绍
-  -- 状态
-  is_active BOOLEAN DEFAULT true,
-  review_status TEXT NOT NULL DEFAULT 'pending',  -- pending/approved/rejected
-  review_note TEXT,
-  reviewed_at TIMESTAMPTZ,
-  reviewed_by TEXT,
-  -- 联系（可选）
-  contact_wechat TEXT,
-  contact_phone TEXT,
-  -- 编辑与诚信
-  edit_token TEXT UNIQUE,
-  orientation_friendly TEXT[],       -- ['LGBTQ+友善','跨性别友善'...]
-  client_gender_pref TEXT,           -- male_only/female_only/空
-  client_age_prefs TEXT[],           -- ['6-12岁','12-18岁','成人','老年']
-  comm_styles TEXT[],                -- ['温暖共情','直接高效','专业客观']
-  has_violation BOOLEAN DEFAULT false,
-  violation_detail TEXT,
-  has_incident BOOLEAN DEFAULT false,
-  incident_detail TEXT,
-  integrity_confirm BOOLEAN DEFAULT false,
-  deep_review BOOLEAN DEFAULT false, -- 加深审核标记
-  -- C-NIP 偏好（多选）
-  cnip_styles TEXT[],                -- {structured, balanced, open}
-  cnip_emotion_focus TEXT[],         -- {emotional, balanced, rational}
-  cnip_time TEXT[],                  -- {past, balanced, present}
-  cnip_stance TEXT[],                -- {warm, balanced, challenging}
-  cnip_homework TEXT[],              -- {yes, neutral, no}
-  cnip_relational TEXT[]             -- {discuss, neutral, skip}
-);
-
--- 3. RLS 策略
-ALTER TABLE assessments ENABLE ROW LEVEL SECURITY;
-ALTER TABLE counselors ENABLE ROW LEVEL SECURITY;
-
--- 评估：匿名可插入
-CREATE POLICY "anon_insert_assessment" ON assessments
-  FOR INSERT WITH CHECK (true);
-
--- 评估：匿名可查询（admin 后台通过 anon key 读取）
-CREATE POLICY "anon_select_assessment" ON assessments
-  FOR SELECT USING (true);
-
--- 咨询师：匿名可读（用于匹配展示）
-CREATE POLICY "anon_read_counselor" ON counselors
-  FOR SELECT USING (is_active = true);
-
--- 咨询师：匿名可插入（录入）
-CREATE POLICY "anon_insert_counselor" ON counselors
-  FOR INSERT WITH CHECK (true);
-
--- 咨询师：通过 ID 更新（编辑自己的档案）
-CREATE POLICY "update_own_counselor" ON counselors
-  FOR UPDATE USING (true);
-
--- 4. 索引（加速匹配查询）
-CREATE INDEX idx_counselors_active ON counselors(is_active);
-CREATE INDEX idx_counselors_specialties ON counselors USING GIN(specialties);
-CREATE INDEX idx_counselors_approaches ON counselors USING GIN(approaches);
-CREATE INDEX idx_counselors_budget ON counselors(fee_budget_level);
-
-*/
 
 // ========== API 封装 ==========
 
@@ -163,7 +22,10 @@ var XPG_COUNSELOR_TOKEN_KEY = 'xiaopingu_counselor_token';
 
 function currentApiToken() {
   try {
-    return sessionStorage.getItem(XPG_ADMIN_TOKEN_KEY) || localStorage.getItem(XPG_COUNSELOR_TOKEN_KEY) || '';
+    var page=location.pathname.split('/').pop();
+    if(page==='admin.html'||/^a[0-9]/.test(page))return sessionStorage.getItem(XPG_ADMIN_TOKEN_KEY)||'';
+    if(page==='counselor.html'||/^c[0-9]/.test(page))return localStorage.getItem(XPG_COUNSELOR_TOKEN_KEY)||'';
+    return localStorage.getItem('xpg_v2_visitor_token')||'';
   } catch (_error) {
     return '';
   }
@@ -171,20 +33,18 @@ function currentApiToken() {
 
 // 为所有发往 CloudBase API 的请求统一附加短期会话令牌。
 (function installAuthenticatedFetch() {
-  if (typeof window === 'undefined' || typeof window.fetch !== 'function') return;
-  var nativeFetch = window.fetch.bind(window);
-  window.fetch = function(resource, options) {
-    var requestUrl = typeof resource === 'string' ? resource : (resource && resource.url) || '';
-    var target, api;
-    try { target = new URL(requestUrl, window.location.href); api = new URL(SUPABASE_CONFIG.url, window.location.href); } catch (_) { return nativeFetch(resource, options); }
-    if (target.origin !== api.origin || (target.pathname !== api.pathname && target.pathname.indexOf(api.pathname.replace(/\/$/, '') + '/') !== 0)) return nativeFetch(resource, options);
-    var next = Object.assign({}, options || {});
-    var headers = new Headers(next.headers || {});
-    var token = currentApiToken();
-    var supplied = headers.get('Authorization') || '';
-    if (token && (!supplied || /^Bearer\s*$/.test(supplied) || supplied === 'Bearer dev-local-key' || supplied === 'Bearer ' + SUPABASE_CONFIG.anonKey)) headers.set('Authorization', 'Bearer ' + token);
-    next.headers = headers;
-    return nativeFetch(resource, next);
+  var nativeFetch=window.fetch.bind(window);
+  function credential(){var value=localStorage.getItem('xpg_v2_visitor_credential');if(!value){var bytes=crypto.getRandomValues(new Uint8Array(32));value='xpg2_'+btoa(String.fromCharCode.apply(null,bytes)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');localStorage.setItem('xpg_v2_visitor_credential',value);}return value;}
+  window.fetch=async function(resource,options){
+    var target,api;try{target=new URL(typeof resource==='string'?resource:resource.url,location.href);api=new URL(SUPABASE_CONFIG.url,location.href);}catch(_){return nativeFetch(resource,options);}
+    if(target.origin!==api.origin||(target.pathname!==api.pathname&&target.pathname.indexOf(api.pathname.replace(/\/$/,'')+'/')!==0))return nativeFetch(resource,options);
+    var next=Object.assign({},options||{}),headers=new Headers(next.headers||{}),token=currentApiToken(),path=target.pathname.slice(api.pathname.replace(/\/$/,'').length);
+    var initial=path==='/rest/v1/assessments'&&next.method==='POST';
+    if(initial){var body=JSON.parse(next.body),claim=credential();(Array.isArray(body)?body:[body]).forEach(function(row){row.client_claim_secret=claim;});next.body=JSON.stringify(body);}
+    var supplied=headers.get('Authorization')||'';if(token&&(!supplied||/^Bearer\s*$/.test(supplied)||supplied==='Bearer '+SUPABASE_CONFIG.anonKey))headers.set('Authorization','Bearer '+token);
+    next.headers=headers;var response=await nativeFetch(resource,next);
+    if(initial&&response.ok){var login=await nativeFetch(SUPABASE_CONFIG.url+'/auth/visitor-receipt',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({credential:claim})});if(login.ok){var auth=await login.json();localStorage.setItem('xpg_v2_visitor_token',auth.token);}}
+    return response;
   };
 })();
 
@@ -278,7 +138,7 @@ function saveAssessment(data) {
     body: JSON.stringify(data)
   }).then(function(r) {
     if (r.ok) { console.log('[小平菇] 评估数据已保存 (id=' + (data.id || 'auto') + ')'); return data; }
-    else if (r.status === 409) { console.warn('[小平菇] 评估记录已存在 (409)，跳过'); return data; }
+    else if (r.status === 409) { throw new Error('此初评编号已被使用，请核对原填写凭证'); }
     else { console.warn('[小平菇] 保存失败:', r.status, r.statusText); (typeof showToast==='function'?showToast:_xpg_toast)('评估数据保存失败，请检查网络后重试','error'); return null; }
   }).catch(function(e) { console.warn('[小平菇] 网络错误:', e); (typeof showToast==='function'?showToast:_xpg_toast)('网络异常，评估数据未保存','error'); return null; });
 }

@@ -1,0 +1,16 @@
+{
+  "env": "xpg-demo-d3gzsswtcc3233ea0",
+  "prefix": "xg_v2_59875df34c_",
+  "api_url": "https://xiaopingu-assessment-308810-6-1300577165.sh.run.tcloudbase.com",
+  "checks": [
+    "health_and_anonymous_denial",
+    "all_legacy_archives_and_no_resumed_cycles",
+    "old_link_read_only_and_native_write_identity_separation",
+    "new_credential_same_archive_and_fresh_consent_required",
+    "existing_counselor_credential_native_access",
+    "both_legacy_functions_forward_to_v2"
+  ],
+  "passed": true,
+  "business_writes": 0,
+  "verified_at": "2026-10-25T05:13:53.320Z"
+}

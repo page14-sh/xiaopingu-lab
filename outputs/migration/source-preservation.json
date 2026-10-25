@@ -1,0 +1,73 @@
+{
+  "checked_at": "2026-10-25T05:14:15.169Z",
+  "checks": [
+    {
+      "collection": "assessments",
+      "unchanged": true
+    },
+    {
+      "collection": "counselors",
+      "unchanged": true
+    },
+    {
+      "collection": "sessions",
+      "unchanged": true
+    },
+    {
+      "collection": "pcoms_ratings",
+      "unchanged": true
+    },
+    {
+      "collection": "visitor_users",
+      "unchanged": true
+    },
+    {
+      "collection": "xg_alerts",
+      "unchanged": true
+    },
+    {
+      "collection": "xg_assessment_events",
+      "unchanged": true
+    },
+    {
+      "collection": "xg_baseline_profile",
+      "unchanged": true
+    },
+    {
+      "collection": "xg_case_switch",
+      "unchanged": true
+    },
+    {
+      "collection": "xg_config",
+      "unchanged": true
+    },
+    {
+      "collection": "xg_consent",
+      "unchanged": true
+    },
+    {
+      "collection": "xg_end_profile",
+      "unchanged": true
+    },
+    {
+      "collection": "xg_llm_jobs",
+      "unchanged": true
+    },
+    {
+      "collection": "xg_llm_results",
+      "unchanged": true
+    },
+    {
+      "collection": "xg_scale_items",
+      "unchanged": true
+    },
+    {
+      "collection": "xg_scales",
+      "unchanged": true
+    },
+    {
+      "collection": "xg_tag_weights",
+      "unchanged": true
+    }
+  ]
+}

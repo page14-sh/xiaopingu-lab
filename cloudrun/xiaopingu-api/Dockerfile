@@ -7,6 +7,7 @@ RUN npm ci --omit=dev
 
 COPY app.js index.js static.js runtime-policy.js legacy-security.js ./
 COPY assessment ./assessment
+COPY portal ./portal
 COPY public ./public
 
 ENV NODE_ENV=production

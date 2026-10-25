@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>小平菇 · 咨询师档案录入</title>
-<script src="web-auth.js"></script>
+<script src="web-auth.js?v=20261025-v2"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   html { scroll-behavior: smooth; }
@@ -1296,7 +1296,7 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="supabase-config.js"></script>
+<script src="supabase-config.js?v=20261025-v2"></script>
 <script>
 var currentStep = 1;
 var currentEditToken = null;
@@ -2903,21 +2903,7 @@ function renderClientList(records, pcomsMap) {
   content.innerHTML = html;
 }
 
-async function openFourAssessment(assessmentId) {
-  var token = localStorage.getItem('xiaopingu_counselor_token') || '';
-  if (!token) { alert('请先使用本人编辑码登录咨询师工作台'); return; }
-  try {
-    var r = await fetch(SUPABASE_URL + '/xg/counselor-context?assessment_id=' + encodeURIComponent(assessmentId), { headers: { Authorization: 'Bearer ' + token } });
-    var d = await r.json();
-    if (!r.ok) throw new Error(d.message || '无法进入该个案');
-    localStorage.setItem('xg_role', 'counselor');
-    localStorage.setItem('xg_counselor_token', token);
-    localStorage.setItem('xg_match_id', d.match_id);
-    localStorage.setItem('xg_focus_user', d.user_id);
-    localStorage.setItem('xg_session_no', String(d.session_no || 1));
-    location.href = 'c1-work.html?match_id=' + encodeURIComponent(d.match_id) + '&user_id=' + encodeURIComponent(d.user_id) + '&session_no=' + (d.session_no || 1);
-  } catch (e) { alert(e.message || '工作台加载失败，请重新登录后重试'); }
-}
+async function openFourAssessment(assessmentId) {location.href='c1-work.html?asid='+encodeURIComponent(assessmentId);}
 
 function loadPanelRequests() {
   var content = document.getElementById('panel-content');

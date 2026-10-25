@@ -1,0 +1,17 @@
+{
+  "env": "xpg-demo-d3gzsswtcc3233ea0",
+  "prefix": "xg_v2_59875df34c_",
+  "synthetic": true,
+  "checks": [
+    "native_intake_owner_and_secret_hash",
+    "intake_retry_bound_to_private_claim",
+    "history_token_cannot_enter_native_routes",
+    "authorized_legacy_approval_creates_native_cycle",
+    "real_database_frozen_form_consent_and_submission",
+    "visitor_score_redaction_and_cross_counselor_denial"
+  ],
+  "cleanup_complete": true,
+  "passed": true,
+  "synthetic_documents_removed": 28,
+  "finished_at": "2026-10-25T05:06:04.827Z"
+}

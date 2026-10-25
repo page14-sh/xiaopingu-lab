@@ -980,7 +980,7 @@ function openCounselorLogin() {
   overlay.classList.add('show');
   startWxLoginQr();
 }
-var WX_API = 'https://xpg-demo-d3gzsswtcc3233ea0-1300577165.ap-shanghai.app.tcloudbase.com/xpg-rest';
+var WX_API = 'https://xiaopingu-assessment-308810-6-1300577165.sh.run.tcloudbase.com';
 var _clPollTimer = null;
 function startWxLoginQr() {
   var box = document.getElementById('cl-qr');
@@ -1398,8 +1398,8 @@ function doCounselorLogin() {
 </div>
 
 <div class="toast" id="toast"></div>
-<script src="web-auth.js"></script>
-<script src="supabase-config.js"></script>
+<script src="web-auth.js?v=20261025-v2"></script>
+<script src="supabase-config.js?v=20261025-v2"></script>
 <script>
 var scores = { mood:0, anxiety:0, sleep:0, function:0, relation:0 };
 var scaleAnswered = { mood:false, anxiety:false, sleep:false, function:false, relation:false };
@@ -2383,10 +2383,11 @@ window.xiaopinguShortId = null;
 function fetchShortId(){
   var asid = getAsid();
   if(!asid || typeof SUPABASE_CONFIG==='undefined' || !SUPABASE_CONFIG.url) return;
-  fetch(SUPABASE_CONFIG.url + '/resolve?code=' + encodeURIComponent(asid))
+  fetch(SUPABASE_CONFIG.url + '/rest/v1/assessments?view_token=eq.' + encodeURIComponent(asid))
     .then(function(r){ return r.ok ? r.json() : null; })
     .then(function(d){
       var el = document.getElementById('shortid-display');
+      if(Array.isArray(d))d=d[0];
       if(d && d.short_id){
         window.xiaopinguShortId = d.short_id;
         if(el) el.textContent = d.short_id;
@@ -2405,7 +2406,7 @@ function copyShortId(){
 }
 
 /* ===== 原问卷 → 四评 入口（A 方案：串成一条链路）===== */
-var XG_API_BASE='https://xpg-demo-d3gzsswtcc3233ea0-1300577165.ap-shanghai.app.tcloudbase.com/xg-api';
+var XG_API_BASE='https://xiaopingu-assessment-308810-6-1300577165.sh.run.tcloudbase.com';
 
 function renderXgEntry(){
   var sec=document.getElementById('xg_entry_section');
@@ -2427,40 +2428,7 @@ function renderXgEntry(){
     '</div>';
 }
 
-function enterXgProcess(){
-  var asid=getAsid();
-  if(!asid){showToast('请先完成评估');return;}
-  var btn=document.getElementById('xg_enter_btn');
-  if(btn){btn.disabled=true;btn.textContent='正在进入…';}
-  fetch(XG_API_BASE+'/v1/xg/bridge/enter',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({asid:asid})
-  }).then(function(r){return r.json().then(function(d){return {ok:r.ok,d:d};});})
-  .then(function(x){
-    if(!x.ok||!x.d||!x.d.visitor_token){
-      // 红线：不在评估范围 → 走拒评页（不写入任何四评身份、不进四评）
-      if(x.d&&x.d.out_of_scope){
-        location.href='x1-out-of-scope.html';
-        return;
-      }
-      throw new Error((x.d&&x.d.message)||'进入失败');
-    }
-    var d=x.d;
-    try{
-      localStorage.setItem('xg_role','visitor');
-      localStorage.setItem('xg_visitor_openid',d.visitor_token);
-      localStorage.setItem('xg_match_id',d.match_id||'');
-      localStorage.setItem('xg_session_no','0');
-      if(d.visitor_id)localStorage.setItem('xg_focus_user',d.visitor_id);
-    }catch(e){}
-    if(btn){btn.textContent='已进入，正在跳转…';}
-    location.href=(d.next_page||'v1-consent.html')+'?match_id='+encodeURIComponent(d.match_id||'');
-  }).catch(function(e){
-    if(btn){btn.disabled=false;btn.textContent='进入咨询过程记录 →';}
-    showToast('进入失败：'+e.message);
-  });
-}
+function enterXgProcess(){location.href='portal.html?asid='+encodeURIComponent(getAsid()||'');}
 function enterViewMode(token){
   currentViewToken=token;
   document.getElementById('landing').classList.add('hidden');
@@ -2980,8 +2948,8 @@ function submitMatchApply(){
           headers:{'Content-Type':'application/json','apikey':SUPABASE_CONFIG.anonKey,'Authorization':'Bearer '+SUPABASE_CONFIG.anonKey,'Prefer':'return=minimal'},
           body:JSON.stringify(createBody)
         }).then(function(r2){
-          if(!r2.ok && r2.status!==409){ throw new Error('创建失败 HTTP '+r2.status); }
-          onSuccess();
+          if(!r2.ok){ throw new Error('创建失败 HTTP '+r2.status); }
+          return doPatch();
         });
       }
       onSuccess();

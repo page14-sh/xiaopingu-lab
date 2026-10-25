@@ -1,0 +1,180 @@
+{
+  "origin": "https://xpg-demo-d3gzsswtcc3233ea0-1300577165.tcloudbaseapp.com",
+  "verified_files": [
+    {
+      "path": "a1-dashboard.html",
+      "sha256": "13adb58aa4cd76f5db605dd29a74fafbc7d8bd1caf4f0a62b11353bf1a7a7c56",
+      "content_type": "text/html",
+      "content_disposition": "attachment"
+    },
+    {
+      "path": "a2-alerts.html",
+      "sha256": "13adb58aa4cd76f5db605dd29a74fafbc7d8bd1caf4f0a62b11353bf1a7a7c56",
+      "content_type": "text/html",
+      "content_disposition": "attachment"
+    },
+    {
+      "path": "a3-scales.html",
+      "sha256": "13adb58aa4cd76f5db605dd29a74fafbc7d8bd1caf4f0a62b11353bf1a7a7c56",
+      "content_type": "text/html",
+      "content_disposition": "attachment"
+    },
+    {
+      "path": "admin.html",
+      "sha256": "2a27b75430a5aea9105e970078d96b565f893f356b2ebead67fbd35ec4e82197",
+      "content_type": "text/html",
+      "content_disposition": "attachment"
+    },
+    {
+      "path": "assets/v2-portal.css",
+      "sha256": "3422c933e72cbd1352692f981afd13f9058e5cac9d7e8ed776d08e00aa82af9e",
+      "content_type": "text/css",
+      "content_disposition": "attachment"
+    },
+    {
+      "path": "assets/v2-portal.js",
+      "sha256": "a9ed2e279a42c0a5506b5878a1af892ba58ee0ef5dd4c8fcd73b7870875306a5",
+      "content_type": "application/javascript",
+      "content_disposition": "attachment"
+    },
+    {
+      "path": "assets/xg-config.js",
+      "sha256": "b8b3b43fa9e66b2a6c6e83329358f2fe39d8575f3df9f729af9e46bd9151318c",
+      "content_type": "application/javascript",
+      "content_disposition": "attachment"
+    },
+    {
+      "path": "assets/xg-ui.css",
+      "sha256": "19c42b0fdfd7ae38bd6b5b406a48f40a28b77f7b0a433c38b7ef1d72b6aa0c5c",
+      "content_type": "text/css",
+      "content_disposition": "attachment"
+    },
+    {
+      "path": "c1-work.html",
+      "sha256": "13adb58aa4cd76f5db605dd29a74fafbc7d8bd1caf4f0a62b11353bf1a7a7c56",
+      "content_type": "text/html",
+      "content_disposition": "attachment"
+    },
+    {
+      "path": "c2-fill.html",
+      "sha256": "13adb58aa4cd76f5db605dd29a74fafbc7d8bd1caf4f0a62b11353bf1a7a7c56",
+      "content_type": "text/html",
+      "content_disposition": "attachment"
+    },
+    {
+      "path": "c3-inbox.html",
+      "sha256": "13adb58aa4cd76f5db605dd29a74fafbc7d8bd1caf4f0a62b11353bf1a7a7c56",
+      "content_type": "text/html",
+      "content_disposition": "attachment"
+    },
+    {
+      "path": "c4-cst.html",
+      "sha256": "13adb58aa4cd76f5db605dd29a74fafbc7d8bd1caf4f0a62b11353bf1a7a7c56",
+      "content_type": "text/html",
+      "content_disposition": "attachment"
+    },
+    {
+      "path": "c5-trend.html",
+      "sha256": "13adb58aa4cd76f5db605dd29a74fafbc7d8bd1caf4f0a62b11353bf1a7a7c56",
+      "content_type": "text/html",
+      "content_disposition": "attachment"
+    },
+    {
+      "path": "c6-switch.html",
+      "sha256": "13adb58aa4cd76f5db605dd29a74fafbc7d8bd1caf4f0a62b11353bf1a7a7c56",
+      "content_type": "text/html",
+      "content_disposition": "attachment"
+    },
+    {
+      "path": "c7-dims.html",
+      "sha256": "13adb58aa4cd76f5db605dd29a74fafbc7d8bd1caf4f0a62b11353bf1a7a7c56",
+      "content_type": "text/html",
+      "content_disposition": "attachment"
+    },
+    {
+      "path": "counselor.html",
+      "sha256": "aa12cb5bac8ab4be5de38175c4cf364310e5f067821db740a1a4836136c7c16a",
+      "content_type": "text/html",
+      "content_disposition": "attachment"
+    },
+    {
+      "path": "index.html",
+      "sha256": "58657d2a7743c3231a615306a259b414aec5e2767a7f610eb2b4bbe123ac8e6f",
+      "content_type": "text/html",
+      "content_disposition": "attachment"
+    },
+    {
+      "path": "my-assessment.html",
+      "sha256": "42e925013ece668d6be433e6771b56d07250a6012d8a05aaa6c019089a2423d1",
+      "content_type": "text/html",
+      "content_disposition": "attachment"
+    },
+    {
+      "path": "portal.html",
+      "sha256": "13adb58aa4cd76f5db605dd29a74fafbc7d8bd1caf4f0a62b11353bf1a7a7c56",
+      "content_type": "text/html",
+      "content_disposition": "attachment"
+    },
+    {
+      "path": "session.html",
+      "sha256": "debcd9201fc4188bc775ed1dd9d06f4d6f6572b9e8bb7dd286b6dc6de7bb5f49",
+      "content_type": "text/html",
+      "content_disposition": "attachment"
+    },
+    {
+      "path": "supabase-config.js",
+      "sha256": "34eb7b327c3bb5c435be265bacfe7c7360b5b9242d976123f90f1ee124f898b8",
+      "content_type": "application/javascript",
+      "content_disposition": "attachment"
+    },
+    {
+      "path": "v1-consent.html",
+      "sha256": "13adb58aa4cd76f5db605dd29a74fafbc7d8bd1caf4f0a62b11353bf1a7a7c56",
+      "content_type": "text/html",
+      "content_disposition": "attachment"
+    },
+    {
+      "path": "v2-prompts.html",
+      "sha256": "13adb58aa4cd76f5db605dd29a74fafbc7d8bd1caf4f0a62b11353bf1a7a7c56",
+      "content_type": "text/html",
+      "content_disposition": "attachment"
+    },
+    {
+      "path": "v3-fill.html",
+      "sha256": "13adb58aa4cd76f5db605dd29a74fafbc7d8bd1caf4f0a62b11353bf1a7a7c56",
+      "content_type": "text/html",
+      "content_disposition": "attachment"
+    },
+    {
+      "path": "v4-done.html",
+      "sha256": "13adb58aa4cd76f5db605dd29a74fafbc7d8bd1caf4f0a62b11353bf1a7a7c56",
+      "content_type": "text/html",
+      "content_disposition": "attachment"
+    },
+    {
+      "path": "v5-records.html",
+      "sha256": "13adb58aa4cd76f5db605dd29a74fafbc7d8bd1caf4f0a62b11353bf1a7a7c56",
+      "content_type": "text/html",
+      "content_disposition": "attachment"
+    },
+    {
+      "path": "v6-follow.html",
+      "sha256": "13adb58aa4cd76f5db605dd29a74fafbc7d8bd1caf4f0a62b11353bf1a7a7c56",
+      "content_type": "text/html",
+      "content_disposition": "attachment"
+    },
+    {
+      "path": "web-auth.js",
+      "sha256": "5702b6bdd77242681272c7d8b69e1d0d9c9a992c71647fc4fbdbb81a73505ddd",
+      "content_type": "application/javascript",
+      "content_disposition": "attachment"
+    },
+    {
+      "path": "xg.html",
+      "sha256": "13adb58aa4cd76f5db605dd29a74fafbc7d8bd1caf4f0a62b11353bf1a7a7c56",
+      "content_type": "text/html",
+      "content_disposition": "attachment"
+    }
+  ],
+  "checked_at": "2026-10-25T05:14:14.008Z"
+}

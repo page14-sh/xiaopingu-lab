@@ -3,6 +3,7 @@ const { COLLECTIONS: C, AssessmentError, documentKey, requireId } = require('./m
 const { requirePrincipal, deny } = require('./authorization');
 const {fromAnswers,blocked,requireAdmission}=require('./admission');
 const { createRolloutRepository } = require('./rollout');
+const {validVisitor}=require('./visitor-identity');
 
 function createIdentityRepository(store) {
   return {
@@ -26,9 +27,9 @@ function createIdentityRepository(store) {
         return { id: visitor.visitor_id };
       });
     },
-    async requireVisitor(id) {
+    async requireVisitor(id,method) {
       const visitor = await store.get(C.visitors, requireId(id, 'visitor_id'));
-      if (!visitor || visitor.disabled || visitor.provider !== 'wechat-cloud') deny('无有效来访身份');
+      if (!validVisitor(visitor,method)) deny('无有效来访身份');
       return visitor;
     },
     async createIntake(principal, data) {
@@ -38,7 +39,7 @@ function createIdentityRepository(store) {
       const timestamp = new Date().toISOString();
       return store.transaction(async (tx) => {
         const visitor = await tx.get(C.visitors, principal.subject);
-        if (!visitor || visitor.disabled || visitor.provider !== 'wechat-cloud') deny();
+        if (!validVisitor(visitor,principal.auth_method)) deny();
         await tx.put('assessments', id, {
           ...data, crisis_level:fromAnswers(data.answers), xg_scope_status:blocked({crisis_level:fromAnswers(data.answers)})?'out_of_scope':'pending_review', id, visitor_user_id: principal.subject, xg_managed: true,
           match_request_status: 'pending', created_at: timestamp

@@ -248,6 +248,10 @@ function createProvenanceRepository(store, { now = () => new Date().toISOString(
       });
     },
 
+    async getCaseConfig(matchId) {
+      requireId(matchId,'match_id');
+      return store.transaction(async tx=>{const match=await tx.get(C.matches,matchId);if(!match)throw new AssessmentError('XG_NOT_FOUND','咨询周期不存在',404);return readCaseConfig(tx,match);});
+    },
     async setCaseConfig(matchId, { optional_enabled, focus_text, expected_revision, changed_by }) {
       requireId(matchId, 'match_id'); requireId(changed_by, 'changed_by'); revision(expected_revision);
       if (typeof optional_enabled !== 'boolean' || (focus_text !== null && (typeof focus_text !== 'string' || !focus_text.trim() || focus_text.length > 500))) invalid('个案配置须明确选修开关及关注主题');

@@ -20,7 +20,7 @@ function assessmentVersionSeed() {
 
 // A rollback-capable, serial test store. It models atomic commits, not CloudBase MVCC.
 function memoryAssessmentStore({ withVersions = true } = {}) {
-  let records = Object.fromEntries([...Object.values(COLLECTIONS), 'assessments'].map((name) => [name, new Map()]));
+  let records = Object.fromEntries([...Object.values(COLLECTIONS), 'assessments', 'counselors'].map((name) => [name, new Map()]));
   if (withVersions) for (const { collection, id, record } of assessmentVersionSeed()) {
     records[collection].set(id, { ...record, _id: id });
   }

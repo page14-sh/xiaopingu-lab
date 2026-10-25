@@ -1,0 +1,241 @@
+{
+  "service": "xiaopingu-assessment",
+  "version": "003",
+  "image_source_version": "002",
+  "traffic_percent": 100,
+  "runtime_sources": [
+    {
+      "path": "runtime-policy.js",
+      "sha256": "b42e1b5149cc750e747c6f39e7683a0d9922718a9ec7cae9b4a14d98b7b3de45"
+    },
+    {
+      "path": "index.js",
+      "sha256": "b66df2657c81a16f1ff411ef07c71e55f03336464591aea4fd49bb155e447bc7"
+    },
+    {
+      "path": "legacy-security.js",
+      "sha256": "b6243340db44f8ae21b313fd2faf8ea3e86ce98c1af4dfd0afaf252b5db18b63"
+    },
+    {
+      "path": "static.js",
+      "sha256": "0c9beda7b89c0555d435e868683f8a7b993887d2114fcd6dd5c596eab1d99673"
+    },
+    {
+      "path": "app.js",
+      "sha256": "42a04d33fc658b25c355cf8f390d0a95a235b375136acd5b654acec7d6a89c50"
+    },
+    {
+      "path": "portal/credentials.js",
+      "sha256": "f7d35f754561d3a0c8b0262e225c47a312ac13ae15bd67b865b3edccb3f59996"
+    },
+    {
+      "path": "portal/repository.js",
+      "sha256": "4754bb30695c39262fb142e21c7661e94c8d37c3a61d7b4b0a00a52fa9453b56"
+    },
+    {
+      "path": "portal/legacy-rest.js",
+      "sha256": "7e846e2f361700336f39c8ec797702a09680a68be106e32044102ee556c51076"
+    },
+    {
+      "path": "portal/history.js",
+      "sha256": "eb9428bec51a96f82aee2b79e26903b7d9fc77a62a9bcd0549ac606b4b9da675"
+    },
+    {
+      "path": "portal/http.js",
+      "sha256": "a5ab41d1f5bc29bd130ca778c7f9c836f1f9d3712cfc991770ac78dd9c8f9f0b"
+    },
+    {
+      "path": "assessment/notification-http.js",
+      "sha256": "e83f67162f25e788ef28a77f2beab2915483a5ffe993fab64e6654de7f1b5174"
+    },
+    {
+      "path": "assessment/notification-service.js",
+      "sha256": "80ef7e574d83fa25b1013e57f6ebb2f6d1395857de937fc454065e86ee9abcfd"
+    },
+    {
+      "path": "assessment/visitor-identity.js",
+      "sha256": "b4297cc32cc39ebd3d9642ec479942e0cae0321b4881f9caccdce556db461951"
+    },
+    {
+      "path": "assessment/baseline-reference.js",
+      "sha256": "00d46ffde0de5792b0d969d4f153ec83820c45819d59d20bdb20492aad83447f"
+    },
+    {
+      "path": "assessment/cloudbase-store.js",
+      "sha256": "3705184538d2f267f66df999c74aed14298d4c764ab162837fdb9279a0ebddd8"
+    },
+    {
+      "path": "assessment/notification-worker.js",
+      "sha256": "304de60463505ff284d02ec83395fe8956b0e87c553cd0c3335a7aa86ce68a74"
+    },
+    {
+      "path": "assessment/followups.js",
+      "sha256": "dd03e6aff2a8a0f6e4c5a6a665909636dd64d51385dda19a0f31e703b373c726"
+    },
+    {
+      "path": "assessment/followup-schedule.js",
+      "sha256": "e00b32f3762d03f399a4b6414c3090632ab47aed6906fea987ef9b2d0f4f9308"
+    },
+    {
+      "path": "assessment/reminders.js",
+      "sha256": "6e0f4cbe9f7fe63a50c57ed8d3a391e85f589ee5e066cbc134934684cc4e7e8a"
+    },
+    {
+      "path": "assessment/statistics-source.js",
+      "sha256": "e2e924cda9485d11bbea9f386a9a20fbc97ddef3b2fffe9f91312be67021e225"
+    },
+    {
+      "path": "assessment/rollout-http.js",
+      "sha256": "ed375a26aa516e01f7257094eb2a19798dfe18af14f4f491285ad6b06f80f7f6"
+    },
+    {
+      "path": "assessment/event-lifecycle.js",
+      "sha256": "9b163cec1eb3f35797af39460ac8dc9777d73847e1b37e3a080c61028d63f92b"
+    },
+    {
+      "path": "assessment/read-views.js",
+      "sha256": "6be1f6471e7a5e6ec4ed26611fb189201951f57fdbab1232d96e0d19663208d8"
+    },
+    {
+      "path": "assessment/combination-engine.js",
+      "sha256": "182a03bfc8e12398155cf1811b91d5abb3767ce3cf16b0b8ae738d3a370c1d4b"
+    },
+    {
+      "path": "assessment/llm-http.js",
+      "sha256": "e78415d89111c585a40c95389a79ff964fdd2e600fbdf36b6fd58189b154611d"
+    },
+    {
+      "path": "assessment/llm-provider.js",
+      "sha256": "8c4c99b72077dbbda262be3e7450eabd49b8edd56a2f48aadc30bd479a27fbaf"
+    },
+    {
+      "path": "assessment/identity-repository.js",
+      "sha256": "21a7d660eed3b2a99c53d5fd01ed4a2304136f246d017ea4a4b274ec7ccafc3a"
+    },
+    {
+      "path": "assessment/llm-worker.js",
+      "sha256": "bd1c7a90bab5b7f939afd238c8613b6d15be370896bfa21abb5186ff4f894fd9"
+    },
+    {
+      "path": "assessment/repository.js",
+      "sha256": "fa9cea7acb766b602ba01a84155d7d3eaf782233e203c6047c3e7c84e79e9a3c"
+    },
+    {
+      "path": "assessment/combinations.js",
+      "sha256": "5e3a5872c10321a54c450406a050952b0d17242d2abd4dd06c3e46055e2c3756"
+    },
+    {
+      "path": "assessment/notification-provider.js",
+      "sha256": "e717abca8af694d332804611eee6d0d6bf625aa5efccb31a3c0e3ad46a9155d5"
+    },
+    {
+      "path": "assessment/provenance.js",
+      "sha256": "9217ec9e5c5b0e4673573d0001d76a06cada068fd5588a94bd2ec2169ef36cba"
+    },
+    {
+      "path": "assessment/service-http.js",
+      "sha256": "dc060a7954e9d6c657a3adff6804cd7ef011b10184f5f93eac99eaf7b9f6acdf"
+    },
+    {
+      "path": "assessment/llm-contract.js",
+      "sha256": "6374ef927459ebdaaf37406e5be393d598f3254065bdac58388713e26b0a1a6e"
+    },
+    {
+      "path": "assessment/statistics.js",
+      "sha256": "1b2ddaf55e80b57a31248374acde6b3506cd36615499c9fa06d1c22ab3f05907"
+    },
+    {
+      "path": "assessment/admission.js",
+      "sha256": "0cab5b7e82485cb14491a987973e5d5a9d063d19fa1d7a84adf4a7863dacea5f"
+    },
+    {
+      "path": "assessment/risk-recheck.js",
+      "sha256": "84380e0b4f04d69c8d5cc2d10bef23751c25fac24b851c3de28e0c339af7ee76"
+    },
+    {
+      "path": "assessment/request-receipts.js",
+      "sha256": "f6e64a22117dfa8db539f7eaf1c594cec4c9e6471dc609e9a99a53fae34d12da"
+    },
+    {
+      "path": "assessment/request-hash.js",
+      "sha256": "e4a0eb05a18067d4cb51f1aa4cc00bbe8f2ac2abbaf3609316c92d8732f261f0"
+    },
+    {
+      "path": "assessment/consecutive-window.js",
+      "sha256": "3c153e069e2e4235740516d9ffd3557b3fffe7b49dc5faf3995d1aa84db34d99"
+    },
+    {
+      "path": "assessment/consent.js",
+      "sha256": "d9805ab208e4a1eadc4b6ccbbc6d33078135d95268e0bdcf55534cf3c8fe8ad9"
+    },
+    {
+      "path": "assessment/consent-http.js",
+      "sha256": "7e270d319de054fa2f2af2d00084ddceeaa9f252354ccc6b2533c2e5ef389e92"
+    },
+    {
+      "path": "assessment/answer-processor.js",
+      "sha256": "baffd95a102975d810b489536be318c484a45a166b9a101787e3798fcf0743b6"
+    },
+    {
+      "path": "assessment/score-replay.js",
+      "sha256": "332bcc4298c363fd7edd15461cabcf4c1916945037eeab1398a4019bd2d11c22"
+    },
+    {
+      "path": "assessment/authorization.js",
+      "sha256": "09a5c0fe4a87722822ba5105ace73e3e9a55fdeff7783ff0eadee7ad2f82764b"
+    },
+    {
+      "path": "assessment/answer-validation.js",
+      "sha256": "97dffd7a277bef140f3263ac5e5d564df8f93655c74c0c5b0f710c8805f241b7"
+    },
+    {
+      "path": "assessment/read-http.js",
+      "sha256": "796bb034d661a5f10acb6b915596c75e4246f3b40f7b3eb36e1d1422e6e67449"
+    },
+    {
+      "path": "assessment/notification-source.js",
+      "sha256": "58914504bc7f292448649a05195142d443678147a0e801ef5989569e82a9eda8"
+    },
+    {
+      "path": "assessment/llm-service.js",
+      "sha256": "33d1d98e528a357d87bb093272945c38ef641be246a8f6ae99d2c6d74ab01662"
+    },
+    {
+      "path": "assessment/model.js",
+      "sha256": "1523293639cbe0fab9f521dc2fb73b2b931adfd377ceb6357a35ab6f674a5dc5"
+    },
+    {
+      "path": "assessment/reminder-view.js",
+      "sha256": "78d2a2338a0a86dfb309543a2d1d1bac4fc3aab87b2ff1ce55c5adad91860077"
+    },
+    {
+      "path": "assessment/scoring-engines.js",
+      "sha256": "a2c89ddd84723205a5f729b0b5e255e61761977af31e007cc51af53563eafc49"
+    },
+    {
+      "path": "assessment/http.js",
+      "sha256": "ad52934042da9787af02c4a1a1fabe211e5a71a42bdfcd1b5a93424435ec76f6"
+    },
+    {
+      "path": "assessment/event-storage.js",
+      "sha256": "fa3b371a95eba40f687a5a06384485e9c5282f630acbdf311741aebac1767cc8"
+    },
+    {
+      "path": "assessment/signal-parameters.js",
+      "sha256": "9dc612e35a164e30ea8dc3e2355c7e0879d2c43c7018aab943d733e7bce6548e"
+    },
+    {
+      "path": "assessment/rollout.js",
+      "sha256": "e19ee76c7cecdb3b9b4b757dfa9f70f93c5ed67512ced0c0748028c6d85a59d1"
+    }
+  ],
+  "backend_tests_passed": 522,
+  "migration_security_tests_passed": 14,
+  "compatibility_tests_passed": 18,
+  "real_database_rehearsal": "passed; synthetic data removed",
+  "browser_local": "login, consent, frozen baseline submission, visitor score redaction, counselor login and manual case config passed",
+  "browser_live": "navigation incomplete due to platform default-domain restriction",
+  "notifications": false,
+  "llm": false,
+  "real_wechat": false
+}

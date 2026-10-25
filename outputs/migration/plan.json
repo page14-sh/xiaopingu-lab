@@ -1,0 +1,30 @@
+{
+  "schema": "v2-migration-plan-v1",
+  "source_hash": "dd0136e3baf5661216dee724c42a3e1eecfb34f07b805f4056f3e381e9f94439",
+  "source_business_records": 364,
+  "archived_records": 364,
+  "working_records": 161,
+  "visitor_identities": 53,
+  "pending_requests": 18,
+  "legacy_events_with_frozen_basis": 0,
+  "native_events_created": 0,
+  "active_cycles_created": 0,
+  "external_jobs_created": 0,
+  "admin_review_records": 112,
+  "issue_reasons": {
+    "invalid_intake_identity": 5,
+    "missing_reference": 104,
+    "unscoped": 3
+  },
+  "target_counts": {
+    "xg_legacy_records": 364,
+    "xg_visitors": 53,
+    "xg_intake_owners": 53,
+    "assessments": 55,
+    "xg_match_requests": 18,
+    "counselors": 66,
+    "sessions": 8,
+    "pcoms_ratings": 18,
+    "visitor_users": 14
+  }
+}

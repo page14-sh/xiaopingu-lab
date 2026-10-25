@@ -1,6 +1,7 @@
 const { isDeepStrictEqual } = require('node:util');
 const { COLLECTIONS: C, SCALES, SCALE_CODES, AssessmentError, requireId, documentKey } = require('./model');
 const { requirePrincipal, deny } = require('./authorization');
+const {validVisitor}=require('./visitor-identity');
 
 const SCOPES = ['assessment', 'followup'];
 const CHANNELS = ['miniprogram', 'web', 'app'];
@@ -58,7 +59,7 @@ function createConsentRepository(store, { now = () => new Date().toISOString() }
   }
   async function visitorIn(tx, visitorId) {
     const visitor = await tx.get(C.visitors, visitorId);
-    if (!visitor || visitor.disabled || visitor.provider !== 'wechat-cloud') deny('无有效来访身份');
+    if (!validVisitor(visitor)) deny('无有效来访身份');
   }
   async function stateIn(tx, visitorId, scope) {
     const state = await tx.get(C.consentStates, documentKey(visitorId, scope));

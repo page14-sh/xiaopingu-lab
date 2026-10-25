@@ -1,0 +1,74 @@
+{
+  "env": "xpg-demo-d3gzsswtcc3233ea0",
+  "prefix": "xg_v2_59875df34c_",
+  "phase": "frozen import verified",
+  "source_hash": "dd0136e3baf5661216dee724c42a3e1eecfb34f07b805f4056f3e381e9f94439",
+  "inserted": 649,
+  "verified": {
+    "xg_legacy_records": {
+      "expected": 364,
+      "verified": 364
+    },
+    "xg_visitors": {
+      "expected": 53,
+      "verified": 53
+    },
+    "xg_intake_owners": {
+      "expected": 53,
+      "verified": 53
+    },
+    "assessments": {
+      "expected": 55,
+      "verified": 55
+    },
+    "xg_match_requests": {
+      "expected": 18,
+      "verified": 18
+    },
+    "counselors": {
+      "expected": 66,
+      "verified": 66
+    },
+    "sessions": {
+      "expected": 8,
+      "verified": 8
+    },
+    "pcoms_ratings": {
+      "expected": 18,
+      "verified": 18
+    },
+    "visitor_users": {
+      "expected": 14,
+      "verified": 14
+    }
+  },
+  "summary": {
+    "source_business_records": 364,
+    "archived_records": 364,
+    "working_records": 161,
+    "visitor_identities": 53,
+    "pending_requests": 18,
+    "legacy_events_with_frozen_basis": 0,
+    "native_events_created": 0,
+    "active_cycles_created": 0,
+    "external_jobs_created": 0,
+    "admin_review_records": 112,
+    "issue_reasons": {
+      "invalid_intake_identity": 5,
+      "missing_reference": 104,
+      "unscoped": 3
+    },
+    "target_counts": {
+      "xg_legacy_records": 364,
+      "xg_visitors": 53,
+      "xg_intake_owners": 53,
+      "assessments": 55,
+      "xg_match_requests": 18,
+      "counselors": 66,
+      "sessions": 8,
+      "pcoms_ratings": 18,
+      "visitor_users": 14
+    }
+  },
+  "checked_at": "2026-10-25T05:08:15.809Z"
+}

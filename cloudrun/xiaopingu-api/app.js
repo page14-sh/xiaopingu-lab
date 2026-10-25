@@ -33,7 +33,7 @@ const DEMO_COUNSELOR_ALIASES = {
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET,POST,PATCH,DELETE,OPTIONS',
-  'Access-Control-Allow-Headers': 'authorization,apikey,content-type,prefer,x-counselor-token',
+  'Access-Control-Allow-Headers': 'authorization,apikey,content-type,prefer,x-counselor-token,x-assessment-token',
   'Access-Control-Max-Age': '600'
 };
 
@@ -332,6 +332,7 @@ function createRequestHandler(options) {
     identityBridge: options.identityBridge, serviceSecrets: options.serviceSecrets, readJson, sendJson,
     demoCounselorIds: Object.values(DEMO_COUNSELOR_ALIASES) });
 
+  const portalHandler=options.portalEnabled&&store.portal?require('./portal/http').createPortalHttp({portal:store.portal,signSession,sessionSecret,readJson,sendJson}):null;
   return async function handler(req, res) {
     try {
       if (req.method === 'OPTIONS') {
@@ -342,7 +343,9 @@ function createRequestHandler(options) {
 
       const url = new URL(req.url || '/', 'http://127.0.0.1');
       const session = sessionFromRequest(req, sessionSecret);
+      if(options.cutoverReady===false&&!['GET','OPTIONS'].includes(req.method)&&!url.pathname.startsWith('/auth/')){sendJson(res,503,{message:'新版正在迁移校验，请稍后再试'});return;}
 
+      if (portalHandler && await portalHandler(req,res,url,session)) return;
       if (await xgHandler(req, res, url, session)) return;
 
       if (req.method === 'GET' && url.pathname === '/health') {
@@ -482,7 +485,7 @@ function createRequestHandler(options) {
       console.error('request failed', {
         name: error && error.name,
         message: error && error.message,
-        path: req.url,
+        path: (req.url||'').split('?')[0],
         method: req.method
       });
       sendJson(res, error.statusCode || 500, { message: error.statusCode ? error.message : '服务暂时不可用' });
@@ -493,7 +496,7 @@ function createRequestHandler(options) {
 function createCloudBaseStore(db, { notificationProvider, llmProvider } = {}) {
   const xgStore = createCloudBaseAssessmentStore(db);
   const consent = createConsentRepository(xgStore);
-  return {
+  const store = {
     // Internal cycle-scoped persistence. Not exposed via TABLES / generic REST.
     assessment: createAssessmentRepository(xgStore),
     identity: createIdentityRepository(xgStore),
@@ -539,6 +542,8 @@ function createCloudBaseStore(db, { notificationProvider, llmProvider } = {}) {
       return db.collection(table).doc(documentId).remove();
     }
   };
+  store.portal=require('./portal/repository').createPortalRepository(db,xgStore,store);
+  return store;
 }
 
 module.exports = {

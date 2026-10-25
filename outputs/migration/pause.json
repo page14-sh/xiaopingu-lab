@@ -1,0 +1,10 @@
+{
+  "env": "xpg-demo-d3gzsswtcc3233ea0",
+  "mode": "pause",
+  "checked_at": "2026-10-25T05:06:45.648Z",
+  "all_legacy_writers_paused": true,
+  "functions": [
+    "xpg-rest",
+    "xg-api"
+  ]
+}

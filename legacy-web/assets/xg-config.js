@@ -5,7 +5,7 @@
   'use strict';
 
   var CONFIG = {
-    API_BASE: 'https://xpg-demo-d3gzsswtcc3233ea0-1300577165.ap-shanghai.app.tcloudbase.com/xg-api',
+    API_BASE: 'https://xiaopingu-assessment-308810-6-1300577165.sh.run.tcloudbase.com',
     // 不提供默认身份；令牌只来自实际登录或受保护的初评桥接。
     DEMO: { visitorOpenid:'', counselorToken:'', adminToken:'' }
   };

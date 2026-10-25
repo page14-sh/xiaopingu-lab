@@ -22,7 +22,7 @@ function createAssessmentHttp({ store, signSession, sessionSecret, identityBridg
   async function member(session) {
     const principal = requirePrincipal(session);
     if (!identity || !repository) throw new AssessmentError('XG_NOT_READY', '四评存储尚未配置', 503);
-    if (principal.role === 'visitor') await identity.requireVisitor(principal.subject);
+    if (principal.role === 'visitor') await identity.requireVisitor(principal.subject,principal.auth_method);
     if (principal.role === 'counselor') {
       const counselor = await store.findById('counselors', principal.subject);
       if (!counselor || !counselor.is_active || counselor.review_status !== 'approved' ||
@@ -71,7 +71,7 @@ function createAssessmentHttp({ store, signSession, sessionSecret, identityBridg
       if (await handleAssessmentRead({ req, res, url, principal, repository, scopedMatch, sendJson })) return true;
       if (url.pathname === '/v1/xg/bridge/enter' && req.method==='POST'){const body=await readJson(req);fields(body,['asid']);sendJson(res,200,await store.admission.enter(principal,body));
       } else if (url.pathname === '/v1/xg/me' && req.method === 'GET') {
-        sendJson(res, 200, { id: principal.subject, role: principal.role });
+        sendJson(res, 200, { id: principal.subject, role: principal.role, auth_method:principal.auth_method });
       } else if (url.pathname === '/v1/xg/admin/stats' && req.method === 'GET') {
         if (principal.role !== 'admin') deny();
         for (const key of url.searchParams.keys()) if (!['metric','from','to'].includes(key) || url.searchParams.getAll(key).length !== 1) throw new AssessmentError('XG_BAD_PARAM','统计查询参数不合法',400);
