@@ -56,6 +56,8 @@ function buildEvent(input) {
  */
 function createAssessmentRepository(store, { now = () => new Date().toISOString() } = {}) {
   return {
+    async riskStatus(matchId){const match=await requireMatch(store,matchId);const state=await require('./risk-recheck').stateIn(store,match);return {out_of_scope:state.blocked,reason:state.blocked_reason||null};},
+
     async createMatch(input) {
       const identity = Object.fromEntries(['match_id', 'visitor_id', 'counselor_id', 'assessment_id']
         .map((field) => [field, requireId(input[field], field)]));

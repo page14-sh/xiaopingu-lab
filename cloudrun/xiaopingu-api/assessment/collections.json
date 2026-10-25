@@ -44,6 +44,7 @@
     {"name": "xg_llm_history", "document_id": "sha256(JSON([event_id,generation]))", "immutable": true},
     {"name": "xg_llm_audit", "document_id": "deterministic operation/revision or reprocess request key", "append_only": true},
     {"name": "xg_tag_weight_proposals", "document_id": "sha256(JSON([event_id,generation]))"},
-    {"name": "xg_tag_weights", "document_id": "match_id", "scope": "advisory LLM multipliers only; never deterministic scores"}
+    {"name": "xg_tag_weights", "document_id": "match_id", "scope": "advisory LLM multipliers only; never deterministic scores"},
+    {"name": "xg_risk_states", "document_id": "match_id", "scope": "cycle risk trigger, cooldown and out-of-scope state"}
   ]
 }

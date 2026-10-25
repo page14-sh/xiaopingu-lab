@@ -5,7 +5,7 @@ const prefix='xg_t21_1792870976770_b9d285_';
 const valid=()=>({schema_version:'integration-t21-v1',env:'xpg-demo-d3gzsswtcc3233ea0',prefix,created:[prefix+'assessment_events']});
 
 test('T21 isolated resource plan includes all current collections and never canonical physical names',()=>{
- const {entries,names}=resourcePlan(prefix);assert.equal(entries.length,44);assert.equal(names.size,44);assert.equal(new Set(names.values()).size,44);
+ const {entries,names}=resourcePlan(prefix);const count=Object.keys(require('./model').COLLECTIONS).length+2;assert.equal(entries.length,count);assert.equal(names.size,count);assert.equal(new Set(names.values()).size,count);
  for(const [logical,physical]of names){assert.notEqual(logical,physical);assert.ok(physical.startsWith(prefix));}
  assert.equal(names.get('counselors'),prefix+'counselors');assert.equal(names.has('arbitrary_private_collection'),false);
 });

@@ -61,7 +61,7 @@ function summarize(data,r) {
   const alerts=unique(data.alerts||[],'alert_id').filter((a)=>within(a.triggered_at,r)&&['L2','L3'].includes(a.initial_level));
   if(want('alert_handle_time')) {
     metrics.alert_handle_time_h={};
-    for(const type of ['outcome','alliance','stability','dissociation'])metrics.alert_handle_time_h[type]=distribution(
+    for(const type of ['outcome','alliance','stability','dissociation','risk'])metrics.alert_handle_time_h[type]=distribution(
       alerts.filter((a)=>a.alert_type===type&&a.status==='closed'&&occurred(a.handled_at,r)),(a)=>(time(a.handled_at)-time(a.triggered_at))/3600000,'hours');
   }
   if(want('remind_action_rate')) {

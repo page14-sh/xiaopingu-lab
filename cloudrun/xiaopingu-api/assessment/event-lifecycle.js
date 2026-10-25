@@ -12,6 +12,7 @@ const { createCombinationRepository, enqueueCombination, pending } = require('./
 const { requireCollectionOpen } = require('./rollout');
 const { requireFollowupDue, completeFollowup } = require('./followup-schedule');
 const { enqueueLlm } = require('./llm-contract');
+const {assertInScope,requireRiskDue,completeRisk}=require('./risk-recheck');
 
 function author(principal, match, event) {
   requirePrincipal(principal); authorizeMatch(principal, match);
@@ -111,6 +112,7 @@ function createEventLifecycle(store, consent, { now = Date.now, timeoutMs = 30 *
           assertScope(existing, match); author(principal, match, existing); ensureBasis(existing);
           if (['submitted', 'abandoned'].includes(existing.status)) return replayReceipt(receipt, existing);
           if (expired(existing, time)) return replayReceipt(receipt, await abandonIn(tx, match, existing, 'timeout', time));
+          await assertInScope(tx,match);await requireRiskDue(tx,match,existing);
           ensurePosition(match, existing);
           await consent.requireInTransaction(tx, match.visitor_id, scopeForCard(existing.scale_code), { lock: false });
           await requireRecheckEligible(tx, match, existing, time);
@@ -126,12 +128,14 @@ function createEventLifecycle(store, consent, { now = Date.now, timeoutMs = 30 *
           assertScope(existing, match); author(principal, match, existing); ensureBasis(existing);
           if (['submitted', 'abandoned'].includes(existing.status)) return complete({ event: existing, duplicated: true });
           if (expired(existing, time)) return complete({ event: await abandonIn(tx, match, existing, 'timeout', time), duplicated: false, statusCode: 200 });
+          await assertInScope(tx,match);await requireRiskDue(tx,match,existing);
           ensurePosition(match, existing);
           await consent.requireInTransaction(tx, match.visitor_id, scopeForCard(existing.scale_code));
           await requireRecheckEligible(tx, match, existing, time);
           await requireFollowupDue(tx, match, existing, time);
           return complete({ event: existing, duplicated: true });
         }
+        await assertInScope(tx,match);
         await requireCollectionOpen(tx);
         ensurePosition(match, { ...input, follow_round: position.follow_round });
         const consentRef = await consent.requireInTransaction(tx, match.visitor_id, scopeForCard(input.scale_code));
@@ -144,6 +148,7 @@ function createEventLifecycle(store, consent, { now = Date.now, timeoutMs = 30 *
           submitted_at: null, expires_at: new Date(time + timeoutMs).toISOString(), start_consent: consentRef
         };
         event.basis = await captureBasisInTransaction(tx, match, event, timestamp);
+        await requireRiskDue(tx,match,event);
         await requireRecheckEligible(tx, match, event, time);
         await requireFollowupDue(tx, match, event, time);
         await writeTransition(tx, match, null, event, 'started');
@@ -175,6 +180,8 @@ function createEventLifecycle(store, consent, { now = Date.now, timeoutMs = 30 *
           const abandoned = await abandonIn(tx, match, event, 'timeout', time);
           return complete({ event: abandoned, error: { code: 'XG_EVENT_EXPIRED', message: '本次填卡已超时，请重新开始' }, statusCode: 409 });
         }
+        await assertInScope(tx,match);
+        await requireRiskDue(tx,match,event);
         ensurePosition(match, event);
         const consentRef = await consent.requireInTransaction(tx, match.visitor_id, scopeForCard(event.scale_code));
         if (await tx.get(C.submissions, event.submission_id)) throw new AssessmentError('XG_ALREADY_SUBMITTED', '该卡片已由另一次填卡提交');
@@ -199,6 +206,7 @@ function createEventLifecycle(store, consent, { now = Date.now, timeoutMs = 30 *
           submitted_at: timestamp, updated_at: timestamp, validation_error: null,
           submission_fingerprint: fingerprint, submission_consent: consentRef, event_revision: (event.event_revision || 0) + 1 };
         await persistSubmitted(tx, match, submitted);
+        await completeRisk(tx,match,submitted);
         await completeFollowup(tx, match, submitted);
         await writeTransition(tx, match, event, submitted, 'submitted');
         await enqueueCombination(tx, match, submitted);

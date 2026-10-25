@@ -25,7 +25,8 @@ function scoreT03V1(basis, answers, durationMs) {
   return { valid: true, answers, scores, quality_flag: qualityLow ? 'low' : 'ok' };
 }
 
-const ENGINES = Object.freeze({ 'xg-core-t03-v1': scoreT03V1 });
+function scoreCompatV1(basis,answers,durationMs){if(basis.card.scale_code!=='xg_risk_recheck')return scoreT03V1(basis,answers,durationMs);return {valid:true,answers,scores:{total:answers.k1,pct:null},quality_flag:durationMs<5000?'low':'ok'};}
+const ENGINES = Object.freeze({ 'xg-core-t03-v1': scoreT03V1, 'xg-core-compat-v1':scoreCompatV1 });
 function scoringEngine(id) {
   if (!Object.hasOwn(ENGINES, id)) throw new AssessmentError('XG_RULE_ENGINE_UNAVAILABLE', '该历史规则引擎尚不支持', 503);
   return ENGINES[id];

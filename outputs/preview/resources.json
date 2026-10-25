@@ -1,0 +1,1482 @@
+{
+  "env": "xpg-demo-d3gzsswtcc3233ea0",
+  "prefix": "xg_preview_7d0a8e2622_",
+  "resources": [
+    {
+      "logical": "xg_matches",
+      "physical": "xg_preview_7d0a8e2622_matches",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "logical": "xg_active_matches",
+      "physical": "xg_preview_7d0a8e2622_active_matches",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "logical": "xg_assessment_events",
+      "physical": "xg_preview_7d0a8e2622_assessment_events",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "match_session_id",
+          "keys": [
+            {
+              "Name": "match_id",
+              "Direction": "1"
+            },
+            {
+              "Name": "session_no",
+              "Direction": "1"
+            },
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "stats_id_time",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            },
+            {
+              "Name": "started_at",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "status_expiry_id",
+          "keys": [
+            {
+              "Name": "status",
+              "Direction": "1"
+            },
+            {
+              "Name": "expires_at",
+              "Direction": "1"
+            },
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "logical": "xg_submissions",
+      "physical": "xg_preview_7d0a8e2622_submissions",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "logical": "xg_baseline_profiles",
+      "physical": "xg_preview_7d0a8e2622_baseline_profiles",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "logical": "xg_end_profiles",
+      "physical": "xg_preview_7d0a8e2622_end_profiles",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "logical": "xg_visitors",
+      "physical": "xg_preview_7d0a8e2622_visitors",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "logical": "xg_identity_assertions",
+      "physical": "xg_preview_7d0a8e2622_identity_assertions",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "logical": "xg_intake_owners",
+      "physical": "xg_preview_7d0a8e2622_intake_owners",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "logical": "xg_match_requests",
+      "physical": "xg_preview_7d0a8e2622_match_requests",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "logical": "xg_case_switches",
+      "physical": "xg_preview_7d0a8e2622_case_switches",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "logical": "xg_llm_results",
+      "physical": "xg_preview_7d0a8e2622_llm_results",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "match_result_id",
+          "keys": [
+            {
+              "Name": "match_id",
+              "Direction": "1"
+            },
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "logical": "xg_consent_policies",
+      "physical": "xg_preview_7d0a8e2622_consent_policies",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "logical": "xg_consent_documents",
+      "physical": "xg_preview_7d0a8e2622_consent_documents",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "logical": "xg_consent_states",
+      "physical": "xg_preview_7d0a8e2622_consent_states",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "logical": "xg_consent_history",
+      "physical": "xg_preview_7d0a8e2622_consent_history",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "visitor_scope_revision",
+          "keys": [
+            {
+              "Name": "visitor_id",
+              "Direction": "1"
+            },
+            {
+              "Name": "scope",
+              "Direction": "1"
+            },
+            {
+              "Name": "revision",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "logical": "xg_item_versions",
+      "physical": "xg_preview_7d0a8e2622_item_versions",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "logical": "xg_rule_versions",
+      "physical": "xg_preview_7d0a8e2622_rule_versions",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "logical": "xg_assessment_release",
+      "physical": "xg_preview_7d0a8e2622_assessment_release",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "logical": "xg_case_assessment_configs",
+      "physical": "xg_preview_7d0a8e2622_case_assessment_configs",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "logical": "xg_event_transitions",
+      "physical": "xg_preview_7d0a8e2622_event_transitions",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "logical": "xg_request_receipts",
+      "physical": "xg_preview_7d0a8e2622_request_receipts",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "logical": "xg_combination_jobs",
+      "physical": "xg_preview_7d0a8e2622_combination_jobs",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "logical": "xg_raw_signals",
+      "physical": "xg_preview_7d0a8e2622_raw_signals",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "logical": "xg_session_combinations",
+      "physical": "xg_preview_7d0a8e2622_session_combinations",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "logical": "xg_combination_history",
+      "physical": "xg_preview_7d0a8e2622_combination_history",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "logical": "xg_rollout_policy",
+      "physical": "xg_preview_7d0a8e2622_rollout_policy",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "logical": "xg_rollout_history",
+      "physical": "xg_preview_7d0a8e2622_rollout_history",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "logical": "xg_followup_jobs",
+      "physical": "xg_preview_7d0a8e2622_followup_jobs",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "status_check_id",
+          "keys": [
+            {
+              "Name": "status",
+              "Direction": "1"
+            },
+            {
+              "Name": "next_check_at",
+              "Direction": "1"
+            },
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "stats_id_time",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            },
+            {
+              "Name": "due_at",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "logical": "xg_notification_tasks",
+      "physical": "xg_preview_7d0a8e2622_notification_tasks",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "status_attempt_id",
+          "keys": [
+            {
+              "Name": "status",
+              "Direction": "1"
+            },
+            {
+              "Name": "next_attempt_at",
+              "Direction": "1"
+            },
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "stats_id_time",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            },
+            {
+              "Name": "created_at",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "logical": "xg_notification_attempts",
+      "physical": "xg_preview_7d0a8e2622_notification_attempts",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "scoped_order",
+          "keys": [
+            {
+              "Name": "task_id",
+              "Direction": "1"
+            },
+            {
+              "Name": "number",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "stats_id_time",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            },
+            {
+              "Name": "started_at",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "logical": "xg_notification_inbox",
+      "physical": "xg_preview_7d0a8e2622_notification_inbox",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "scoped_order",
+          "keys": [
+            {
+              "Name": "recipient_role",
+              "Direction": "1"
+            },
+            {
+              "Name": "recipient_id",
+              "Direction": "1"
+            },
+            {
+              "Name": "created_at",
+              "Direction": "-1"
+            },
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "stats_id_time",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            },
+            {
+              "Name": "created_at",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "logical": "xg_notification_recipients",
+      "physical": "xg_preview_7d0a8e2622_notification_recipients",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "logical": "xg_notification_audit",
+      "physical": "xg_preview_7d0a8e2622_notification_audit",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "logical": "xg_notification_bridge",
+      "physical": "xg_preview_7d0a8e2622_notification_bridge",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "logical": "xg_alert_actions",
+      "physical": "xg_preview_7d0a8e2622_alert_actions",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "stats_id_time",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            },
+            {
+              "Name": "created_at",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "logical": "xg_llm_jobs",
+      "physical": "xg_preview_7d0a8e2622_llm_jobs",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "stats_id_time",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            },
+            {
+              "Name": "created_at",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "status_recovery_id",
+          "keys": [
+            {
+              "Name": "status",
+              "Direction": "1"
+            },
+            {
+              "Name": "recovery_eligible",
+              "Direction": "1"
+            },
+            {
+              "Name": "recover_at",
+              "Direction": "1"
+            },
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "status_id",
+          "keys": [
+            {
+              "Name": "status",
+              "Direction": "1"
+            },
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "status_attempt_id",
+          "keys": [
+            {
+              "Name": "status",
+              "Direction": "1"
+            },
+            {
+              "Name": "next_attempt_at",
+              "Direction": "1"
+            },
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "logical": "xg_llm_attempts",
+      "physical": "xg_preview_7d0a8e2622_llm_attempts",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "logical": "xg_llm_history",
+      "physical": "xg_preview_7d0a8e2622_llm_history",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "logical": "xg_llm_audit",
+      "physical": "xg_preview_7d0a8e2622_llm_audit",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "logical": "xg_tag_weight_proposals",
+      "physical": "xg_preview_7d0a8e2622_tag_weight_proposals",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "logical": "xg_tag_weights",
+      "physical": "xg_preview_7d0a8e2622_tag_weights",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "logical": "xg_risk_states",
+      "physical": "xg_preview_7d0a8e2622_risk_states",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "logical": "assessments",
+      "physical": "xg_preview_7d0a8e2622_assessments",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "logical": "counselors",
+      "physical": "xg_preview_7d0a8e2622_counselors",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "logical": "sessions",
+      "physical": "xg_preview_7d0a8e2622_sessions",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "logical": "pcoms_ratings",
+      "physical": "xg_preview_7d0a8e2622_pcoms_ratings",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "logical": "visitor_users",
+      "physical": "xg_preview_7d0a8e2622_visitor_users",
+      "acl": "ADMINONLY",
+      "indexes": [
+        {
+          "name": "_openid_1",
+          "keys": [
+            {
+              "Name": "_openid",
+              "Direction": "1"
+            }
+          ]
+        },
+        {
+          "name": "_id_",
+          "keys": [
+            {
+              "Name": "_id",
+              "Direction": "1"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "passed": true,
+  "checked_at": "2026-10-25T03:17:51.068Z"
+}

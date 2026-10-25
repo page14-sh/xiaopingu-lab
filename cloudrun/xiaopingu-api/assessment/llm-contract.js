@@ -55,7 +55,7 @@ async function sourceIn(tx,eventId) {
   const event = await tx.get(C.events,eventId);
   if (!event || event.event_id !== eventId) throw new AssessmentError('XG_NOT_FOUND','作答记录不存在',404);
   const match = await requireMatch(tx,event.match_id); assertScope(event,match); verifyEventBasis(event);
-  if (event.status !== 'submitted' || event.quality_flag !== 'ok') throw new AssessmentError('XG_LLM_INELIGIBLE','仅有效且质量合格的答卷进入模型',409);
+  if (event.status !== 'submitted' || event.quality_flag !== 'ok' || event.scale_code==='xg_risk_recheck') throw new AssessmentError('XG_LLM_INELIGIBLE','仅有效且质量合格的答卷进入模型',409);
   return {event,match};
 }
 function numericAnswers(event) {
@@ -93,7 +93,7 @@ async function buildSnapshot(tx,event,match) {
     sources:[...records.values()].map(e=>({event_id:e.event_id,basis_hash:e.basis.basis_hash}))};
 }
 async function enqueueLlm(tx,match,event,timestamp) {
-  if (event.quality_flag!=='ok') return;
+  if (event.quality_flag!=='ok'||event.scale_code==='xg_risk_recheck') return;
   const existing = await tx.get(C.llmJobs,event.event_id); assertScope(existing,match);
   if (existing) return;
   await tx.put(C.llmJobs,event.event_id,{...scopeOf(match),event_id:event.event_id,job_id:event.event_id,

@@ -1,3 +1,4 @@
+const {closeRiskTrigger}=require('./risk-recheck');
 const { isDeepStrictEqual } = require('node:util');
 const { COLLECTIONS: C, AssessmentError, requireId, documentKey, assertScope } = require('./model');
 const { requirePrincipal, authorizeMatch, deny } = require('./authorization');
@@ -90,6 +91,7 @@ function createNotificationService(store, { now = Date.now, validateCounselor } 
         await audit(tx,'alert',alertId,next.revision,{match_id:match.match_id,actor_id:principal.subject,change});
         await tx.put(C.alertActions,alertId,next);
         if (next.status === 'closed') {
+          await closeRiskTrigger(tx,match,alertId);
           const task = await tx.get(C.notificationTasks,alertTaskId(alertId)); assertScope(task,match);
           if (task && ['queued','retry_wait','blocked','processing'].includes(task.status)) await tx.put(C.notificationTasks,task.task_id,
             {...task,status:'cancelled',cancellation_reason:'alert_closed',lease_token:null,lease_until:null,next_attempt_at:null,

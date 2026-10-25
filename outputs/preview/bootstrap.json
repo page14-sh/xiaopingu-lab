@@ -1,0 +1,21 @@
+{
+  "scope": "synthetic CloudRun HTTP + isolated real CloudBase database",
+  "endpoint": "https://xiaopingu-assessment-preview-308810-6-1300577165.sh.run.tcloudbase.com",
+  "prefix": "xg_preview_7d0a8e2622_",
+  "started_at": "2026-10-25T03:18:01.843Z",
+  "tests": [
+    {
+      "name": "publish isolated compatibility definitions and test-only consent",
+      "passed": true
+    },
+    {
+      "name": "initialize closed collection and reminder switches",
+      "passed": true
+    }
+  ],
+  "native_wechat_verified": false,
+  "external_notifications": false,
+  "llm": false,
+  "passed": true,
+  "finished_at": "2026-10-25T03:18:03.501Z"
+}

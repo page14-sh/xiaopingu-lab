@@ -1,6 +1,7 @@
 const { randomUUID } = require('node:crypto');
 const { COLLECTIONS: C, AssessmentError, documentKey, requireId } = require('./model');
 const { requirePrincipal, deny } = require('./authorization');
+const {fromAnswers,blocked,requireAdmission}=require('./admission');
 const { createRolloutRepository } = require('./rollout');
 
 function createIdentityRepository(store) {
@@ -39,7 +40,7 @@ function createIdentityRepository(store) {
         const visitor = await tx.get(C.visitors, principal.subject);
         if (!visitor || visitor.disabled || visitor.provider !== 'wechat-cloud') deny();
         await tx.put('assessments', id, {
-          ...data, id, visitor_user_id: principal.subject, xg_managed: true,
+          ...data, crisis_level:fromAnswers(data.answers), xg_scope_status:blocked({crisis_level:fromAnswers(data.answers)})?'out_of_scope':'pending_review', id, visitor_user_id: principal.subject, xg_managed: true,
           match_request_status: 'pending', created_at: timestamp
         });
         await tx.put(C.intakes, id, { assessment_id: id, visitor_id: principal.subject, created_at: timestamp });
@@ -54,6 +55,7 @@ function createIdentityRepository(store) {
       return store.transaction(async (tx) => {
         const owner = await tx.get(C.intakes, assessment_id);
         if (!owner || owner.visitor_id !== principal.subject) deny('评估记录不属于当前可信来访身份');
+        await requireAdmission(tx,assessment_id,principal.subject);
         const request = { request_id: id, assessment_id, visitor_id: principal.subject, counselor_id,
           status: 'pending', created_at: new Date().toISOString() };
         await tx.put(C.requests, id, request);
@@ -66,6 +68,7 @@ function createIdentityRepository(store) {
         const request = await tx.get(C.requests, id);
         if (!request || !(principal.role === 'admin' ||
             (principal.role === 'counselor' && request.counselor_id === principal.subject))) deny();
+        await requireAdmission(tx,request.assessment_id,request.visitor_id);
         if (request.status === 'approved') return request;
         if (request.status !== 'pending') throw new AssessmentError('XG_REQUEST_STATE', '申请状态不可审批');
         const approved = { ...request, status: 'approved', approved_by: principal.subject,
@@ -79,6 +82,7 @@ function createIdentityRepository(store) {
       const request = await store.get(C.requests, id);
       if (!request || !(principal.role === 'admin' ||
           (principal.role === 'counselor' && request.counselor_id === principal.subject))) deny();
+      await requireAdmission(store,request.assessment_id,request.visitor_id);
       if (request.status !== 'approved') throw new AssessmentError('XG_MATCH_NOT_APPROVED', '须先审批匹配申请');
       return request;
     },

@@ -23,7 +23,7 @@ const RULE_PARAMETERS = Object.freeze({
   'OUT-FLAT': ['outcome_flat_delta', 'outcome_flat_consecutive'], 'OUT-SINGLE': ['outcome_drop_abs'],
   'ALL-TOTAL': ['alliance_total_max', 'alliance_consecutive'], 'ALL-DIM': ['alliance_dim_max', 'alliance_consecutive'],
   'ALL-GAP': ['diff_post_warn'], 'STAB-SELF': ['stability_item_max', 'stability_consecutive'],
-  'STAB-PRO': ['stability_item_max', 'stability_consecutive'], DISSOC: []
+  'STAB-PRO': ['stability_item_max', 'stability_consecutive'], DISSOC: [], 'RISK-RECHECK': []
 });
 function validateThresholds(value, { partial = false } = {}) {
   if (!value || Object.getPrototypeOf(value) !== Object.prototype || !Object.keys(value).length ||

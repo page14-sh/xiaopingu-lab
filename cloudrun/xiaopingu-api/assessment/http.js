@@ -67,9 +67,10 @@ function createAssessmentHttp({ store, signSession, sessionSecret, identityBridg
         if (await handleRollout({ req, res, url, principal, repository, readJson, sendJson })) return true;
       } catch (error) { if (error.code === 'XG_SCOPE_MISMATCH') deny(); throw error; }
       if (await handleConsent({ req, res, url, principal, consent: store.consent, scopedMatch, readJson, sendJson,
-        collectionPaused: () => repository.collectionPaused(), followups: store.followups })) return true;
+        collectionPaused: () => repository.collectionPaused(), riskStatus: (id)=>repository.riskStatus(id), followups: store.followups })) return true;
       if (await handleAssessmentRead({ req, res, url, principal, repository, scopedMatch, sendJson })) return true;
-      if (url.pathname === '/v1/xg/me' && req.method === 'GET') {
+      if (url.pathname === '/v1/xg/bridge/enter' && req.method==='POST'){const body=await readJson(req);fields(body,['asid']);sendJson(res,200,await store.admission.enter(principal,body));
+      } else if (url.pathname === '/v1/xg/me' && req.method === 'GET') {
         sendJson(res, 200, { id: principal.subject, role: principal.role });
       } else if (url.pathname === '/v1/xg/admin/stats' && req.method === 'GET') {
         if (principal.role !== 'admin') deny();
@@ -200,7 +201,8 @@ function createAssessmentHttp({ store, signSession, sessionSecret, identityBridg
           response.form = formView(event);
         } else if (operation === 'submit' && event.status === 'submitted') {
           response.saved = true;
-          if (principal.role === 'visitor') response.visitor_view = { message: '已记下，谢谢你照实说。' };
+          if(event.scale_code==='xg_risk_recheck'&&event.raw_answers.k1>=event.basis.rules.risk_recheck.urgent_min){response.out_of_scope=true;response.reason='risk_recheck_red_line';response.next_action='out_of_scope';}
+          if (principal.role === 'visitor') response.visitor_view = { message: response.out_of_scope?'当前周期已停止评估，请联系咨询师核对后续安排。':'已记下，谢谢你照实说。' };
           else { response.total = event.scores.total; response.pct = event.scores.pct; }
         } else if (operation === 'abandon') response.abandoned_at = event.abandoned_at;
         sendJson(res, result.statusCode || (operation !== 'abandon' && !result.duplicated ? 201 : 200), response);

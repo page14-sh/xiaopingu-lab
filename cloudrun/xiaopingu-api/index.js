@@ -4,6 +4,7 @@ const cloudbase = require('@cloudbase/node-sdk');
 const { createCloudBaseStore, createRequestHandler } = require('./app');
 const { createStaticHandler } = require('./static');
 const { providerFromEnvironment } = require('./assessment/notification-provider');
+const {runtimePolicy,namespaceDatabase,disabledNotifications}=require('./runtime-policy');
 const { llmProviderFromEnvironment } = require('./assessment/llm-provider');
 
 const env = process.env.TCB_ENV;
@@ -16,8 +17,9 @@ if (!env || !accessKey || !adminPassword || !sessionSecret) {
   throw new Error('Required CloudBase runtime configuration is missing');
 }
 
+const policy=runtimePolicy();
 const app = cloudbase.init({ env, accessKey });
-const store = createCloudBaseStore(app.database(), { notificationProvider: providerFromEnvironment(app), llmProvider: llmProviderFromEnvironment() });
+const store = createCloudBaseStore(namespaceDatabase(app.database(),policy.prefix), { notificationProvider: policy.notificationsEnabled?providerFromEnvironment(app):disabledNotifications, llmProvider: policy.llmEnabled?llmProviderFromEnvironment():{ready:false} });
 const apiHandler = createRequestHandler({
   store,
   adminPassword,
@@ -31,7 +33,8 @@ const apiHandler = createRequestHandler({
   },
   demoMode: process.env.XPG_DEMO_MODE === '1'
 });
-const handler = createStaticHandler(path.join(__dirname, 'public'), apiHandler);
+// The isolated API preview does not present the legacy PCOMS UI as the new product.
+const handler = policy.preview ? apiHandler : createStaticHandler(path.join(__dirname, 'public'), apiHandler);
 
 const port = Number(process.env.PORT || 8787);
 http.createServer(handler).listen(port, '0.0.0.0', () => {

@@ -25,7 +25,7 @@ function inspect({base=root,gates,configuration,index}={}){
  const missingEvidence=[];for(const gate of gates.gates||[]){if(!['open','verified_in_scope'].includes(gate.status))missingEvidence.push(gate.id+':invalid-status');if(gate.status==='verified_in_scope'&&!gate.evidence?.length)missingEvidence.push(gate.id+':no-evidence');for(const file of gate.evidence||[]){try{readRelative(base,file);}catch{missingEvidence.push(file);}}}
  add('gate_evidence_references',Array.isArray(gates.gates)&&gates.gates.length>0&&!missingEvidence.length,{missing:missingEvidence});
  const manifest=JSON.parse(readRelative(base,'cloudrun/xiaopingu-api/assessment/collections.json'));
- const names=manifest.collections.map(c=>c.name);add('resource_manifest',names.length===42&&new Set(names).size===42&&manifest.client_access.read===false&&manifest.client_access.write===false,{collections:names.length,declared_indexes:manifest.collections.reduce((n,c)=>n+(c.indexes||[]).length,0)});
+ const names=manifest.collections.map(c=>c.name);add('resource_manifest',names.length===Object.keys(require('../cloudrun/xiaopingu-api/assessment/model').COLLECTIONS).length&&new Set(names).size===names.length&&manifest.client_access.read===false&&manifest.client_access.write===false,{collections:names.length,declared_indexes:manifest.collections.reduce((n,c)=>n+(c.indexes||[]).length,0)});
  const openGates=(gates.gates||[]).filter(g=>g.status!=='verified_in_scope').map(g=>({id:g.id,owner_role:g.owner_role,requirement:g.requirement}));
  const missingTarget=Object.entries(gates.target||{}).filter(([,v])=>typeof v!=='string'||!v.trim()).map(([k])=>k);
  const failures=checks.filter(c=>!c.passed).map(c=>c.id);

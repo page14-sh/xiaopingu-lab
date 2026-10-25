@@ -1,0 +1,41 @@
+{
+  "scope": "synthetic CloudRun HTTP + isolated real CloudBase database",
+  "endpoint": "https://xiaopingu-assessment-preview-308810-6-1300577165.sh.run.tcloudbase.com",
+  "prefix": "xg_preview_7d0a8e2622_",
+  "started_at": "2026-10-25T03:18:24.506Z",
+  "tests": [
+    {
+      "name": "cloud health, disabled model and private APIs reject anonymous callers",
+      "passed": true
+    },
+    {
+      "name": "synthetic signed identity, admission, consent and approved new cycle",
+      "passed": true
+    },
+    {
+      "name": "frozen baseline and low outcome create a due risk card",
+      "passed": true
+    },
+    {
+      "name": "risk 5, two-session cooldown, risk 10 and durable stop through cloud HTTP",
+      "passed": true
+    }
+  ],
+  "native_wechat_verified": false,
+  "external_notifications": false,
+  "llm": false,
+  "final_rollout": {
+    "revision": 3,
+    "enable_reminder": false,
+    "enable_cst": false,
+    "emergency_stop": true,
+    "collection_paused": true,
+    "safety_always_on": true,
+    "stage": "emergency_paused",
+    "updated_by": "preview-smoke",
+    "updated_at": "2026-10-25T03:20:43.810Z",
+    "reason": "Synthetic smoke finished; return preview to closed state"
+  },
+  "passed": true,
+  "finished_at": "2026-10-25T03:20:44.162Z"
+}

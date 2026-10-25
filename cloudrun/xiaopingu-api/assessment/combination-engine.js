@@ -1,10 +1,10 @@
-const { SCALES: S, AssessmentError, documentKey, basisReference, assertScope } = require('./model');
+const { RISK_SCALE, SCALES: S, AssessmentError, documentKey, basisReference, assertScope } = require('./model');
 const { replayEventScores } = require('./score-replay');
 const { validateThresholds, RULE_PARAMETERS } = require('./signal-parameters');
 const { consecutiveWindow } = require('./consecutive-window');
 
 const CARDS = [S.state, S.feel, S.pro];
-const RELEVANT = [S.baseline, ...CARDS];
+const RELEVANT = [S.baseline, ...CARDS, RISK_SCALE];
 const level = (signals) => signals.reduce((max, s) => Math.max(max, Number(s.level.slice(1))), 0);
 const levelName = (n) => n ? `L${n}` : null;
 const ref = (event) => ({ event_id: event.event_id, session_no: event.session_no, scale_code: event.scale_code,
@@ -29,7 +29,8 @@ function evaluateCombinations(match, input) {
   const sessions = [...new Set(rows.map((e) => e.session_no))].sort((a, b) => a - b);
   return sessions.map((session) => {
     const state = get(S.state, session), feel = get(S.feel, session), pro = get(S.pro, session);
-    const policy = state || feel || pro || baseline;
+    const risk=get(RISK_SCALE,session);
+    const policy = state || feel || pro || risk || baseline;
     let t;
     try { t = validateThresholds(policy.basis.rules.thresholds); }
     catch { throw new AssessmentError('XG_RULE_PARAMETERS_INVALID', '历史阈值不符合当前参数契约，请核对后重算', 503); }
@@ -41,6 +42,7 @@ function evaluateCombinations(match, input) {
         window_sessions: sources.filter((e) => e.scale_code === anchor.scale_code &&
           (e.scale_code !== S.state || e.session_no >= 2)).map((e) => e.session_no) });
     }
+    if(risk&&risk.raw_answers.k1>=risk.basis.rules.risk_recheck.positive_min)add('RISK-RECHECK',risk.raw_answers.k1>=risk.basis.rules.risk_recheck.urgent_min?'L3':'L2',risk,[risk],{value:risk.raw_answers.k1,safety_line:true});
     if (baseline?.scores.dissoc_level === 2) add('DISSOC', 'L3', baseline, [baseline], { value: 2 });
     if (state && session >= 2) {
       const current = state.scores.total;

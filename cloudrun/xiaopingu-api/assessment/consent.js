@@ -1,5 +1,5 @@
 const { isDeepStrictEqual } = require('node:util');
-const { COLLECTIONS: C, SCALES, AssessmentError, requireId, documentKey } = require('./model');
+const { COLLECTIONS: C, SCALES, SCALE_CODES, AssessmentError, requireId, documentKey } = require('./model');
 const { requirePrincipal, deny } = require('./authorization');
 
 const SCOPES = ['assessment', 'followup'];
@@ -9,7 +9,7 @@ function validScope(scope) {
   return scope;
 }
 function scopeForCard(scale) {
-  if (!Object.values(SCALES).includes(scale)) throw new AssessmentError('XG_BAD_PARAM', '无效卡片', 400);
+  if (!SCALE_CODES.includes(scale)) throw new AssessmentError('XG_BAD_PARAM', '无效卡片', 400);
   return [SCALES.end, SCALES.evaluation, SCALES.follow].includes(scale) ? 'followup' : 'assessment';
 }
 function revision(value) {

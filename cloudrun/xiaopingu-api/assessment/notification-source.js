@@ -1,3 +1,4 @@
+const {assertInScope}=require('./risk-recheck');
 const { COLLECTIONS: C, AssessmentError, documentKey, scopeOf, assertScope, eventPosition, SCALES: S } = require('./model');
 const { contentHash } = require('./provenance');
 const { requireMatch } = require('./event-storage');
@@ -17,7 +18,7 @@ async function enqueueAlerts(tx, match, result, timestamp) {
     if (!action) {
       action = { ...scopeOf(match), alert_id: signal.signal_id, event_id: signal.event_id, session_no: anchor.session_no,
         initial_level: signal.level, triggered_at: timestamp,
-        alert_type: signal.rule_id === 'DISSOC' ? 'dissociation' : signal.rule_id.startsWith('OUT-') ? 'outcome' : signal.rule_id.startsWith('ALL-') ? 'alliance' : 'stability',
+        alert_type: signal.rule_id === 'RISK-RECHECK' ? 'risk' : signal.rule_id === 'DISSOC' ? 'dissociation' : signal.rule_id.startsWith('OUT-') ? 'outcome' : signal.rule_id.startsWith('ALL-') ? 'alliance' : 'stability',
         status: 'open', revision: 0, cst_step: 0, phone_followup_required: false, phone_followup_done: false, created_at: timestamp };
       await tx.put(C.alertActions, signal.signal_id, action);
     }
@@ -25,7 +26,7 @@ async function enqueueAlerts(tx, match, result, timestamp) {
     if (!existing && action.status !== 'closed') await tx.put(C.notificationTasks, id, {
       ...scopeOf(match), task_id: id, kind: 'alert', alert_id: signal.signal_id, event_id: signal.event_id, session_no: anchor.session_no,
       recipient_role: 'counselor', recipient_id: match.counselor_id,
-      channels: signal.rule_id === 'DISSOC' ? ['sms','inapp'] : ['miniprogram','inapp'],
+      channels: ['DISSOC','RISK-RECHECK'].includes(signal.rule_id) ? ['sms','inapp'] : ['miniprogram','inapp'],
       status: 'queued', attempt_count: 0, revision: 1, next_attempt_at: timestamp, created_at: timestamp, updated_at: timestamp
     });
   }
@@ -54,6 +55,7 @@ async function currentAlert(tx, match, action) {
 async function notificationGate(store, tx, task, { lock = true, now = Date.now } = {}) {
   const match = await requireMatch(tx, task.match_id); assertScope(task, match);
   if (task.kind === 'followup') {
+    await assertInScope(tx,match);
     const job = await requireScheduledJob(tx, match, task.follow_round); await readFollowupTask(tx, match, job);
     if (task.recipient_role !== 'visitor' || task.recipient_id !== match.visitor_id) throw new AssessmentError('XG_SCOPE_MISMATCH', '通知收件人不匹配');
     const position = eventPosition({ match_id: match.match_id, scale_code: S.follow, session_no: job.session_no, follow_round: job.follow_round });

@@ -2,6 +2,7 @@ const { COLLECTIONS: C, AssessmentError, requireId, requireSession, documentKey,
 const { requireMatch } = require('./event-storage');
 const { contentHash } = require('./provenance');
 const { evaluateCombinations, RELEVANT } = require('./combination-engine');
+const { syncRiskTriggers } = require('./risk-recheck');
 const { enqueueAlerts } = require('./notification-source');
 
 function pending() { return new AssessmentError('XG_COMBINATION_PENDING', '作答已保存，组合判读待重试，请沿用原request_id', 503); }
@@ -57,6 +58,7 @@ function createCombinationRepository(store, { now = () => new Date().toISOString
         const live = await requireMatch(tx, matchId), current = await tx.get(C.combinationJobs, matchId);
         assertScope(current, live);
         if (live.version !== match.version || current?.generation !== job.generation) return false;
+        await syncRiskTriggers(tx,live,results);
         if (current.completed_generation !== current.generation) await tx.put(C.combinationJobs, matchId,
           { ...current, completed_generation: job.generation, status: 'complete', completed_at: now() });
         return true;

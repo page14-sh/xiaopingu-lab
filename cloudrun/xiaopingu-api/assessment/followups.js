@@ -1,3 +1,5 @@
+const {stateIn: riskState,eligible: riskEligible}=require('./risk-recheck');
+const {RISK_SCALE}=require('./model');
 const { isDeepStrictEqual } = require('node:util');
 const { COLLECTIONS: C, SCALES: S, AssessmentError, requireId, requireSession, eventPosition, scopeOf, assertScope } = require('./model');
 const { requirePrincipal, authorizeMatch, deny } = require('./authorization');
@@ -37,7 +39,7 @@ function createFollowupRepository(store, { now = Date.now } = {}) {
         await update({ status: 'notified', next_check_at: null });
         return { job_id: id, outcome: 'notified' };
       }
-      let blocked = null, consentRef;
+      let blocked = (await riskState(tx,match)).blocked ? 'XG_OUT_OF_SCOPE' : null, consentRef;
       try { await requireCollectionOpen(tx); }
       catch (error) { if (error.code !== 'XG_COLLECTION_PAUSED') throw error; blocked = error.code; }
       if (!blocked) {
@@ -95,6 +97,7 @@ function createFollowupRepository(store, { now = Date.now } = {}) {
       return store.transaction(async (tx) => {
         const match = await requireMatch(tx, matchId); authorizeMatch(principal, match);
         if (!['visitor','counselor'].includes(principal.role)) deny();
+        if((await riskState(tx,match)).blocked)return [];
         if (await collectionPausedIn(tx)) return [];
         const purpose = scope ?? (match.status === 'closed' ? 'followup' : 'assessment');
         if (!['assessment','followup'].includes(purpose) || (match.status === 'closed' && purpose !== 'followup')) throw new AssessmentError('XG_BAD_PARAM', '卡片用途与周期状态不一致', 400);
@@ -124,6 +127,8 @@ function createFollowupRepository(store, { now = Date.now } = {}) {
                 } catch (error) { if (error.code !== 'XG_RECHECK_NOT_DUE') throw error; }
               }
               await add(S.feel, session_no);
+              const {rules}=await readVersionsInTransaction(tx);
+              if(await riskEligible(tx,match,session_no,rules.definition.risk_recheck))await add(RISK_SCALE,session_no);
             }
           }
           return prompts;

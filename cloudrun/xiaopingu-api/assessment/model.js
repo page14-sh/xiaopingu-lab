@@ -2,6 +2,7 @@ const { createHash } = require('node:crypto');
 
 const COLLECTIONS = Object.freeze({
   matches: 'xg_matches',
+  riskStates: 'xg_risk_states',
   activeMatches: 'xg_active_matches',
   events: 'xg_assessment_events',
   submissions: 'xg_submissions',
@@ -49,7 +50,8 @@ const SCALES = Object.freeze({
   baseline: 'xg_m0_baseline', state: 'xg_m1_state', feel: 'xg_m2_feel',
   pro: 'xg_m3_pro', end: 'xg_m4_end', evaluation: 'xg_m4_eval', follow: 'xg_m4_follow'
 });
-const SCALE_CODES = Object.values(SCALES);
+const RISK_SCALE = 'xg_risk_recheck';
+const SCALE_CODES = [...Object.values(SCALES), RISK_SCALE];
 const SCORE_FIELDS = Object.freeze([
   'total', 'pct', 'ors_total', 'add_total', 'supp_total',
   'resource_total', 'dissoc_level', 'stability_total'
@@ -136,6 +138,6 @@ function scoreSnapshot(event) {
 }
 
 module.exports = {
-  COLLECTIONS, SCALES, SCORE_FIELDS, AssessmentError,
+  COLLECTIONS, SCALES, SCALE_CODES, RISK_SCALE, SCORE_FIELDS, AssessmentError,
   requireId, requireSession, documentKey, eventPosition, scopeOf, assertScope, scoreSnapshot, basisReference
 };

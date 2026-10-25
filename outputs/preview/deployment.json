@@ -1,0 +1,265 @@
+{
+  "env": "xpg-demo-d3gzsswtcc3233ea0",
+  "service": "xiaopingu-assessment-preview",
+  "prefix": "xg_preview_7d0a8e2622_",
+  "started_at": "2026-10-25T03:07:18.790Z",
+  "scope": "isolated-api-preview-synthetic-only",
+  "files": [
+    {
+      "path": ".dockerignore",
+      "sha256": "9cdccdd059e8de45dce89607617cdd24ef2c391d21846582f2748b8febd2b6d6"
+    },
+    {
+      "path": "Dockerfile",
+      "sha256": "c7a604d98c48b82a8f992cda1fc8426104880d45d137143d167e8978cf447e43"
+    },
+    {
+      "path": "app.js",
+      "sha256": "8ef92dc3d2cfbad8348fa67cb85b309fe2f13d2af77a243e434c10031b5303a2"
+    },
+    {
+      "path": "assessment/admission.js",
+      "sha256": "0cab5b7e82485cb14491a987973e5d5a9d063d19fa1d7a84adf4a7863dacea5f"
+    },
+    {
+      "path": "assessment/answer-processor.js",
+      "sha256": "baffd95a102975d810b489536be318c484a45a166b9a101787e3798fcf0743b6"
+    },
+    {
+      "path": "assessment/answer-validation.js",
+      "sha256": "97dffd7a277bef140f3263ac5e5d564df8f93655c74c0c5b0f710c8805f241b7"
+    },
+    {
+      "path": "assessment/authorization.js",
+      "sha256": "076ad219b787f1461d9afe414c511325222495817c6b56cc58722cc5c94af420"
+    },
+    {
+      "path": "assessment/baseline-reference.js",
+      "sha256": "00d46ffde0de5792b0d969d4f153ec83820c45819d59d20bdb20492aad83447f"
+    },
+    {
+      "path": "assessment/cloudbase-store.js",
+      "sha256": "d27137b4cacec22c4b4e62afefa44523ba164a209cf97a51d823a19110badbad"
+    },
+    {
+      "path": "assessment/collections.json",
+      "sha256": "794675b9671ec2539a62cd4d84420f5f4e92414df7bc7fdb32ac4babb7d73f35"
+    },
+    {
+      "path": "assessment/combination-engine.js",
+      "sha256": "182a03bfc8e12398155cf1811b91d5abb3767ce3cf16b0b8ae738d3a370c1d4b"
+    },
+    {
+      "path": "assessment/combinations.js",
+      "sha256": "5e3a5872c10321a54c450406a050952b0d17242d2abd4dd06c3e46055e2c3756"
+    },
+    {
+      "path": "assessment/consecutive-window.js",
+      "sha256": "3c153e069e2e4235740516d9ffd3557b3fffe7b49dc5faf3995d1aa84db34d99"
+    },
+    {
+      "path": "assessment/consent-http.js",
+      "sha256": "7e270d319de054fa2f2af2d00084ddceeaa9f252354ccc6b2533c2e5ef389e92"
+    },
+    {
+      "path": "assessment/consent.js",
+      "sha256": "b08b57f52ef420271d4929f4e4ffa9579ce2ec7a2a4501ee4113816e3e75d4ae"
+    },
+    {
+      "path": "assessment/definitions/items-compat-v1.json",
+      "sha256": "353ca8f2d465e80677a4c001604d5b67671c723819257660e5cd8b4092fa3c93"
+    },
+    {
+      "path": "assessment/definitions/items-v3-2.json",
+      "sha256": "339db1010c9c3ce28e8cfc04d7c008c107650ced6b6e201f90ac5780ab064f21"
+    },
+    {
+      "path": "assessment/definitions/rules-compat-v1.json",
+      "sha256": "b4769afa1d4082606341c94122cf6ac0e1beff049422d560981c326b3f958e11"
+    },
+    {
+      "path": "assessment/definitions/rules-t03-v1.json",
+      "sha256": "16da9424e6100e3bb2a22c5f6bf9046db76a28766be4c552675c374aaa8fff84"
+    },
+    {
+      "path": "assessment/event-lifecycle.js",
+      "sha256": "9b163cec1eb3f35797af39460ac8dc9777d73847e1b37e3a080c61028d63f92b"
+    },
+    {
+      "path": "assessment/event-storage.js",
+      "sha256": "fa3b371a95eba40f687a5a06384485e9c5282f630acbdf311741aebac1767cc8"
+    },
+    {
+      "path": "assessment/followup-schedule.js",
+      "sha256": "e00b32f3762d03f399a4b6414c3090632ab47aed6906fea987ef9b2d0f4f9308"
+    },
+    {
+      "path": "assessment/followups.js",
+      "sha256": "dd03e6aff2a8a0f6e4c5a6a665909636dd64d51385dda19a0f31e703b373c726"
+    },
+    {
+      "path": "assessment/http.js",
+      "sha256": "bfe9f549527713064b3ae352ec10cb92fbb47ec800f5fa163280f5808ed1843c"
+    },
+    {
+      "path": "assessment/identity-repository.js",
+      "sha256": "888ad2df05a0ce2d6de33d100ce52e97d08e0e1d8522f6a7b55151b654c396fe"
+    },
+    {
+      "path": "assessment/llm-contract.js",
+      "sha256": "6374ef927459ebdaaf37406e5be393d598f3254065bdac58388713e26b0a1a6e"
+    },
+    {
+      "path": "assessment/llm-http.js",
+      "sha256": "e78415d89111c585a40c95389a79ff964fdd2e600fbdf36b6fd58189b154611d"
+    },
+    {
+      "path": "assessment/llm-provider.js",
+      "sha256": "8c4c99b72077dbbda262be3e7450eabd49b8edd56a2f48aadc30bd479a27fbaf"
+    },
+    {
+      "path": "assessment/llm-service.js",
+      "sha256": "33d1d98e528a357d87bb093272945c38ef641be246a8f6ae99d2c6d74ab01662"
+    },
+    {
+      "path": "assessment/llm-worker.js",
+      "sha256": "bd1c7a90bab5b7f939afd238c8613b6d15be370896bfa21abb5186ff4f894fd9"
+    },
+    {
+      "path": "assessment/model.js",
+      "sha256": "d22470220a714b67512d272eeb07a0afe52213980375aace9e076e72eaba8ed1"
+    },
+    {
+      "path": "assessment/notification-http.js",
+      "sha256": "e83f67162f25e788ef28a77f2beab2915483a5ffe993fab64e6654de7f1b5174"
+    },
+    {
+      "path": "assessment/notification-provider.js",
+      "sha256": "e717abca8af694d332804611eee6d0d6bf625aa5efccb31a3c0e3ad46a9155d5"
+    },
+    {
+      "path": "assessment/notification-service.js",
+      "sha256": "80ef7e574d83fa25b1013e57f6ebb2f6d1395857de937fc454065e86ee9abcfd"
+    },
+    {
+      "path": "assessment/notification-source.js",
+      "sha256": "58914504bc7f292448649a05195142d443678147a0e801ef5989569e82a9eda8"
+    },
+    {
+      "path": "assessment/notification-worker.js",
+      "sha256": "304de60463505ff284d02ec83395fe8956b0e87c553cd0c3335a7aa86ce68a74"
+    },
+    {
+      "path": "assessment/provenance.js",
+      "sha256": "c15984d77fb050ecbc0fc0ececce7be68ff4d1ce0db10ba455491d7ead35ff5c"
+    },
+    {
+      "path": "assessment/read-http.js",
+      "sha256": "796bb034d661a5f10acb6b915596c75e4246f3b40f7b3eb36e1d1422e6e67449"
+    },
+    {
+      "path": "assessment/read-views.js",
+      "sha256": "6be1f6471e7a5e6ec4ed26611fb189201951f57fdbab1232d96e0d19663208d8"
+    },
+    {
+      "path": "assessment/reminder-view.js",
+      "sha256": "78d2a2338a0a86dfb309543a2d1d1bac4fc3aab87b2ff1ce55c5adad91860077"
+    },
+    {
+      "path": "assessment/reminders.js",
+      "sha256": "6e0f4cbe9f7fe63a50c57ed8d3a391e85f589ee5e066cbc134934684cc4e7e8a"
+    },
+    {
+      "path": "assessment/repository.js",
+      "sha256": "fa9cea7acb766b602ba01a84155d7d3eaf782233e203c6047c3e7c84e79e9a3c"
+    },
+    {
+      "path": "assessment/request-hash.js",
+      "sha256": "e4a0eb05a18067d4cb51f1aa4cc00bbe8f2ac2abbaf3609316c92d8732f261f0"
+    },
+    {
+      "path": "assessment/request-receipts.js",
+      "sha256": "f6e64a22117dfa8db539f7eaf1c594cec4c9e6471dc609e9a99a53fae34d12da"
+    },
+    {
+      "path": "assessment/risk-recheck.js",
+      "sha256": "84380e0b4f04d69c8d5cc2d10bef23751c25fac24b851c3de28e0c339af7ee76"
+    },
+    {
+      "path": "assessment/rollout-http.js",
+      "sha256": "ed375a26aa516e01f7257094eb2a19798dfe18af14f4f491285ad6b06f80f7f6"
+    },
+    {
+      "path": "assessment/rollout.js",
+      "sha256": "e19ee76c7cecdb3b9b4b757dfa9f70f93c5ed67512ced0c0748028c6d85a59d1"
+    },
+    {
+      "path": "assessment/score-replay.js",
+      "sha256": "332bcc4298c363fd7edd15461cabcf4c1916945037eeab1398a4019bd2d11c22"
+    },
+    {
+      "path": "assessment/scoring-engines.js",
+      "sha256": "a2c89ddd84723205a5f729b0b5e255e61761977af31e007cc51af53563eafc49"
+    },
+    {
+      "path": "assessment/service-http.js",
+      "sha256": "dc060a7954e9d6c657a3adff6804cd7ef011b10184f5f93eac99eaf7b9f6acdf"
+    },
+    {
+      "path": "assessment/signal-parameters.js",
+      "sha256": "9dc612e35a164e30ea8dc3e2355c7e0879d2c43c7018aab943d733e7bce6548e"
+    },
+    {
+      "path": "assessment/statistics-source.js",
+      "sha256": "e2e924cda9485d11bbea9f386a9a20fbc97ddef3b2fffe9f91312be67021e225"
+    },
+    {
+      "path": "assessment/statistics.js",
+      "sha256": "1b2ddaf55e80b57a31248374acde6b3506cd36615499c9fa06d1c22ab3f05907"
+    },
+    {
+      "path": "index.js",
+      "sha256": "7e6b671505bccc14f1b5ce6393f6d4ff1c559c56d1ec90c7d7ba7940fdf877f9"
+    },
+    {
+      "path": "package-lock.json",
+      "sha256": "4020e975f43efea72100e10a77062dbcf8125bee6e31a92b087d259a0cfcafb7"
+    },
+    {
+      "path": "package.json",
+      "sha256": "c1b7d787b32c359ed289908fc4d98d005c1865dbc4f54e1fa5d5e4ecf9a30156"
+    },
+    {
+      "path": "public/.keep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "runtime-policy.js",
+      "sha256": "df27282fa5f16409487d1dea8b9664c2ff4cb34df5dded343cb3d6ac3b399cea"
+    },
+    {
+      "path": "static.js",
+      "sha256": "0c9beda7b89c0555d435e868683f8a7b993887d2114fcd6dd5c596eab1d99673"
+    }
+  ],
+  "submitted": true,
+  "request_id": "c7fd21e8-a7b8-4ba2-941a-28d79b826954",
+  "url": "https://xiaopingu-assessment-preview-308810-6-1300577165.sh.run.tcloudbase.com",
+  "version": "xiaopingu-assessment-preview-001",
+  "build_id": 2609382475,
+  "run_id": "multi_tenant_1xKoZx2POanlvQ",
+  "image_digest": "sha256:fd3d0d85a069f770512aa8ec93841071aac1e2586db157dcc91fa59ae9b60bf4",
+  "image_url": "ccr.ccs.tencentyun.com/tcb-100011945138-yyiq/ca-kqwojftr_xiaopingu-assessment-preview:xiaopingu-assessment-preview-001-20261025110729",
+  "runtime_source_matches": true,
+  "local_tests": {
+    "passed": 514,
+    "failed": 0
+  },
+  "initial_health": {
+    "ok": true,
+    "mode": "cloudbase-nosql"
+  },
+  "external_notifications": false,
+  "llm": false,
+  "schedulers_created": false
+}

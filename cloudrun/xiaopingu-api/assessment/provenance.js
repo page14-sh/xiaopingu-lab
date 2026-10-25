@@ -3,6 +3,8 @@ const { isDeepStrictEqual } = require('node:util');
 const { COLLECTIONS: C, SCALES: S, AssessmentError, requireId, documentKey, scopeOf, assertScope } = require('./model');
 const DEFAULT_CATALOG = require('./definitions/items-v3-2.json');
 const DEFAULT_RULES = require('./definitions/rules-t03-v1.json');
+const COMPAT_CATALOG = require('./definitions/items-compat-v1.json');
+const COMPAT_RULES = require('./definitions/rules-compat-v1.json');
 const { validateThresholds, parameterSchema } = require('./signal-parameters');
 
 function invalid(message) { throw new AssessmentError('XG_BASIS_INVALID', message, 409); }
@@ -31,12 +33,13 @@ function string(value, nullable = false) {
 function validateCatalog(catalog) {
   keys(catalog, ['source_version', 'cards', 'items']);
   string(catalog.source_version);
-  if (!Array.isArray(catalog.cards) || catalog.cards.length !== 7 ||
-      !Array.isArray(catalog.items) || catalog.items.length !== 42) invalid('当前题库契约要求7张卡片和42道题');
-  if (new Set(catalog.items.map((item) => item.code)).size !== 42 ||
-      new Set(catalog.cards.map((card) => card.scale_code)).size !== 7) invalid('卡片或题号重复');
+  const template = catalog.source_version === COMPAT_CATALOG.source_version ? COMPAT_CATALOG : DEFAULT_CATALOG;
+  if (!Array.isArray(catalog.cards) || catalog.cards.length !== template.cards.length ||
+      !Array.isArray(catalog.items) || catalog.items.length !== template.items.length) invalid('当前题库契约要求7张卡片和42道题');
+  if (new Set(catalog.items.map((item) => item.code)).size !== template.items.length ||
+      new Set(catalog.cards.map((card) => card.scale_code)).size !== template.cards.length) invalid('卡片或题号重复');
   for (const item of catalog.items) {
-    const original = DEFAULT_CATALOG.items.find((row) => row.code === item.code);
+    const original = template.items.find((row) => row.code === item.code);
     if (!original) invalid('未知题号');
     keys(item, Object.keys(original));
     for (const field of ['scale_code', 'item_type', 'is_dynamic', 'is_optional', 'sort_order']) {
@@ -54,7 +57,7 @@ function validateCatalog(catalog) {
     } else if (item.options !== null) invalid('非单选题不可带单选选项');
   }
   for (const card of catalog.cards) {
-    const original = DEFAULT_CATALOG.cards.find((row) => row.scale_code === card.scale_code);
+    const original = template.cards.find((row) => row.scale_code === card.scale_code);
     if (!original) invalid('未知卡片');
     keys(card, Object.keys(original));
     for (const field of ['phase', 'fill_role', 'timing', 'item_codes', 'optional_codes']) {
@@ -66,13 +69,14 @@ function validateCatalog(catalog) {
 }
 
 function validateRules(rules) {
-  keys(rules, Object.keys(DEFAULT_RULES));
+  const template = rules.schema_version === 2 ? COMPAT_RULES : DEFAULT_RULES;
+  keys(rules, Object.keys(template));
   requireId(rules.engine_id, 'engine_id');
   string(rules.source_decision);
   // Current structural/score contract is the approved T03 rule set. Thresholds,
   // timing and quality duration can evolve under new immutable rule versions.
-  for (const key of Object.keys(DEFAULT_RULES).filter((key) => !['engine_id', 'source_decision', 'thresholds', 'timing', 'quality'].includes(key))) {
-    if (!isDeepStrictEqual(rules[key], DEFAULT_RULES[key])) invalid('计分结构变化需要升级规则契约');
+  for (const key of Object.keys(template).filter((key) => !['engine_id', 'source_decision', 'thresholds', 'timing', 'quality'].includes(key))) {
+    if (!isDeepStrictEqual(rules[key], template[key])) invalid('计分结构变化需要升级规则契约');
   }
   validateThresholds(rules.thresholds);
   keys(rules.timing, Object.keys(DEFAULT_RULES.timing));
@@ -287,4 +291,6 @@ function createProvenanceRepository(store, { now = () => new Date().toISOString(
   };
 }
 
-module.exports = { createProvenanceRepository, captureBasisInTransaction, verifyEventBasis, defaultVersionBundle, contentHash, readVersionsInTransaction: readVersions };
+function compatibilityVersionBundle(){return {item_version:'items-compat-v1',rule_version:'rules-compat-v1',catalog:copy(COMPAT_CATALOG),rules:copy(COMPAT_RULES)};}
+
+module.exports = { compatibilityVersionBundle, createProvenanceRepository, captureBasisInTransaction, verifyEventBasis, defaultVersionBundle, contentHash, readVersionsInTransaction: readVersions };

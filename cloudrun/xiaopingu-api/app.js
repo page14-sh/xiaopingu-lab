@@ -12,6 +12,7 @@ const { createStatisticsRepository } = require('./assessment/statistics');
 const { createLlmWorker } = require('./assessment/llm-worker');
 const { createLlmService } = require('./assessment/llm-service');
 const { createAssessmentHttp } = require('./assessment/http');
+const {createAdmissionBridge}=require('./assessment/admission');
 const { AUDIENCE } = require('./assessment/authorization');
 
 const TABLES = new Set([
@@ -491,6 +492,7 @@ function createCloudBaseStore(db, { notificationProvider, llmProvider } = {}) {
     // Internal cycle-scoped persistence. Not exposed via TABLES / generic REST.
     assessment: createAssessmentRepository(xgStore),
     identity: createIdentityRepository(xgStore),
+    admission: createAdmissionBridge(xgStore,consent),
     consent,
     lifecycle: createEventLifecycle(xgStore, consent),
     followups: createFollowupRepository(xgStore),

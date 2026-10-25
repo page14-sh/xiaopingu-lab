@@ -1,0 +1,50 @@
+{
+  "legacy": {
+    "service": "xiaopingu-api",
+    "status": "normal",
+    "onlineVersions": [
+      {
+        "VersionName": "xiaopingu-api-004",
+        "ImageUrl": "ccr.ccs.tencentyun.com/tcb-100011945138-yyiq/ca-kqwojftr_xiaopingu-api:xiaopingu-api-004-20260913151347",
+        "FlowRatio": "100"
+      }
+    ],
+    "latestDeploy": {
+      "DeployId": "004",
+      "DeployTime": "2026-09-13 15:13:40",
+      "Status": "normal",
+      "RunId": "multi_tenant_1x5ePEYYhaUgWU",
+      "BuildId": 2602874724,
+      "FlowRatio": 100,
+      "ImageUrl": "ccr.ccs.tencentyun.com/tcb-100011945138-yyiq/ca-kqwojftr_xiaopingu-api:xiaopingu-api-004-20260913151347",
+      "ScaleStatus": "",
+      "HasTraffic": true,
+      "TrafficType": "FLOW",
+      "IsReleasing": false
+    }
+  },
+  "preview": {
+    "service": "xiaopingu-assessment-preview",
+    "status": "normal",
+    "onlineVersions": [
+      {
+        "VersionName": "xiaopingu-assessment-preview-001",
+        "ImageUrl": "ccr.ccs.tencentyun.com/tcb-100011945138-yyiq/ca-kqwojftr_xiaopingu-assessment-preview:xiaopingu-assessment-preview-001-20261025110729",
+        "FlowRatio": "100"
+      }
+    ],
+    "latestDeploy": {
+      "DeployId": "001",
+      "DeployTime": "2026-10-25 11:07:25",
+      "Status": "normal",
+      "RunId": "multi_tenant_1xKoZx2POanlvQ",
+      "BuildId": 2609382475,
+      "FlowRatio": 100,
+      "ImageUrl": "ccr.ccs.tencentyun.com/tcb-100011945138-yyiq/ca-kqwojftr_xiaopingu-assessment-preview:xiaopingu-assessment-preview-001-20261025110729",
+      "ScaleStatus": "",
+      "HasTraffic": true,
+      "TrafficType": "FLOW",
+      "IsReleasing": false
+    }
+  }
+}

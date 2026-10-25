@@ -1,4 +1,4 @@
-const { AssessmentError, SCALES, requireId } = require('./model');
+const { AssessmentError, SCALE_CODES, SCALES, requireId } = require('./model');
 const { deny } = require('./authorization');
 const { professional, visibleCard, eventView, trendView, comparisonView, llmView } = require('./read-views');
 
@@ -33,7 +33,7 @@ async function handleAssessmentRead({ req, res, url, principal, repository, scop
   try {
     if (url.pathname.endsWith('/events')) {
       const scale = params.get('scale_code');
-      if (scale !== null && !Object.values(SCALES).includes(scale)) badQuery();
+      if (scale !== null && !SCALE_CODES.includes(scale)) badQuery();
       if (scale && !visibleCard(principal.role, scale)) deny();
       const session = integer(params, 'session_no', null, 0);
       const round = params.get('follow_round');

@@ -1,11 +1,12 @@
-const { SCALES: S, SCORE_FIELDS, basisReference } = require('./model');
+const { SCALE_CODES, RISK_SCALE, SCALES: S, SCORE_FIELDS, basisReference } = require('./model');
 const { deny } = require('./authorization');
 const { validateOutput } = require('./llm-contract');
 
 const COUNSELOR_CARDS = Object.freeze([S.feel, S.pro]);
-const VISITOR_CARDS = Object.freeze(Object.values(S).filter((code) => code !== S.pro));
+const VISITOR_CARDS = Object.freeze(SCALE_CODES.filter((code) => code !== S.pro));
 const numbered = (prefix, count) => Array.from({ length: count }, (_, i) => `${prefix}${i + 1}`);
 const ANSWERS = Object.freeze({
+  [RISK_SCALE]: ['k1'],
   [S.baseline]: [...numbered('s', 7), ...numbered('b', 3), 'r1', 'r2', 'd1'],
   [S.state]: numbered('s', 10), [S.feel]: numbered('f', 4), [S.pro]: numbered('p', 6),
   [S.end]: numbered('e', 6), [S.evaluation]: [...numbered('v', 3), 'o1'], [S.follow]: numbered('u', 6)
@@ -15,7 +16,7 @@ const BANNED_TEXT = /恶化|病情|严重|抑郁|焦虑症/;
 
 function professional(role) { if (!['counselor', 'admin'].includes(role)) deny(); }
 function visibleCard(role, code) {
-  if (role === 'admin') return Object.values(S).includes(code);
+  if (role === 'admin') return SCALE_CODES.includes(code);
   if (role === 'counselor') return COUNSELOR_CARDS.includes(code);
   if (role === 'visitor') return VISITOR_CARDS.includes(code);
   return false;

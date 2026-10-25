@@ -1,0 +1,191 @@
+{
+  "schema_version": 2,
+  "engine_id": "xg-core-compat-v1",
+  "source_decision": "User-confirmed legacy admission and risk recheck retention",
+  "answer_range": {
+    "min": 0,
+    "max": 10,
+    "integer": true,
+    "default": 5,
+    "missing": "reject"
+  },
+  "primary_groups": {
+    "xg_m0_baseline": [
+      "s1",
+      "s2",
+      "s3",
+      "s4",
+      "s5",
+      "s6",
+      "s7"
+    ],
+    "xg_m1_state": [
+      "s1",
+      "s2",
+      "s3",
+      "s4",
+      "s5",
+      "s6",
+      "s7"
+    ],
+    "xg_m2_feel": [
+      "f1",
+      "f2",
+      "f3",
+      "f4"
+    ],
+    "xg_m3_pro": [
+      "p1",
+      "p2",
+      "p3",
+      "p4",
+      "p5",
+      "p6"
+    ],
+    "xg_m4_end": [
+      "e1",
+      "e2",
+      "e3",
+      "e4",
+      "e5",
+      "e6"
+    ],
+    "xg_m4_eval": [
+      "v1",
+      "v2",
+      "v3"
+    ],
+    "xg_m4_follow": [
+      "u1",
+      "u2",
+      "u3",
+      "u4",
+      "u5",
+      "u6"
+    ],
+    "xg_risk_recheck": [
+      "k1"
+    ]
+  },
+  "primary_max": {
+    "xg_m0_baseline": 70,
+    "xg_m1_state": 70,
+    "xg_m2_feel": 40,
+    "xg_m3_pro": 60,
+    "xg_m4_end": 60,
+    "xg_m4_eval": 30,
+    "xg_m4_follow": 60,
+    "xg_risk_recheck": 10
+  },
+  "ors": {
+    "mean_items": [
+      "s1",
+      "s2",
+      "s3"
+    ],
+    "sum_items": [
+      "s4",
+      "s5",
+      "s6"
+    ],
+    "rounding": "nearest_integer",
+    "max": 40
+  },
+  "additional": {
+    "item": "s7",
+    "max": 10,
+    "included_in_ors": false
+  },
+  "supplement_groups": {
+    "xg_m0_baseline": [
+      "b1",
+      "b2",
+      "b3"
+    ],
+    "xg_m4_end": [
+      "e3",
+      "e4",
+      "e5"
+    ],
+    "xg_m4_follow": [
+      "u2",
+      "u3",
+      "u4"
+    ]
+  },
+  "resource_group": [
+    "r1",
+    "r2"
+  ],
+  "dissociation": {
+    "item": "d1",
+    "values": [
+      0,
+      1,
+      2
+    ],
+    "included_in_primary": false
+  },
+  "optional": {
+    "items": [
+      "s8",
+      "s9",
+      "s10"
+    ],
+    "max": 30,
+    "mode": "all_or_none",
+    "included_in_primary": false,
+    "disabled_value": null
+  },
+  "first_session": {
+    "scale_code": "xg_m3_pro",
+    "not_applicable": [
+      "p6"
+    ],
+    "null_metrics": [
+      "total",
+      "pct",
+      "diff_post"
+    ]
+  },
+  "percent": {
+    "precision": 2,
+    "thresholds_use_unrounded": true
+  },
+  "quality": {
+    "duration_ms_per_answer": 5000,
+    "zero_variance": "low",
+    "invalid_answers": "reject"
+  },
+  "timing": {
+    "late_recheck_days": 7,
+    "dynamic_refresh_sessions": 10
+  },
+  "thresholds": {
+    "outcome_drop_abs": 7,
+    "outcome_drop_consecutive": 2,
+    "outcome_flat_delta": 3,
+    "outcome_flat_consecutive": 4,
+    "stability_item_max": 3,
+    "stability_consecutive": 2,
+    "alliance_total_max": 28,
+    "alliance_dim_max": 3,
+    "alliance_consecutive": 2,
+    "diff_post_warn": 15,
+    "l3_consecutive": 3,
+    "l3_low_pct": 30
+  },
+  "alert_semantics": {
+    "missing_session_breaks_window": true,
+    "missing_alliance_never_downgrades": true,
+    "absolute_low_is_independent": true,
+    "preserve_l3": true,
+    "flat_is_distance_from_baseline": true,
+    "recheck_is_not_regular_session": true
+  },
+  "risk_recheck": {
+    "positive_min": 5,
+    "urgent_min": 10,
+    "cooldown_sessions": 2
+  }
+}

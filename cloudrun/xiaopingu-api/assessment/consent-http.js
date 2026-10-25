@@ -19,7 +19,7 @@ function pagination(params) {
   return { limit: get('limit', 50, 1, 200), offset: get('offset', 0, 0, 100000) };
 }
 
-async function handleConsent({ req, res, url, principal, consent, scopedMatch, readJson, sendJson, collectionPaused, followups }) {
+async function handleConsent({ req, res, url, principal, consent, scopedMatch, readJson, sendJson, collectionPaused, riskStatus, followups }) {
   const own = url.pathname === '/v1/xg/me/consent';
   const history = url.pathname === '/v1/xg/me/consent/history';
   const admin = url.pathname === '/v1/xg/admin/consents';
@@ -38,6 +38,7 @@ async function handleConsent({ req, res, url, principal, consent, scopedMatch, r
       }
     }
     const match = await scopedMatch(principal, url.searchParams.get('match_id'));
+    if(riskStatus){const risk=await riskStatus(match.match_id);if(risk.out_of_scope){sendJson(res,200,{prompts:[],...risk,next_action:'out_of_scope'});return true;}}
     if (collectionPaused && await collectionPaused()) {
       sendJson(res, 200, { prompts: [] });
       return true;

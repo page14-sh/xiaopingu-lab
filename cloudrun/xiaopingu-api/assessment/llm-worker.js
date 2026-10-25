@@ -1,3 +1,4 @@
+const {assertInScope}=require('./risk-recheck');
 const { randomUUID } = require('node:crypto');
 const { COLLECTIONS:C, AssessmentError, requireId, assertScope, scopeOf, documentKey } = require('./model');
 const { createConsentRepository, scopeForCard } = require('./consent');
@@ -5,7 +6,7 @@ const { requireCollectionOpen } = require('./rollout');
 const { contentHash, verifyEventBasis } = require('./provenance');
 const { sourceIn, buildSnapshot, validateOutput, PROMPT_VERSION } = require('./llm-contract');
 const RETRYABLE = new Set(['XG_LLM_UPSTREAM_5XX','XG_LLM_TIMEOUT','XG_LLM_NETWORK','XG_LLM_INVALID_JSON','XG_LLM_INVALID_OUTPUT','XG_LLM_RESPONSE_TOO_LARGE','XG_LLM_LEASE_EXPIRED']);
-const BLOCKED = new Set(['XG_CONSENT_REQUIRED','XG_CONSENT_NOT_CONFIGURED','XG_CONSENT_POLICY_INVALID','XG_COLLECTION_PAUSED','XG_LLM_CONSENT_CHANGED','XG_FORBIDDEN']);
+const BLOCKED = new Set(['XG_OUT_OF_SCOPE','XG_CONSENT_REQUIRED','XG_CONSENT_NOT_CONFIGURED','XG_CONSENT_POLICY_INVALID','XG_COLLECTION_PAUSED','XG_LLM_CONSENT_CHANGED','XG_FORBIDDEN']);
 const SAFE_CODES = new Set([...RETRYABLE,...BLOCKED,'XG_LLM_UPSTREAM_4XX','XG_LLM_UNSAFE_OUTPUT','XG_LLM_INELIGIBLE','XG_SCOPE_MISMATCH','XG_LLM_SOURCE_INVALID','XG_LLM_MODEL_CHANGED','XG_LLM_INTERNAL']);
 const safeCode = error => SAFE_CODES.has(error?.code) ? error.code : 'XG_LLM_INTERNAL';
 function nextRecovery(time){const day=86400000,zone=8*3600000;let target=Math.floor((time+zone)/day)*day-zone+4*3600000;if(target<=time)target+=day;return new Date(target).toISOString();}
@@ -15,6 +16,7 @@ function createLlmWorker(store,{provider={ready:false},now=Date.now,leaseMs=3000
   const iso=()=>new Date(now()).toISOString(),consent=createConsentRepository(store);
   async function guard(tx,job,{finish=false}={}) {
     const {event,match}=await sourceIn(tx,job.event_id);assertScope(job,match);
+    await assertInScope(tx,match);
     await requireCollectionOpen(tx);
     const ref=await consent.requireInTransaction(tx,match.visitor_id,scopeForCard(event.scale_code));
     if(finish&&contentHash(ref)!==contentHash(job.consent_ref))throw new AssessmentError('XG_LLM_CONSENT_CHANGED','同意状态已变化');
