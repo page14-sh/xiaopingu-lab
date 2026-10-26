@@ -1,14 +1,14 @@
 {
-  "checked_at": "2026-10-26T17:42:08.257Z",
+  "checked_at": "2026-10-26T17:54:56.569Z",
   "entry": "http://127.0.0.1:8796/journey.html",
-  "run_id": "c7320177-f747-45a9-8961-0694a4a6229e",
-  "visitor_name": "合成测试来访者 c7320177",
-  "counselor_name": "合成测试咨询师 c7320177",
+  "run_id": "be9d0f99-7e2a-48fe-8b1f-15351a8c81d7",
+  "visitor_name": "合成测试来访者 be9d0f99",
+  "counselor_name": "合成测试咨询师 be9d0f99",
   "requests": [
     {
-      "assessment_id": "eb70b492-8c15-4194-b4d9-f1c8bc38b0c7",
-      "status": "pending",
-      "match_id": null
+      "assessment_id": "cc7a19b7-8614-4e33-87a6-7b2610e8f7ea",
+      "status": "approved",
+      "match_id": "b8a99f106027035d4ab321fb78f8abe582692362700c924a876dce90dace14e9"
     }
   ],
   "credentials_path": ".private/test-chain/accounts.md",

@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-10-26T17:40:06.058662+00:00",
+  "checked_at": "2026-10-26T17:53:11.481805+00:00",
   "git": {
     "branch": "codex/local-demo-modules",
     "main_already_merged": true,
@@ -22,7 +22,8 @@
     "compatibility": 13,
     "synthetic_cloud_chain": "passed; 8 submitted cards; baseline 49, state 42",
     "frontend_regressions": 3,
-    "published_assets_verified": 29
+    "published_assets_verified": 30,
+    "confirmation_regressions": 3
   },
   "production_audit": {
     "counselors": 66,
@@ -35,8 +36,9 @@
     "entry": "passed",
     "prepare_test_request": "passed",
     "counselor_pending_list": "passed",
-    "approval_confirmation": "waiting_for_user_native_dialog",
-    "admin_click_flow": "not_completed_while_dialog_blocks_browser"
+    "approval_confirmation": "passed with page-owned dialog; cancellation preserves pending; acceptance creates cycle",
+    "admin_click_flow": "passed; directory, counselor detail, v2 board and exact 49/42 scores visible",
+    "console_errors": 0
   },
   "real_clinical_writes": 0,
   "limits": [

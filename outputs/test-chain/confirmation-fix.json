@@ -1,0 +1,15 @@
+{
+  "checked_at": "2026-10-26T17:53:11.481805+00:00",
+  "native_confirmation_replaced": true,
+  "cancel_verified": true,
+  "approve_verified": true,
+  "created_cycle_visible": true,
+  "counselor_directory_click": "passed",
+  "counselor_detail": "passed",
+  "admin_visible_scores": [
+    49,
+    42
+  ],
+  "console_errors": 0,
+  "synthetic_only": true
+}
