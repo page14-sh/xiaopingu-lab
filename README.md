@@ -17,13 +17,13 @@ xiaopingu-lab/
 当前后端采用 CloudRun + CloudBase NoSQL，源码在 `cloudrun/xiaopingu-api/`；当前 Web 发布源码在 `legacy-web/`。正式数据已迁入独立 v2 数据区，旧库保留。当前系统不使用 `server/` 的 Supabase SQL。
 
 - [v2 源码与准确接口契约](docs/v2-source-and-api.md)
-- [来访 → 咨询师 → 四评 → 后台操作文档](docs/test-chain-walkthrough.md)
-- `npm run test:journey`：启动本机体验入口 `http://127.0.0.1:8796/journey.html`，数据实际写入 CloudBase 合成测试区。
-- `npm run test:journey:setup`：首次创建测试身份，凭证只保存到 `.private/test-chain/`。
+- [固定账号与平台原页面操作文档](docs/platform-demo-accounts.md)
+- `npm run start:demo`：启动平台原首页 `http://127.0.0.1:8796/`，数据实际写入 CloudBase 合成测试区。
+- `npm run demo:accounts`：首次创建固定演示账号，密码只保存到 `.private/test-chain/platform-accounts.md`，已有账号不会重置。
 - `npm run test:cloudbase`：后端回归测试。
 - [数据迁移与运行说明](specs/v2-cutover/operations.md)
 
-测试入口可切换独立的来访者、咨询师和测试管理员身份，正常走登录、初评、匹配、审批、同意和作答接口。真实通知与 LLM 保持关闭。正式默认域名仍需自定义域名完成浏览器访问配置。
+来访者、咨询师和测试管理员通过固定账号在原平台页面登录，手动完成初评、匹配、审批、同意和作答。旧流程展示页和一键准备申请接口已停用。真实通知与 LLM 保持关闭。正式默认域名仍需自定义域名完成浏览器访问配置。
 
 下面保留 v1 演示时期的部署说明，仅作历史参考；不要把旧数据同步脚本或 demo 账号用于当前正式服务。T21/T22 旧证据也描述当时的版本，当前迁移与联调证据分别在 `outputs/migration/` 与 `outputs/test-chain/`。
 

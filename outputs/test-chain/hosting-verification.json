@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-10-26T17:54:58.006Z",
+  "checked_at": "2026-10-26T18:38:02.142Z",
   "verified": 30,
   "files": [
     {
@@ -28,7 +28,7 @@
     },
     {
       "path": "assets/v2-portal.js",
-      "sha256": "01511d9f9eac2523877b51a4644e075979ca5b955de2c7a77397c2b24c86bbb0"
+      "sha256": "a6a88dd3495f7fc9b0b43adc276377ad179635c66b828ebcd35cc9b7b6f95643"
     },
     {
       "path": "assets/xg-config.js",
@@ -68,11 +68,11 @@
     },
     {
       "path": "counselor.html",
-      "sha256": "31f02e130191ca01e5fce0b6b60454d4bf89beee69fc5153629dd440d59bfcd5"
+      "sha256": "057a1bb015a0b43277c44824302b165f6bf9e0eaab3fa60ff96bd0c90bd78649"
     },
     {
       "path": "index.html",
-      "sha256": "2b066bb40d1d8774fdddb0caae2c65fa2f0a89a96c523f7379855ea12c200038"
+      "sha256": "1c0971d966fb92555482f71f887b078406c973a2f0b83cee09c588a6164905be"
     },
     {
       "path": "my-assessment.html",
@@ -88,7 +88,7 @@
     },
     {
       "path": "supabase-config.js",
-      "sha256": "b47c8022d10822fd4d6cc8ea5f8cd050c39a30b92fc39116d68a1af68014a138"
+      "sha256": "4f05e2b3a6c6fb30f55d0342c0a4930bc55b86e2153ec89cd913ce2db9fb9f4d"
     },
     {
       "path": "v1-consent.html",

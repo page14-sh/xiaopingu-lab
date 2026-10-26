@@ -1264,7 +1264,7 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="supabase-config.js?v=20261027-chain"></script>
+<script src="assets/confirm-action.js?v=20261027-platform"></script><script src="supabase-config.js?v=20261027-chain"></script>
 <script>
 var currentStep = 1;
 var currentEditToken = null;
@@ -2352,7 +2352,7 @@ function showPanelLogin() {
 async function loadPanelByInput() {
   var input=document.getElementById('panel-cid-input').value.trim();if(!input)return;
   try{
-    var data=await XPG_API_AUTH.loginCounselor(input);panelCid=data.counselor.id;
+    var data=await XPG_API_AUTH.loginCounselor(input,document.getElementById('panel-account-password')?.value||'');panelCid=data.counselor.id;
     localStorage.setItem('xiaopingu_counselor_id',panelCid);
     if(window.XPG_WEB_AUTH)XPG_WEB_AUTH.setSession('counselor',panelCid,{via:'verified_edit_code'});
     document.getElementById('panel-login').style.display='none';document.getElementById('panel-content').style.display='block';
@@ -2691,7 +2691,7 @@ function loadPanelRequests() {
       return;
     }
 
-    var pendingCount = records.filter(function(r) { return r.match_request_status === 'pending' || r.match_request_status === 'approved'; }).length;
+    var pendingCount = records.filter(function(r) { return r.match_request_status === 'pending'; }).length;
     var badge = document.getElementById('panel-badge');
     if (pendingCount > 0) {
       badge.style.display = 'inline';
@@ -2868,17 +2868,17 @@ function updateMatchStatus(id, status, note) {
   });
 }
 
-function approveMatchApplication(id) {
-  if (!confirm('确认通过此匹配申请？\n\n通过后：\n• 来访者在「我的评估」页将看到审批结果\n• 来访者可查看你的联系方式（微信/电话/邮箱）\n• 来访者可在完成同意后进入四评')) return;
+async function approveMatchApplication(id) {
+  if (!await XPG_CONFIRM('确认通过此匹配申请？通过后将建立咨询周期，来访者可在完成同意后进入四评。','确认通过')) return;
   updateMatchStatus(id, 'approved').then(function(r) {
     if (r.ok) {
-      alert('✅ 已通过！来访者进入「我的评估」页面即可查看你的联系方式和档案信息。');
+      showToast('✅ 已通过！来访者进入「我的评估」页面即可查看你的联系方式和档案信息。');
       loadPanelRequests();
     } else {
-      alert('操作失败，请重试');
+      showToast('操作失败，请重试');
     }
   }).catch(function() {
-    alert('网络错误，请重试');
+    showToast('网络错误，请重试');
   });
 }
 
@@ -2887,39 +2887,39 @@ function rejectMatchApplication(id) {
   if (reason === null) return; // 用户取消
   updateMatchStatus(id, 'rejected', reason || null).then(function(r) {
     if (r.ok) {
-      alert('已拒绝该申请。来访者进入「我的评估」页面可查看结果及理由。');
+      showToast('已拒绝该申请。来访者进入「我的评估」页面可查看结果及理由。');
       loadPanelRequests();
     } else {
-      alert('操作失败，请重试');
+      showToast('操作失败，请重试');
     }
   }).catch(function() {
-    alert('网络错误，请重试');
+    showToast('网络错误，请重试');
   });
 }
 
-function markContacted(id) {
-  if (!confirm('确认标记为"已联系"？标记后来访者状态页将更新。')) return;
+async function markContacted(id) {
+  if (!await XPG_CONFIRM('确认标记为已联系？标记后来访者状态页将更新。','确认标记')) return;
   updateMatchStatus(id, 'contacted').then(function(r) {
     if (r.ok) {
-      alert('📞 已标记为已联系');
+      showToast('📞 已标记为已联系');
       loadPanelRequests();
     } else {
-      alert('操作失败，请重试');
+      showToast('操作失败，请重试');
     }
   }).catch(function() {
-    alert('网络错误，请重试');
+    showToast('网络错误，请重试');
   });
 }
 
 function copyContact(text) {
   if (!text) return;
   if (navigator.clipboard) {
-    navigator.clipboard.writeText(text).then(function() { alert('已复制：' + text); });
+    navigator.clipboard.writeText(text).then(function() { showToast('已复制：' + text); });
   } else {
     var ta = document.createElement('textarea');
     ta.value = text; document.body.appendChild(ta); ta.select();
     document.execCommand('copy'); document.body.removeChild(ta);
-    alert('已复制');
+    showToast('已复制');
   }
 }
 

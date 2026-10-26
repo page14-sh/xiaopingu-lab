@@ -66,3 +66,7 @@
 - 原 `/xg/cases`、`/xg/stats` 不是 v2 契约，前端不要继续调用。
 
 原生错误通常为 `{"error":{"code":"XG_…","message":"…"}}`；portal/兼容接口可能是平铺 `code/message`。调用端同时读取两种错误外形。无权限不应显示为空列表或吞掉错误。
+
+## 固定演示账号适配
+
+`POST /api/auth/account` 仅存在于本机独立测试平台（8796；验收另用 8797），请求为 `{role, username, password}`。服务端校验固定测试账号后调用 preview 正常角色认证接口，返回实际角色令牌；来访者同时获得其独立填写凭证。该路由不在正式 CloudRun 中提供，正式凭证规则没有改变。账号映射和密码保存在被 Git 忽略的 `.private/test-chain/`，不随静态站点发布。

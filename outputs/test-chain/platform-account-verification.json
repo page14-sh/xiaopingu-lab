@@ -1,0 +1,14 @@
+{
+  "date": "2026-10-27",
+  "entry": "http://127.0.0.1:8796/",
+  "verification_entry": "http://127.0.0.1:8797/",
+  "synthetic_only": true,
+  "original_platform_ui": true,
+  "verification_assessment": "5ba6e88a-8ad6-4e3c-a8d4-17e3c5607c21",
+  "verification_match": "75c1c6237566ecff5e80bd96de2faf4fad02036e87f327f42c480d3bdbb6c80b",
+  "verified_ui": ["visitor_username_password_login", "original_initial_assessment_saved", "normal_matching_algorithm", "manual_match_request", "original_counselor_login", "manual_captcha_by_user", "original_workbench_approval", "shared_cycle", "assessment_consent", "baseline_submitted", "feel_submitted", "professional_submitted", "session_2_state_submitted", "original_admin_login", "admin_board_four_submitted_cards"],
+  "user_account_untouched": {"matches": 0, "intakes": 0, "history_unlinked": 0},
+  "tests_passed": 12,
+  "hosting_files_verified": 30,
+  "limitations": ["Alias account login is local adapter only", "Public hosting default domain still needs custom domain for normal browsing", "Closing and timed followups not re-tested in this original-page pass"]
+}

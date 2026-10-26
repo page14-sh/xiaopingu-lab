@@ -218,7 +218,6 @@ function matchCounselors(assessment) {
   })
   .then(function(counselors) {
     if (!Array.isArray(counselors)) return [];
-    if(window.XPG_TEST_JOURNEY?.counselor_id)return counselors.filter(c=>c.id===window.XPG_TEST_JOURNEY.counselor_id).map(c=>({counselor:c,matchScore:100,matchDetails:['独立测试区定向匹配'],filtered:false}));
 
     // 资质等级映射（用于硬性过滤）
     var credRank = { '三级': 1, '二级': 2, '心理治疗师': 3, '社会工作师（初级）': 1, '社会工作师（中级）': 2, '社会工作师（高级）': 3, '精神科医生': 4, '注册心理师': 3, '督导师': 4 };

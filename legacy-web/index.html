@@ -813,7 +813,7 @@
     <div class="consent-section">
       <h3>三、数据存储与安全</h3>
       <ul>
-        <li>数据存储于加密的云端数据库（Supabase），传输过程采用 SSL 加密</li>
+        <li>数据存储于腾讯云 CloudBase，线上传输采用 HTTPS</li>
         <li>我们采取了行业标准的技术措施保护您的数据安全</li>
         <li>您有权随时要求删除您的全部数据，请联系管理员处理</li>
       </ul>
@@ -866,8 +866,8 @@
       <p id="cl-qr-tip" style="font-size:12px;color:#7A7268;margin:8px 0 0">用微信「扫一扫」，关注后自动登录</p>
     </div>
     <details id="cl-alt">
-      <summary style="font-size:12px;color:#A09889;cursor:pointer;margin-bottom:8px">其他登录方式（凭咨询师 ID / 编辑码）</summary>
-      <input id="counselor-login-input" type="text" placeholder="咨询师 ID / 编辑码" autocomplete="off"
+      <summary style="font-size:12px;color:#A09889;cursor:pointer;margin-bottom:8px">其他登录方式（凭本人编辑码）</summary>
+      <input id="counselor-login-input" type="text" placeholder="本人咨询师编辑码" autocomplete="off"
         onkeydown="if(event.key==='Enter')doCounselorLogin()" />
       <input id="counselor-login-password" type="password" placeholder="密码（ID / 编辑码登录可留空）" autocomplete="off" style="display:none" />
       <div class="counselor-login-btns">
@@ -1017,18 +1017,18 @@ function closeCounselorLogin() {
   clearInterval(_clPollTimer);
   document.getElementById('counselor-login-overlay').classList.remove('show');
 }
-function doCounselorLogin() {
-  var val = document.getElementById('counselor-login-input').value.trim();
-  if (!val) { document.getElementById('counselor-login-input').style.borderColor='#E53935'; return; }
-  // 判断是 edit token（不含 -）还是 UUID（含 -）
-  if (val.indexOf('-') >= 0) {
-    // UUID → ?cid=
-    location.href = 'counselor.html?cid=' + encodeURIComponent(val);
-  } else {
-    // 编辑码 → ?edit=
-    location.href = 'counselor.html?edit=' + encodeURIComponent(val);
-  }
+async function doCounselorLogin() {
+  var input=document.getElementById('counselor-login-input'),value=input.value.trim();
+  if(!value){input.style.borderColor='#E53935';return;}
+  try{
+    var password=document.getElementById('counselor-login-password').value;
+    var data=await XPG_API_AUTH.loginCounselor(value,password);
+    localStorage.setItem('xiaopingu_counselor_id',data.counselor.id);
+    if(window.XPG_WEB_AUTH)XPG_WEB_AUTH.setSession('counselor',data.counselor.id,{via:'verified_login'});
+    location.href='counselor.html?panel=1';
+  }catch(error){showToast(error.message||'登录失败','error');}
 }
+
 </script>
 
 <div id="main-app" style="display:none;">
@@ -2305,7 +2305,7 @@ function generateResult() {
   }
 
   // Save assessment data (skip in view mode)
-  var viewToken = (crypto.randomUUID || function(){return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,function(c){var r=Math.random()*16|0;return(c==='x'?r:(r&0x3|0x8)).toString(16);});})();
+  var viewToken = currentViewToken || crypto.randomUUID();
   var assessmentPayload = {
     id:viewToken,
     view_token:viewToken,
@@ -2879,7 +2879,7 @@ function submitMatchApply(){
   var name=nameEl?nameEl.value.trim():'';
   var contactEl=document.getElementById('apply-contact');
   var contact=contactEl?contactEl.value.trim():'';
-  if(!name||!contact){alert('请填写姓名和联系方式');return;}
+  if(!name||!contact){showToast('请填写姓名和联系方式');return;}
   var asid=getAsid();
   var isFallbackAsid = false;
   if(!asid){
@@ -2896,7 +2896,7 @@ function submitMatchApply(){
     window.xiaopinguAsid = asid;
     console.warn('[小平菇] fallback ASID:', asid);
   }
-  if(typeof SUPABASE_CONFIG==='undefined'){ console.error('SUPABASE_CONFIG 未加载'); alert('系统异常，请刷新重试'); return; }
+  if(typeof SUPABASE_CONFIG==='undefined'){ console.error('SUPABASE_CONFIG 未加载'); showToast('系统异常，请刷新重试'); return; }
   var applyBtn=document.getElementById('btn-submit-match');
   if(applyBtn){applyBtn.disabled=true;applyBtn.textContent='提交中...';}
   var applyCid = document.getElementById('apply-cid').value;
@@ -2948,10 +2948,10 @@ function submitMatchApply(){
     });
   }
   doPatch().then(function(){
-    alert('已收到您的申请，咨询师将在1个工作日内联系您');
+    showToast('已收到您的申请，咨询师将在1个工作日内联系您');
   }).catch(function(e){
     console.error('[小平菇] 申请提交失败:', e);
-    alert('提交失败：'+(e.message||'网络错误')+'。请刷新页面后重试，多次失败请截图联系平台');
+    showToast('提交失败：'+(e.message||'网络错误')+'。请刷新页面后重试，多次失败请截图联系平台');
   }).finally(function(){
     if(applyBtn){applyBtn.disabled=false;applyBtn.textContent='提交申请';}
   });
