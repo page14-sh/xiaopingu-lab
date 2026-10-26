@@ -1,0 +1,16 @@
+{
+  "checked_at": "2026-10-26T17:42:08.257Z",
+  "entry": "http://127.0.0.1:8796/journey.html",
+  "run_id": "c7320177-f747-45a9-8961-0694a4a6229e",
+  "visitor_name": "合成测试来访者 c7320177",
+  "counselor_name": "合成测试咨询师 c7320177",
+  "requests": [
+    {
+      "assessment_id": "eb70b492-8c15-4194-b4d9-f1c8bc38b0c7",
+      "status": "pending",
+      "match_id": null
+    }
+  ],
+  "credentials_path": ".private/test-chain/accounts.md",
+  "synthetic": true
+}

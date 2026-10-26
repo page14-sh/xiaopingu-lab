@@ -1,0 +1,8 @@
+{
+  "env": "xpg-demo-d3gzsswtcc3233ea0",
+  "service": "xiaopingu-assessment-preview",
+  "prefix": "xg_preview_7d0a8e2622_",
+  "api_url": "https://xiaopingu-assessment-preview-308810-6-1300577165.sh.run.tcloudbase.com",
+  "local_origin": "http://127.0.0.1:8796",
+  "synthetic_only": true
+}

@@ -1,0 +1,122 @@
+{
+  "checked_at": "2026-10-26T17:43:53.915Z",
+  "verified": 29,
+  "files": [
+    {
+      "path": "a1-dashboard.html",
+      "sha256": "b669699d303f197990b01cd0965fcb45cbbcadd066b7e0af9fa8f090a30586b6"
+    },
+    {
+      "path": "a2-alerts.html",
+      "sha256": "b669699d303f197990b01cd0965fcb45cbbcadd066b7e0af9fa8f090a30586b6"
+    },
+    {
+      "path": "a3-scales.html",
+      "sha256": "b669699d303f197990b01cd0965fcb45cbbcadd066b7e0af9fa8f090a30586b6"
+    },
+    {
+      "path": "admin.html",
+      "sha256": "182e833b9b7e16dacd2721bb1a815fce780f30888ffbfebe33fcda0f157dedfb"
+    },
+    {
+      "path": "assets/v2-portal.css",
+      "sha256": "3422c933e72cbd1352692f981afd13f9058e5cac9d7e8ed776d08e00aa82af9e"
+    },
+    {
+      "path": "assets/v2-portal.js",
+      "sha256": "36e5e7c4ad59b400476053bd46320bd5cbba864de687d03e35cd92c233e48858"
+    },
+    {
+      "path": "assets/xg-config.js",
+      "sha256": "b8b3b43fa9e66b2a6c6e83329358f2fe39d8575f3df9f729af9e46bd9151318c"
+    },
+    {
+      "path": "assets/xg-ui.css",
+      "sha256": "19c42b0fdfd7ae38bd6b5b406a48f40a28b77f7b0a433c38b7ef1d72b6aa0c5c"
+    },
+    {
+      "path": "c1-work.html",
+      "sha256": "b669699d303f197990b01cd0965fcb45cbbcadd066b7e0af9fa8f090a30586b6"
+    },
+    {
+      "path": "c2-fill.html",
+      "sha256": "b669699d303f197990b01cd0965fcb45cbbcadd066b7e0af9fa8f090a30586b6"
+    },
+    {
+      "path": "c3-inbox.html",
+      "sha256": "b669699d303f197990b01cd0965fcb45cbbcadd066b7e0af9fa8f090a30586b6"
+    },
+    {
+      "path": "c4-cst.html",
+      "sha256": "b669699d303f197990b01cd0965fcb45cbbcadd066b7e0af9fa8f090a30586b6"
+    },
+    {
+      "path": "c5-trend.html",
+      "sha256": "b669699d303f197990b01cd0965fcb45cbbcadd066b7e0af9fa8f090a30586b6"
+    },
+    {
+      "path": "c6-switch.html",
+      "sha256": "b669699d303f197990b01cd0965fcb45cbbcadd066b7e0af9fa8f090a30586b6"
+    },
+    {
+      "path": "c7-dims.html",
+      "sha256": "b669699d303f197990b01cd0965fcb45cbbcadd066b7e0af9fa8f090a30586b6"
+    },
+    {
+      "path": "counselor.html",
+      "sha256": "31f02e130191ca01e5fce0b6b60454d4bf89beee69fc5153629dd440d59bfcd5"
+    },
+    {
+      "path": "index.html",
+      "sha256": "2b066bb40d1d8774fdddb0caae2c65fa2f0a89a96c523f7379855ea12c200038"
+    },
+    {
+      "path": "my-assessment.html",
+      "sha256": "56ee448d687a370679ecc4153f18c28d60632d21fc5b5f4ae84f9f3324c2a470"
+    },
+    {
+      "path": "portal.html",
+      "sha256": "b669699d303f197990b01cd0965fcb45cbbcadd066b7e0af9fa8f090a30586b6"
+    },
+    {
+      "path": "session.html",
+      "sha256": "c876d7e8500ec8fa6285412911ac492e57481496985c68c37ec6efcc2e84d832"
+    },
+    {
+      "path": "supabase-config.js",
+      "sha256": "b47c8022d10822fd4d6cc8ea5f8cd050c39a30b92fc39116d68a1af68014a138"
+    },
+    {
+      "path": "v1-consent.html",
+      "sha256": "b669699d303f197990b01cd0965fcb45cbbcadd066b7e0af9fa8f090a30586b6"
+    },
+    {
+      "path": "v2-prompts.html",
+      "sha256": "b669699d303f197990b01cd0965fcb45cbbcadd066b7e0af9fa8f090a30586b6"
+    },
+    {
+      "path": "v3-fill.html",
+      "sha256": "b669699d303f197990b01cd0965fcb45cbbcadd066b7e0af9fa8f090a30586b6"
+    },
+    {
+      "path": "v4-done.html",
+      "sha256": "b669699d303f197990b01cd0965fcb45cbbcadd066b7e0af9fa8f090a30586b6"
+    },
+    {
+      "path": "v5-records.html",
+      "sha256": "b669699d303f197990b01cd0965fcb45cbbcadd066b7e0af9fa8f090a30586b6"
+    },
+    {
+      "path": "v6-follow.html",
+      "sha256": "b669699d303f197990b01cd0965fcb45cbbcadd066b7e0af9fa8f090a30586b6"
+    },
+    {
+      "path": "web-auth.js",
+      "sha256": "5702b6bdd77242681272c7d8b69e1d0d9c9a992c71647fc4fbdbb81a73505ddd"
+    },
+    {
+      "path": "xg.html",
+      "sha256": "b669699d303f197990b01cd0965fcb45cbbcadd066b7e0af9fa8f090a30586b6"
+    }
+  ]
+}

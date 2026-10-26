@@ -12,19 +12,22 @@ xiaopingu-lab/
 └── docs/         # 设计与迁移说明
 ```
 
-## 四评当前实现与联调入口
+## 当前 CloudBase v2 与完整链路体验
 
-四评采用 **CloudRun + CloudBase NoSQL**，与旧PCOMS演示功能并存；`server/`中的Supabase SQL不用于当前四评。下方已有线上地址不代表T01–T21新增四评功能已经发布。
+当前后端采用 CloudRun + CloudBase NoSQL，源码在 `cloudrun/xiaopingu-api/`；当前 Web 发布源码在 `legacy-web/`。正式数据已迁入独立 v2 数据区，旧库保留。当前系统不使用 `server/` 的 Supabase SQL。
 
-- [当前API契约](specs/assessment-foundation/api-contract.md)、[数据/资源/配置契约](specs/assessment-foundation/data-contract.md)
-- [逐项任务状态](specs/assessment-foundation/tasks.md)、[T21隔离联调记录](specs/assessment-foundation/t21-integration.md)
-- [T22发布审查与回滚材料](specs/assessment-foundation/t22-release-readiness.md)：当前NO_GO，完整前端及真实客户端/通道等发布门槛未关闭；任务材料完成不等于可上线。
-- `npm run check:assessment:release`：离线核对既有证据和发布缺口；退出码2表示仍被发布门槛阻断，不执行部署。
-- `npm run demo:assessment`：仅本地合成数据及24个场景验收，不连接云端。
-- `npm run test:cloudbase`：后端本地回归；不等于真实客户端/外部通道验收。
-- `node scripts/t21-isolated-integration.cjs --run`：显式真实数据库联调，固定授权演示环境并使用独立测试集合，完成后清理。
+- [v2 源码与准确接口契约](docs/v2-source-and-api.md)
+- [来访 → 咨询师 → 四评 → 后台操作文档](docs/test-chain-walkthrough.md)
+- `npm run test:journey`：启动本机体验入口 `http://127.0.0.1:8796/journey.html`，数据实际写入 CloudBase 合成测试区。
+- `npm run test:journey:setup`：首次创建测试身份，凭证只保存到 `.private/test-chain/`。
+- `npm run test:cloudbase`：后端回归测试。
+- [数据迁移与运行说明](specs/v2-cutover/operations.md)
 
-## CloudBase 演示环境
+测试入口可切换独立的来访者、咨询师和测试管理员身份，正常走登录、初评、匹配、审批、同意和作答接口。真实通知与 LLM 保持关闭。正式默认域名仍需自定义域名完成浏览器访问配置。
+
+下面保留 v1 演示时期的部署说明，仅作历史参考；不要把旧数据同步脚本或 demo 账号用于当前正式服务。T21/T22 旧证据也描述当时的版本，当前迁移与联调证据分别在 `outputs/migration/` 与 `outputs/test-chain/`。
+
+## 历史 v1 CloudBase 演示环境
 
 - 首页与 API：<https://xiaopingu-api-308810-6-1300577165.sh.run.tcloudbase.com/>
 - 首页内管理中心：<https://xiaopingu-api-308810-6-1300577165.sh.run.tcloudbase.com/admin>
@@ -127,7 +130,7 @@ http://127.0.0.1:8080/index.html
 
 ```text
 账号：counselor
-密码：xiaopingu2026（仅本地文件服务）
+密码：<从本机私有配置读取>（仅本地文件服务）
 ```
 
 小程序端：

@@ -1,11 +1,11 @@
 # 四评当前 API 契约
 
-更新：2026-10-25。以T01–T20当前实现为准；联调证据与未验证项见 [T21报告](t21-integration.md)。本文件列出已实现接口，不表示这些接口已经部署到现有线上服务。原交付包06的SQL/Supabase接口示意不作为运行契约。
+更新：2026-10-25。以T01–T20当前实现为准；联调证据与未验证项见 [T21报告](t21-integration.md)。本文件描述原生接口；迁移后的已部署登录、初评兼容、审批与运营看板补充见 [v2 源码与接入契约](../../docs/v2-source-and-api.md)。原交付包06的SQL/Supabase接口示意不作为运行契约。
 
 ## 公共约定
 
 - 根路径 `/v1/xg`，JSON请求/响应；所有敏感响应及错误使用 `Cache-Control: no-store`。
-- 人员接口使用 `Authorization: Bearer <服务端会话>`；会话必须aud=xg-assessment、demo=false，且角色/认证方式匹配。来访需可信微信身份，咨询师需有效审批身份。
+- 人员接口使用 `Authorization: Bearer <服务端会话>`；会话必须aud=xg-assessment、demo=false，且角色/认证方式匹配。来访支持可信微信身份或独立填写凭证身份（intake-receipt）；旧评估链接只授予历史读取权限。咨询师需有效审批身份。
 - 服务接口使用独立 `XPG_MATCH_SERVICE_SECRET` 或 `XPG_SCHEDULER_SECRET`；两者不能相同，均至少32字节，不能用普通管理员会话代替。
 - 请求字段采用白名单，身份、归属、计分、版本依据均由服务端决定。标识只接受1–128位字母、数字、下划线、连字符。
 - 业务错误形如 `{"error":{"code":"XG_...","message":"..."}}`；不返回SDK异常、完整请求头、环境变量或通道原始响应。

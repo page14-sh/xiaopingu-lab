@@ -8,6 +8,8 @@
     "test:legacy-security": "node --test scripts/legacy-security.test.cjs scripts/legacy-gateway.test.cjs scripts/followup-adapter.test.cjs scripts/web-auth-boundary.test.cjs",
     "sync:cloudbase:data": "node scripts/sync-cloudbase-data.js",
     "demo:assessment": "node scripts/verify-assessment-demo.cjs",
-    "check:assessment:release": "node scripts/check-assessment-release.cjs"
+    "check:assessment:release": "node scripts/check-assessment-release.cjs",
+    "test:journey": "node scripts/test-chain/server.cjs",
+    "test:journey:setup": "node scripts/test-chain/setup.cjs"
   }
 }

@@ -1,0 +1,14 @@
+{
+  "checked_at": "2026-10-26T17:34:29.285Z",
+  "service": "xiaopingu-assessment",
+  "version": "004",
+  "board_status": 200,
+  "counselors_total": 66,
+  "cycles": 0,
+  "overview": {
+    "events_total": 0,
+    "submitted_total": 0,
+    "cycles_total": 0
+  },
+  "real_business_writes": 0
+}

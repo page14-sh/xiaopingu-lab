@@ -41,7 +41,8 @@ function createPortalHttp({portal,signSession,sessionSecret,readJson,sendJson}){
    if(p==='/v1/xg/portal/history'&&req.method==='GET'){
     const q=Object.fromEntries(url.searchParams);fields(q,['assessment_id','source','after','limit']);
     sendJson(res,200,await history(portal,session,{...q,limit:q.limit===undefined?50:Number(q.limit)}));
-   }else if(p==='/v1/xg/portal/cases'&&req.method==='GET')sendJson(res,200,await portal.cases(session));
+   }else if(p==='/v1/xg/portal/board'&&req.method==='GET')sendJson(res,200,await portal.board(session));
+   else if(p==='/v1/xg/portal/cases'&&req.method==='GET')sendJson(res,200,await portal.cases(session));
    else if(p==='/xg/counselor-context'&&req.method==='GET')sendJson(res,200,await portal.context(session,url.searchParams.get('asid')||url.searchParams.get('assessment_id')));
    else if(p==='/v1/xg/portal/migration'&&req.method==='GET'){
     if(session.role!=='admin')deny();const rows=await portal.scan(C.legacyRecords);sendJson(res,200,{archived_records:rows.length,unlinked_records:rows.filter(x=>x.link_status!=='linked').length,runs:await portal.scan(C.migrationRuns)});

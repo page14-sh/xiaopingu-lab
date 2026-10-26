@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>小平菇 · 咨询师档案录入</title>
-<script src="web-auth.js?v=20261025-v2"></script>
+<script src="web-auth.js?v=20261027-chain"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   html { scroll-behavior: smooth; }
@@ -1237,9 +1237,9 @@
         </div>
       </div>
       <div class="panel-login" id="panel-login" style="display:none;">
-        <p style="font-size:13px;color:#6B635A;margin-bottom:10px;">输入你的咨询师 ID 查看匹配申请</p>
-        <input type="text" id="panel-cid-input" placeholder="咨询师 ID（UUID）">
-        <button class="req-btn req-btn-primary" onclick="loadPanelByInput()">查询</button>
+        <p style="font-size:13px;color:#6B635A;margin-bottom:10px;">使用本人编辑码登录后查看匹配申请</p>
+        <input type="text" id="panel-cid-input" placeholder="本人编辑码（不是咨询师 ID）" autocomplete="off">
+        <button class="req-btn req-btn-primary" onclick="loadPanelByInput()">登录工作台</button>
       </div>
     </div>
   </div>
@@ -1264,7 +1264,7 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="supabase-config.js?v=20261025-v2"></script>
+<script src="supabase-config.js?v=20261027-chain"></script>
 <script>
 var currentStep = 1;
 var currentEditToken = null;
@@ -1747,8 +1747,8 @@ function enterEditMode(token) {
     showToast('档案已加载，修改后点击提交即可保存。');
     // 同时加载咨询师工作台面板
     panelCid = data.id;
-    showPanel();
-    loadPanelRequests();
+    if(data.review_status==='approved'&&data.is_active===true){showPanel();loadPanelRequests();}
+    else document.getElementById('panel-area').style.display='none';
   }).catch(function(e) {
     showToast('加载失败，请稍后重试。');
   });
@@ -2317,57 +2317,23 @@ function loadPanelIdentity() {
     .catch(function() { updatePanelIdentity(null); });
 }
 
-// 初始化面板：URL 参数 or localStorage
-(function initPanel() {
-  var params = new URLSearchParams(location.search);
-  var cid = params.get('cid');
-  if (resolveLocalCounselorAccount(cid)) {
-    enterLocalCounselorAccount(cid);
-    return;
-  }
-  if (cid) {
-    panelCid = cid;
-    localStorage.setItem('xiaopingu_counselor_id', cid);
-    if (window.XPG_WEB_AUTH) {
-      XPG_WEB_AUTH.setSession('counselor', cid, { via: 'cid' });
-    }
-    // 隐藏注册表单，只显示工作台面板
-    if (document.getElementById('form_area')) document.getElementById('form_area').style.display = 'none';
-    // 页面标题改为工作台
-    document.querySelector('.page-header .brand-name').textContent = '咨询师工作台';
-    showPanel();
-    loadPanelIdentity();
-    loadPanelRequests();
-    return;
-  }
-  // 如果在编辑模式，尝试从 localStorage 获取
-  if (currentEditToken) {
-    var stored = localStorage.getItem('xiaopingu_counselor_id');
-    if (stored) {
-      panelCid = stored;
-      if (window.XPG_WEB_AUTH) {
-        XPG_WEB_AUTH.setSession('counselor', stored, { via: 'localStorage' });
-      }
-      showPanel();
-      loadPanelIdentity();
-      loadPanelRequests();
-      return;
-    }
-  }
-  if (window.XPG_WEB_AUTH) {
-    var webSubject = XPG_WEB_AUTH.getSubject('counselor');
-    if (webSubject) {
-      panelCid = webSubject;
-      showPanel();
-      loadPanelIdentity();
-      loadPanelRequests();
-      return;
-    }
-  }
-  // 如果有 ?panel=1 但无 cid，显示输入框
-  if (params.get('panel') === '1') {
-    showPanelLogin();
-  }
+// Only the backend session establishes counselor identity; an ID selects no permissions.
+(async function initPanel() {
+  var params=new URLSearchParams(location.search);
+  // Editing links perform their own credential exchange; do not race a cached identity.
+  if(params.get('edit'))return;
+  if(!params.get('cid')&&!params.get('panel')&&!localStorage.getItem('xiaopingu_counselor_token'))return;
+  var token=localStorage.getItem('xiaopingu_counselor_token');
+  if(!token){showPanelLogin();return;}
+  try{
+    var response=await fetch(SUPABASE_URL+'/v1/xg/me',{headers:{Authorization:'Bearer '+token}});
+    if(!response.ok)throw new Error('请使用本人编辑码重新登录');
+    var me=await response.json();if(me.role!=='counselor')throw new Error('请使用咨询师身份');
+    if(params.get('cid')&&params.get('cid')!==me.id)throw new Error('链接中的咨询师与当前账号不同，请重新登录对应账号');
+    panelCid=me.id;localStorage.setItem('xiaopingu_counselor_id',me.id);
+    if(document.getElementById('form_area'))document.getElementById('form_area').style.display='none';
+    document.querySelector('.page-header .brand-name').textContent='咨询师工作台';showPanel();loadPanelIdentity();loadPanelRequests();
+  }catch(e){showPanelLogin();showToast(e.message);}
 })();
 
 function showPanel() {
@@ -2383,19 +2349,16 @@ function showPanelLogin() {
   document.getElementById('panel-login').style.display = 'block';
 }
 
-function loadPanelByInput() {
-  var input = document.getElementById('panel-cid-input').value.trim();
-  if (!input) return;
-  if (enterLocalCounselorAccount(input)) return;
-  panelCid = input;
-  localStorage.setItem('xiaopingu_counselor_id', input);
-  if (window.XPG_WEB_AUTH) {
-    XPG_WEB_AUTH.setSession('counselor', input, { via: 'manual_input' });
-  }
-  document.getElementById('panel-login').style.display = 'none';
-  document.getElementById('panel-content').style.display = 'block';
-  loadPanelIdentity();
-  loadPanelRequests();
+async function loadPanelByInput() {
+  var input=document.getElementById('panel-cid-input').value.trim();if(!input)return;
+  try{
+    var data=await XPG_API_AUTH.loginCounselor(input);panelCid=data.counselor.id;
+    localStorage.setItem('xiaopingu_counselor_id',panelCid);
+    if(window.XPG_WEB_AUTH)XPG_WEB_AUTH.setSession('counselor',panelCid,{via:'verified_edit_code'});
+    document.getElementById('panel-login').style.display='none';document.getElementById('panel-content').style.display='block';
+    if(document.getElementById('form_area'))document.getElementById('form_area').style.display='none';
+    showPanel();loadPanelIdentity();loadPanelRequests();
+  }catch(e){showToast(e.message||'登录失败');}
 }
 
 // ========== 面板 Tab 切换 ==========

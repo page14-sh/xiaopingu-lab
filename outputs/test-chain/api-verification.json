@@ -1,0 +1,24 @@
+{
+  "synthetic": true,
+  "prefix": "xg_preview_7d0a8e2622_",
+  "run_id": "134964a8-1127-4bb4-aa42-8c967b269884",
+  "assessment_id": "35768f39-7a91-450d-84bf-47bf1665abaf",
+  "match_id": "507aa218092e2e33ac88a74f294abc2104131bf22592334ba86a45afef987fd5",
+  "checks": [
+    "intake_and_matching_request_visible_to_assigned_counselor",
+    "counselor_approval_creates_cycle",
+    "baseline_session_one_and_two_cards_and_idempotent_submissions",
+    "visitor_score_redaction_and_admin_board_permissions",
+    "admin_observes_exact_scores_and_first_session_not_applicable",
+    "close_end_evaluation_and_followup_due_date_preserved",
+    "admin_board_links_counselor_and_eight_submitted_cards"
+  ],
+  "passed": true,
+  "results": {
+    "baseline_total": 49,
+    "state_session_two_total": 42,
+    "first_session_pro_total": null,
+    "submitted_cards": 8
+  },
+  "checked_at": "2026-10-26T17:27:10.029Z"
+}

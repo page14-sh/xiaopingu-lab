@@ -46,3 +46,13 @@ test('approval creates a native cycle exactly once; archived approved status doe
  const approved=await f.portal.patchIntake(pending,{match_request_status:'approved'},{role:'counselor',principal:p});assert.ok(approved.match_id);
  const repeated=await f.portal.patchIntake(approved,{match_request_status:'approved'},{role:'counselor',principal:p});assert.equal(repeated.match_id,approved.match_id);assert.equal(f.source.snapshot()[C.matches].size,1);
 });
+test('operations board is admin-only and counts all statuses without exposing answers or credentials',async()=>{
+ const f=fixture(),i=await intake(f),cid=randomUUID();await f.portal.createCounselor({id:cid,name:'Synthetic counselor',edit_token:'do-not-expose',is_active:true,review_status:'approved'});
+ const pending=await f.portal.patchIntake(i.row,{match_request_cid:cid},{role:'visitor',principal:i.principal});
+ const counselor={role:'counselor',subject:cid,aud:'xg-assessment',auth_method:'counselor-edit',demo:false,exp:Date.now()+60000};
+ const approved=await f.portal.patchIntake(pending,{match_request_status:'approved'},{role:'counselor',principal:counselor});
+ for(const [n,status]of ['submitted','started','abandoned'].entries())await f.source.transaction(tx=>tx.put(C.events,'event'+n,{event_id:'event'+n,match_id:approved.match_id,status,raw_answers:{s1:9},started_at:'2026-10-27T00:00:00Z'}));
+ const admin={role:'admin',subject:'admin',aud:'xg-assessment',auth_method:'admin-password',demo:false,exp:Date.now()+60000};
+ assert.equal((await f.request('/v1/xg/portal/board',null,i.principal)).status,403);assert.equal((await f.request('/v1/xg/portal/board',null,counselor)).status,403);
+ const r=await f.request('/v1/xg/portal/board',null,admin);assert.equal(r.status,200);assert.equal(r.output.overview.events_total,3);assert.equal(r.output.cases[0].card_submitted,1);assert.equal(r.output.cases[0].card_abandoned,1);assert.equal(r.output.cases[0].counselor_name,'Synthetic counselor');assert.doesNotMatch(JSON.stringify(r.output),/raw_answers|do-not-expose|credential/);
+});

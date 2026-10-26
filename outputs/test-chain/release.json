@@ -1,0 +1,46 @@
+{
+  "checked_at": "2026-10-26T17:40:06.058662+00:00",
+  "git": {
+    "branch": "codex/local-demo-modules",
+    "main_already_merged": true,
+    "upstream_fix_integrated": "b0fcc54"
+  },
+  "deployments": {
+    "xiaopingu-assessment": {
+      "version": "004",
+      "runtime_files_matched": 56,
+      "traffic_percent": 100
+    },
+    "xiaopingu-assessment-preview": {
+      "version": "004",
+      "runtime_files_matched": 56,
+      "traffic_percent": 100
+    }
+  },
+  "tests": {
+    "backend": 523,
+    "compatibility": 13,
+    "synthetic_cloud_chain": "passed; 8 submitted cards; baseline 49, state 42",
+    "frontend_regressions": 3,
+    "published_assets_verified": 29
+  },
+  "production_audit": {
+    "counselors": 66,
+    "approved": 61,
+    "pending": 5,
+    "matching_requests": 27,
+    "missing_counselor_references": 0
+  },
+  "browser": {
+    "entry": "passed",
+    "prepare_test_request": "passed",
+    "counselor_pending_list": "passed",
+    "approval_confirmation": "waiting_for_user_native_dialog",
+    "admin_click_flow": "not_completed_while_dialog_blocks_browser"
+  },
+  "real_clinical_writes": 0,
+  "limits": [
+    "Original homepage CAPTCHA requires user action",
+    "Public default hosting domains still require a custom domain for normal browser access"
+  ]
+}

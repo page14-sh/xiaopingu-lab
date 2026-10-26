@@ -1,12 +1,4 @@
-// ========== Supabase 配置 ==========
-// 实验室数据收集 + 咨询师精准匹配
-//
-// 启用步骤：
-// 1. 在 https://supabase.com 创建免费项目
-// 2. 在 SQL Editor 中执行下方建表 SQL
-// 3. 填入您的 SUPABASE_URL 和 SUPABASE_ANON_KEY
-// 4. 将 enableDataCollection 改为 true
-
+// CloudBase v2 REST compatibility configuration. No Supabase deployment is used.
 var SUPABASE_CONFIG = {
   enableDataCollection: true,
   url: 'https://xiaopingu-assessment-308810-6-1300577165.sh.run.tcloudbase.com',
@@ -226,6 +218,7 @@ function matchCounselors(assessment) {
   })
   .then(function(counselors) {
     if (!Array.isArray(counselors)) return [];
+    if(window.XPG_TEST_JOURNEY?.counselor_id)return counselors.filter(c=>c.id===window.XPG_TEST_JOURNEY.counselor_id).map(c=>({counselor:c,matchScore:100,matchDetails:['独立测试区定向匹配'],filtered:false}));
 
     // 资质等级映射（用于硬性过滤）
     var credRank = { '三级': 1, '二级': 2, '心理治疗师': 3, '社会工作师（初级）': 1, '社会工作师（中级）': 2, '社会工作师（高级）': 3, '精神科医生': 4, '注册心理师': 3, '督导师': 4 };

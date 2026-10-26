@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
-  <script src="supabase-config.js?v=20261025-v2"></script>
-  <script src="web-auth.js?v=20261025-v2"></script>
+  <script src="supabase-config.js?v=20261027-chain"></script>
+  <script src="web-auth.js?v=20261027-chain"></script>
   <title>小平菇 · 数据管理后台</title>
   <style>
     * { box-sizing: border-box; margin:0; padding:0; }
@@ -570,7 +570,7 @@
         📊 运营看板
       </div>
       <div class="tab" data-tab="counselors" onclick="switchTab('counselors')">
-        👨⚕️ 入驻审批
+        👨⚕️ 咨询师资料 / 入驻审批
       </div>
       <div class="tab" data-tab="assessments" onclick="switchTab('assessments')">
         📋 来访者评估
@@ -659,8 +659,8 @@
       <!-- 数据看板 -->
       <div id="content-dashboard">
         <div class="stat-row">
-          <div class="stat-card"><div class="num" id="dash-counselors">-</div><div class="label">咨询师总数</div></div>
-          <div class="stat-card"><div class="num" id="dash-pending">-</div><div class="label">⏳ 待审入驻</div></div>
+          <button type="button" class="stat-card" onclick="openCounselorDirectory('')" aria-label="查看全部咨询师详情"><div class="num" id="dash-counselors">-</div><div class="label">咨询师总数 · 查看全部</div></button>
+          <button type="button" class="stat-card" onclick="openCounselorDirectory('pending')"><div class="num" id="dash-pending">-</div><div class="label">待审入驻 · 查看</div></button>
           <div class="stat-card"><div class="num" id="dash-assessments">-</div><div class="label">评估总数</div></div>
           <div class="stat-card"><div class="num" id="dash-avg-score">-</div><div class="label">平均症状评分</div></div>
           <div class="stat-card"><div class="num" id="dash-severe">-</div><div class="label">重度评估</div></div>
@@ -985,7 +985,7 @@
     function onDataLoaded() {
       // 从评估数据中提取匹配申请
       allData['match-applications'] = (allData.assessments || []).filter(function(a) {
-        return a.match_request_name;
+        return a.match_request_cid || a.current_request_id || a.match_request_name;
       });
       updateStats();
       renderDashboard();
@@ -1068,6 +1068,7 @@
       } catch (e) {
         console.error('加载数据失败:', e);
         const msg = (e && e.message) ? e.message : '未知错误';
+        if(/HTTP (401|403)/.test(msg)){doLogout();document.getElementById('login-error').textContent='会话失效或权限不足，请重新登录。';}
         // 隐藏 loading spinner，显示错误提示
         const tbody = document.getElementById('tbody-' + type);
         if (tbody) {
@@ -1105,7 +1106,7 @@
 
       if (tab === 'dashboard') renderDashboard();
       else if (tab === 'xg') loadXgBoard();
-      else if (tab === 'match-applications') { allData['match-applications'] = (allData.assessments || []).filter(function(a) { return a.match_request_name; }); filterData(); }
+      else if (tab === 'match-applications') { allData['match-applications'] = (allData.assessments || []).filter(function(a) { return a.match_request_cid || a.current_request_id || a.match_request_name; }); filterData(); }
     }
 
     // ========== 过滤数据 ==========
@@ -1123,7 +1124,7 @@
 
           if (credFilter && item.credential_level !== credFilter) match = false;
         if (activeFilter && String(item.is_active) !== activeFilter) match = false;
-        if (reviewFilter && item.review_status !== reviewFilter) match = false;
+        if (reviewFilter && (item.review_status||'pending') !== reviewFilter) match = false;
         if (search) {
             const text = [item.name, item.credential_level, item.city, item.bio_short].filter(Boolean).join(' ').toLowerCase();
             if (!text.includes(search)) match = false;
@@ -1358,13 +1359,14 @@
       var cName = '-';
       if (a.match_request_cid && allData.counselors) {
         var found = allData.counselors.find(function(c) { return c.id === a.match_request_cid; });
-        if (found) cName = found.name || '未知';
+        if (found) cName = found.name || '未填写姓名'; else cName='关联咨询师不在当前库中，需核对';
       }
 
       // 已选咨询师
       var selectedName = '-';
-      if (a.selected_counselor_name) {
-        selectedName = '<span class="tag tag-green">✓ ' + a.selected_counselor_name + '</span>';
+      var selected=allData.counselors.find(c=>c.id===(a.selected_counselor_id||a.match_request_cid));
+      if (selected || a.selected_counselor_name) {
+        selectedName = '<span class="tag tag-green">✓ ' + escapeHtml(selected?.name||a.selected_counselor_name) + '</span>';
       }
 
       var severityTag = a.severity === '重度' ? '<span class="tag tag-red">' + a.severity + '</span>'
@@ -1403,7 +1405,7 @@
         '<td><code style="font-size:11px;color:#6B635A">' + (a.id ? a.id.substring(0,8) : '-') + '</code></td>' +
         '<td><strong>' + (a.match_request_name || a.visitor_name || '匿名') + '</strong></td>' +
         '<td>' + (a.match_request_contact || '-') + '</td>' +
-        '<td><span class="tag tag-blue">' + cName + '</span></td>' +
+        '<td><span class="tag tag-blue">' + escapeHtml(cName) + '</span></td>' +
         '<td>' + selectedName + '</td>' +
         '<td><strong>' + (a.total_score || 0) + '</strong></td>' +
         '<td>' + severityTag + '</td>' +
@@ -1579,7 +1581,7 @@
         if (item.has_violation === '是') {
           html += '<div style="margin-bottom:10px">'
             + '<p style="font-size:12px;color:#856404;margin:0 0 4px">违法记录 / 纪律处分：<strong>是</strong></p>'
-            + '<p style="font-size:13px;color:#333;background:#fff;padding:8px 10px;border-radius:6px;margin:0;white-space:pre-wrap">' + (item.violation_detail || '（未填写说明）') + '</p>'
+            + '<p style="font-size:13px;color:#333;background:#fff;padding:8px 10px;border-radius:6px;margin:0;white-space:pre-wrap">' + escapeHtml((item.violation_detail || '（未填写说明）')) + '</p>'
             + '</div>';
         } else {
           html += '<p style="font-size:12px;color:#6c757d;margin:0 0 6px">违法记录 / 纪律处分：无</p>';
@@ -1587,7 +1589,7 @@
         if (item.has_incident === '是') {
           html += '<div>'
             + '<p style="font-size:12px;color:#856404;margin:0 0 4px">咨询事故 / 正式投诉：<strong>是</strong></p>'
-            + '<p style="font-size:13px;color:#333;background:#fff;padding:8px 10px;border-radius:6px;margin:0;white-space:pre-wrap">' + (item.incident_detail || '（未填写说明）') + '</p>'
+            + '<p style="font-size:13px;color:#333;background:#fff;padding:8px 10px;border-radius:6px;margin:0;white-space:pre-wrap">' + escapeHtml((item.incident_detail || '（未填写说明）')) + '</p>'
             + '</div>';
         } else {
           html += '<p style="font-size:12px;color:#6c757d;margin:0">咨询事故 / 正式投诉：无</p>';
@@ -1605,9 +1607,9 @@
         html += '<div class="detail-grid" style="margin-bottom:12px"><div class="detail-item">'
           + '<div class="detail-label">📞 匹配申请信息</div>'
           + '<div class="detail-value" style="font-size:13px;line-height:1.8">'
-          + '<strong>申请者：</strong>' + (item.match_request_name || '-') + '<br>'
-          + '<strong>联系方式：</strong>' + (item.match_request_contact || '-') + '<br>'
-          + '<strong>意向咨询师：</strong>' + mcName + '<br>'
+          + '<strong>申请者：</strong>' + escapeHtml((item.match_request_name || '-')) + '<br>'
+          + '<strong>联系方式：</strong>' + escapeHtml((item.match_request_contact || '-')) + '<br>'
+          + '<strong>意向咨询师：</strong>' + escapeHtml(mcName) + '<br>'
           + '<strong>申请状态：</strong>' + (item.match_request_status === 'approved' ? '✅ 已通过' : item.match_request_status === 'rejected' ? '❌ 已拒绝' : item.match_request_status === 'contacted' ? '📞 已联系' : '⏳ 待处理') + '<br>'
           + '<strong>申请时间：</strong>' + formatTime(item.updated_at || item.created_at)
           + '</div></div></div>';
@@ -1616,16 +1618,18 @@
       html += '<div class="detail-grid">';
       const skipKeys = ['has_violation','violation_detail','has_incident','incident_detail','needs_deep_review','match_request_name','match_request_contact','match_request_cid','match_request_status'];
       Object.keys(item).forEach(key => {
-        if (key === 'id') return;
+        if (['id','_id','view_token','edit_token','credential_hash','claim_hash'].includes(key)||key.startsWith('migration_')) return;
         if (type === 'counselors' && skipKeys.includes(key)) return;
         let value = item[key];
         if (value === null || value === undefined || value === '') return; // 跳过空值
-        if (Array.isArray(value)) { value = value.join(', '); if (!value) return; }
+        if(key==='photo_daily'||key==='photo_license'){value=Array.isArray(value)?'已上传 '+value.length+' 张照片':'已上传';}
+        else if (Array.isArray(value)) { value = value.join(', '); if (!value) return; }
+        else if(typeof value==='object')value=JSON.stringify(value);
         if (key === 'created_at' || key === 'updated_at') value = formatTime(value);
         if (key === 'crisis_level') value = crisisLabel(value);
         html += '<div class="detail-item">' +
-          '<div class="detail-label">' + formatLabel(key) + '</div>' +
-          '<div class="detail-value">' + value + '</div>' +
+          '<div class="detail-label">' + escapeHtml(formatLabel(key)) + '</div>' +
+          '<div class="detail-value">' + escapeHtml(value) + '</div>' +
         '</div>';
       });
       html += '</div>';
@@ -2072,146 +2076,37 @@
     var _xgData = { cases: null, metrics: null, loadedAt: 0 };
 
     async function loadXgBoard(force) {
-      if (!force && _xgData.cases && _xgData.metrics) { renderXgBoard(); return; }
-      const vBody = document.getElementById('xg-visitor-body');
-      const cBody = document.getElementById('xg-counselor-body');
-      if (vBody) vBody.innerHTML = '<div class="mini-empty">加载中…</div>';
-      if (cBody) cBody.innerHTML = '<div class="mini-empty">加载中…</div>';
-      try {
-        const [r1, r2] = await Promise.all([
-          fetch(SUPABASE_URL + '/xg/cases'),
-          fetch(SUPABASE_URL + '/xg/stats')
-        ]);
-        if (!r1.ok) throw new Error('个案列表 HTTP ' + r1.status);
-        if (!r2.ok) throw new Error('质量统计 HTTP ' + r2.status);
-        _xgData.cases = ((await r1.json()).cases) || [];
-        _xgData.metrics = ((await r2.json()).metrics) || {};
-        _xgData.loadedAt = Date.now();
-        renderXgBoard();
-      } catch (e) {
-        const msg = (e && e.message) ? e.message : '未知错误';
-        if (vBody) vBody.innerHTML = '<div class="mini-empty" style="color:#c00;">加载失败：' + escapeHtml(msg) + '</div>';
-        if (cBody) cBody.innerHTML = '<div class="mini-empty" style="color:#c00;">加载失败：' + escapeHtml(msg) + '</div>';
-        showToast('四评数据加载失败：' + msg, 'error');
-      }
+      const vBody=document.getElementById('xg-visitor-body'),cBody=document.getElementById('xg-counselor-body');
+      if(!force&&_xgData.cases&&_xgData.metrics){renderXgBoard();return;}
+      for(const box of [vBody,cBody])if(box)box.textContent='加载中…';
+      try{
+        const responses=await Promise.all([fetch(SUPABASE_URL+'/v1/xg/portal/board'),fetch(SUPABASE_URL+'/v1/xg/admin/stats')]);
+        const data=await Promise.all(responses.map(r=>r.json()));
+        responses.forEach((r,i)=>{if(!r.ok)throw new Error(data[i].error?.message||data[i].message||'请求失败 HTTP '+r.status);});
+        _xgData={cases:data[0].cases,metrics:data[1].metrics,overview:data[0].overview,loadedAt:Date.now()};renderXgBoard();
+      }catch(e){for(const box of [vBody,cBody])if(box)box.textContent='加载失败：'+e.message;showToast('四评数据加载失败：'+e.message,'error');}
     }
-
-    function renderXgBoard() {
-      renderXgMetrics(_xgData.metrics || {});
-      renderXgVisitor(_xgData.cases || []);
-      renderXgCounselor(_xgData.cases || []);
-      const note = document.getElementById('xg-note');
-      if (note) {
-        note.innerHTML = '数据来源：四评系统同一数据库（个案开关 / 作答事件 / 预警）。'
-          + (_xgData.loadedAt ? ' 最近刷新：' + new Date(_xgData.loadedAt).toLocaleString('zh-CN') : '')
-          + '　指标口径：率值类指标需样本 ≥ 5 条才计算，否则显示「样本不足」。';
-      }
+    function renderXgBoard(){
+      const box=document.getElementById('xg-metrics'),metrics=_xgData.metrics||{};
+      const titles={fill_duration_ms:'填卡用时',abandon_rate:'放弃率',low_quality_rate:'低质量比例',remind_action_rate:'提醒有动作率',alert_handle_time_h:'提醒处理用时',follow_return_rate:'随访回收率',llm_success_rate:'模型成功率'};
+      box.replaceChildren();
+      for(const [key,label] of Object.entries(titles)){const m=metrics[key],card=document.createElement('div');card.className='metric-card';const value=document.createElement('div');value.className='mv';value.textContent=!m||m.status!=='available'?(m?.status==='unavailable'?'暂不可统计':'样本不足'):m.value!==undefined?Math.round(m.value*100)+'%':m.p50!==undefined?String(m.p50)+(m.unit||''): '可查看';const title=document.createElement('div');title.className='ml';title.textContent=label;card.append(value,title);box.append(card);}
+      const count=document.createElement('p');count.textContent='新版周期 '+(_xgData.overview?.cycles_total||0)+' 个，作答事件 '+(_xgData.overview?.events_total||0)+' 条，已提交 '+(_xgData.overview?.submitted_total||0)+' 条。';box.append(count);
+      renderXgVisitor(_xgData.cases||[]);renderXgCounselor(_xgData.cases||[]);
+      document.getElementById('xg-note').textContent='来源：v2 咨询周期和作答事件。小样本统计按不同来访者人数保护；单个测试个案可点击查看具体结果。旧版历史不混入新版计分。 最近刷新：'+new Date(_xgData.loadedAt).toLocaleString('zh-CN');
     }
-
-    function pctText(v) { return (v == null) ? null : Math.round(v * 100) + '%'; }
-    function msText(v) {
-      if (v == null) return null;
-      if (v >= 60000) return (v / 60000).toFixed(1) + ' 分';
-      return Math.round(v / 1000) + ' 秒';
+    function renderXgVisitor(cases){
+      const box=document.getElementById('xg-visitor-body');box.replaceChildren();if(!cases.length){box.textContent='暂无新版咨询周期。咨询师审批通过匹配申请后出现。';return;}
+      const table=document.createElement('table');table.className='mini-table';table.innerHTML='<thead><tr><th>来访者</th><th>咨询师</th><th>状态</th><th>已提交</th><th>操作</th></tr></thead>';const body=document.createElement('tbody');
+      for(const x of cases){const tr=document.createElement('tr');for(const text of [x.visitor_name,x.counselor_name,x.status==='closed'?'已结案':'进行中',x.card_submitted]){const td=document.createElement('td');td.textContent=text;tr.append(td);}const td=document.createElement('td'),a=document.createElement('a');a.textContent='查看四评记录与结果';a.href='a1-dashboard.html?match_id='+encodeURIComponent(x.match_id);td.append(a);tr.append(td);body.append(tr);}table.append(body);box.append(table);
     }
-
-    function renderXgMetrics(m) {
-      const box = document.getElementById('xg-metrics');
-      if (!box) return;
-      const ov = m.overview || {};
-      const fd = m.fill_duration_ms;
-      const ah = m.alert_handle_time_h;
-      const cards = [
-        {
-          v: fd ? msText(fd.p50) : null,
-          sub: fd ? 'P90 ' + msText(fd.p90) : '',
-          l: '填卡用时（中位数）', h: '样本 ' + (fd ? fd.n : 0) + ' 份已提交问卷'
-        },
-        { v: pctText(m.abandon_rate), sub: '', l: '放弃率', h: '开始填写后中途放弃的比例', bad: (m.abandon_rate || 0) >= 0.3 },
-        { v: pctText(m.low_quality_rate), sub: '', l: '敷衍填写率', h: '被判为低质量的提交占比', bad: (m.low_quality_rate || 0) >= 0.3 },
-        { v: pctText(m.remind_action_rate), sub: '', l: '提醒有动作率', h: '中/高预警后有处理动作的比例', bad: (m.remind_action_rate != null && m.remind_action_rate < 0.5) },
-        {
-          v: ah ? ah.p50 + ' 小时' : null,
-          sub: ah ? 'P90 ' + ah.p90 + ' 小时' : '',
-          l: '预警处理时长', h: '样本 ' + (ah ? ah.n : 0) + ' 条已关闭预警'
-        },
-        {
-          v: (m.follow_return_rate && (m.follow_return_rate['1m'] != null || m.follow_return_rate['3m'] != null))
-            ? [m.follow_return_rate['1m'], m.follow_return_rate['3m']].map(x => x == null ? '—' : Math.round(x * 100) + '%').join(' / ')
-            : null,
-          sub: '', l: '随访回收率', h: '1 个月 / 3 个月'
-        },
-        { v: pctText(m.llm_success_rate), sub: '', l: '智能解读成功率', h: 'LLM 解读任务完成占比' },
-        {
-          v: (ov.events_total != null) ? ov.events_total : null,
-          sub: ov.submitted_total != null ? ('已提交 ' + ov.submitted_total) : '',
-          l: '作答事件总数', h: '含开始/提交/放弃三类事件'
-        },
-        {
-          v: (ov.alerts_open != null) ? ov.alerts_open : null,
-          sub: ov.alerts_total != null ? ('累计 ' + ov.alerts_total) : '',
-          l: '🔔 未关闭预警', h: '需跟进的预警条数', bad: (ov.alerts_open || 0) > 0
-        }
-      ];
-      box.innerHTML = cards.map(cd => {
-        const na = (cd.v == null || cd.v === '');
-        return '<div class="metric-card' + (na ? ' na' : (cd.bad ? ' bad' : '')) + '">'
-          + '<div class="mv">' + (na ? '样本不足' : escapeHtml(String(cd.v))) + (cd.sub ? ' <small>' + escapeHtml(cd.sub) + '</small>' : '') + '</div>'
-          + '<div class="ml">' + cd.l + '</div>'
-          + '<div class="mh">' + cd.h + '</div>'
-          + '</div>';
-      }).join('');
+    function renderXgCounselor(cases){
+      const box=document.getElementById('xg-counselor-body');box.replaceChildren();
+      const button=document.createElement('button');button.className='btn btn-primary';button.textContent='查看库内全部咨询师（'+allData.counselors.length+'）';button.onclick=()=>openCounselorDirectory('');box.append(button);
+      for(const counselor of allData.counselors){const own=cases.filter(x=>x.counselor_id===counselor.id);if(!own.length)continue;const row=document.createElement('p'),b=document.createElement('button');b.className='action-btn view';b.textContent=counselor.name||'未填写姓名';b.onclick=()=>viewDetail('counselors',counselor.id);row.append(b,document.createTextNode(' · '+own.length+' 个新版周期 · 已提交 '+own.reduce((sum,x)=>sum+x.card_submitted,0)+' 张卡'));box.append(row);}
     }
-
-    function renderXgVisitor(cases) {
-      const box = document.getElementById('xg-visitor-body');
-      if (!box) return;
-      if (!cases.length) { box.innerHTML = '<div class="mini-empty">暂无循证咨询个案</div>'; return; }
-      const rows = cases.slice().sort((a, b) => String(b.last_activity_at || '').localeCompare(String(a.last_activity_at || '')));
-      box.innerHTML = '<div style="max-height:420px;overflow:auto;"><table class="mini-table"><thead><tr>'
-        + '<th>来访者</th><th>匹配单号</th><th>已提交</th><th>放弃</th><th>未关闭预警</th><th>最后活动</th>'
-        + '</tr></thead><tbody>'
-        + rows.map(x =>
-            '<tr>'
-            + '<td>' + escapeHtml(x.visitor_name || '（未绑定）') + '<div style="font-size:11px;color:#aaa;">' + escapeHtml(x.counselor_name || '未指派咨询师') + '</div></td>'
-            + '<td style="font-size:12px;color:#666;">' + escapeHtml(x.match_id || '-') + '</td>'
-            + '<td>' + (x.card_submitted || 0) + '</td>'
-            + '<td>' + (x.card_abandoned || 0) + '</td>'
-            + '<td>' + ((x.alerts_open || 0) > 0 ? '<span style="color:#D65F5F;font-weight:600;">' + x.alerts_open + '</span>' : '0') + '</td>'
-            + '<td style="font-size:12px;color:#888;">' + agoText(x.last_activity_at) + '</td>'
-            + '</tr>').join('')
-        + '</tbody></table></div>';
-    }
-
-    function renderXgCounselor(cases) {
-      const box = document.getElementById('xg-counselor-body');
-      if (!box) return;
-      if (!cases.length) { box.innerHTML = '<div class="mini-empty">暂无咨询师承接数据</div>'; return; }
-      const map = {};
-      cases.forEach(x => {
-        const k = x.counselor_name || '未指派';
-        const cur = map[k] || { name: k, cases: 0, submitted: 0, abandoned: 0, open: 0, last: '' };
-        cur.cases += 1;
-        cur.submitted += (x.card_submitted || 0);
-        cur.abandoned += (x.card_abandoned || 0);
-        cur.open += (x.alerts_open || 0);
-        if (String(x.last_activity_at || '') > String(cur.last || '')) cur.last = x.last_activity_at || '';
-        map[k] = cur;
-      });
-      const rows = Object.values(map).sort((a, b) => b.cases - a.cases || b.open - a.open);
-      box.innerHTML = '<div style="max-height:420px;overflow:auto;"><table class="mini-table"><thead><tr>'
-        + '<th>咨询师</th><th>个案数</th><th>来访提交卡</th><th>放弃</th><th>未关闭预警</th><th>最后活动</th>'
-        + '</tr></thead><tbody>'
-        + rows.map(x =>
-            '<tr>'
-            + '<td>' + escapeHtml(x.name) + '</td>'
-            + '<td>' + x.cases + '</td>'
-            + '<td>' + x.submitted + '</td>'
-            + '<td>' + x.abandoned + '</td>'
-            + '<td>' + (x.open > 0 ? '<span style="color:#D65F5F;font-weight:600;">' + x.open + '</span>' : '0') + '</td>'
-            + '<td style="font-size:12px;color:#888;">' + agoText(x.last) + '</td>'
-            + '</tr>').join('')
-        + '</tbody></table></div>';
+    function openCounselorDirectory(review){
+      switchTab('counselors');document.getElementById('search-counselors').value='';document.getElementById('filter-credential').value='';document.getElementById('filter-active').value='';document.getElementById('filter-review').value=review||'';currentPage.counselors=1;filterData();
     }
 
     function renderChart(canvasId, type, dataFn, options) {
