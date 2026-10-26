@@ -31,11 +31,12 @@ function currentApiToken() {
     var target,api;try{target=new URL(typeof resource==='string'?resource:resource.url,location.href);api=new URL(SUPABASE_CONFIG.url,location.href);}catch(_){return nativeFetch(resource,options);}
     if(target.origin!==api.origin||(target.pathname!==api.pathname&&target.pathname.indexOf(api.pathname.replace(/\/$/,'')+'/')!==0))return nativeFetch(resource,options);
     var next=Object.assign({},options||{}),headers=new Headers(next.headers||{}),token=currentApiToken(),path=target.pathname.slice(api.pathname.replace(/\/$/,'').length);
+    if(!token&&localStorage.getItem('xpg_demo_active')==='1')token='xpgdemo.unauthenticated';
     var initial=path==='/rest/v1/assessments'&&next.method==='POST';
     if(initial){var body=JSON.parse(next.body),claim=credential();(Array.isArray(body)?body:[body]).forEach(function(row){row.client_claim_secret=claim;});next.body=JSON.stringify(body);}
     var supplied=headers.get('Authorization')||'';if(token&&(!supplied||/^Bearer\s*$/.test(supplied)||supplied==='Bearer '+SUPABASE_CONFIG.anonKey))headers.set('Authorization','Bearer '+token);
     next.headers=headers;var response=await nativeFetch(resource,next);
-    if(initial&&response.ok){var login=await nativeFetch(SUPABASE_CONFIG.url+'/auth/visitor-receipt',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({credential:claim})});if(login.ok){var auth=await login.json();localStorage.setItem('xpg_v2_visitor_token',auth.token);}}
+    if(initial&&response.ok){var login=await nativeFetch(SUPABASE_CONFIG.url+'/auth/visitor-receipt',{method:'POST',headers:{'Content-Type':'application/json',...(token.indexOf('xpgdemo.')===0?{Authorization:'Bearer '+token}:{})},body:JSON.stringify({credential:claim})});if(login.ok){var auth=await login.json();localStorage.setItem('xpg_v2_visitor_token',auth.token);}}
     return response;
   };
 })();

@@ -1,0 +1,42 @@
+{
+  "checked_at": "2026-10-26T18:55:13.565Z",
+  "endpoint": "https://xiaopingu-assessment-308810-6-1300577165.sh.run.tcloudbase.com",
+  "roles": [
+    {
+      "role": "visitor",
+      "authenticated": true,
+      "identity_matches": true
+    },
+    {
+      "role": "counselor",
+      "authenticated": true,
+      "identity_matches": true
+    },
+    {
+      "role": "admin",
+      "authenticated": true,
+      "identity_matches": true
+    }
+  ],
+  "writes": 0,
+  "visitor_intakes": 0,
+  "visitor_matches": 0,
+  "directory_isolation": {
+    "demo": 6,
+    "production": 66,
+    "overlap": 0
+  },
+  "removing_demo_prefix_denied": true,
+  "production_token_cannot_access_preview": true,
+  "cloudrun_version": "xiaopingu-assessment-005",
+  "backend_tests": 525,
+  "frontend_auth_tests": 3,
+  "browser": {
+    "pages_origin": "http://127.0.0.1:8798",
+    "authentication": "production CloudRun API",
+    "visitor_login": true,
+    "admin_login": true,
+    "admin_directory_count": 6,
+    "records_submitted": 0
+  }
+}

@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "start": "node index.js",
-    "test": "node --test test.js assessment/*.test.js portal/*.test.js"
+    "test": "node --test test.js demo-accounts.test.js assessment/*.test.js portal/*.test.js"
   },
   "dependencies": {
     "@cloudbase/node-sdk": "^3.16.0"

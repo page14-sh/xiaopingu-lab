@@ -20,7 +20,7 @@ if (!env || !accessKey || !adminPassword || !sessionSecret) {
 const policy=runtimePolicy();
 const app = cloudbase.init({ env, accessKey });
 const store = createCloudBaseStore(namespaceDatabase(app.database(),policy.prefix), { notificationProvider: policy.notificationsEnabled?providerFromEnvironment(app):disabledNotifications, llmProvider: policy.llmEnabled?llmProviderFromEnvironment():{ready:false} });
-const apiHandler = createRequestHandler({
+const productionHandler = createRequestHandler({
   store,
   portalEnabled:policy.portalEnabled,
   cutoverReady:!policy.production||process.env.XPG_CUTOVER_READY==='1',
@@ -35,6 +35,8 @@ const apiHandler = createRequestHandler({
   },
   demoMode: process.env.XPG_DEMO_MODE === '1'
 });
+const {createDemoRouter,configFromEnv}=require('./demo-accounts');
+const apiHandler=createDemoRouter({accounts:configFromEnv(process.env),next:productionHandler});
 // The isolated API preview does not present the legacy PCOMS UI as the new product.
 const handler = (policy.preview||policy.portalEnabled) ? apiHandler : createStaticHandler(path.join(__dirname, 'public'), apiHandler);
 
