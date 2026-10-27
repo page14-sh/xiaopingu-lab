@@ -2105,9 +2105,17 @@ function submitProfile() {
 
 // 页面初始化：先验证，再显示
 (function initCounselorApp() {
-  if (puzzleVerified) {
+  // 已登录（含演示账号）时不再要求算术验证：每次登录都会刷新页面，
+  // 否则演示通路要连续解两道题才能进工作台。
+  var hasCounselorSession = false, inDemoMode = false;
+  try {
+    hasCounselorSession = !!localStorage.getItem('xiaopingu_counselor_token');
+    inDemoMode = localStorage.getItem('xpg_demo_active') === '1';
+  } catch (e) {}
+  if (puzzleVerified || hasCounselorSession || inDemoMode) {
+    puzzleVerified = true;
     document.getElementById('main-app').style.display = 'block';
-    return; // 已验证，直接显示
+    return; // 已验证或已持有会话，直接显示
   }
   showPuzzle(function() {
     puzzleVerified = true;
