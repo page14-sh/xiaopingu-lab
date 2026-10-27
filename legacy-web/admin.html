@@ -448,6 +448,29 @@
     .section-title small { font-weight: 400; color: #999; font-size: 12px; margin-left: 8px; }
     .section-title:first-child { margin-top: 0; }
 
+    /* ===== 咨询师两大板块：入驻审批 / 咨询师资料 ===== */
+    .panel-block {
+      background: #fff; border-radius: 12px; overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 24px;
+    }
+    .panel-head {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; flex-wrap: wrap; padding: 16px 20px;
+      border-bottom: 1px solid #eee; background: #F3F8F1;
+    }
+    .panel-head.review { background: #FFF8F0; border-bottom-color: #F5D9B8; }
+    .panel-head.review.has-item { background: #FFF3E4; border-bottom-color: #E9B872; }
+    .panel-title { font-size: 16px; font-weight: 600; color: #333; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .panel-title small { font-weight: 400; color: #999; font-size: 12px; }
+    .panel-count {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 26px; height: 22px; padding: 0 9px; border-radius: 11px;
+      background: #9CCB8E; color: #fff; font-size: 12px; font-weight: 700;
+    }
+    .panel-count.pending { background: #E24B4A; }
+    .panel-tools { display: flex; gap: 8px; flex-wrap: wrap; }
+    .panel-block .table-container { box-shadow: none; border-radius: 0; }
+
     /* ===== 滞留预警 ===== */
     .alert-panel {
       background: #FFF8F0; border: 1px solid #F0A35E; border-radius: 12px;
@@ -606,7 +629,7 @@
         <option value="approved">已通过</option>
         <option value="rejected">已拒绝</option>
       </select>
-      <button class="btn btn-success readonly-hide" onclick="approveSelectedCounselors()">✅ 批量通过选中</button>
+      <span style="font-size:12px;color:#888;align-self:center;">（搜索与筛选作用于「咨询师资料」板块，入驻审批始终显示全部待审申请）</span>
       <button class="btn btn-success readonly-hide" onclick="exportCSV('counselors')">📥 导出CSV</button>
       <button class="btn btn-danger readonly-hide" onclick="deleteSelected('counselors')">🗑️ 删除选中</button>
     </div>
@@ -660,7 +683,7 @@
       <div id="content-dashboard">
         <div class="stat-row">
           <button type="button" class="stat-card" onclick="openCounselorDirectory('')" aria-label="查看全部咨询师详情"><div class="num" id="dash-counselors">-</div><div class="label">咨询师总数 · 查看全部</div></button>
-          <button type="button" class="stat-card" onclick="openCounselorDirectory('pending')"><div class="num" id="dash-pending">-</div><div class="label">待审入驻 · 查看</div></button>
+          <button type="button" class="stat-card" onclick="openReviewQueue()"><div class="num" id="dash-pending">-</div><div class="label">待审入驻 · 去审批</div></button>
           <div class="stat-card"><div class="num" id="dash-assessments">-</div><div class="label">评估总数</div></div>
           <div class="stat-card"><div class="num" id="dash-avg-score">-</div><div class="label">平均症状评分</div></div>
           <div class="stat-card"><div class="num" id="dash-severe">-</div><div class="label">重度评估</div></div>
@@ -739,10 +762,64 @@
         <div class="xg-note" id="xg-note"></div>
       </div>
 
-      <!-- 咨询师表格 -->
+      <!-- 咨询师：分为「入驻审批」与「咨询师资料」两个板块 -->
       <div id="content-counselors" style="display:none;">
-        <div class="table-container">
-          <table>
+        <!-- 板块一：入驻审批（仅待审核队列） -->
+        <div class="panel-block" id="block-review">
+          <div class="panel-head review">
+            <div class="panel-title">
+              🆕 入驻审批
+              <span class="panel-count" id="review-count">0</span>
+              <small>待审核的入驻申请 · 通过后自动进入下方咨询师资料库</small>
+            </div>
+            <div class="panel-tools readonly-hide">
+              <button class="btn btn-success" onclick="approveSelectedReview()">✅ 批量通过选中</button>
+            </div>
+          </div>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th><input type="checkbox" id="select-all-review" onchange="toggleSelectAll('review')"></th>
+                  <th>姓名</th>
+                  <th>资质等级</th>
+                  <th>从业年限</th>
+                  <th>城市</th>
+                  <th>咨询取向</th>
+                  <th>擅长议题</th>
+                  <th>费用</th>
+                  <th>提交时间</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-review">
+                <tr><td colspan="10" class="loading"><div class="spinner"></div></td></tr>
+              </tbody>
+            </table>
+            <div class="empty-state" id="empty-review" style="display:none;">
+              <div class="icon">🎉</div>
+              <div class="text">暂无待审核的入驻申请</div>
+            </div>
+            <div class="pagination" id="pagination-review"></div>
+          </div>
+        </div>
+
+        <!-- 板块二：咨询师资料（全量档案） -->
+        <div class="panel-block" id="block-counselors">
+          <div class="panel-head">
+            <div class="panel-title">
+              📇 咨询师资料
+              <span class="panel-count" id="counselor-count">0</span>
+              <small>已入库咨询师档案 · 可搜索筛选、查看详情与导出</small>
+            </div>
+            <div class="panel-tools readonly-hide">
+              <button class="btn btn-success" onclick="approveSelectedCounselors()">✅ 批量通过选中</button>
+              <button class="btn btn-success" onclick="exportCSV('counselors')">📥 导出CSV</button>
+              <button class="btn btn-danger" onclick="deleteSelected('counselors')">🗑️ 删除选中</button>
+            </div>
+          </div>
+          <div class="table-container">
+            <table>
             <thead>
               <tr>
                 <th><input type="checkbox" id="select-all-counselors" onchange="toggleSelectAll('counselors')"></th>
@@ -764,7 +841,7 @@
               </tr>
             </thead>
             <tbody id="tbody-counselors">
-              <tr><td colspan="15" class="loading"><div class="spinner"></div></td></tr>
+              <tr><td colspan="16" class="loading"><div class="spinner"></div></td></tr>
             </tbody>
           </table>
           <div class="empty-state" id="empty-counselors" style="display:none;">
@@ -772,6 +849,7 @@
             <div class="text">暂无咨询师数据</div>
           </div>
           <div class="pagination" id="pagination-counselors"></div>
+          </div>
         </div>
       </div>
 
@@ -914,10 +992,10 @@
     // ========== 全局状态 ==========
     let currentTab = 'dashboard';
     let allData = { counselors: [], assessments: [] };
-    let filteredData = { counselors: [], assessments: [], 'match-applications': [] };
-    let currentPage = { counselors: 1, assessments: 1, 'match-applications': 1 };
+    let filteredData = { counselors: [], assessments: [], 'match-applications': [], review: [] };
+    let currentPage = { counselors: 1, assessments: 1, 'match-applications': 1, review: 1 };
     const PAGE_SIZE = 20;
-    let selectedIds = { counselors: new Set(), assessments: new Set() };
+    let selectedIds = { counselors: new Set(), assessments: new Set(), review: new Set() };
     let sortState = { counselors: { key: 'created_at', dir: 'desc' }, assessments: { key: 'created_at', dir: 'desc' }, 'match-applications': { key: 'updated_at', dir: 'desc' } };
     let chartInstances = {};
 
@@ -1062,7 +1140,8 @@
         const data = await res.json();
         allData[type] = Array.isArray(data) ? data : [];
         filteredData[type] = [...data];
-        renderTable(type);
+        if (type === 'counselors') refreshCounselorSections();
+        else renderTable(type);
         _loadCount++;
         if (_loadCount >= 2) { _loadCount = 0; onDataLoaded(); }
       } catch (e) {
@@ -1070,10 +1149,11 @@
         const msg = (e && e.message) ? e.message : '未知错误';
         if(/HTTP (401|403)/.test(msg)){doLogout();document.getElementById('login-error').textContent='会话失效或权限不足，请重新登录。';}
         // 隐藏 loading spinner，显示错误提示
-        const tbody = document.getElementById('tbody-' + type);
-        if (tbody) {
-          tbody.innerHTML = '<tr><td colspan="12" class="loading" style="color:#E24B4A;">数据加载失败：' + msg + '<br>请检查网络后刷新页面重试</td></tr>';
-        }
+        const errHtml = '<tr><td colspan="12" class="loading" style="color:#E24B4A;">数据加载失败：' + msg + '<br>请检查网络后刷新页面重试</td></tr>';
+        (type === 'counselors' ? ['tbody-counselors', 'tbody-review'] : ['tbody-' + type]).forEach(function(id) {
+          const el = document.getElementById(id);
+          if (el) el.innerHTML = errHtml;
+        });
         _loadCount++;
         if (_loadCount >= 2) { _loadCount = 0; onDataLoaded(); }
       }
@@ -1086,6 +1166,7 @@
       document.getElementById('stat-pending').textContent = pendingCount;
       document.getElementById('stat-assessments').textContent = allData.assessments.length;
       document.getElementById('stat-match-applications').textContent = allData['match-applications'] ? allData['match-applications'].length : 0;
+      updatePanelCounts();
     }
 
     // ========== 切换标签页 ==========
@@ -1152,7 +1233,41 @@
       });
 
       currentPage[type] = 1;
-      renderTable(type);
+      if (type === 'counselors') refreshCounselorSections();
+      else renderTable(type);
+    }
+
+    // ========== 咨询师两大板块：入驻审批 + 咨询师资料 ==========
+    function pendingCounselors() {
+      return (allData.counselors || []).filter(function(c) { return !c.review_status || c.review_status === 'pending'; });
+    }
+
+    function refreshCounselorSections() {
+      filteredData.review = pendingCounselors();
+      currentPage.review = 1;
+      updatePanelCounts();
+      renderTable('review');
+      renderTable('counselors');
+    }
+
+    function updatePanelCounts() {
+      const pending = pendingCounselors().length;
+      const rc = document.getElementById('review-count');
+      if (rc) {
+        rc.textContent = pending;
+        rc.className = 'panel-count' + (pending ? ' pending' : '');
+      }
+      const head = document.querySelector('#block-review .panel-head');
+      if (head) head.classList.toggle('has-item', pending > 0);
+      const cc = document.getElementById('counselor-count');
+      if (cc) cc.textContent = (allData.counselors || []).length;
+    }
+
+    function openReviewQueue() {
+      switchTab('counselors');
+      refreshCounselorSections();
+      const block = document.getElementById('block-review');
+      if (block) block.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     // ========== 渲染表格 ==========
@@ -1178,6 +1293,8 @@
       pageData.forEach(item => {
         if (type === 'counselors') {
           html += renderCounselorRow(item);
+        } else if (type === 'review') {
+          html += renderReviewRow(item);
         } else if (type === 'match-applications') {
           html += renderMatchApplicationRow(item);
         } else {
@@ -1241,6 +1358,38 @@
           '<button class="action-btn view" onclick="viewDetail(\'counselors\', \'' + c.id + '\')">查看</button>' +
           reviewBtns +
           deleteBtn +
+        '</div></td>' +
+      '</tr>';
+    }
+
+    // ========== 渲染「入驻审批」行（精简列，聚焦审核决策） ==========
+    function renderReviewRow(c) {
+      const checked = selectedIds.review.has(c.id) ? 'checked' : '';
+      const deepReviewTag = c.needs_deep_review
+        ? '<br><span class="tag" style="background:#FFF3CD;color:#856404;border-color:#FFC107">⚠ 加深审核</span>'
+        : '';
+      const selectCell = READONLY_MODE ? '<td style="display:none"></td>'
+        : '<td><input type="checkbox" ' + checked + ' onchange="toggleSelect(\'review\', \'' + c.id + '\', this.checked)"></td>';
+
+      let btns = '';
+      if (!READONLY_MODE) {
+        btns = '<button class="action-btn approve" onclick="approveCounselor(\'' + c.id + '\')">✅ 通过</button>'
+             + '<button class="action-btn reject" onclick="showRejectModal(\'' + c.id + '\', \'' + (c.name || '未知') + '\')">❌ 拒绝</button>';
+      }
+
+      return '<tr>' +
+        selectCell +
+        '<td><strong>' + (c.name || '-') + '</strong>' + deepReviewTag + '</td>' +
+        '<td>' + (c.credential_level || '-') + '</td>' +
+        '<td>' + (c.years_experience || 0) + '年</td>' +
+        '<td>' + (c.city || '-') + '</td>' +
+        '<td>' + formatArray(c.approaches, 'blue') + '</td>' +
+        '<td>' + formatArray(c.specialties, 'green') + '</td>' +
+        '<td>¥' + (c.fee_min || 0) + '</td>' +
+        '<td>' + formatTime(c.created_at) + '</td>' +
+        '<td><div class="action-btns">' +
+          '<button class="action-btn view" onclick="viewDetail(\'counselors\', \'' + c.id + '\')">查看档案</button>' +
+          btns +
         '</div></td>' +
       '</tr>';
     }
@@ -2049,12 +2198,12 @@
     }
 
     // ========== 批量通过入驻申请 ==========
-    async function approveSelectedCounselors() {
-      const ids = [...selectedIds.counselors];
-      if (!ids.length) { showToast('请先勾选待通过的咨询师', 'error'); return; }
-      const targets = (allData.counselors || []).filter(c => ids.indexOf(c.id) >= 0 && (!c.review_status || c.review_status === 'pending'));
-      if (!targets.length) { showToast('勾选的咨询师中没有待审核项', 'error'); return; }
-      if (!confirm('确认通过 ' + targets.length + ' 位咨询师的入驻申请？')) return;
+    async function bulkApproveCounselors(ids) {
+      const targets = (allData.counselors || []).filter(function(c) {
+        return ids.indexOf(c.id) >= 0 && (!c.review_status || c.review_status === 'pending');
+      });
+      if (!targets.length) { showToast('勾选的咨询师中没有待审核项', 'error'); return null; }
+      if (!confirm('确认通过 ' + targets.length + ' 位咨询师的入驻申请？')) return null;
       let ok = 0, fail = 0;
       for (const t of targets) {
         try {
@@ -2066,10 +2215,33 @@
           if (res.ok) { ok++; t.review_status = 'approved'; t.is_active = true; } else fail++;
         } catch (e) { fail++; }
       }
-      filterData();
+      return { ok: ok, fail: fail };
+    }
+
+    // 「入驻审批」板块：批量通过
+    async function approveSelectedReview() {
+      const ids = [...selectedIds.review];
+      if (!ids.length) { showToast('请先勾选待通过的入驻申请', 'error'); return; }
+      const r = await bulkApproveCounselors(ids);
+      if (!r) return;
+      selectedIds.review.clear();
+      loadData('counselors');
       updateStats();
-      renderDashboard();
-      showToast('批量通过完成：成功 ' + ok + ' 条' + (fail ? '，失败 ' + fail + ' 条' : ''), fail ? 'error' : 'success');
+      if (currentTab === 'dashboard') renderDashboard();
+      showToast('批量通过完成：成功 ' + r.ok + ' 条' + (r.fail ? '，失败 ' + r.fail + ' 条' : ''), r.fail ? 'error' : 'success');
+    }
+
+    // 「咨询师资料」板块：批量通过
+    async function approveSelectedCounselors() {
+      const ids = [...selectedIds.counselors];
+      if (!ids.length) { showToast('请先勾选待通过的咨询师', 'error'); return; }
+      const r = await bulkApproveCounselors(ids);
+      if (!r) return;
+      selectedIds.counselors.clear();
+      loadData('counselors');
+      updateStats();
+      if (currentTab === 'dashboard') renderDashboard();
+      showToast('批量通过完成：成功 ' + r.ok + ' 条' + (r.fail ? '，失败 ' + r.fail + ' 条' : ''), r.fail ? 'error' : 'success');
     }
 
     // ========== 循证咨询（四评）看板 ==========
@@ -2107,6 +2279,7 @@
     }
     function openCounselorDirectory(review){
       switchTab('counselors');document.getElementById('search-counselors').value='';document.getElementById('filter-credential').value='';document.getElementById('filter-active').value='';document.getElementById('filter-review').value=review||'';currentPage.counselors=1;filterData();
+      var blk=document.getElementById('block-counselors');if(blk)blk.scrollIntoView({behavior:'smooth',block:'start'});
     }
 
     function renderChart(canvasId, type, dataFn, options) {
