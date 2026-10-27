@@ -15,7 +15,8 @@ test('three aliases use preview authorization; invalid or production tokens neve
  assert.equal((await request('/v1/xg/portal/cases',null,PREFIX+formal)).status,401);
  assert.equal(productionCalls,0);
  assert.deepEqual(await(await request('/v1/xg/portal/cases',null,visitor)).json(),{source:'preview'});
- assert.deepEqual(await(await request('/rest/v1/counselors?is_active=eq.true&review_status=eq.approved',null,visitor)).json(),[{id:'demo-counselor'}]);
+ // 演示端读取返回 preview 全量目录（真实咨询师池的脱敏副本），不再裁剪成单个演示咨询师
+ assert.deepEqual(await(await request('/rest/v1/counselors?is_active=eq.true&review_status=eq.approved',null,visitor)).json(),[{id:'demo-counselor'},{id:'other-test-counselor'}]);
  assert.equal((await request('/not-allowed',null,visitor)).status,404);
  assert.equal(productionCalls,0);
  assert.deepEqual(await(await request('/v1/xg/portal/cases',null,formal)).json(),{source:'production'});assert.equal(productionCalls,1);

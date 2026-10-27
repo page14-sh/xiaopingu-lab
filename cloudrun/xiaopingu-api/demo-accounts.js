@@ -46,7 +46,9 @@ function createDemoRouter({accounts:a,next,fetchImpl=fetch}){
    const upstream=await fetchImpl(TARGET+route,{method:req.method,redirect:'error',headers,...(body?{body}:{}),signal:AbortSignal.timeout(45000)});
    let result=await upstream.json();
    if(upstream.ok&&url.pathname.startsWith('/auth/')&&typeof result.token==='string')result.token=PREFIX+result.token;
-   if(upstream.ok&&req.method==='GET'&&url.pathname==='/rest/v1/counselors'&&url.searchParams.get('is_active')==='eq.true'&&url.searchParams.get('review_status')==='eq.approved'&&Array.isArray(result))result=result.filter(x=>x.id===a.backend.counselor.id);
+   // Demo sessions read the preview catalogue, which mirrors the real counselor
+   // pool as a sanitised copy (no phone/email/wechat/licence/edit token), so the
+   // demo shows realistic data while every write stays inside the preview island.
    return reply(res,upstream.status,result);
   }catch{return reply(res,502,{message:'演示服务暂不可用，请稍后重试'});}
  };
