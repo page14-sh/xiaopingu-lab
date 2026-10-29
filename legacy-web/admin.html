@@ -1488,7 +1488,7 @@
         '<td><strong>' + (a.visitor_name || '匿名') + '</strong></td>' +
         '<td>' + (a.visitor_gender || '-') + '</td>' +
         '<td>' + (a.visitor_age || '-') + '</td>' +
-        '<td>' + formatArray(a.issues, 'blue') + '</td>' +
+        '<td>' + formatArray([].concat(a.issues || []).map(typeof issueLabel === 'function' ? issueLabel : function(x){return x;}), 'blue') + '</td>' +
         '<td><strong>' + (a.total_score || 0) + '</strong></td>' +
         '<td>' + severityTag + '</td>' +
         '<td>' + crisisTag + '</td>' +

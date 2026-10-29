@@ -358,7 +358,18 @@ document.getElementById('basic').innerHTML = [
   loadXgTodo(st, d.match_id);
 }
 
-function renderXg(){var box=document.getElementById('xg-entry');box.innerHTML='<button class="btn block" onclick="goXg()">新版咨询档案与历史记录 →</button><p class="note">旧链接可查历史；新的申请和作答需要本人新版填写凭证。</p>';}
+function renderXg(){
+  var box=document.getElementById('xg-entry');
+  var approved = DATA && DATA.match_request_status === 'approved';
+  var cid = DATA && DATA.match_request_cid;
+  if (approved && cid) {
+    box.innerHTML='<button class="btn block" onclick="goXg()">进入我的咨询档案与评估 →</button>'+
+      '<p class="note">匹配已通过，可在这里查看每次咨询前后的评估记录并填写本次量表。</p>';
+  } else {
+    box.innerHTML='<button class="btn block btn-outline" onclick="goXg()">查看我的咨询档案 →</button>'+
+      '<p class="note">匹配通过后，这里会开放咨询前后的评估填写入口。</p>';
+  }
+}
 function loadXgTodo(){var bar=document.getElementById('xg-todo');if(bar)bar.style.display='none';}
 function goXg(){location.href='portal.html?asid='+encodeURIComponent(AID||'');}
 
