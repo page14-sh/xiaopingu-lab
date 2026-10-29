@@ -1457,6 +1457,12 @@ function generateCaptcha() {
 
 function showCaptcha(cb) {
   try {
+    // 演示账号已授信（与咨询师工作台口径一致），跳过算术验证避免遮挡演示流程
+    if (localStorage.getItem('xpg_demo_active') === '1') {
+      puzzleVerified = true;
+      if (cb) cb();
+      return;
+    }
     window._captchaCallback = cb;
     generateCaptcha();
     var box = document.getElementById('captcha-inline');
