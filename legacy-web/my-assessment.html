@@ -276,13 +276,21 @@ function render(){
   document.getElementById('panel').style.display='block';
 
   // 基本信息
-  var basic = [
-    ['姓名', d.visitor_name], ['年龄', d.visitor_age], ['性别', d.visitor_gender],
-    ['职业身份', d.visitor_occupation], ['所在城市', d.visitor_city],
-    ['填写身份', d.filled_by === 'parent' ? '家长 / 监护人代填' : '本人填写'],
-    ['困扰持续', d.duration], ['主要诉求', [].concat(d.issues||[]).join('、')]
-  ];
-  document.getElementById('basic').innerHTML = basic.map(function(p){
+var ISSUE_LABEL = {
+  emotion:'情绪困扰', relationship:'关系困境', trauma:'创伤经历', growth:'自我成长',
+  adolescent:'青少年问题', marriage:'婚姻 / 伴侣', personality:'人格成长', crisis:'危机状态',
+  workplace:'职场困扰', eating:'进食障碍', addiction:'成瘾行为', grief:'丧亲哀伤',
+  sexual:'性心理议题', somatic:'心身困扰', family:'家庭系统'
+};
+function issueText(arr){
+  return [].concat(arr||[]).map(function(c){ return ISSUE_LABEL[c] || c; }).join('、');
+}
+document.getElementById('basic').innerHTML = [
+  ['姓名', d.visitor_name], ['年龄', d.visitor_age], ['性别', d.visitor_gender],
+  ['职业身份', d.visitor_occupation], ['所在城市', d.visitor_city],
+  ['填写身份', d.filled_by === 'parent' ? '家长 / 监护人代填' : '本人填写'],
+  ['困扰持续', d.duration], ['主要诉求', issueText(d.issues)]
+].map(function(p){
     if (p[1] === null || p[1] === undefined || p[1] === '') return '';
     return '<dt>'+esc(p[0])+'</dt><dd>'+esc(p[1])+'</dd>';
   }).join('');
