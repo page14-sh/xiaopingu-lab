@@ -2260,22 +2260,52 @@
     }
     function renderXgBoard(){
       const box=document.getElementById('xg-metrics'),metrics=_xgData.metrics||{};
-      const titles={fill_duration_ms:'填卡用时',abandon_rate:'放弃率',low_quality_rate:'低质量比例',remind_action_rate:'提醒有动作率',alert_handle_time_h:'提醒处理用时',follow_return_rate:'随访回收率',llm_success_rate:'模型成功率'};
       box.replaceChildren();
-      for(const [key,label] of Object.entries(titles)){const m=metrics[key],card=document.createElement('div');card.className='metric-card';const value=document.createElement('div');value.className='mv';value.textContent=!m||m.status!=='available'?(m?.status==='unavailable'?'暂不可统计':'样本不足'):m.value!==undefined?Math.round(m.value*100)+'%':m.p50!==undefined?String(m.p50)+(m.unit||''): '可查看';const title=document.createElement('div');title.className='ml';title.textContent=label;card.append(value,title);box.append(card);}
-      const count=document.createElement('p');count.textContent='新版周期 '+(_xgData.overview?.cycles_total||0)+' 个，作答事件 '+(_xgData.overview?.events_total||0)+' 条，已提交 '+(_xgData.overview?.submitted_total||0)+' 条。';box.append(count);
+      const fmtMs=(ms)=>ms>=60000?(ms/60000).toFixed(1)+' 分钟':Math.round(ms/1000)+' 秒';
+      const fmtH=(h)=>h>=1?h.toFixed(1)+' 小时':Math.max(1,Math.round(h*60))+' 分钟';
+      const pct=(m)=>Math.round(m.value*100)+'%';
+      const ok=(m)=>m&&m.status==='available';
+      const reason=(m)=>!m?'暂无数据':(m.status==='not_available'?'暂不可统计':'样本不足（来访者 < 5 人）');
+      function addCard(label,main,sub){const c=document.createElement('div');c.className='metric-card'+(sub?'':' na');const mv=document.createElement('div');mv.className='mv';mv.textContent=main;const ml=document.createElement('div');ml.className='ml';ml.textContent=label;c.append(mv,ml);if(sub){const mh=document.createElement('div');mh.className='mh';mh.textContent=sub;c.append(mh);}box.append(c);return c;}
+      const fd=metrics.fill_duration_ms;
+      addCard('填卡用时（中位数）',ok(fd)?fmtMs(fd.p50):reason(fd),ok(fd)?('p90 '+fmtMs(fd.p90)+' · 样本 '+fd.n+' 张已提交卡'):'');
+      const lq=metrics.low_quality_rate;
+      addCard('低质量填答比例',ok(lq)?pct(lq):reason(lq),ok(lq)?(lq.numerator+' / '+lq.denominator+' 张'):'');
+      const ab=metrics.abandon_rate;
+      addCard('填卡放弃率',ok(ab)?pct(ab):reason(ab),ok(ab)?(ab.numerator+' / '+ab.denominator+' 个填写位置'):'');
+      const ra=metrics.remind_action_rate;
+      addCard('提醒后有动作率',ok(ra)?pct(ra):reason(ra),ok(ra)?(ra.numerator+' / '+ra.denominator+' 条 L2、L3 提醒'):'');
+      const ah=metrics.alert_handle_time_h||{},TYPE={outcome:'结果',alliance:'同盟',stability:'稳定',dissociation:'解离',risk:'危机'};
+      const ahList=Object.entries(ah).filter(([,v])=>ok(v));
+      const ahMain=ah.risk&&ok(ah.risk)?ah.risk:(ahList[0]&&ahList[0][1]);
+      addCard('提醒处理用时（中位数）',ahMain?fmtH(ahMain.p50):'样本不足',ahList.length?ahList.map(([t,v])=>TYPE[t]+' '+fmtH(v.p50)).join(' · '):'');
+      const fr=metrics.follow_return_rate||{};
+      const fr1=fr['1m'],fr3=fr['3m'],frMain=[fr1,fr3].find(ok);
+      addCard('随访回收率',frMain?pct(frMain):reason(fr1||fr3),[['1 个月',fr1],['3 个月',fr3]].map(([t,v])=>t+' '+(ok(v)?pct(v):'样本不足')).join(' · '));
+      const ls=metrics.llm_success_rate;
+      addCard('模型任务成功率',ok(ls)?pct(ls):reason(ls),ok(ls)?(ls.numerator+' / '+ls.denominator+' 个任务'):'');
+      const count=document.createElement('p');count.className='mh';count.style.marginTop='10px';
+      count.textContent='新版周期 '+(_xgData.overview?.cycles_total||0)+' 个，作答事件 '+(_xgData.overview?.events_total||0)+' 条，已提交 '+(_xgData.overview?.submitted_total||0)+' 条。统计区间为最近 30 天，按「不同来访者不少于 5 人」保护后再给出率值。';box.append(count);
       renderXgVisitor(_xgData.cases||[]);renderXgCounselor(_xgData.cases||[]);
       document.getElementById('xg-note').textContent='来源：v2 咨询周期和作答事件。小样本统计按不同来访者人数保护；单个测试个案可点击查看具体结果。旧版历史不混入新版计分。 最近刷新：'+new Date(_xgData.loadedAt).toLocaleString('zh-CN');
     }
     function renderXgVisitor(cases){
       const box=document.getElementById('xg-visitor-body');box.replaceChildren();if(!cases.length){box.textContent='暂无新版咨询周期。咨询师审批通过匹配申请后出现。';return;}
-      const table=document.createElement('table');table.className='mini-table';table.innerHTML='<thead><tr><th>来访者</th><th>咨询师</th><th>状态</th><th>已提交</th><th>操作</th></tr></thead>';const body=document.createElement('tbody');
-      for(const x of cases){const tr=document.createElement('tr');for(const text of [x.visitor_name,x.counselor_name,x.status==='closed'?'已结案':'进行中',x.card_submitted]){const td=document.createElement('td');td.textContent=text;tr.append(td);}const td=document.createElement('td'),a=document.createElement('a');a.textContent='查看四评记录与结果';a.href='a1-dashboard.html?match_id='+encodeURIComponent(x.match_id);td.append(a);tr.append(td);body.append(tr);}table.append(body);box.append(table);
+      const table=document.createElement('table');table.className='mini-table';table.innerHTML='<thead><tr><th>来访者</th><th>咨询师</th><th>状态</th><th>已提交</th><th>放弃</th><th>最近填写</th><th>操作</th></tr></thead>';const body=document.createElement('tbody');
+      for(const x of [...cases].sort((a,b)=>String(b.last_activity_at||'').localeCompare(String(a.last_activity_at||'')))){
+        const tr=document.createElement('tr');
+        const cells=[x.visitor_name,x.counselor_name,x.status==='closed'?'已结案':'进行中',String(x.card_submitted||0),String(x.card_abandoned||0),String(x.last_activity_at||'').slice(0,10)];
+        for(const text of cells){const td=document.createElement('td');td.textContent=text;tr.append(td);}
+        const td=document.createElement('td'),a=document.createElement('a');a.textContent='查看四评记录与结果';a.href='a1-dashboard.html?match_id='+encodeURIComponent(x.match_id);td.append(a);tr.append(td);body.append(tr);}table.append(body);box.append(table);
     }
     function renderXgCounselor(cases){
       const box=document.getElementById('xg-counselor-body');box.replaceChildren();
       const button=document.createElement('button');button.className='btn btn-primary';button.textContent='查看库内全部咨询师（'+allData.counselors.length+'）';button.onclick=()=>openCounselorDirectory('');box.append(button);
-      for(const counselor of allData.counselors){const own=cases.filter(x=>x.counselor_id===counselor.id);if(!own.length)continue;const row=document.createElement('p'),b=document.createElement('button');b.className='action-btn view';b.textContent=counselor.name||'未填写姓名';b.onclick=()=>viewDetail('counselors',counselor.id);row.append(b,document.createTextNode(' · '+own.length+' 个新版周期 · 已提交 '+own.reduce((sum,x)=>sum+x.card_submitted,0)+' 张卡'));box.append(row);}
+      for(const counselor of allData.counselors){const own=cases.filter(x=>x.counselor_id===counselor.id);if(!own.length)continue;
+        const active=own.filter(x=>x.status!=='closed').length,closed=own.length-active;
+        const submitted=own.reduce((sum,x)=>sum+(x.card_submitted||0),0),abandoned=own.reduce((sum,x)=>sum+(x.card_abandoned||0),0);
+        const row=document.createElement('p'),b=document.createElement('button');b.className='action-btn view';b.textContent=counselor.name||'未填写姓名';b.onclick=()=>viewDetail('counselors',counselor.id);
+        row.append(b,document.createTextNode(' · 共 '+own.length+' 个周期（进行中 '+active+' / 已结案 '+closed+'）· 已提交 '+submitted+' 张卡'+(abandoned?' · 放弃 '+abandoned+' 张':'')));box.append(row);}
     }
     function openCounselorDirectory(review){
       switchTab('counselors');document.getElementById('search-counselors').value='';document.getElementById('filter-credential').value='';document.getElementById('filter-active').value='';document.getElementById('filter-review').value=review||'';currentPage.counselors=1;filterData();
