@@ -870,6 +870,7 @@
                 <th>危机等级</th>
                 <th>咨询方式</th>
                 <th>预算</th>
+                <th>AI 倾诉</th>
                 <th>创建时间</th>
                 <th>操作</th>
               </tr>
@@ -1494,6 +1495,7 @@
         '<td>' + crisisTag + '</td>' +
         '<td>' + formatArray(a.preferred_formats, 'yellow') + '</td>' +
         '<td>' + (a.budget || '-') + '</td>' +
+        '<td>' + formatAiTalk(a) + '</td>' +
         '<td>' + formatTime(a.created_at) + '</td>' +
         '<td><div class="action-btns">' +
           '<button class="action-btn view" onclick="viewDetail(\'assessments\', \'' + a.id + '\')">查看</button>' +
@@ -1812,9 +1814,20 @@
         crisis_level: '危机等级', user_agent: '用户代理',
         match_request_name: '申请者姓名', match_request_contact: '申请者联系方式',
         match_request_cid: '申请咨询师ID',
-        selected_counselor_id: '已选咨询师ID', selected_counselor_name: '已选咨询师', selected_at: '选定时间'
+        selected_counselor_id: '已选咨询师ID', selected_counselor_name: '已选咨询师', selected_at: '选定时间',
+        ai_talk_freq: '💬 会跟 AI 说吗', ai_talk_replace: '💬 还会跟身边人说吗', ai_talk_gain: '💬 AI 最帮到你的地方'
       };
       return labels[key] || key;
+    }
+
+    // ========== 格式化 AI 倾诉情况 ==========
+    function formatAiTalk(a) {
+      var f = a.ai_talk_freq;
+      if (!f) return '-';
+      var map = { none:'不用 AI', rare:'很少用', sometimes:'有时用', often:'常用 AI', mostly:'主要靠 AI' };
+      var cls = (f === 'mostly' && a.ai_talk_replace === 'replaced') ? 'red'
+        : (f === 'often' || f === 'mostly') ? 'yellow' : 'green';
+      return '<span class="tag tag-' + cls + '">' + (map[f] || f) + '</span>';
     }
 
     // ========== 删除操作 ==========

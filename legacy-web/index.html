@@ -1168,7 +1168,7 @@ async function doCounselorLogin() {
       <div class="form-grid">
         <div class="form-row"><label class="required">姓名（可填化名）</label><input type="text" id="name" placeholder="请输入您的姓名或化名" autocomplete="off"></div>
         <div class="form-row"><label class="required">年龄</label><input type="number" id="age" placeholder="请输入年龄" min="6" max="99" inputmode="numeric" oninput="toggleMinorNotice()"><p id="minor_notice" style="display:none;margin:4px 0 0;font-size:12px;color:#E65100;line-height:1.6;background:#FFF3E0;padding:8px 10px;border-radius:8px;">⚠️ 如果您未满 18 周岁，请在填写本问卷前取得监护人的同意和知晓。未成年人寻求心理咨询服务需要监护人知情并配合。</p></div>
-        <div class="form-row"><label>填写身份</label><select id="filled_by"><option value="self">本人填写</option><option value="parent">家长 / 监护人代填</option></select><p style="margin:4px 0 0;font-size:12px;color:#A09889;line-height:1.6;">如为家长代未成年人填写，请选择「家长 / 监护人代填」，系统会优先推荐擅长儿童青少年方向的咨询师。</p></div>
+        <div class="form-row"><label>填写身份</label><select id="filled_by" onchange="toggleParentAiTip()"><option value="self">本人填写</option><option value="parent">家长 / 监护人代填</option></select><p style="margin:4px 0 0;font-size:12px;color:#A09889;line-height:1.6;">如为家长代未成年人填写，请选择「家长 / 监护人代填」，系统会优先推荐擅长儿童青少年方向的咨询师。</p></div>
         <div class="form-row"><label class="required">性别</label><select id="gender"><option value="">请选择</option><option value="male">男</option><option value="female">女</option><option value="ta">TA</option><option value="lgbtq">LGBTQ+</option><option value="other">其他/不便透露</option></select></div>
         <div class="form-row"><label class="required">职业身份</label><select id="occupation" onchange="toggleOccupationOther()"><option value="">请选择</option><option value="student_k12">在校学生（中小学）</option><option value="student_college">在校学生（大学及以上）</option><option value="worker">在职人员</option><option value="parent_role">家长</option><option value="freelance">自由职业 / 待业</option><option value="retired">退休人员</option><option value="other">其他</option></select><input type="text" id="occupation_other" placeholder="请填写您的职业" style="display:none;margin-top:8px;font-size:14px;padding:10px 12px;border:1.5px solid #E8E4DC;border-radius:8px" autocomplete="off"></div>
         <div class="form-row"><label>所在城市 <span style="font-size:12px;color:#A09889;font-weight:400">（选填，用于匹配同城咨询师）</span></label><input type="text" id="city" placeholder="例如：浙江省 杭州市、上海市 上海市" autocomplete="off"></div>
@@ -1181,6 +1181,43 @@ async function doCounselorLogin() {
         <div class="form-row"><label>性取向友善需求 <span style="font-size:12px;color:#A09889;font-weight:400">（选填）</span></label><select id="orientation_pref"><option value="">不需要</option><option value="friendly">希望咨询师对 LGBTQ+ 友善</option><option value="experienced">需要性少数相关经验的咨询师</option></select></div>
       </div>
       <div class="form-row"><label>希望咨询师的沟通风格 <span style="font-size:12px;color:#A09889;font-weight:400">（选填）</span></label><select id="comm_style"><option value="">不限</option><option value="talkative">我想多说，希望咨询师多听</option><option value="guided">我不知道从哪说起，需要咨询师引导</option><option value="shy">我不太善于表达，需要咨询师带动</option><option value="collaborative">我想和咨询师平等交流、一起探讨</option><option value="directive">我希望咨询师多给建议和反馈</option></select></div>
+
+      <!-- AI 倾诉情况（选填 · 不计入评估总分，仅用于帮助咨询师了解你的支持来源） -->
+      <div id="ai_talk_block" style="margin-top:16px;padding:16px;background:#F4F6FA;border-radius:12px;border:1px solid #D9DEE8">
+        <div style="font-size:14px;font-weight:600;color:#4A5568;margin-bottom:10px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">💬 心里有事的时候，你会跟谁说 <span style="font-size:11px;font-weight:400;color:#8A94A6">（选填 · 不影响评估结果）</span></div>
+        <p id="ai_talk_parent_tip" style="display:none;margin:0 0 12px;font-size:12px;color:#8A5A2B;line-height:1.6;background:#FFF8E8;padding:8px 10px;border-radius:8px;">如果你不了解孩子的实际使用情况，这里可以留空。</p>
+        <div class="form-row" style="margin-bottom:12px">
+          <label style="font-size:13px;color:#444441">1. 心里不舒服、想找人聊聊的时候，你会跟 AI 聊天工具说吗？（比如豆包、DeepSeek、ChatGPT 这类）</label>
+          <select id="ai_talk_freq">
+            <option value="">未填写</option>
+            <option value="none">没用过，也不会想到找 AI</option>
+            <option value="rare">很少，偶尔试过一两次</option>
+            <option value="sometimes">有时，会跟 AI 聊，但主要还是找身边的人</option>
+            <option value="often">经常，心里有事时先想到的就是 AI</option>
+            <option value="mostly">几乎每次，主要跟 AI 说，很少跟真人讲</option>
+          </select>
+        </div>
+        <div class="form-row" style="margin-bottom:12px">
+          <label style="font-size:13px;color:#444441">2. 跟 AI 说完之后，这些事你还会跟身边的人说吗？（家人、朋友、同事）</label>
+          <select id="ai_talk_replace">
+            <option value="">未填写</option>
+            <option value="same">会说，和以前一样</option>
+            <option value="less">说得比从前少一些了</option>
+            <option value="replaced">基本不说了，跟 AI 说就够了</option>
+            <option value="never">我本来就不怎么跟人讲这些</option>
+          </select>
+        </div>
+        <div class="form-row" style="margin-bottom:0">
+          <label style="font-size:13px;color:#444441">3. 跟 AI 聊的时候，最帮到你的地方是？（选填，最多选 2 项）</label>
+          <div class="cnip-options" data-field="ai_talk_gain" style="margin-top:8px">
+            <button type="button" class="cnip-btn" data-value="always" onclick="selectAiGain(this)">🕐 随时都在，不用等</button>
+            <button type="button" class="cnip-btn" data-value="nojudge" onclick="selectAiGain(this)">🤲 不用担心被评判</button>
+            <button type="button" class="cnip-btn" data-value="clarify" onclick="selectAiGain(this)">🧭 帮我把事情理顺</button>
+            <button type="button" class="cnip-btn" data-value="noburden" onclick="selectAiGain(this)">🪶 不用顾及对方的感受</button>
+            <button type="button" class="cnip-btn" data-value="nospill" onclick="selectAiGain(this)">🔒 说完不会有后续负担</button>
+          </div>
+        </div>
+      </div>
 
       <!-- C-NIP 偏好画像（基于 Cooper-Norcross 偏好问卷） -->
       <div style="margin-top:16px;padding:16px;background:#F0F7EC;border-radius:12px;border:1px solid #C8DCC0">
@@ -1650,6 +1687,8 @@ function initApp() {
         if (d.scores) { Object.keys(d.scores).forEach(function(k) { scores[k] = d.scores[k]; var row = document.getElementById('scale_'+k); if(row){var btns=row.querySelectorAll('.scale-btn');btns.forEach(function(b,i){b.classList.toggle('sel',i<=d.scores[k]);});} }); }
         if (d.scaleAnswered) { Object.keys(d.scaleAnswered).forEach(function(k){ scaleAnswered[k]=d.scaleAnswered[k]; }); }
         if (d.cnip) setCnipValues(d.cnip);
+        if (d.ai_talk) setAiTalkValues(d.ai_talk);
+        toggleParentAiTip();
         currentStep = d.step;
         document.querySelectorAll('.section-block').forEach(function(el){el.classList.toggle('active',el.id==='section'+currentStep);});
         for(var i=1;i<=4;i++){var bar=document.getElementById('step'+i+'-bar');bar.classList.remove('active','done');if(i<currentStep)bar.classList.add('done');if(i===currentStep)bar.classList.add('active');}
@@ -1692,7 +1731,7 @@ function handleConsent() {
 }
 
 function showToast(msg){var t=document.getElementById('toast');if(!t)return;t.textContent=msg;t.classList.add('show');setTimeout(function(){if(t)t.classList.remove('show');},2200);}
-function saveDraft(){try{var expects=[];document.querySelectorAll('#expect_grid input:checked').forEach(function(el){expects.push(el.value);});var issues=[];document.querySelectorAll('#issue_grid input:checked').forEach(function(el){issues.push(el.value);});var specials=[];document.querySelectorAll('input[name="special"]:checked').forEach(function(el){specials.push(el.value);});var formats=[];document.querySelectorAll('input[name="format"]:checked').forEach(function(el){formats.push(el.value);});localStorage.setItem(STORAGE_KEY,JSON.stringify({step:currentStep,name:document.getElementById('name').value,age:document.getElementById('age').value,gender:document.getElementById('gender').value,occupation:document.getElementById('occupation').value,occupation_other:document.getElementById('occupation_other').value,filled_by:document.getElementById('filled_by').value,city:document.getElementById('city').value,prev_counseling:document.getElementById('prev_counseling').value,budget:document.getElementById('budget').value,gender_pref:document.getElementById('gender_pref').value,age_pref:document.getElementById('age_pref').value,orientation_pref:document.getElementById('orientation_pref').value,comm_style:document.getElementById('comm_style').value,cnip:getCnipValues(),formats:formats,duration:document.getElementById('duration').value,description:document.getElementById('description').value,crisis_screen:document.getElementById('crisis_screen').value,expects:expects,issues:issues,issues_other:otherIssues,specials:specials,scores:scores,scaleAnswered:scaleAnswered}));}catch(e){}}
+function saveDraft(){try{var expects=[];document.querySelectorAll('#expect_grid input:checked').forEach(function(el){expects.push(el.value);});var issues=[];document.querySelectorAll('#issue_grid input:checked').forEach(function(el){issues.push(el.value);});var specials=[];document.querySelectorAll('input[name="special"]:checked').forEach(function(el){specials.push(el.value);});var formats=[];document.querySelectorAll('input[name="format"]:checked').forEach(function(el){formats.push(el.value);});localStorage.setItem(STORAGE_KEY,JSON.stringify({step:currentStep,name:document.getElementById('name').value,age:document.getElementById('age').value,gender:document.getElementById('gender').value,occupation:document.getElementById('occupation').value,occupation_other:document.getElementById('occupation_other').value,filled_by:document.getElementById('filled_by').value,city:document.getElementById('city').value,prev_counseling:document.getElementById('prev_counseling').value,budget:document.getElementById('budget').value,gender_pref:document.getElementById('gender_pref').value,age_pref:document.getElementById('age_pref').value,orientation_pref:document.getElementById('orientation_pref').value,comm_style:document.getElementById('comm_style').value,cnip:getCnipValues(),ai_talk:getAiTalkValues(),formats:formats,duration:document.getElementById('duration').value,description:document.getElementById('description').value,crisis_screen:document.getElementById('crisis_screen').value,expects:expects,issues:issues,issues_other:otherIssues,specials:specials,scores:scores,scaleAnswered:scaleAnswered}));}catch(e){}}
 function validateStepRequired(step){
   var missing=[];
   if(step===1){
@@ -1741,6 +1780,59 @@ function setCnipValues(vals){
       b.classList.toggle('active',b.getAttribute('data-value')===val);
     });
   });
+}
+// ===== AI 倾诉情况（选填 · 不计入评估总分）=====
+var AI_GAIN_MAX = 2;
+var AI_FREQ_LABEL = {none:'没用过 / 不会想到找 AI',rare:'很少，偶尔试过',sometimes:'有时，主要还是找身边人',often:'经常，先想到 AI',mostly:'几乎每次，很少跟真人讲'};
+var AI_REPLACE_LABEL = {same:'仍会跟身边人说',less:'跟人说得比以前少',replaced:'基本不跟人说了',never:'本来就不怎么跟人讲'};
+var AI_GAIN_LABEL = {always:'随时都在，不用等',nojudge:'不用担心被评判',clarify:'帮我把事情理顺',noburden:'不用顾及对方的感受',nospill:'说完不会有后续负担'};
+function selectAiGain(btn){
+  if(btn.classList.contains('active')){btn.classList.remove('active');return;}
+  var row = btn.parentElement;
+  var actives = row.querySelectorAll('.cnip-btn.active');
+  if(actives.length >= AI_GAIN_MAX){
+    actives[0].classList.remove('active');
+    if(typeof showToast==='function') showToast('最多选 '+AI_GAIN_MAX+' 项，已取消最早的选择');
+  }
+  btn.classList.add('active');
+}
+function getAiTalkValues(){
+  var gains=[];
+  document.querySelectorAll('[data-field="ai_talk_gain"] .cnip-btn.active').forEach(function(b){gains.push(b.getAttribute('data-value'));});
+  var f=document.getElementById('ai_talk_freq'), r=document.getElementById('ai_talk_replace');
+  return {ai_talk_freq:(f&&f.value)||'', ai_talk_replace:(r&&r.value)||'', ai_talk_gain:gains};
+}
+function setAiTalkValues(v){
+  if(!v) return;
+  var f=document.getElementById('ai_talk_freq'), r=document.getElementById('ai_talk_replace');
+  if(f && v.ai_talk_freq) f.value = v.ai_talk_freq;
+  if(r && v.ai_talk_replace) r.value = v.ai_talk_replace;
+  var gains = Array.isArray(v.ai_talk_gain) ? v.ai_talk_gain : [];
+  document.querySelectorAll('[data-field="ai_talk_gain"] .cnip-btn').forEach(function(b){
+    b.classList.toggle('active', gains.indexOf(b.getAttribute('data-value')) >= 0);
+  });
+}
+function toggleParentAiTip(){
+  var tip=document.getElementById('ai_talk_parent_tip');
+  var fb=document.getElementById('filled_by');
+  if(tip && fb) tip.style.display = (fb.value==='parent') ? 'block' : 'none';
+}
+// 咨询师视角提示：频率高 + 替代真人 = 现实关系退缩信号
+function getAiTalkHint(a){
+  if(!a) return '';
+  if(a.ai_talk_freq==='mostly' && a.ai_talk_replace==='replaced'){
+    return '这位来访者目前主要用 AI 倾诉，现实中基本不再与人谈论感受——首次会谈建议先从「跟人说话是什么感觉」入手，不急着处理议题本身。';
+  }
+  if(a.ai_talk_freq==='often' || a.ai_talk_freq==='mostly'){
+    return '这位来访者习惯先找 AI 倾诉——可以把「AI 能给的、和咨询能给的有什么不同」作为建立关系的切入点。';
+  }
+  if(a.ai_talk_gain && a.ai_talk_gain.indexOf('nojudge')>=0){
+    return '这位来访者在 AI 那里最看重「不被评判」——前期请多给接纳与正常化，少做评价与纠正。';
+  }
+  if(a.ai_talk_gain && a.ai_talk_gain.indexOf('clarify')>=0){
+    return '这位来访者看重 AI 帮他「把事情理顺」——适合结构化的工作方式，比如一起梳理脉络、列清单。';
+  }
+  return '';
 }
 function toggleSimple(el){var cb=el.querySelector('input[type="checkbox"]');cb.checked=!cb.checked;if(cb.checked){el.style.borderColor='#5C7A52';el.style.background='#E8F0E4';}else{el.style.borderColor='#E8E4DC';el.style.background='#fff';}}
 function setScale(key,val,btn){scores[key]=val;scaleAnswered[key]=true;var row=document.getElementById('scale_'+key);var btns=row.querySelectorAll('.scale-btn');btns.forEach(function(b,i){b.classList.toggle('sel',i<=val);});}
@@ -2159,6 +2251,24 @@ function generateResult() {
     }
   }
 
+  // AI 倾诉情况展示（选填 · 不计入总分）
+  var aiTalk=getAiTalkValues();
+  if(aiTalk.ai_talk_freq||aiTalk.ai_talk_replace||aiTalk.ai_talk_gain.length){
+    var aiGainTxt=aiTalk.ai_talk_gain.map(function(g){return AI_GAIN_LABEL[g]||g;}).join('、');
+    var aiHtml='<div style="padding:12px 16px;background:#F4F6FA;border:1px solid #D9DEE8;border-radius:10px;margin-bottom:6px">';
+    aiHtml+='<div style="font-size:13px;font-weight:600;color:#4A5568;margin-bottom:8px">💬 心里有事的时候，你会跟谁说</div>';
+    aiHtml+='<div class="info-grid" style="gap:6px">';
+    if(aiTalk.ai_talk_freq)aiHtml+='<div class="info-item" style="padding:4px 0"><div class="info-label" style="font-size:12px">会跟 AI 说吗</div><div class="info-val" style="font-size:13px">'+(AI_FREQ_LABEL[aiTalk.ai_talk_freq]||aiTalk.ai_talk_freq)+'</div></div>';
+    if(aiTalk.ai_talk_replace)aiHtml+='<div class="info-item" style="padding:4px 0"><div class="info-label" style="font-size:12px">还会跟身边人说吗</div><div class="info-val" style="font-size:13px">'+(AI_REPLACE_LABEL[aiTalk.ai_talk_replace]||aiTalk.ai_talk_replace)+'</div></div>';
+    if(aiGainTxt)aiHtml+='<div class="info-item" style="padding:4px 0"><div class="info-label" style="font-size:12px">AI 最帮到你的地方</div><div class="info-val" style="font-size:13px">'+aiGainTxt+'</div></div>';
+    aiHtml+='</div>';
+    aiHtml+='<div style="font-size:12px;color:#8A94A6;line-height:1.7;margin-top:8px">这部分只用于让咨询师更快了解你的支持来源，不计入评估分数。</div></div>';
+    var aiAnchor=document.getElementById('cnip_profile');
+    var aiBox=document.createElement('div');aiBox.innerHTML=aiHtml;aiBox.id='ai_talk_profile';
+    if(aiAnchor&&aiAnchor.parentElement){aiAnchor.parentElement.insertBefore(aiBox,aiAnchor.nextSibling);}
+    else{var sEl=document.getElementById('score_summary');if(sEl&&sEl.parentElement)sEl.parentElement.insertBefore(aiBox,sEl.parentElement.children[3]||null);}
+  }
+
   // 存储结果数据用于导出
   lastResultData = {
     name: name, age: age, gender: genderText, occupation: occText,
@@ -2166,7 +2276,7 @@ function generateResult() {
     prevCounseling: prevText, budget: budgetVal, budgetText: budgetText,
     city: cityVal, formats: formats, genderPref: genderPrefText,
     issues: issues, description: description, specials: specials,
-    crisisLevel: crisisVal, cnip: cnip,
+    crisisLevel: crisisVal, cnip: cnip, aiTalk: getAiTalkValues(),
     scores: { mood: scores.mood, anxiety: scores.anxiety, sleep: scores.sleep, function: scores.function, relation: scores.relation },
     totalScore: totalScore, severity: severity, severityStandard: severityStandard,
     recommendedApproaches: currentRecommendedApproaches,
@@ -2197,7 +2307,8 @@ function generateResult() {
       comm_style: document.getElementById('comm_style').value,
       filled_by: filledBy,
       is_minor: isMinor,
-      cnip: getCnipValues()
+      cnip: getCnipValues(),
+      ai_talk: getAiTalkValues()
     }).then(function(results){
       document.getElementById('counselor_loading').style.display='none';
       if(results.length>0){
@@ -2327,6 +2438,9 @@ function generateResult() {
     cnip_warmth:_attr('[data-field="cnip_warmth"] .cnip-btn.active','data-value'),
     cnip_homework:_attr('[data-field="cnip_homework"] .cnip-btn.active','data-value'),
     cnip_relational:_attr('[data-field="cnip_relational"] .cnip-btn.active','data-value'),
+    ai_talk_freq:(document.getElementById('ai_talk_freq')||{}).value||null,
+    ai_talk_replace:(document.getElementById('ai_talk_replace')||{}).value||null,
+    ai_talk_gain:getAiTalkValues().ai_talk_gain,
     expects:Array.from(document.querySelectorAll('#expect_grid input:checked')).map(function(e){return e.value;}),
     issues:issues,description:description,duration:durationText,
     score_mood:scores.mood,score_anxiety:scores.anxiety,score_sleep:scores.sleep,
@@ -2482,6 +2596,9 @@ function enterViewMode(token){
       if(d.cnip_homework)cnipVals.cnip_homework=d.cnip_homework;
       if(d.cnip_relational)cnipVals.cnip_relational=d.cnip_relational;
       if(Object.keys(cnipVals).length>0)setCnipValues(cnipVals);
+      // 回填 AI 倾诉情况
+      setAiTalkValues({ai_talk_freq:d.ai_talk_freq, ai_talk_replace:d.ai_talk_replace, ai_talk_gain:d.ai_talk_gain});
+      toggleParentAiTip();
       // 回填 scores
       if(d.score_mood!=null)scores.mood=d.score_mood;
       if(d.score_anxiety!=null)scores.anxiety=d.score_anxiety;
@@ -2870,6 +2987,9 @@ function rebuildAssessmentFromDOM(){
       cnip_warmth: _attr('[data-field=\"cnip_warmth\"] .cnip-btn.active','data-value') || 'warm',
       cnip_homework: _attr('[data-field=\"cnip_homework\"] .cnip-btn.active','data-value') || 'neutral',
       cnip_relational: _attr('[data-field=\"cnip_relational\"] .cnip-btn.active','data-value') || 'neutral',
+      ai_talk_freq: (document.getElementById('ai_talk_freq') || {}).value || null,
+      ai_talk_replace: (document.getElementById('ai_talk_replace') || {}).value || null,
+      ai_talk_gain: getAiTalkValues().ai_talk_gain,
       expects: Array.from(document.querySelectorAll('#expect_grid input:checked') || []).map(function(e){ return e.value; }),
       user_agent: navigator.userAgent.substring(0,200)
     };

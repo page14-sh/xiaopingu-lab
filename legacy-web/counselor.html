@@ -2579,6 +2579,31 @@ function renderAssessmentDetail(a) {
   html += cnipParts.length ? cnipParts.map(function(v) { return '<span class="detail-chip">' + esc(v) + '</span>'; }).join('') : '<span class="detail-chip">未填写</span>';
   html += '</div></div>';
 
+  // 支持来源 · AI 倾诉情况（选填 · 不计入评估总分）
+  var aiFreqMap = {none:'没用过 / 不会想到找 AI', rare:'很少，偶尔试过', sometimes:'有时，主要仍找身边人', often:'经常，先想到 AI', mostly:'几乎每次，很少跟真人讲'};
+  var aiReplaceMap = {same:'仍会跟身边人说', less:'说得比以前少', replaced:'基本不跟人说了', never:'本来就不怎么跟人讲'};
+  var aiGainMap = {always:'随时都在，不用等', nojudge:'不用担心被评判', clarify:'帮我把事情理顺', noburden:'不用顾及对方的感受', nospill:'说完不会有后续负担'};
+  var aiParts = [];
+  if (a.ai_talk_freq) aiParts.push('会跟 AI 说吗：' + (aiFreqMap[a.ai_talk_freq] || a.ai_talk_freq));
+  if (a.ai_talk_replace) aiParts.push('还会跟身边人说吗：' + (aiReplaceMap[a.ai_talk_replace] || a.ai_talk_replace));
+  var aiGains = arrVal(a.ai_talk_gain);
+  if (aiGains.length) aiParts.push('AI 最帮到你的地方：' + aiGains.map(function(g) { return aiGainMap[g] || g; }).join('、'));
+  var aiHint = '';
+  if (a.ai_talk_freq === 'mostly' && a.ai_talk_replace === 'replaced') {
+    aiHint = '这位来访者目前主要用 AI 倾诉，现实中基本不再与人谈论感受。首次会谈建议先从「跟人说话是什么感觉」入手，不急着处理议题本身。';
+  } else if (a.ai_talk_freq === 'often' || a.ai_talk_freq === 'mostly') {
+    aiHint = '这位来访者习惯先找 AI 倾诉。可以把「AI 能给的、和咨询能给的有什么不同」作为建立关系的切入点。';
+  } else if (aiGains.indexOf('nojudge') >= 0) {
+    aiHint = '这位来访者在 AI 那里最看重「不被评判」。前期请多给接纳与正常化，少做评价与纠正。';
+  } else if (aiGains.indexOf('clarify') >= 0) {
+    aiHint = '这位来访者看重 AI 帮他「把事情理顺」，适合结构化的工作方式（一起梳理脉络、列清单）。';
+  }
+  html += '<div class="detail-section"><div class="detail-title">💬 支持来源 · AI 倾诉情况</div>';
+  html += '<div class="detail-chips" style="margin-bottom:8px">' + (aiParts.length ? aiParts.map(function(v) { return '<span class="detail-chip">' + esc(v) + '</span>'; }).join('') : '<span class="detail-chip">未填写</span>') + '</div>';
+  if (aiHint) html += '<div style="font-size:12px;color:#8A5A2B;line-height:1.8;background:#FFF8E8;border:1px solid #E8C4B8;border-radius:8px;padding:10px 12px">💡 ' + esc(aiHint) + '</div>';
+  html += '<div style="font-size:11px;color:#A09889;line-height:1.7;margin-top:6px">以上为来访者自述，不计入评估分数，仅供首次会谈定向参考。</div>';
+  html += '</div>';
+
   html += '<div class="detail-section"><div class="detail-title">主诉与预期</div>';
   html += '<div class="detail-chips" style="margin-bottom:8px">' + renderDetailChips(a.issues, issueMap) + '</div>';
   html += '<div class="detail-chips" style="margin-bottom:8px">' + renderDetailChips(a.expects, expectMap, 'warn') + '</div>';
