@@ -322,6 +322,18 @@
     .detail-label { font-size: 12px; color: #999; margin-bottom: 5px; }
     .detail-value { font-size: 14px; color: #333; word-break: break-all; }
 
+    /* 咨询师照片展示 */
+    .photo-section { margin-bottom: 18px; }
+    .photo-section-title { font-size: 13px; font-weight: 600; color: #5a5248; margin: 0 0 10px; display: flex; align-items: center; gap: 6px; }
+    .photo-section-note { font-size: 11px; color: #A09889; font-weight: 400; }
+    .photo-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+    .photo-thumb { width: 96px; height: 96px; object-fit: cover; border-radius: 8px; border: 1px solid #E8E4DC; cursor: pointer; background: #f3f1ec; transition: transform .12s; }
+    .photo-thumb:hover { transform: scale(1.04); border-color: #C9A227; }
+    /* 照片灯箱 */
+    #modal-photo .modal { max-width: 90vw; max-height: 90vh; padding: 0; background: #111; }
+    #modal-photo img { max-width: 88vw; max-height: 84vh; display: block; border-radius: 6px; }
+    #modal-photo .modal-close { color: #fff; background: rgba(0,0,0,.4); }
+
     /* 设置面板 */
     .settings-form { max-width: 400px; }
     .settings-form .form-group { margin-bottom: 20px; }
@@ -928,6 +940,14 @@
       <button class="modal-close" onclick="closeModal(null, 'modal-detail')">&times;</button>
       <h2 id="modal-title">详情</h2>
       <div id="modal-content"></div>
+    </div>
+  </div>
+
+  <!-- 照片灯箱 -->
+  <div class="modal-overlay" id="modal-photo" onclick="closeModal(event, 'modal-photo')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="closeModal(null, 'modal-photo')">&times;</button>
+      <img id="modal-photo-img" src="" alt="照片">
     </div>
   </div>
 
@@ -1766,15 +1786,33 @@
           + '</div></div></div>';
       }
 
+      // 咨询师照片：真实图片展示（生活照 + 证书照），证书照仅审核可见
+      if (type === 'counselors') {
+        const sections = [
+          { key: 'photo_daily', title: '📷 生活照片', note: '（来访者可见）' },
+          { key: 'photo_license', title: '📋 证书 / 凭证照片', note: '（仅审核可见）' }
+        ];
+        sections.forEach(function(s) {
+          var arr = item[s.key];
+          if (Array.isArray(arr) && arr.length) {
+            html += '<div class="photo-section"><p class="photo-section-title">' + s.title +
+              '<span class="photo-section-note">' + s.note + ' · 共 ' + arr.length + ' 张，点击放大</span></p><div class="photo-grid">';
+            arr.forEach(function(durl) {
+              html += '<img class="photo-thumb" src="' + escapeHtml(durl) + '" alt="' + s.title + '" loading="lazy" onclick="showPhoto(this.src)">';
+            });
+            html += '</div></div>';
+          }
+        });
+      }
+
       html += '<div class="detail-grid">';
-      const skipKeys = ['has_violation','violation_detail','has_incident','incident_detail','needs_deep_review','match_request_name','match_request_contact','match_request_cid','match_request_status'];
+      const skipKeys = ['has_violation','violation_detail','has_incident','incident_detail','needs_deep_review','match_request_name','match_request_contact','match_request_cid','match_request_status','photo_daily','photo_license'];
       Object.keys(item).forEach(key => {
         if (['id','_id','view_token','edit_token','credential_hash','claim_hash'].includes(key)||key.startsWith('migration_')) return;
         if (type === 'counselors' && skipKeys.includes(key)) return;
         let value = item[key];
         if (value === null || value === undefined || value === '') return; // 跳过空值
-        if(key==='photo_daily'||key==='photo_license'){value=Array.isArray(value)?'已上传 '+value.length+' 张照片':'已上传';}
-        else if (Array.isArray(value)) { value = value.join(', '); if (!value) return; }
+        if (Array.isArray(value)) { value = value.join(', '); if (!value) return; }
         else if(typeof value==='object')value=JSON.stringify(value);
         if (key === 'created_at' || key === 'updated_at') value = formatTime(value);
         if (key === 'crisis_level') value = crisisLabel(value);
@@ -1819,6 +1857,12 @@
         ai_talk_freq: '💬 会跟 AI 说吗', ai_talk_replace: '💬 还会跟身边人说吗', ai_talk_gain: '💬 AI 最帮到你的地方'
       };
       return labels[key] || key;
+    }
+
+    // 照片灯箱
+    function showPhoto(src) {
+      document.getElementById('modal-photo-img').src = src;
+      document.getElementById('modal-photo').classList.add('active');
     }
 
     // ========== 格式化 AI 倾诉情况 ==========
