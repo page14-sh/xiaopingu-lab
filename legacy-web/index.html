@@ -2308,7 +2308,7 @@ function generateResult() {
       filled_by: filledBy,
       is_minor: isMinor,
       cnip: getCnipValues(),
-      ai_talk: getAiTalkValues()
+      ai_talk: getAiTalkValues() // 仅透传，不参与匹配打分（当前只作咨询师查阅参考）
     }).then(function(results){
       document.getElementById('counselor_loading').style.display='none';
       if(results.length>0){
