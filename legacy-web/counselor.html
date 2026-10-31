@@ -2853,16 +2853,6 @@ function loadPanelRequests() {
         }
       }
 
-      // AI 倾诉情况（仅高频时在列表轻标记，其余在「查看详情」里看完整内容）
-      var aiFreq = a.ai_talk_freq;
-      if (aiFreq === 'often' || aiFreq === 'mostly') {
-        var aiTxt = aiFreq === 'mostly' ? '💬 主要靠 AI 倾诉' : '💬 常用 AI 倾诉';
-        if (a.ai_talk_replace === 'replaced') aiTxt += ' · 现实中基本不跟人说了';
-        var aiStyle = (aiFreq === 'mostly' && a.ai_talk_replace === 'replaced')
-          ? 'background:#FDECEA;color:#A03030' : 'background:#FFF8E8;color:#8A5A2B';
-        html += '<div class="req-cnip" style="' + aiStyle + '">' + aiTxt + '</div>';
-      }
-
       // 拒绝理由
       if (status === 'rejected' && a.match_request_reviewed_note) {
         html += '<div class="req-note" style="margin-top:6px;font-size:12px;color:#721C24;background:#F8D7DA;padding:6px 10px;border-radius:6px">📝 拒绝理由：' + esc(a.match_request_reviewed_note) + '</div>';
