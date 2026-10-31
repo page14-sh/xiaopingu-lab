@@ -1468,6 +1468,14 @@ function compressImage(file, cb) {
   img.src = url;
 }
 
+// ===== 照片上传槽位初始化 =====
+// 全新注册（无草稿/无编辑令牌）时，slots 容器是空的，必须主动渲染一次，否则看不到上传入口
+(function initPhotoSlots(){
+  ['c_daily','c_license','pe_daily','pe_license'].forEach(function(k){
+    if (document.getElementById('slots_' + k)) renderPhotoSlots(k);
+  });
+})();
+
 // ===== 微信扫码绑定（注册第 0 步；WX 未配置时降级提示，不阻塞填写）=====
 var _wxOpenid = '', _wxBindToken = '', _wxPollTimer = null;
 function startWxBind() {
@@ -2285,6 +2293,8 @@ function enterLocalCounselorAccount(value) {
     if (d.contact_email_public) document.getElementById('c_email_public').checked = true;
     if (d.public_welfare) document.getElementById('c_public_welfare').checked = true;
   if (d.public_welfare_fee) document.getElementById('c_public_welfare_fee').value = d.public_welfare_fee;
+  if (d.photo_daily && d.photo_daily.length) { photoStore.c_daily = d.photo_daily.slice(); renderPhotoSlots('c_daily'); }
+  if (d.photo_license && d.photo_license.length) { photoStore.c_license = d.photo_license.slice(); renderPhotoSlots('c_license'); }
   toggleWelfareFee('c_');
     if (d.bio_short) document.getElementById('c_bio_short').value = d.bio_short;
     if (d.bio_full) document.getElementById('c_bio_full').value = d.bio_full;
