@@ -414,7 +414,7 @@
       <div style="background:#F0F7EC;border:1px solid #C8DCC0;border-radius:10px;padding:14px 16px;margin-bottom:16px;font-size:13px;color:#5A6B52;line-height:1.8">
         <p style="font-weight:600;margin-bottom:6px;color:#3D4D35">📋 信息填写说明</p>
         <p>您填写的所有信息将仅用于<strong>来访者匹配推荐</strong>和<strong>联络对接</strong>，系统严格保密，不会出售或用于其他商业用途。</p>
-        <p style="margin-top:8px">如果您<strong>不公开任何联络方式</strong>（微信/手机/邮箱），当有来访者匹配到您时，我们将<strong>只能通过小平菇平台站内消息</strong>通知您，可能存在信息延迟，建议您至少保留一种公开联络方式。</p>
+        <p style="margin-top:8px">请<strong>至少公开一种联络方式</strong>（微信/手机/邮箱），让匹配成功的来访者可以主动联动到您。</p>
       </div>
 
       <div class="form-row">
@@ -434,7 +434,7 @@
       </div>
 
       <div class="form-row">
-        <label>日常照片 <span class="label-hint">（选填，来访者可在匹配结果中直接看到；第一张作为头像展示）</span></label>
+        <label class="required">生活照片 <span class="label-hint">（必填，来访者可在匹配结果中直接看到；第一张作为头像展示）</span></label>
         <div class="photo-slots" id="slots_c_daily"></div>
         <input type="file" id="file_c_daily" accept="image/*" hidden onchange="onPhotoPicked('c_daily', this)">
         <div style="font-size:12px;color:#A09889;margin-top:6px">最多 2 张，建议清晰的正面生活照，系统会自动压缩</div>
@@ -443,7 +443,7 @@
       <div class="form-grid">
         <div class="form-row">
           <label class="required">主资质</label>
-          <select id="c_credential">
+          <select id="c_credential" onchange="toggleCredentialOther()">
             <option value="">请选择（用于匹配排序）</option>
             <option value="三级">心理咨询师（三级）</option>
             <option value="二级">心理咨询师（二级）</option>
@@ -452,12 +452,19 @@
             <option value="社会工作师（中级）">社会工作师（中级·社工师）</option>
             <option value="社会工作师（高级）">社会工作师（高级·高级社工师）</option>
             <option value="精神科医生">精神科医生</option>
-            <option value="督导师">督导师</option>
+            <option value="注册心理师">注册心理师</option>
+            <option value="其他">其他（下方补充填写）</option>
           </select>
+          <input type="text" id="c_credential_other" placeholder="请填写您的主资质名称，如：婚姻家庭咨询师、心理健康指导师…" style="display:none;margin-top:8px;font-size:14px;padding:10px 12px;border:1.5px solid #E8E4DC;border-radius:8px" autocomplete="off">
         </div>
         <div class="form-row">
-          <label>督导师证书编号</label>
-          <input type="text" id="c_supervisor_cert" placeholder="选填，如：中国心理学会注册督导师编号" style="font-size:14px;padding:10px 12px" autocomplete="off">
+          <label>督导师资质 <span class="label-hint">（单独一栏，已从主资质中移出；非督导师请保持默认）</span></label>
+          <select id="c_supervisor_level" onchange="toggleSupervisorCert()" style="font-size:14px;padding:10px 12px;border:1.5px solid #E8E4DC;border-radius:8px;width:100%">
+            <option value="">我不是督导师</option>
+            <option value="注册督导师">注册督导师（中国心理学会）</option>
+            <option value="其他督导师">其他督导师资质</option>
+          </select>
+          <input type="text" id="c_supervisor_cert" placeholder="督导师证书编号（选择督导师资质后必填）" style="display:none;margin-top:8px;font-size:14px;padding:10px 12px;border:1.5px solid #E8E4DC;border-radius:8px" autocomplete="off">
         </div>
         <div class="form-row">
           <label class="required">从业年限</label>
@@ -477,7 +484,6 @@
           <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="extra_credential" value="社会工作师（高级）"><div class="opt-label">社工师（高级）</div></div>
           <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="extra_credential" value="精神科医生"><div class="opt-label">精神科医生</div></div>
           <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="extra_credential" value="注册心理师"><div class="opt-label">注册心理师</div></div>
-          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="extra_credential" value="督导师"><div class="opt-label">督导师</div></div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;margin-top:10px">
           <input type="text" id="c_extra_credential_other" placeholder="其他资质，如：教师资格证、健康管理师…" style="flex:1;font-size:14px;padding:10px 12px" autocomplete="off">
@@ -509,7 +515,7 @@
       </div>
 
       <div class="form-row">
-        <label>证书 / 凭证照片 <span class="label-hint">（选填，仅平台审核可见，不对外展示）</span></label>
+        <label class="required">证书 / 凭证照片 <span class="label-hint">（必填，仅平台审核可见，不对外展示）</span></label>
         <div class="photo-slots" id="slots_c_license"></div>
         <input type="file" id="file_c_license" accept="image/*" hidden onchange="onPhotoPicked('c_license', this)">
         <div style="font-size:12px;color:#A09889;margin-top:6px">最多 2 张，建议资质证书、执业证明的照片，系统会自动压缩</div>
@@ -895,8 +901,8 @@
       <hr class="divider">
 
       <div class="form-row">
-        <label>联系方式（选填，可设置是否对外公布）</label>
-        <div style="font-size:12px;color:#A09889;margin-bottom:12px">勾选"允许对外公布"后，来访者可在匹配结果中看到该联系方式。如不公开任何联络方式，系统将通过平台消息通知您，可能存在延迟。</div>
+        <label class="required">联系方式（至少公开一种）</label>
+        <div style="font-size:12px;color:#A09889;margin-bottom:12px">请至少填写一种联络方式并勾选"允许对外公布"，让匹配成功的来访者可以主动联动到您。</div>
         <div class="form-grid">
           <div class="form-row">
             <label style="font-size:13px;font-weight:400;color:#A09889">微信号</label>
@@ -1614,8 +1620,7 @@ function copyEditLink() {
 function restoreFromData(d) {
   if (d.name) document.getElementById('c_name').value = d.name;
   if (d.gender) document.getElementById('c_gender').value = d.gender;
-  if (d.credential_level) document.getElementById('c_credential').value = d.credential_level;
-  if (d.supervisor_cert) document.getElementById('c_supervisor_cert').value = d.supervisor_cert;
+  restoreCredentialFields(d);
   if (d.years_experience) document.getElementById('c_years').value = d.years_experience;
   if (d.education) document.getElementById('c_education').value = d.education;
   if (d.city) document.getElementById('c_city').value = d.city;
@@ -1764,7 +1769,12 @@ function collectData() {
   return {
     name: document.getElementById('c_name').value.trim(),
     gender: document.getElementById('c_gender').value,
-    credential_level: document.getElementById('c_credential').value,
+    credential_level: (function() {
+      var v = document.getElementById('c_credential').value;
+      if (v === '其他') return document.getElementById('c_credential_other').value.trim() || '其他';
+      return v;
+    })(),
+    supervisor_level: document.getElementById('c_supervisor_level').value,
     supervisor_cert: document.getElementById('c_supervisor_cert').value.trim(),
     extra_credentials: getMultiChecked('extra_credential'),
     extra_credentials_other: otherExtraCredentials.slice(),
@@ -1830,27 +1840,71 @@ function collectData() {
   };
 }
 
+// 回填主资质 / 督导师栏（含历史「督导师」主资质值迁移到独立栏、自定义主资质落到「其他」）
+function restoreCredentialFields(d) {
+  var sel = document.getElementById('c_credential');
+  var other = document.getElementById('c_credential_other');
+  var supSel = document.getElementById('c_supervisor_level');
+  if (d.credential_level) {
+    var v = d.credential_level;
+    if (v === '督导师') {
+      sel.value = '';
+      if (supSel) supSel.value = '注册督导师';
+    } else if (Array.from(sel.options).some(function(o) { return o.value === v; })) {
+      sel.value = v;
+    } else {
+      sel.value = '其他';
+      if (other) other.value = v;
+    }
+  }
+  if (d.supervisor_level && supSel) supSel.value = d.supervisor_level;
+  toggleCredentialOther();
+  toggleSupervisorCert();
+  if (d.supervisor_cert) document.getElementById('c_supervisor_cert').value = d.supervisor_cert;
+}
+
 function toggleWelfareFee(prefix){
   var cb = document.getElementById(prefix + 'public_welfare');
   var row = document.getElementById(prefix + 'welfare_fee_row');
   if (row) row.style.display = (cb && cb.checked) ? 'block' : 'none';
 }
 
+// 主资质「其他」自定义输入框
+function toggleCredentialOther(){
+  var s = document.getElementById('c_credential');
+  var i = document.getElementById('c_credential_other');
+  if (i) i.style.display = (s && s.value === '其他') ? 'block' : 'none';
+}
+// 督导师资质独立一栏：选中后才显示编号输入框
+function toggleSupervisorCert(){
+  var s = document.getElementById('c_supervisor_level');
+  var i = document.getElementById('c_supervisor_cert');
+  if (!i) return;
+  var on = (s && s.value) ? true : false;
+  i.style.display = on ? 'block' : 'none';
+  if (!on) i.value = '';
+}
+
 function previewAndSubmit() {
   var d = collectData();
   if (!d.name) { showToast('请填写真实姓名'); goStep(1); return; }
   if (!/^[\u4e00-\u9fa5]{2,4}$/.test(d.name) && !/^[A-Za-z\s·]{2,30}$/.test(d.name)) { showToast('请填写真实姓名（中文2-4字或英文全名）'); goStep(1); return; }
-  if (!d.credential_level) { showToast('请选择资质等级'); goStep(1); return; }
+  if (!d.credential_level || d.credential_level === '其他') { showToast('请选择主资质，选「其他」请补充填写资质名称'); goStep(1); return; }
+  if (d.supervisor_level && !d.supervisor_cert) { showToast('您选择了督导师资质，请填写督导师证书编号'); goStep(1); return; }
+  if (!d.photo_daily.length) { showToast('请上传至少 1 张生活照片（来访者可见）'); goStep(1); return; }
+  if (!d.photo_license.length) { showToast('请上传至少 1 张证书 / 凭证照片（仅平台审核可见）'); goStep(1); return; }
   if (d.approaches.length === 0) { showToast('请至少选择一个咨询取向'); goStep(2); return; }
   if (d.specialties.length === 0) { showToast('请至少选择一个擅长议题'); goStep(3); return; }
   if (!d.bio_short) { showToast('请填写一句话简介'); goStep(5); return; }
+  var hasPublicContact = (d.contact_wechat && d.contact_wechat_public) || (d.contact_phone && d.contact_phone_public) || (d.contact_email && d.contact_email_public);
+  if (!hasPublicContact) { showToast('请至少填写一种联络方式并勾选「允许对外公布」，让来访者可以主动联动到您'); return; }
 
     var html = '<div class="preview-card"><h3>' + d.name + '</h3>';
     if (d.gender) { var gMap = {male:'男',female:'女',ta:'TA',other:'其他'}; html += '<span style="font-size:12px;color:#6B635A;margin-left:8px">' + (gMap[d.gender]||d.gender) + '</span>'; }
     html += '<p style="font-size:12px;color:#C4654A;margin-bottom:12px">⚠ 实名制 · 须与执业证姓名一致</p>';
   html += '<p style="font-size:13px;color:#6B635A;margin-bottom:12px">' + d.bio_short + '</p>';
   html += '<div class="preview-row"><span class="preview-label">资质</span><span class="preview-val">' + d.credential_level + '</span></div>';
-  if (d.supervisor_cert) html += '<div class="preview-row"><span class="preview-label">督导师证书编号</span><span class="preview-val">' + d.supervisor_cert + '</span></div>';
+  if (d.supervisor_level) html += '<div class="preview-row"><span class="preview-label">督导师资质</span><span class="preview-val">' + d.supervisor_level + (d.supervisor_cert ? ' · ' + d.supervisor_cert : '') + '</span></div>';
   if (d.photo_daily && d.photo_daily.length) html += '<div class="preview-row"><span class="preview-label">日常照片</span><span class="preview-val">' + d.photo_daily.length + ' 张（来访者可见）</span></div>';
   if (d.photo_license && d.photo_license.length) html += '<div class="preview-row"><span class="preview-label">证书照片</span><span class="preview-val">' + d.photo_license.length + ' 张（仅平台审核可见）</span></div>';
   if (d.extra_credentials && d.extra_credentials.length) {
@@ -2189,8 +2243,7 @@ function enterLocalCounselorAccount(value) {
     var d = JSON.parse(draft);
 
     if (d.name) document.getElementById('c_name').value = d.name;
-    if (d.credential_level) document.getElementById('c_credential').value = d.credential_level;
-    if (d.supervisor_cert) document.getElementById('c_supervisor_cert').value = d.supervisor_cert;
+    restoreCredentialFields(d);
     if (d.years_experience) document.getElementById('c_years').value = d.years_experience;
     if (d.education) document.getElementById('c_education').value = d.education;
     if (d.city) document.getElementById('c_city').value = d.city;
