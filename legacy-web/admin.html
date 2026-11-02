@@ -1811,6 +1811,10 @@
         if (['id','_id','view_token','edit_token','credential_hash','claim_hash'].includes(key)||key.startsWith('migration_')) return;
         if (type === 'counselors' && skipKeys.includes(key)) return;
         let value = item[key];
+        if (key === 'specials' && Array.isArray(value)) {
+          const sm = {medication:'服用精神类药物',diagnosed:'精神科诊断',substance:'物质滥用/成瘾',medical:'慢性躯体疾病',none:'无上述情况'};
+          value = value.map(function(v){return sm[v]||v;});
+        }
         if (value === null || value === undefined || value === '') return; // 跳过空值
         if (Array.isArray(value)) { value = value.join(', '); if (!value) return; }
         else if(typeof value==='object')value=JSON.stringify(value);

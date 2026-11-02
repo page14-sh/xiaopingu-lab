@@ -833,12 +833,12 @@
         <label>可承接的严重程度（可多选）<span class="term-tip" data-tip="评分标准（5题×5分，满分25）：
 轻度（0-7分）：生活/情绪轻微受影响，心理咨询可有效帮助
 中度（8-14分）：中度困扰，建议专业心理咨询
-重度（15分以上）：中重度，建议系统心理治疗，可联合精神科评估
+重度（15分以上）：中重度，建议系统心理咨询，可联合精神科评估
 危机：需要紧急干预 — 自伤/自杀风险，立即干预">?</span></label>
         <div class="option-grid" id="severity_grid" style="grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));">
           <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="severity" value="轻度"><div class="opt-label">轻度</div><div class="opt-desc">总分0-7，轻微困扰，心理咨询可有效帮助</div></div>
           <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="severity" value="中度"><div class="opt-label">中度</div><div class="opt-desc">总分8-14，建议专业心理咨询</div></div>
-          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="severity" value="重度"><div class="opt-label">重度</div><div class="opt-desc">总分15+，建议系统治疗，可联合精神科</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="severity" value="重度"><div class="opt-label">重度</div><div class="opt-desc">总分15+，建议系统心理咨询，可联合精神科</div></div>
         </div>
       </div>
 
@@ -2592,7 +2592,8 @@ function renderAssessmentDetail(a) {
   };
   var specialMap = {
     medication:'目前正在服用精神类药物', diagnosed:'已有精神科诊断',
-    substance:'存在物质滥用/成瘾', medical:'有慢性躯体疾病'
+    substance:'存在物质滥用/成瘾', medical:'有慢性躯体疾病',
+    none:'无上述情况'
   };
   var cInfo = crisisInfo(a.crisis_level);
   var prefMap = {
