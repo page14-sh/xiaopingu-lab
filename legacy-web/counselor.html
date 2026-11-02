@@ -603,7 +603,7 @@
           <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="approach" value="自体心理学"><div class="opt-label">自体心理学</div><div class="opt-desc">科胡特自体客体理论</div></div>
           <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="approach" value="人际精神分析"><div class="opt-label">人际精神分析</div><div class="opt-desc">IPT/ Sullivan人际关系</div></div>
           <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="approach" value="意义疗法"><div class="opt-label">意义疗法</div><div class="opt-desc">Frankl Logotherapy</div></div>
-          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="approach" value="积极心理治疗"><div class="opt-label">积极心理治疗</div><div class="opt-desc">Peseschkian平衡模型</div></div>
+          <div class="opt-card" onclick="toggleOpt(this)"><input type="checkbox" name="approach" value="积极心理取向"><div class="opt-label">积极心理取向</div><div class="opt-desc">Peseschkian平衡模型</div></div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;margin-top:10px">
           <input type="text" id="c_approach_other" placeholder="其他取向，如：矫正治疗、跨文化咨询、团体治疗…" style="flex:1;font-size:14px;padding:10px 12px" autocomplete="off">
@@ -1672,7 +1672,7 @@ function restoreFromData(d) {
   if (d.bio_full) document.getElementById('c_bio_full').value = d.bio_full;
   if (d.client_gender_pref) document.getElementById('c_client_gender_pref').value = d.client_gender_pref;
 
-  var stdApproaches = ['CBT','ACT','DBT','EMDR','精神动力学','人本主义','存在主义治疗','格式塔','家庭治疗','EFT','叙事治疗','婚姻伴侣治疗','游戏治疗','表达性艺术治疗','催眠治疗','正念','躯体治疗','短程焦点','荣格分析','自体心理学','人际精神分析','意义疗法','积极心理治疗'];
+  var stdApproaches = ['CBT','ACT','DBT','EMDR','精神动力学','人本主义','存在主义治疗','格式塔','家庭治疗','EFT','叙事治疗','婚姻伴侣治疗','游戏治疗','表达性艺术治疗','催眠治疗','正念','躯体治疗','短程焦点','荣格分析','自体心理学','人际精神分析','意义疗法','积极心理取向'];
   var stdSpecialties = ['emotion','relationship','trauma','growth','adolescent','marriage','personality','crisis'];
   var stdCerts = ['危机干预','EMDR认证','CBT认证','创伤专项','婚姻咨询专项','儿童青少年专项','EAP专项','家庭治疗专项','正念认证','CAMS自杀干预','心理测量','评估性治疗','循证咨询受训','精神科门诊见习'];
   var stdPopulations = ['成人','青少年','儿童','大学生','家长','老年人','LGBTQ+','企业员工'];
@@ -3026,7 +3026,7 @@ function pad(n) { return n<10?'0'+n:n; }
 
 // ===== 面板内编辑档案 =====
 var PE_OPTIONS = {
-  approaches: ['CBT','ACT','DBT','EMDR','精神动力学','人本主义','存在主义治疗','格式塔','家庭治疗','EFT','叙事治疗','婚姻伴侣治疗','游戏治疗','表达性艺术治疗','催眠治疗','正念','躯体治疗','短程焦点','荣格分析','自体心理学','人际精神分析','意义疗法','积极心理治疗'],
+  approaches: ['CBT','ACT','DBT','EMDR','精神动力学','人本主义','存在主义治疗','格式塔','家庭治疗','EFT','叙事治疗','婚姻伴侣治疗','游戏治疗','表达性艺术治疗','催眠治疗','正念','躯体治疗','短程焦点','荣格分析','自体心理学','人际精神分析','意义疗法','积极心理取向'],
   specialties: ['emotion','relationship','trauma','growth','adolescent','marriage','personality','crisis'],
   service_settings: ['个体咨询','伴侣咨询','家庭治疗','团体咨询'],
   extra_credentials: ['心理咨询师（三级）','心理咨询师（二级）','心理治疗师','社会工作师（初级）','社会工作师（中级）','社会工作师（高级）','精神科医生','注册心理师','督导师'],
@@ -3046,7 +3046,7 @@ var PE_OPTIONS = {
   cnip_relational: ['discuss','optional','task-focused']
 };
 var PE_LABELS = {
-  approaches: {'CBT':'认知行为','ACT':'接纳承诺','DBT':'辩证行为','EMDR':'眼动脱敏','精神动力学':'精神动力学','人本主义':'人本主义','存在主义治疗':'存在主义','格式塔':'格式塔','家庭治疗':'家庭治疗','EFT':'EFT情绪聚焦','叙事治疗':'叙事治疗','婚姻伴侣治疗':'婚姻伴侣','游戏治疗':'游戏治疗','表达性艺术治疗':'表达艺术','催眠治疗':'催眠治疗','正念':'正念','躯体治疗':'躯体治疗','短程焦点':'短程焦点','荣格分析':'荣格分析','自体心理学':'自体心理学','人际精神分析':'人际精神分析','意义疗法':'意义疗法','积极心理治疗':'积极心理治疗'},
+  approaches: {'CBT':'认知行为','ACT':'接纳承诺','DBT':'辩证行为','EMDR':'眼动脱敏','精神动力学':'精神动力学','人本主义':'人本主义','存在主义治疗':'存在主义','格式塔':'格式塔','家庭治疗':'家庭治疗','EFT':'EFT情绪聚焦','叙事治疗':'叙事治疗','婚姻伴侣治疗':'婚姻伴侣','游戏治疗':'游戏治疗','表达性艺术治疗':'表达艺术','催眠治疗':'催眠治疗','正念':'正念','躯体治疗':'躯体治疗','短程焦点':'短程焦点','荣格分析':'荣格分析','自体心理学':'自体心理学','人际精神分析':'人际精神分析','意义疗法':'意义疗法','积极心理取向':'积极心理取向'},
   specialties: {'emotion':'情绪困扰','relationship':'人际关系','trauma':'创伤经历','growth':'自我成长','adolescent':'青少年问题','marriage':'婚姻家庭','personality':'人格议题','crisis':'危机干预'},
   service_settings: {'个体咨询':'个体咨询','伴侣咨询':'伴侣咨询','家庭治疗':'家庭治疗','团体咨询':'团体咨询'},
   extra_credentials: {'心理咨询师（三级）':'三级咨询师','心理咨询师（二级）':'二级咨询师','心理治疗师':'心理治疗师','社会工作师（初级）':'社工师(初级)','社会工作师（中级）':'社工师(中级)','社会工作师（高级）':'社工师(高级)','精神科医生':'精神科医生','注册心理师':'注册心理师','督导师':'督导师'},

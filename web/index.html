@@ -1927,7 +1927,7 @@ function generateResult() {
   var specials=[];document.querySelectorAll('input[name="special"]:checked').forEach(function(el){specials.push(el.value);});
   var totalScore=scores.mood+scores.anxiety+scores.sleep+scores.function+scores.relation;
   var severity='一般心理困扰',severityColor='teal';
-  if(totalScore>=20){severity='需精神科就医';severityColor='coral';}else if(totalScore>=15){severity='需要心理治疗介入';severityColor='coral';}else if(totalScore>=8){severity='需要外力介入';severityColor='amber';}
+  if(totalScore>=20){severity='需精神科就医';severityColor='coral';}else if(totalScore>=15){severity='需要心理咨询介入';severityColor='coral';}else if(totalScore>=8){severity='需要外力介入';severityColor='amber';}
   // 标准三级制 severity（用于匹配算法）
   var severityStandard='轻度';
   if(totalScore>=15)severityStandard='重度';else if(totalScore>=8)severityStandard='中度';
@@ -2652,7 +2652,7 @@ function rebuildAssessmentFromDOM(){
       relScore = scores.relation || 0;
       totalScore = moodScore + anxietyScore + sleepScore + funcScore + relScore;
       if(totalScore >= 20) severity = '需精神科就医';
-      else if(totalScore >= 15) severity = '需要心理治疗介入';
+      else if(totalScore >= 15) severity = '需要心理咨询介入';
       else if(totalScore >= 8) severity = '需要外力介入';
     }
     // 第3优先：从结果面板 HTML 文本解析（兜底）
@@ -2672,7 +2672,7 @@ function rebuildAssessmentFromDOM(){
         if (relMatch) relScore = parseInt(relMatch[1]) || 0;
         totalScore = moodScore + anxietyScore + sleepScore + funcScore + relScore;
         if(totalScore >= 20) severity = '需精神科就医';
-        else if(totalScore >= 15) severity = '需要心理治疗介入';
+        else if(totalScore >= 15) severity = '需要心理咨询介入';
         else if(totalScore >= 8) severity = '需要外力介入';
         console.log('[小平菇] DOM重建：从结果面板文本解析 scores='+moodScore+','+anxietyScore+','+sleepScore);
       }
