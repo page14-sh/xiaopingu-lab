@@ -343,7 +343,13 @@ function matchCounselors(assessment) {
       }
 
       // 7. 经济匹配（6分）
-      if (assessment.budget && c.fee_budget_level) {
+      if (assessment.budget === 'welfare') {
+        // 寻求公益价格咨询：与选择「公益咨询」的咨询师对齐
+        if (c.public_welfare === true) {
+          score += 6;
+          details.push('经济匹配: 公益咨询师（符合公益价格需求）');
+        }
+      } else if (assessment.budget && c.fee_budget_level) {
         var clientRank = budgetRank[assessment.budget] || 0;
         var counselorRank = budgetRank[c.fee_budget_level] || 0;
         if (clientRank > 0 && counselorRank > 0) {

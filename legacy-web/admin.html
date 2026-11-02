@@ -1514,7 +1514,7 @@
         '<td>' + severityTag + '</td>' +
         '<td>' + crisisTag + '</td>' +
         '<td>' + formatArray(a.preferred_formats, 'yellow') + '</td>' +
-        '<td>' + (a.budget || '-') + '</td>' +
+        '<td>' + formatBudget(a.budget) + '</td>' +
         '<td>' + formatAiTalk(a) + '</td>' +
         '<td>' + formatTime(a.created_at) + '</td>' +
         '<td><div class="action-btns">' +
@@ -1873,6 +1873,12 @@
       var cls = (f === 'mostly' && a.ai_talk_replace === 'replaced') ? 'red'
         : (f === 'often' || f === 'mostly') ? 'yellow' : 'green';
       return '<span class="tag tag-' + cls + '">' + (map[f] || f) + '</span>';
+    }
+
+    function formatBudget(v) {
+      if (!v) return '-';
+      var map = { low:'300元/次以内', mid:'300-600元/次', high:'600-1000元/次', premium:'1000元/次以上', welfare:'希望寻求公益价格咨询' };
+      return map[v] || v;
     }
 
     // ========== 删除操作 ==========

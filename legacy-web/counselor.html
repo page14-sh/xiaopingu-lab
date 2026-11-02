@@ -2624,7 +2624,7 @@ function renderAssessmentDetail(a) {
   html += renderDetailItem('是否咨询过', a.prev_counseling);
   html += renderDetailItem('困扰时长', a.duration);
   html += renderDetailItem('咨询方式', arrVal(a.preferred_formats).join('、') || '-');
-  html += renderDetailItem('经济承受', mapVal(a.budget, {low:'300元/次以内', mid:'300-600元/次', high:'600-1000元/次', premium:'1000元/次以上'}));
+  html += renderDetailItem('经济承受', mapVal(a.budget, {low:'300元/次以内', mid:'300-600元/次', high:'600-1000元/次', premium:'1000元/次以上', welfare:'希望寻求公益价格咨询'}));
   html += '</div></div>';
 
   html += '<div class="detail-section"><div class="detail-title">咨询偏好</div><div class="detail-grid">';
