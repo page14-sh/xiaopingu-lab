@@ -1,6 +1,6 @@
 // REST compatibility for existing intake/profile pages. All data uses the injected v2 namespace.
 const crypto=require('node:crypto');
-function createLegacyRest({db,hooks}) {
+function createLegacyRest({db,hooks,photos}) {
 const _=db.command;
 const TABLES=['counselors','assessments','sessions','pcoms_ratings','visitor_users'];
 const DEMO_COUNSELOR_CODES={counselor:'00000000-0000-4000-8000-000000000001',counselor2:'00000000-0000-4000-8000-000000000002'};
@@ -90,14 +90,14 @@ function stripCounselor(row) {
   COUNSELOR_SENSITIVE.forEach((k) => delete out[k]);
   return out;
 }
-// 咨询师照片：dataURL 数组，每张 ≤ 260KB（字符数），最多 3 张；非图片/超限一律剔除
+// Legacy test/local runtime only. Production uses private storage via photos.save.
 function sanitizeCounselorPhotos(v) {
   if (!Array.isArray(v)) return [];
   const out = [];
   v.forEach((s) => {
     if (typeof s === 'string' && /^data:image\/(jpeg|jpg|png|webp);base64,/.test(s) && s.length <= 260000) out.push(s);
   });
-  return out.slice(0, 3);
+  return out.slice(0, 2);
 }
 // 本人档案编辑白名单；审核、启用状态与身份字段须管理员。
 const COUNSELOR_PATCH_FIELDS = [
@@ -239,6 +239,7 @@ async function handleRest(req, res, table, params, caller) {
       // 咨询师令牌看自己完整档案；其余（含匿名）一律剥离敏感字段
       out = out.map((r) => (caller.role === 'counselor' && r.id === caller.counselorId ? r : stripCounselor(r)));
     }
+    if (table === 'counselors' && photos) out = await photos.present(out);
     return sendJson(res, 200, out);
   }
 
@@ -248,6 +249,7 @@ async function handleRest(req, res, table, params, caller) {
     const items = Array.isArray(body) ? body : [body];
     if (!['assessments','counselors'].includes(table)) return sendJson(res,403,{message:'该写入口仅对管理员开放'});
     if(!items.length||items.length>20||items.some(x=>!x||Object.getPrototypeOf(x)!==Object.prototype))return sendJson(res,400,{message:'请求内容不合法'});
+    if (photos && table === 'counselors' && items.length !== 1) return sendJson(res,400,{message:'请逐份提交咨询师资料'});
 
     if (table === 'visitor_users') {
       const results = [];
@@ -270,8 +272,8 @@ async function handleRest(req, res, table, params, caller) {
       const now = nowIso();
       if (table === 'counselors') {
         const row = pickAllowed(item, COUNSELOR_PATCH_FIELDS.concat(['id', 'created_at']));
-        row.photo_daily = sanitizeCounselorPhotos(item.photo_daily);
-        row.photo_license = sanitizeCounselorPhotos(item.photo_license);
+        row.photo_daily = photos ? (item.photo_daily || []) : sanitizeCounselorPhotos(item.photo_daily);
+        row.photo_license = photos ? (item.photo_license || []) : sanitizeCounselorPhotos(item.photo_license);
         row.id = isUuid(item.id) ? item.id : uuid();
         if (await findOne('counselors', { id: row.id })) return sendJson(res, 409, { message: '记录已存在' });
         row.edit_token = crypto.randomBytes(24).toString('base64url');
@@ -281,6 +283,12 @@ async function handleRest(req, res, table, params, caller) {
         row.is_demo = false;
         row.needs_deep_review = item.has_violation === '是' || item.has_incident === '是';
         row.review_status = isAdmin ? (item.review_status || 'pending') : 'pending'; // 匿名录入一律待审
+        if (photos) {
+          const saved = await photos.save(row.id, row, null, next => hooks.createCounselor(next), () => findOne('counselors', { id: row.id }));
+          // Registration returns identifiers only: certificate URLs require login.
+          results.push({ id: saved.id, edit_token: saved.edit_token, review_status: saved.review_status });
+          continue;
+        }
         await hooks.createCounselor(row);
         // Only the successful registration response returns this new editing credential.
         results.push(row);
@@ -344,21 +352,26 @@ async function handleRest(req, res, table, params, caller) {
       const allowed = isAdmin ? patch : pickAllowed(patch, COUNSELOR_PATCH_FIELDS);
       if(!isAdmin && target.review_status==='rejected')Object.assign(allowed,{review_status:'pending',is_active:false});
       if(!isAdmin && ('has_violation'in allowed||'has_incident'in allowed))allowed.needs_deep_review=(allowed.has_violation??target.has_violation)==='是'||(allowed.has_incident??target.has_incident)==='是';
-      if ('photo_daily' in allowed) allowed.photo_daily = sanitizeCounselorPhotos(allowed.photo_daily);
-      if ('photo_license' in allowed) allowed.photo_license = sanitizeCounselorPhotos(allowed.photo_license);
+      if (!photos) {
+        if ('photo_daily' in allowed) allowed.photo_daily = sanitizeCounselorPhotos(allowed.photo_daily);
+        if ('photo_license' in allowed) allowed.photo_license = sanitizeCounselorPhotos(allowed.photo_license);
+      }
       // 资质 / 认证字段有实质变更 → 记录更新时间，供平台复核
       // （不改变 review_status：修改档案不会让咨询师下架，也不影响已通过的匹配）
       const CRED_KEYS = ['credential_level', 'years_experience', 'license_number', 'supervisor_cert',
         'extra_credentials', 'extra_credentials_other', 'certifications', 'certifications_other',
         'therapy_cert', 'photo_license', 'education', 'training_background'];
       const credChanged = CRED_KEYS.some(function(k) {
-        return (k in allowed) && JSON.stringify(allowed[k]) !== JSON.stringify(target[k]);
+        const comparable = v => k === 'photo_license' && Array.isArray(v) ? v.map(x => x && typeof x === 'object' ? x.file_id : x) : v;
+        return (k in allowed) && JSON.stringify(comparable(allowed[k])) !== JSON.stringify(comparable(target[k]));
       });
       if (credChanged) allowed.credential_updated_at = nowIso();
       allowed.updated_at = nowIso();
-      await updateWhere('counselors', { id: target.id }, allowed);
+      if (photos) await photos.save(target.id, allowed, target, next => hooks.patchCounselor(target, next), () => findOne('counselors', { id: target.id }));
+      else await updateWhere('counselors', { id: target.id }, allowed);
       const fresh = await findOne('counselors', { id: target.id });
-      return sendJson(res, 200, [isAdmin ? fresh : stripCounselor(fresh)]);
+      // The authenticated owner needs their certificate references when editing again.
+      return sendJson(res, 200, photos ? await photos.present([fresh]) : [isAdmin ? fresh : stripCounselor(fresh)]);
     }
 
     if (table === 'assessments') {

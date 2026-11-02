@@ -19,9 +19,11 @@ if (!env || !accessKey || !adminPassword || !sessionSecret) {
 
 const policy=runtimePolicy();
 const app = cloudbase.init({ env, accessKey });
+const photos = policy.portalEnabled ? require('./portal/photos').createCounselorPhotos({ storage: app, namespace: policy.prefix }) : null;
 const store = createCloudBaseStore(namespaceDatabase(app.database(),policy.prefix), { notificationProvider: policy.notificationsEnabled?providerFromEnvironment(app):disabledNotifications, llmProvider: policy.llmEnabled?llmProviderFromEnvironment():{ready:false} });
 const productionHandler = createRequestHandler({
   store,
+  photos,
   portalEnabled:policy.portalEnabled,
   cutoverReady:!policy.production||process.env.XPG_CUTOVER_READY==='1',
   adminPassword,

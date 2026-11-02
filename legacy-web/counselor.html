@@ -1270,7 +1270,7 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="assets/confirm-action.js?v=20261027-platform"></script><script src="supabase-config.js?v=20261027-chain"></script><script src="assets/demo-accounts.js?v=20261027-cloud"></script>
+<script src="assets/confirm-action.js?v=20261027-platform"></script><script src="supabase-config.js?v=20261103-private-photos"></script><script src="assets/demo-accounts.js?v=20261027-cloud"></script>
 <script>
 var currentStep = 1;
 var currentEditToken = null;
@@ -1427,7 +1427,7 @@ function renderPhotoSlots(key) {
   var arr = photoStore[key];
   var html = '';
   arr.forEach(function(durl, i) {
-    html += '<div class="photo-slot"><img src="' + durl + '" alt=""><span class="photo-del" onclick="removePhoto(\'' + key + '\',' + i + ')">×</span></div>';
+    html += '<div class="photo-slot"><img src="' + counselorPhotoUrl(durl) + '" referrerpolicy="no-referrer" alt="照片（链接过期请重新打开档案）"><span class="photo-del" onclick="removePhoto(\'' + key + '\',' + i + ')">×</span></div>';
   });
   if (arr.length < PHOTO_MAX) {
     html += '<div class="photo-slot" onclick="document.getElementById(\'file_' + key + '\').click()">＋</div>';
@@ -1441,8 +1441,11 @@ function removePhoto(key, i) {
 function onPhotoPicked(key, input) {
   var f = input.files && input.files[0];
   if (!f) return;
+  if (photoStore[key].length >= PHOTO_MAX) { showToast('每类最多 2 张照片'); input.value = ''; return; }
+  if (!/^image\/(jpeg|png|webp)$/.test(f.type) || f.size > 10 * 1024 * 1024) { showToast('请选择 10 MB 以内的 JPG、PNG 或 WebP 图片'); input.value = ''; return; }
   compressImage(f, function(durl) {
     if (!durl) { showToast('图片读取失败，请换一张'); return; }
+    if (photoStore[key].length >= PHOTO_MAX) { showToast('每类最多 2 张照片'); return; }
     photoStore[key].push(durl);
     renderPhotoSlots(key);
   });
@@ -1830,8 +1833,8 @@ function collectData() {
     contact_email_public: document.getElementById('c_email_public').checked,
     public_welfare: document.getElementById('c_public_welfare').checked,
     public_welfare_fee: parseInt(document.getElementById('c_public_welfare_fee').value) || null,
-    photo_daily: photoStore.c_daily.slice(),
-    photo_license: photoStore.c_license.slice(),
+    photo_daily: counselorPhotoPayload(photoStore.c_daily),
+    photo_license: counselorPhotoPayload(photoStore.c_license),
     wx_openid: _wxOpenid || undefined,
     wx_bind_token: _wxBindToken || undefined,
     bio_short: document.getElementById('c_bio_short').value.trim(),
@@ -2052,6 +2055,10 @@ function submitProfile() {
       submitBtn.style.cursor = 'not-allowed';
     }
     updateCounselor(currentEditId, d).then(function(result) {
+      if (result) {
+        photoStore.c_daily = result.photo_daily || []; photoStore.c_license = result.photo_license || [];
+        renderPhotoSlots('c_daily'); renderPhotoSlots('c_license');
+      }
       if (currentReviewStatus === 'rejected') {
         showToast('✅ 已重新提交审核，请等待管理员审核结果');
         currentReviewStatus = 'pending';
@@ -2149,19 +2156,16 @@ function submitProfile() {
       } else if (result && result.edit_token) {
         // 新模式：返回输入数据对象
         token = result.edit_token;
+        if (result.id) localStorage.setItem('xiaopingu_counselor_id', result.id);
       } else {
         token = d.edit_token || '';
       }
       onSuccess('档案已成功提交！', token);
     }).catch(function(err) {
-      console.warn('[小平菇] 后端保存失败，已保存本地草稿:', err);
-      localStorage.setItem('xiaopingu_counselor_draft', JSON.stringify(d));
-      // 仍然展示成功页
-      onSuccess('档案已成功提交！');
+      onFail('资料未提交成功，请稍后重试。照片仅保留在当前页面，刷新前请先完成提交。');
     });
   } else {
-    localStorage.setItem('xiaopingu_counselor_draft', JSON.stringify(d));
-    onSuccess('档案已成功提交！');
+    onFail('资料服务尚未连接，无法提交。请保留当前页面并稍后重试。');
   }
 }
 
@@ -2249,6 +2253,8 @@ function enterLocalCounselorAccount(value) {
     var draft = localStorage.getItem('xiaopingu_counselor_draft');
     if (!draft) return;
     var d = JSON.parse(draft);
+    // Restore once into memory, then remove sensitive legacy drafts from disk.
+    localStorage.removeItem('xiaopingu_counselor_draft');
 
     if (d.name) document.getElementById('c_name').value = d.name;
     restoreCredentialFields(d);
@@ -3248,8 +3254,8 @@ function saveCounselorProfile() {
     available_slots: document.getElementById('pe_slots').value || null,
     public_welfare: document.getElementById('pe_public_welfare').checked,
     public_welfare_fee: parseInt(document.getElementById('pe_public_welfare_fee').value) || null,
-    photo_daily: photoStore.pe_daily.slice(),
-    photo_license: photoStore.pe_license.slice(),
+    photo_daily: counselorPhotoPayload(photoStore.pe_daily),
+    photo_license: counselorPhotoPayload(photoStore.pe_license),
     contact_wechat: document.getElementById('pe_wechat').value || null,
     contact_wechat_public: document.getElementById('pe_wechat_public').checked,
     contact_phone: document.getElementById('pe_phone').value || null,
@@ -3267,6 +3273,11 @@ function saveCounselorProfile() {
   })
   .then(function(r) {
     if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.json();
+  })
+  .then(function(rows) {
+    var saved = rows[0];
+    if (saved) { photoStore.pe_daily = saved.photo_daily || []; photoStore.pe_license = saved.photo_license || []; }
     peToast('档案已更新 ✓');
     setTimeout(function() { hideEditPanel(); }, 800);
   })

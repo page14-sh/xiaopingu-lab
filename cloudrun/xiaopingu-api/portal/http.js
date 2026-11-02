@@ -3,8 +3,8 @@ const {history}=require('./history');
 const {AUDIENCE,fields,deny,authorizeMatch}=require('../assessment/authorization');
 const {COLLECTIONS:C,AssessmentError}=require('../assessment/model');
 const HISTORY_AUDIENCE='xg-history';
-function createPortalHttp({portal,signSession,sessionSecret,readJson,sendJson}){
- const rest=createLegacyRest({db:portal.db,hooks:portal});
+function createPortalHttp({portal,photos,signSession,sessionSecret,readJson,sendJson}){
+ const rest=createLegacyRest({db:portal.db,hooks:portal,photos});
  return async function(req,res,url,session){
   const p=url.pathname;
   if(!['/auth/visitor-receipt','/auth/history','/resolve','/xg/counselor-context'].includes(p)&&!p.startsWith('/v1/xg/portal/')&&!p.startsWith('/rest/v1/'))return false;
@@ -30,7 +30,7 @@ function createPortalHttp({portal,signSession,sessionSecret,readJson,sendJson}){
      if(session.role==='counselor'){const counselor=await portal.source.get('counselors',session.subject);if(!counselor||counselor.is_demo)deny();caller={role:'counselor',counselorId:session.subject,counselor,principal:session};}
      else {await portal.member(session);caller={role:session.role,principal:session};}
     }
-    if(['POST','PATCH'].includes(req.method))req.__bodyRaw=JSON.stringify(await readJson(req));
+    if(['POST','PATCH'].includes(req.method))req.__bodyRaw=JSON.stringify(await readJson(req,p==='/rest/v1/counselors'?2*1024*1024:1024*1024));
     await rest(req,res,p.slice('/rest/v1/'.length),url.searchParams,caller);return true;
    }
    const readOnly=session?.aud===HISTORY_AUDIENCE&&session.role==='visitor'&&session.read_only===true;

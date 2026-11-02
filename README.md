@@ -17,6 +17,7 @@ xiaopingu-lab/
 当前后端采用 CloudRun + CloudBase NoSQL，源码在 `cloudrun/xiaopingu-api/`；当前 Web 发布源码在 `legacy-web/`。正式数据已迁入独立 v2 数据区，旧库保留。当前系统不使用 `server/` 的 Supabase SQL。
 
 - [v2 源码与准确接口契约](docs/v2-source-and-api.md)
+- [咨询师照片私有存储与发布说明](docs/counselor-photo-storage.md)
 - [固定账号与平台原页面操作文档](docs/platform-demo-accounts.md)
 - `npm run start:demo`：启动平台原首页 `http://127.0.0.1:8796/`，数据实际写入 CloudBase 合成测试区。
 - `npm run demo:accounts`：首次创建固定演示账号，密码只保存到 `.private/test-chain/platform-accounts.md`，已有账号不会重置。

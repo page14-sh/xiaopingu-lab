@@ -161,7 +161,7 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="supabase-config.js?v=20261027-chain"></script><script src="assets/demo-accounts.js?v=20261027-cloud"></script>
+<script src="supabase-config.js?v=20261103-private-photos"></script><script src="assets/demo-accounts.js?v=20261027-cloud"></script>
 <script>
 var API = SUPABASE_CONFIG.url+'/rest/v1';
 var REST = SUPABASE_CONFIG.url;
@@ -340,7 +340,7 @@ document.getElementById('basic').innerHTML = [
         if (!c) { el.textContent = '咨询师：' + esc(d.selected_counselor_name || '（已申请）'); return; }
         el.innerHTML = '<div class="divider"></div>' +
           '<p class="sec-title">你的咨询师</p>' +
-          (c.photo_daily && c.photo_daily[0] ? '<img src="'+c.photo_daily[0]+'" alt="咨询师照片" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid #F0EDE6;margin-bottom:8px">' : '') +
+          (c.photo_daily && c.photo_daily[0] ? '<img src="'+counselorPhotoUrl(c.photo_daily[0])+'" referrerpolicy="no-referrer" alt="咨询师照片" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid #F0EDE6;margin-bottom:8px">' : '') +
           '<dl class="kv">' +
           '<dt>姓名</dt><dd>'+esc(c.name)+'</dd>' +
           (c.city ? '<dt>城市</dt><dd>'+esc(c.city)+'</dd>' : '') +

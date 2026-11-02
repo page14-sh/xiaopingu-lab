@@ -1437,7 +1437,7 @@ async function doCounselorLogin() {
 
 <div class="toast" id="toast"></div>
 <script src="web-auth.js?v=20261027-chain"></script>
-<script src="supabase-config.js?v=20261027-chain"></script><script src="assets/demo-accounts.js?v=20261027-cloud"></script>
+<script src="supabase-config.js?v=20261103-private-photos"></script><script src="assets/demo-accounts.js?v=20261027-cloud"></script>
 <script>
 var scores = { mood:0, anxiety:0, sleep:0, function:0, relation:0 };
 var scaleAnswered = { mood:false, anxiety:false, sleep:false, function:false, relation:false };
@@ -2345,7 +2345,7 @@ function generateResult() {
 
           // 头部：日常照片 + 姓名 + 匹配度 + 公益标识
           chtml+='<div class="counselor-header"><span class="c-head-left">';
-          if(c.photo_daily&&c.photo_daily[0]) chtml+='<img class="counselor-photo" src="'+c.photo_daily[0]+'" alt="咨询师照片">';
+          if(c.photo_daily&&c.photo_daily[0]) chtml+='<img class="counselor-photo" src="'+counselorPhotoUrl(c.photo_daily[0])+'" referrerpolicy="no-referrer" alt="咨询师照片">';
           chtml+='<span class="counselor-name">'+esc(c.name);
           if(c.public_welfare) chtml+=' <span class="counselor-welfare-badge">🌿 公益</span>';
           chtml+='</span></span>';

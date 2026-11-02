@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
-  <script src="supabase-config.js?v=20261027-chain"></script><script src="assets/demo-accounts.js?v=20261027-cloud"></script>
+  <script src="supabase-config.js?v=20261103-private-photos"></script><script src="assets/demo-accounts.js?v=20261027-cloud"></script>
   <script src="web-auth.js?v=20261027-chain"></script>
   <title>小平菇 · 数据管理后台</title>
   <style>
@@ -947,7 +947,7 @@
   <div class="modal-overlay" id="modal-photo" onclick="closeModal(event, 'modal-photo')">
     <div class="modal" onclick="event.stopPropagation()">
       <button class="modal-close" onclick="closeModal(null, 'modal-photo')">&times;</button>
-      <img id="modal-photo-img" src="" alt="照片">
+      <img id="modal-photo-img" src="" referrerpolicy="no-referrer" alt="照片">
     </div>
   </div>
 
@@ -1042,6 +1042,10 @@
     function doLogout() {
       if (window.XPG_API_AUTH) XPG_API_AUTH.clearAdminSession();
       if (window.XPG_WEB_AUTH) XPG_WEB_AUTH.clearSession('admin');
+      allData = { counselors: [], assessments: [] };
+      document.querySelectorAll('.modal-overlay.active').forEach(function(modal) { modal.classList.remove('active'); });
+      document.getElementById('modal-content').textContent = '';
+      document.getElementById('modal-photo-img').removeAttribute('src');
       document.getElementById('main-app').style.display = 'none';
       document.getElementById('login-screen').style.display = 'flex';
       document.getElementById('login-password').value = '';
@@ -1144,6 +1148,7 @@
     function closeModal(event, id) {
       if (event && event.target !== event.currentTarget) return;
       document.getElementById(id).classList.remove('active');
+      if (id === 'modal-photo') document.getElementById('modal-photo-img').removeAttribute('src');
     }
 
     // ========== 加载数据 ==========
@@ -1726,9 +1731,20 @@
     }
 
     // ========== 查看详情 ==========
-    function viewDetail(type, id) {
-      const item = allData[type].find(d => d.id === id);
+    async function viewDetail(type, id) {
+      let item = allData[type].find(d => d.id === id);
       if (!item) return;
+      if (type === 'counselors') {
+        const detailToken = currentApiToken();
+        try {
+          const response = await fetch(SUPABASE_CONFIG.url + '/rest/v1/counselors?id=eq.' + encodeURIComponent(id), { headers: getSupabaseHeaders(), cache: 'no-store' });
+          if (!response.ok) throw new Error('档案读取失败');
+          const rows = await response.json();
+          if (!detailToken || currentApiToken() !== detailToken) return;
+          if (!rows[0]) throw new Error('档案不存在');
+          item = rows[0];
+        } catch (_) { showToast('无法读取最新档案，请重新登录或稍后重试', 'error'); return; }
+      }
 
       const modal = document.getElementById('modal-detail');
       const title = document.getElementById('modal-title');
@@ -1798,7 +1814,7 @@
             html += '<div class="photo-section"><p class="photo-section-title">' + s.title +
               '<span class="photo-section-note">' + s.note + ' · 共 ' + arr.length + ' 张，点击放大</span></p><div class="photo-grid">';
             arr.forEach(function(durl) {
-              html += '<img class="photo-thumb" src="' + escapeHtml(durl) + '" alt="' + s.title + '" loading="lazy" onclick="showPhoto(this.src)">';
+              html += '<img class="photo-thumb" src="' + escapeHtml(counselorPhotoUrl(durl)) + '" referrerpolicy="no-referrer" alt="' + s.title + '（链接过期请重新打开详情）" loading="lazy" onclick="showPhoto(this.src)">';
             });
             html += '</div></div>';
           }

@@ -60,13 +60,13 @@ function sendJson(res, statusCode, data) {
   res.end(JSON.stringify(data));
 }
 
-function readJson(req) {
+function readJson(req, maxBytes = 1024 * 1024) {
   return new Promise((resolve, reject) => {
     const chunks = [];
     let size = 0;
     req.on('data', (chunk) => {
       size += chunk.length;
-      if (size > 1024 * 1024) {
+      if (size > maxBytes) {
         reject(Object.assign(new Error('Request body is too large'), { statusCode: 413 }));
         req.destroy();
         return;
@@ -332,7 +332,7 @@ function createRequestHandler(options) {
     identityBridge: options.identityBridge, serviceSecrets: options.serviceSecrets, readJson, sendJson,
     demoCounselorIds: Object.values(DEMO_COUNSELOR_ALIASES) });
 
-  const portalHandler=options.portalEnabled&&store.portal?require('./portal/http').createPortalHttp({portal:store.portal,signSession,sessionSecret,readJson,sendJson}):null;
+  const portalHandler=options.portalEnabled&&store.portal?require('./portal/http').createPortalHttp({portal:store.portal,photos:options.photos,signSession,sessionSecret,readJson,sendJson}):null;
   return async function handler(req, res) {
     try {
       if (req.method === 'OPTIONS') {

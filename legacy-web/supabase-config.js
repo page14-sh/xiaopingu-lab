@@ -5,6 +5,20 @@ var SUPABASE_CONFIG = {
   anonKey: ''
 };
 
+// Storage references are durable; signed preview URLs live only in page memory.
+function counselorPhotoUrl(photo) {
+  var value = typeof photo === 'string' ? photo : photo && photo.url;
+  if (typeof value !== 'string') return '';
+  if (/^data:image\/(jpeg|jpg|png|webp);base64,[A-Za-z0-9+/]+=*$/.test(value)) return value;
+  if (/^https:\/\//.test(value) && !/[\s<>"']/.test(value)) return value;
+  return '';
+}
+function counselorPhotoPayload(photos) {
+  return (photos || []).map(function(photo) {
+    return photo && typeof photo === 'object' ? { file_id: photo.file_id } : photo;
+  });
+}
+
 
 
 // ========== API 封装 ==========
@@ -157,9 +171,9 @@ function updateCounselor(id, data) {
     headers: getSupabaseWriteHeaders(),
     body: JSON.stringify({ ...data, updated_at: new Date().toISOString() })
   }).then(function(r) {
-    if (r.ok) return true;
+    if (r.ok) return r.json().then(function(rows) { return rows[0]; });
     else throw new Error('HTTP ' + r.status);
-  }).catch(function(e) { console.warn('[小平菇] 更新失败:', e); (typeof showToast==='function'?showToast:_xpg_toast)('档案更新失败，请重试','error'); });
+  }).catch(function(e) { (typeof showToast==='function'?showToast:_xpg_toast)('档案更新失败，请重试','error'); throw e; });
 }
 
 // 审核咨询师档案
@@ -441,5 +455,4 @@ function matchCounselors(assessment) {
     return [];
   });
 }
-
 
