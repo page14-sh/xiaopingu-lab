@@ -16,12 +16,14 @@ async function api(path,body,method){const r=await fetch(SUPABASE_CONFIG.url+pat
 const key=()=>role==='admin'?'xiaopingu_admin_token':role==='counselor'?'xiaopingu_counselor_token':'xpg_v2_visitor_token';
 function saveToken(t){token=t;(role==='admin'?sessionStorage:localStorage).setItem(key(),t);}
 function renderData(data,parent){const dl=el('dl');for(const [k,v]of Object.entries(data||{})){if(v==null||['_id','id','match_id','event_id','visitor_id','counselor_id','source_hash'].includes(k))continue;dl.append(el('dt',labels[k]||names[k]||humanize(k)));const dd=el('dd');if(Array.isArray(v)&&v.some(x=>x&&typeof x==='object')){for(const row of v){const article=el('article');renderData(row,article);dd.append(article);}}else if(v&&typeof v==='object'&&!Array.isArray(v))renderData(v,dd);else dd.textContent=Array.isArray(v)?v.map(String).join('、'):valueText(k,v);dl.append(dd);}parent.append(dl);}
-function valueText(k,v){if(typeof v==='boolean')return v?'是':'否';if(typeof v==='number')return String(v);if(typeof v!=='string')return String(v);if(v==='')return '—';const choice=choiceLabels[k]&&choiceLabels[k][v];if(choice)return choice;return names[v]||statusNames[v]||humanize(v);}
+function valueText(k,v){if(typeof v==='boolean')return v?'是':'否';if(typeof v==='number'){const choice=choiceLabels[k]&&choiceLabels[k][String(v)];return choice||String(v);}if(typeof v!=='string')return String(v);if(v==='')return '—';const choice=choiceLabels[k]&&choiceLabels[k][v];if(choice)return choice;const mapped=names[v]||statusNames[v]||versionNames[v];if(mapped)return mapped;return /^[a-z][a-z0-9]*(_[a-z0-9]+)+$|^[a-z]+([A-Z][a-z0-9]*)+$/.test(v)?humanize(v):v;}
 const statusNames={submitted:'已提交',started:'填写中',rejected:'待重新提交',pending:'待审核',approved:'已通过',closed:'已结案',active:'进行中',open:'待处理',acked:'已确认',abandoned:'已放弃',expired:'已过期',draft:'草稿',scored:'已计分',void:'已作废',superseded:'已被替代',validated:'已校验',linked:'归属已连接',not_captured:'未捕获依据','1m':'一个月随访','3m':'三个月随访',low:'偏低',mid:'中等',high:'偏高'};
 const choiceLabels={d1:{0:'从不',1:'偶尔',2:'经常'},p6:{0:'变差',5:'持平',10:'好转'},k1:{0:'没有',5:'偶尔闪过',10:'经常出现'}};
+const versionNames={'items-compat-v1':'兼容题库 v1','rules-compat-v1':'兼容规则 v1','items-v3-2':'题库 v3.2','rules-t03-v1':'规则 T03 v1','llm-t19-v1':'大模型结果 T19 v1','stats-t19-v1':'统计 T19 v1'};
 const labels={
   // 事件与档案
   scale_code:'卡片',session_no:'节次',follow_round:'随访轮次',status:'状态',created_at:'创建时间',submitted_at:'提交时间',
+  raw_answers:'原始作答',
   total:'总分',pct:'百分比',total_score:'原始总分',severity:'原始等级',visitor_name:'来访者',assessment_id:'评估编号',
   match_request_status:'申请状态',scope:'用途',version:'版本',agreed_at:'同意时间',revoked_at:'撤回时间',
   source_collection:'记录来源',source_hash:'原始记录校验值',legacy_only:'历史记录',due_at:'到期时间',message:'提示',
