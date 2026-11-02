@@ -5,6 +5,7 @@ const main=document.querySelector('main'),q=new URLSearchParams(location.search)
 let role=q.get('role')||(/^c\d/.test(page)?'counselor':/^a\d/.test(page)?'admin':'visitor'),token='',activeCase=null;
 const names={xg_m0_baseline:'咨询前状态',xg_m1_state:'本节状态',xg_m2_feel:'本节感受',xg_m3_pro:'专业判断',xg_m4_end:'结束状态',xg_m4_eval:'咨询评价',xg_m4_follow:'随访',xg_risk_recheck:'风险复查'};
 const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
+function humanize(k){if(!k)return k;return k.replace(/_/g,' ').replace(/([a-z0-9])([A-Z])/g,'$1 $2').replace(/^./,c=>c.toUpperCase());}
 function button(text,fn,parent=main){const b=el('button',text);b.type='button';b.onclick=async()=>{b.disabled=true;try{await fn();}catch(e){error(e.message);}finally{b.disabled=false;}};parent.append(b);return b;}
 function link(text,href,parent=main){const a=el('a',text);a.href=href;parent.append(a);return a;}
 function clear(title){main.replaceChildren(el('h1',title));document.getElementById('error').textContent='';}
@@ -14,8 +15,67 @@ function field(label,type='text',parent=main){const l=el('label',label),i=el(typ
 async function api(path,body,method){const r=await fetch(SUPABASE_CONFIG.url+path,{method:method||(body?'POST':'GET'),headers:{'Content-Type':'application/json',Authorization:token?'Bearer '+token:''},...(body?{body:JSON.stringify(body)}:{})});let data;try{data=await r.json();}catch{throw new Error('服务返回异常，请稍后重试');}if(!r.ok)throw new Error(data.error?.message||data.message||'请求失败，请重新登录或稍后重试');return data;}
 const key=()=>role==='admin'?'xiaopingu_admin_token':role==='counselor'?'xiaopingu_counselor_token':'xpg_v2_visitor_token';
 function saveToken(t){token=t;(role==='admin'?sessionStorage:localStorage).setItem(key(),t);}
-function renderData(data,parent){const dl=el('dl');for(const [k,v]of Object.entries(data||{})){if(v==null||['_id','id','match_id','event_id','visitor_id','counselor_id','source_hash'].includes(k))continue;dl.append(el('dt',labels[k]||names[k]||k));const dd=el('dd');if(Array.isArray(v)&&v.some(x=>x&&typeof x==='object')){for(const row of v){const article=el('article');renderData(row,article);dd.append(article);}}else if(v&&typeof v==='object'&&!Array.isArray(v))renderData(v,dd);else dd.textContent=Array.isArray(v)?v.map(String).join('、'):names[v]||({submitted:'已提交',started:'填写中',rejected:'待重新提交',pending:'待审核',approved:'已通过',closed:'已结案',active:'进行中',open:'待处理',acked:'已确认'}[v])||String(v);dl.append(dd);}parent.append(dl);}
-const labels={scale_code:'卡片',session_no:'节次',follow_round:'随访轮次',status:'状态',created_at:'创建时间',submitted_at:'提交时间',total_score:'原始总分',severity:'原始等级',total:'总分',pct:'百分比',visitor_name:'来访者',match_request_status:'申请状态',scope:'用途',version:'版本',agreed_at:'同意时间',revoked_at:'撤回时间',source_collection:'记录来源',source_hash:'原始记录校验值',legacy_only:'历史记录',due_at:'到期时间',message:'提示',follow_1m_due_at:'原定一月随访',follow_3m_due_at:'原定三月随访',revision:'修订号',reason:'原因',focus_text:'人工维护的关注点',optional_enabled:'选修题',quality_flag:'质量标记',notes:'记录',session_number:'节次',session_date:'日期'};
+function renderData(data,parent){const dl=el('dl');for(const [k,v]of Object.entries(data||{})){if(v==null||['_id','id','match_id','event_id','visitor_id','counselor_id','source_hash'].includes(k))continue;dl.append(el('dt',labels[k]||names[k]||humanize(k)));const dd=el('dd');if(Array.isArray(v)&&v.some(x=>x&&typeof x==='object')){for(const row of v){const article=el('article');renderData(row,article);dd.append(article);}}else if(v&&typeof v==='object'&&!Array.isArray(v))renderData(v,dd);else dd.textContent=Array.isArray(v)?v.map(String).join('、'):valueText(k,v);dl.append(dd);}parent.append(dl);}
+function valueText(k,v){if(typeof v==='boolean')return v?'是':'否';if(typeof v==='number')return String(v);if(typeof v!=='string')return String(v);if(v==='')return '—';const choice=choiceLabels[k]&&choiceLabels[k][v];if(choice)return choice;return names[v]||statusNames[v]||humanize(v);}
+const statusNames={submitted:'已提交',started:'填写中',rejected:'待重新提交',pending:'待审核',approved:'已通过',closed:'已结案',active:'进行中',open:'待处理',acked:'已确认',abandoned:'已放弃',expired:'已过期',draft:'草稿',scored:'已计分',void:'已作废',superseded:'已被替代',validated:'已校验',linked:'归属已连接',not_captured:'未捕获依据','1m':'一个月随访','3m':'三个月随访',low:'偏低',mid:'中等',high:'偏高'};
+const choiceLabels={d1:{0:'从不',1:'偶尔',2:'经常'},p6:{0:'变差',5:'持平',10:'好转'},k1:{0:'没有',5:'偶尔闪过',10:'经常出现'}};
+const labels={
+  // 事件与档案
+  scale_code:'卡片',session_no:'节次',follow_round:'随访轮次',status:'状态',created_at:'创建时间',submitted_at:'提交时间',
+  total:'总分',pct:'百分比',total_score:'原始总分',severity:'原始等级',visitor_name:'来访者',assessment_id:'评估编号',
+  match_request_status:'申请状态',scope:'用途',version:'版本',agreed_at:'同意时间',revoked_at:'撤回时间',
+  source_collection:'记录来源',source_hash:'原始记录校验值',legacy_only:'历史记录',due_at:'到期时间',message:'提示',
+  follow_1m_due_at:'原定一月随访',follow_3m_due_at:'原定三月随访',revision:'修订号',reason:'原因',
+  focus_text:'人工维护的关注点',optional_enabled:'选修题',quality_flag:'质量标记',notes:'记录',session_number:'节次',session_date:'日期',
+  // 计分依据引用
+  basis_ref:'计分依据',item_version:'题库版本',rule_version:'规则版本',basis_hash:'依据校验值',
+  config_revision:'个案配置修订',focus_revision:'关注点修订',
+  // 分数字段（与后端 SCORE_FIELDS 对齐）
+  ors_total:'ORS 组合分（核心状态）',add_total:'目标附加分（我的目标）',supp_total:'补充适应分',
+  resource_total:'资源可及分',dissoc_level:'解离提示级别',stability_total:'稳定度分',
+  // 趋势与阶段对照
+  baseline:'咨询前基线',recheck:'复测',end:'结案状态',follow_1m:'一个月随访',follow_3m:'三个月随访',
+  reference_baseline:'参照基线',source:'来源',points:'各节记录',
+  // 规则与阈值
+  thresholds:'预警阈值',parameters:'信号参数',published_at:'发布时间',published_by:'发布人',change_reason:'变更原因',
+  previous_rule_version:'上一规则版本',engine_id:'计分引擎',answer_range:'作答范围',primary_groups:'核心题分组',
+  ors:'ORS 组合规则',additional:'附加题规则',supplement_groups:'补充适应分组',resource_group:'资源分组',
+  dissociation:'解离提示规则',first_session:'首节规则',percent:'百分比规则',quality:'质量规则',timing:'时间间隔',
+  alert_semantics:'预警语义',risk_recheck:'风险复查规则',
+  outcome_drop_abs:'降分绝对值预警线',outcome_drop_consecutive:'连续降分预警次数',outcome_flat_delta:'持平波动幅度',
+  outcome_flat_consecutive:'连续持平次数',stability_item_max:'稳定度单项上限',stability_consecutive:'稳定度连续次数',
+  alliance_total_max:'联盟总分上限',alliance_dim_max:'联盟单项上限',alliance_consecutive:'联盟连续次数',
+  diff_post_warn:'前后分差预警线',l3_consecutive:'三级预警连续次数',l3_low_pct:'三级预警低百分比线',
+  // 依据快照内部结构
+  schema_version:'结构版本',item_hash:'题库校验值',rule_hash:'规则校验值',release_revision:'发布修订号',
+  rules:'计分规则',card:'卡片信息',items:'题目快照',context:'归属与配置',captured_at:'依据捕获时间',
+  source_text:'原始题干',text:'题干',label:'简称',dim:'维度',item_type:'题型',options:'选项',
+  is_dynamic:'动态题',is_optional:'选修题',sort_order:'排序',applicable:'本次适用',required:'必答',
+  not_applicable_reason:'不适用原因',code:'题号',enabled_optional_codes:'启用的选修题',
+  not_applicable_codes:'本次不适用的题',primary_max:'核心题量程',optional_max:'选修量程',focus_source:'关注点来源',
+  phase:'阶段',fill_role:'填写角色',timing:'时机',intro_text:'引导语',
+  mean_items:'均分题',sum_items:'求和题',rounding:'取整方式',max:'上限',items:'题目',mode:'模式',
+  included_in_primary:'计入核心分',disabled_value:'停用值',positive_min:'阳性下限',urgent_min:'紧急下限',
+  cooldown_sessions:'冷却节数',precision:'精度',zero_variance:'零方差处理',invalid_answers:'无效作答处理',
+  duration_ms_per_answer:'每题合理时长（毫秒）',late_recheck_days:'重测间隔天数',dynamic_refresh_sessions:'动态题面刷新节数',
+  missing_session_breaks_window:'缺节断开窗口',missing_alliance_never_downgrades:'缺联盟不降级',
+  absolute_low_is_independent:'绝对低分独立判定',preserve_l3:'保留三级判定',flat_is_distance_from_baseline:'持平按基线距离',
+  recheck_is_not_regular_session:'复测不算常规节次',value:'取值',values:'取值集合',
+  // 旧历史与其他
+  issues:'困扰议题',answers:'作答',note:'备注',counselor_name:'咨询师',name:'名称',title:'标题',body:'内容',
+  read_at:'已读时间',alert_id:'提醒编号',cst:'复核步骤',cst_step:'复核进度',phone_followup_done:'电话跟进完成',
+  action_revision:'操作修订号',enabled:'已启用',disabled:'已停用',
+  // 作答题号（与题库定义 label·dim 对齐）
+  s1:'状1·情绪',s2:'状2·睡眠',s3:'状3·饮食与躯体不适',s4:'状4·关系与支持',s5:'状5·日常功能',s6:'状6·整体',
+  s7:'状7·我的目标',s8:'状8·情绪容得下（选修）',s9:'状9·稳得住自己（选修）',s10:'状10·在当下（选修）',
+  b1:'补1·人际适应',b2:'补2·社会适应',b3:'补3·自我适应',r1:'资1·安心处',r2:'资2·搁置力',d1:'解1·解离提示',
+  f1:'感1·被听见',f2:'感2·谈到位',f3:'感3·方式合',f4:'感4·整体',
+  p1:'师1·捕捉核心感受',p2:'师2·方向一致',p3:'师3·方式匹配',p4:'师4·稳定度',p5:'师5·工作质量',p6:'师6·较上节',
+  e1:'结1·整体',e2:'结2·身心',e3:'结3·人际适应',e4:'结4·应对',e5:'结5·自我成长',e6:'结6·目标达成',
+  v1:'评1·关系联结',v2:'评2·方法适配',v3:'评3·推荐意愿',o1:'开1·开放反馈',
+  u1:'追1·身心',u2:'追2·人际适应',u3:'追3·应对',u4:'追4·自我适应',u5:'追5·目标与困扰',u6:'追6·资源可及',
+  k1:'风1·风险复查'
+};
 async function login(){clear('进入咨询记录');main.append(el('p','新旧记录统一保存在这里。旧完整链接可查历史；填写新卡片需使用独立填写凭证。'));const tabs=card('选择身份');for(const [r,n]of [['visitor','来访者'],['counselor','咨询师'],['admin','管理员']])button(n,()=>{role=r;login();},tabs);
  const box=card({visitor:'来访者填写凭证',counselor:'咨询师编辑码',admin:'管理员密码'}[role]);const accountMode=SUPABASE_CONFIG.accountLogin===true;const input=field(accountMode?'账号':'凭证',accountMode?'text':'password',box);input.autocomplete=accountMode?'username':'off';const password=accountMode?field('密码','password',box):null;
  button('登录',async()=>{const d=accountMode?await window.XPG_PLATFORM_ACCOUNT.login(role,input.value.trim(),password.value):await api(role==='visitor'?'/auth/visitor-receipt':role==='counselor'?'/auth/counselor':'/auth/admin',role==='admin'?{password:input.value.trim()}:{credential:input.value.trim()});saveToken(d.token);if(role==='visitor'&&!accountMode)localStorage.setItem('xpg_v2_visitor_credential',input.value.trim());await home();},box);
@@ -44,7 +104,7 @@ async function cycle(m){activeCase=m;clear(m.status==='closed'?'结案与随访'
  if(role==='visitor'){button('评估知情说明',()=>consent('assessment'),box);button('结束与随访知情说明',()=>consent('followup'),box);}
  const choices=el('div');box.append(choices);async function prompts(scope){choices.replaceChildren();const r=await api('/v1/xg/prompts/next?'+new URLSearchParams({match_id:m.match_id,session_no:n.value,scope}));if(r.out_of_scope){choices.append(el('p','当前不开放作答，请联系咨询师核对后续安排。'));return;}for(const p of r.prompts||[])button(names[p.scale_code]||p.scale_code,()=>form(p),choices);if(!r.prompts?.length)choices.append(el('p','暂无可填写卡片。可能尚未同意、已填写、未到随访时间，或平台暂未开放。'));}
  if(role!=='admin'){button('查看本节待填卡片',()=>prompts(m.status==='closed'?'followup':'assessment'),box);if(role==='visitor'&&m.status!=='closed')button('结束咨询时填写',()=>prompts('followup'),box);}
- button('查看新版填写记录',async()=>{const d=await api('/v1/xg/events?match_id='+encodeURIComponent(m.match_id));const b=card('新版记录');if(!d.events.length)b.append(el('p','尚无记录'));for(const e of d.events)renderData(e,b);});
+ button('查看新版填写记录',async()=>{let d;try{d=await api('/v1/xg/events?match_id='+encodeURIComponent(m.match_id));}catch(e){const b=card('新版记录');b.append(el('p','该周期的四评记录暂时读取失败：'+(e.message||'服务异常')+'。作答记录仍完整保存在后台，请联系平台管理员核对数据后重试。'));return;}const b=card('新版记录');if(!d.events.length)b.append(el('p','尚无记录'));for(const e of d.events)renderData(e,b);});
  if(role!=='visitor'){button('查看状态趋势',async()=>{const b=card('新版状态趋势');renderData(await api('/v1/xg/trend?match_id='+encodeURIComponent(m.match_id)),b);});button('阶段对照',async()=>renderData(await api('/v1/xg/person-compare?match_id='+encodeURIComponent(m.match_id)),card('阶段对照')));button('关注点与选修题',()=>caseConfig(m));button('提醒与复核',()=>inbox(m));if(role==='counselor')button('个案提醒设置',()=>switches(m));if(m.status==='active')button('确认结案',async()=>{if(!await window.XPG_CONFIRM('确认在第 '+n.value+' 节结束这个周期？结案后将保留历史，并按原周期安排随访。','确认结案'))return;await api('/v1/xg/portal/close',{match_id:m.match_id,session_no:Number(n.value)});await home();});}
 }
 async function consent(scope){const d=await api('/v1/xg/me/consent?scope='+scope);clear('知情说明');button('返回周期',()=>cycle(activeCase));if(!d.required_document)throw new Error('说明尚未发布');main.append(el('h2',d.required_document.title),el('p',d.required_document.content,'consent'));const check=field('我已阅读并同意','checkbox');check.checked=false;const request=crypto.randomUUID();button('确认同意',async()=>{if(!check.checked)throw new Error('请阅读说明并主动勾选同意');await api('/v1/xg/me/consent',{scope,version:d.required_version,document_hash:d.required_document.content_hash,agreed:true,channel:'web',client_event_id:request,expected_revision:d.revision});await cycle(activeCase);});if(d.agreed)button('撤回此用途的同意',async()=>{if(!await window.XPG_CONFIRM('确认撤回？相关新作答将暂停，历史记录仍保留。','确认撤回'))return;await api('/v1/xg/me/consent',{scope,version:d.required_version,document_hash:d.required_document.content_hash,agreed:false,channel:'web',client_event_id:crypto.randomUUID(),expected_revision:d.revision});await cycle(activeCase);});}

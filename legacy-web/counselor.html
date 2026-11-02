@@ -2884,13 +2884,13 @@ function loadPanelRequests() {
 
         // 偏好设置行
         html += '<div class="req-prefs">';
-        if (a.budget) html += '<span class="req-pref-tag">💰 ' + esc(a.budget) + '</span>';
+        if (a.budget) html += '<span class="req-pref-tag">💰 ' + esc({low:'300元/次以内',mid:'300-600元/次',high:'600-1000元/次',premium:'1000元/次以上',welfare:'希望公益价格'}[a.budget] || a.budget) + '</span>';
         if (a.prev_counseling) html += '<span class="req-pref-tag">📋 既往：' + esc(a.prev_counseling) + '</span>';
         if (a.preferred_formats) {
           var fmts = typeof a.preferred_formats === 'string' ? a.preferred_formats.split(',') : a.preferred_formats;
           html += '<span class="req-pref-tag">📡 ' + (fmts || []).map(esc).join('、') + '</span>';
         }
-        if (a.gender_pref && a.gender_pref !== 'any') html += '<span class="req-pref-tag">👤 倾向：' + esc(a.gender_pref) + '</span>';
+        if (a.gender_pref && a.gender_pref !== 'any') html += '<span class="req-pref-tag">👤 倾向：' + esc({male:'希望男性咨询师',female:'希望女性咨询师'}[a.gender_pref] || a.gender_pref) + '</span>';
         if (a.comm_style) {
           var csMap = {listening:'倾听型',guided:'引导型',leading:'带动型',collaborative:'对话型',directive:'指导型'};
           html += '<span class="req-pref-tag">💭 ' + (csMap[a.comm_style] || a.comm_style) + '</span>';
@@ -2898,19 +2898,19 @@ function loadPanelRequests() {
         if (a.filled_by === 'parent') html += '<span class="req-pref-tag" style="background:#FFF3E0;color:#E65100">📋 家长代填</span>';
         html += '</div>';
 
-        // C-NIP 偏好
+        // C-NIP 偏好（选项集与来访表单 index.html 一致；未收录值按原值展示，避免漏显示）
         var cnipMap = {
-          cnip_structure: {label:'结构',values:{structured:'结构化',balanced:'适中',open:'开放式'}},
-          cnip_emotion: {label:'情感',values:{emotional:'情感聚焦',balanced:'适中',rational:'理性分析'}},
-          cnip_timefocus: {label:'时间',values:{past:'关注过去',present:'关注当下',future:'关注未来'}},
-          cnip_warmth: {label:'立场',values:{warm:'温暖支持',neutral:'中立客观',challenging:'适度挑战'}},
-          cnip_homework: {label:'作业',values:{regular:'经常布置',occasional:'偶尔布置',none:'不布置'}},
-          cnip_relational: {label:'关系',values:{discuss:'主动讨论',optional:'按需涉及',none:'关注任务'}}
+          cnip_structure: {label:'结构',values:{structured:'结构化',balanced:'两者兼顾',open:'自由探索'}},
+          cnip_emotion: {label:'情感',values:{emotional:'深入感受',balanced:'两者兼顾',rational:'聚焦解决'}},
+          cnip_timefocus: {label:'时间',values:{past:'探讨过去',balanced:'两者兼顾',present:'关注当下'}},
+          cnip_warmth: {label:'立场',values:{warm:'温和支持',balanced:'两者兼顾',direct:'坦诚直接'}},
+          cnip_homework: {label:'作业',values:{yes:'愿意',neutral:'无所谓',no:'不太愿意'}},
+          cnip_relational: {label:'关系',values:{discuss:'想讨论',neutral:'无所谓',skip:'不需要'}}
         };
         var cnipParts = [];
         Object.keys(cnipMap).forEach(function(k) {
           var v = a[k];
-          if (v && cnipMap[k].values[v]) cnipParts.push(cnipMap[k].label + ':' + cnipMap[k].values[v]);
+          if (v) cnipParts.push(cnipMap[k].label + ':' + (cnipMap[k].values[v] || v));
         });
         if (cnipParts.length > 0) {
           html += '<div class="req-cnip">🧩 C-NIP：' + cnipParts.join(' · ') + '</div>';
