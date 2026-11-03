@@ -521,6 +521,13 @@
         <div style="font-size:12px;color:#A09889;margin-top:6px">最多 2 张，建议资质证书、执业证明的照片，系统会自动压缩</div>
       </div>
 
+      <div class="form-row">
+        <label class="required">学历 / 学位证书照片 <span class="label-hint">（必填，仅平台审核可见，不对外展示）</span></label>
+        <div class="photo-slots" id="slots_c_diploma"></div>
+        <input type="file" id="file_c_diploma" accept="image/*" hidden onchange="onPhotoPicked('c_diploma', this)">
+        <div style="font-size:12px;color:#A09889;margin-top:6px">最多 2 张，建议最高学历的毕业证书 / 学位证书照片（与上方「最高学历」一致），系统会自动压缩</div>
+      </div>
+
       <!-- ===== 诚信声明 ===== -->
       <div class="form-row" style="margin-top:24px;padding-top:20px;border-top:1px solid #E8E3DC">
         <p style="font-size:13px;font-weight:600;color:#2C2C2A;margin-bottom:4px">诚信声明</p>
@@ -1103,7 +1110,7 @@
         <!-- 基本信息 -->
         <div class="pe-section">
           <div class="pe-section-title">基本信息</div>
-          <div id="pe_credential_note" style="background:#F0F7EC;border:1px solid #C8DCC0;border-radius:8px;padding:10px 12px;font-size:12px;color:#5A6B52;line-height:1.7;margin-bottom:12px">资质与认证信息（主资质、附加资质、专项认证、执业证号、证书照片）可随时更新，保存后平台会在 1–2 个工作日内复核；复核期间不影响你现有的匹配与接单。</div>
+          <div id="pe_credential_note" style="background:#F0F7EC;border:1px solid #C8DCC0;border-radius:8px;padding:10px 12px;font-size:12px;color:#5A6B52;line-height:1.7;margin-bottom:12px">资质与认证信息（主资质、附加资质、专项认证、执业证号、证书照片、学历学位证书照片）可随时更新，保存后平台会在 1–2 个工作日内复核；复核期间不影响你现有的匹配与接单。</div>
           <div class="pe-row">
             <div class="pe-field"><label>姓名</label><input type="text" id="pe_name" readonly style="background:#f5f2ef;color:#8B7E6B;cursor:not-allowed;border-color:#E3DDD4;" title="姓名不可修改，须与执业证一致"></div>
             <div class="pe-field"><label>性别</label><select id="pe_gender"><option value="">请选择</option><option value="male">男</option><option value="female">女</option><option value="ta">TA</option><option value="other">其他/不便透露</option></select></div>
@@ -1121,6 +1128,9 @@
           <div class="pe-row">
             <div class="pe-field"><label>日常照片（来访者可见，第一张为头像）</label><div class="photo-slots" id="slots_pe_daily"></div><input type="file" id="file_pe_daily" accept="image/*" hidden onchange="onPhotoPicked('pe_daily', this)"></div>
             <div class="pe-field"><label>证书 / 凭证照片（仅平台审核可见）</label><div class="photo-slots" id="slots_pe_license"></div><input type="file" id="file_pe_license" accept="image/*" hidden onchange="onPhotoPicked('pe_license', this)"></div>
+          </div>
+          <div class="pe-row">
+            <div class="pe-field"><label>学历 / 学位证书照片（仅平台审核可见）</label><div class="photo-slots" id="slots_pe_diploma"></div><input type="file" id="file_pe_diploma" accept="image/*" hidden onchange="onPhotoPicked('pe_diploma', this)"><div style="font-size:12px;color:#A09889;margin-top:4px">最多 2 张，建议最高学历的毕业证书 / 学位证书照片（与「最高学历」一致）</div></div>
           </div>
         </div>
         <!-- 培训资质 -->
@@ -1420,7 +1430,7 @@ var otherSpecialties = [];
 var otherCerts = [];
 
 // ===== 咨询师照片（日常照对外可见 / 证书照仅平台审核可见）=====
-var photoStore = { c_daily: [], c_license: [], pe_daily: [], pe_license: [] };
+var photoStore = { c_daily: [], c_license: [], c_diploma: [], pe_daily: [], pe_license: [], pe_diploma: [] };
 var PHOTO_MAX = 2;
 function renderPhotoSlots(key) {
   var box = document.getElementById('slots_' + key);
@@ -1475,7 +1485,7 @@ function compressImage(file, cb) {
 // ===== 照片上传槽位初始化 =====
 // 全新注册（无草稿/无编辑令牌）时，slots 容器是空的，必须主动渲染一次，否则看不到上传入口
 (function initPhotoSlots(){
-  ['c_daily','c_license','pe_daily','pe_license'].forEach(function(k){
+  ['c_daily','c_license','c_diploma','pe_daily','pe_license','pe_diploma'].forEach(function(k){
     if (document.getElementById('slots_' + k)) renderPhotoSlots(k);
   });
 })();
@@ -1639,6 +1649,7 @@ function restoreFromData(d) {
   if (d.license_number) document.getElementById('c_license').value = d.license_number;
   if (d.photo_daily && d.photo_daily.length) { photoStore.c_daily = d.photo_daily.slice(); renderPhotoSlots('c_daily'); }
   if (d.photo_license && d.photo_license.length) { photoStore.c_license = d.photo_license.slice(); renderPhotoSlots('c_license'); }
+  if (d.photo_diploma && d.photo_diploma.length) { photoStore.c_diploma = d.photo_diploma.slice(); renderPhotoSlots('c_diploma'); }
   if (d.supervision_hours) document.getElementById('c_supervision').value = d.supervision_hours;
   if (d.personal_therapy_hours) document.getElementById('c_personal_therapy').value = d.personal_therapy_hours;
   ['personal_therapy_status', 'therapy_cert', 'ethics_training'].forEach(function(name) {
@@ -1836,6 +1847,7 @@ function collectData() {
     public_welfare_fee: parseInt(document.getElementById('c_public_welfare_fee').value) || null,
     photo_daily: counselorPhotoPayload(photoStore.c_daily),
     photo_license: counselorPhotoPayload(photoStore.c_license),
+    photo_diploma: counselorPhotoPayload(photoStore.c_diploma),
     wx_openid: _wxOpenid || undefined,
     wx_bind_token: _wxBindToken || undefined,
     bio_short: document.getElementById('c_bio_short').value.trim(),
@@ -1905,6 +1917,7 @@ function previewAndSubmit() {
   if (d.supervisor_level && !d.supervisor_cert) { showToast('您选择了督导师资质，请填写督导师证书编号'); goStep(1); return; }
   if (!d.photo_daily.length) { showToast('请上传至少 1 张生活照片（来访者可见）'); goStep(1); return; }
   if (!d.photo_license.length) { showToast('请上传至少 1 张证书 / 凭证照片（仅平台审核可见）'); goStep(1); return; }
+  if (!d.photo_diploma.length) { showToast('请上传至少 1 张学历 / 学位证书照片（仅平台审核可见）'); goStep(1); return; }
   if (d.approaches.length === 0) { showToast('请至少选择一个咨询取向'); goStep(2); return; }
   if (d.specialties.length === 0) { showToast('请至少选择一个擅长议题'); goStep(3); return; }
   if (!d.bio_short) { showToast('请填写一句话简介'); goStep(5); return; }
@@ -1919,6 +1932,7 @@ function previewAndSubmit() {
   if (d.supervisor_level) html += '<div class="preview-row"><span class="preview-label">督导师资质</span><span class="preview-val">' + d.supervisor_level + (d.supervisor_cert ? ' · ' + d.supervisor_cert : '') + '</span></div>';
   if (d.photo_daily && d.photo_daily.length) html += '<div class="preview-row"><span class="preview-label">日常照片</span><span class="preview-val">' + d.photo_daily.length + ' 张（来访者可见）</span></div>';
   if (d.photo_license && d.photo_license.length) html += '<div class="preview-row"><span class="preview-label">证书照片</span><span class="preview-val">' + d.photo_license.length + ' 张（仅平台审核可见）</span></div>';
+  if (d.photo_diploma && d.photo_diploma.length) html += '<div class="preview-row"><span class="preview-label">学历学位证书照片</span><span class="preview-val">' + d.photo_diploma.length + ' 张（仅平台审核可见）</span></div>';
   if (d.extra_credentials && d.extra_credentials.length) {
     html += '<div class="preview-row"><span class="preview-label">附加资质</span><span class="preview-val">';
     d.extra_credentials.forEach(function(e) { html += '<span class="preview-tag">' + e + '</span> '; });
@@ -2303,6 +2317,7 @@ function enterLocalCounselorAccount(value) {
   if (d.public_welfare_fee) document.getElementById('c_public_welfare_fee').value = d.public_welfare_fee;
   if (d.photo_daily && d.photo_daily.length) { photoStore.c_daily = d.photo_daily.slice(); renderPhotoSlots('c_daily'); }
   if (d.photo_license && d.photo_license.length) { photoStore.c_license = d.photo_license.slice(); renderPhotoSlots('c_license'); }
+  if (d.photo_diploma && d.photo_diploma.length) { photoStore.c_diploma = d.photo_diploma.slice(); renderPhotoSlots('c_diploma'); }
   toggleWelfareFee('c_');
     if (d.bio_short) document.getElementById('c_bio_short').value = d.bio_short;
     if (d.bio_full) document.getElementById('c_bio_full').value = d.bio_full;
@@ -3154,10 +3169,11 @@ function loadCounselorProfile() {
     document.getElementById('pe_license').value = d.license_number || '';
     photoStore.pe_daily = (d.photo_daily || []).slice(); renderPhotoSlots('pe_daily');
     photoStore.pe_license = (d.photo_license || []).slice(); renderPhotoSlots('pe_license');
+    photoStore.pe_diploma = (d.photo_diploma || []).slice(); renderPhotoSlots('pe_diploma');
     var _note = document.getElementById('pe_credential_note');
     var _cu = d.credential_updated_at || d.updated_at;
     if (_note && _cu) {
-      _note.innerHTML = '资质与认证信息（主资质、附加资质、专项认证、执业证号、证书照片）可随时更新，保存后平台会在 1–2 个工作日内复核；复核期间不影响你现有的匹配与接单。' +
+      _note.innerHTML = '资质与认证信息（主资质、附加资质、专项认证、执业证号、证书照片、学历学位证书照片）可随时更新，保存后平台会在 1–2 个工作日内复核；复核期间不影响你现有的匹配与接单。' +
         '<br><span style="color:#7A8B72">上次资质更新：' + String(_cu).replace('T', ' ').slice(0, 16) + '</span>';
     }
     document.getElementById('pe_supervisor_cert').value = d.supervisor_cert || '';
@@ -3266,6 +3282,7 @@ function saveCounselorProfile() {
     public_welfare_fee: parseInt(document.getElementById('pe_public_welfare_fee').value) || null,
     photo_daily: counselorPhotoPayload(photoStore.pe_daily),
     photo_license: counselorPhotoPayload(photoStore.pe_license),
+    photo_diploma: counselorPhotoPayload(photoStore.pe_diploma),
     contact_wechat: document.getElementById('pe_wechat').value || null,
     contact_wechat_public: document.getElementById('pe_wechat_public').checked,
     contact_phone: document.getElementById('pe_phone').value || null,

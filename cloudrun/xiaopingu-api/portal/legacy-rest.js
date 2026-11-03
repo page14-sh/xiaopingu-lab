@@ -83,7 +83,7 @@ async function updateWhere(coll, where, patch) {
 // ---------------- 身份 ----------------
 // ---------------- 字段策略 ----------------
 // counselors 匿名读剥离（与旧线上一致，另加执照号）
-const COUNSELOR_SENSITIVE = ['edit_token', 'contact_wechat', 'contact_phone', 'contact_email', 'license_number', 'public_welfare_fee', 'photo_license', 'wx_openid', 'wx_bind_token', 'review_note', 'reviewed_by', 'reviewed_at', 'has_violation', 'violation_detail', 'has_incident', 'incident_detail', 'needs_deep_review'];
+const COUNSELOR_SENSITIVE = ['edit_token', 'contact_wechat', 'contact_phone', 'contact_email', 'license_number', 'public_welfare_fee', 'photo_license', 'photo_diploma', 'wx_openid', 'wx_bind_token', 'review_note', 'reviewed_by', 'reviewed_at', 'has_violation', 'violation_detail', 'has_incident', 'incident_detail', 'needs_deep_review'];
 function stripCounselor(row) {
   if (!row) return row;
   const out = { ...row };
@@ -108,7 +108,7 @@ const COUNSELOR_PATCH_FIELDS = [
   'ethics_training', 'certifications', 'orientation_friendly', 'client_gender_pref',
   'client_age_prefs', 'comm_styles', 'cnip_styles', 'cnip_emotion_focus', 'cnip_time',
   'cnip_stance', 'cnip_homework', 'cnip_relational', 'public_welfare', 'public_welfare_fee',
-  'photo_daily', 'photo_license',
+  'photo_daily', 'photo_license', 'photo_diploma',
   // 资质与认证：咨询师可随时自行更新（平台复核后生效，审核状态不变、不影响现有匹配）
   'gender', 'supervisor_cert', 'license_number', 'extra_credentials', 'extra_credentials_other',
   'certifications_other', 'approaches_other', 'specialties_other', 'populations_other',
@@ -274,6 +274,7 @@ async function handleRest(req, res, table, params, caller) {
         const row = pickAllowed(item, COUNSELOR_PATCH_FIELDS.concat(['id', 'created_at']));
         row.photo_daily = photos ? (item.photo_daily || []) : sanitizeCounselorPhotos(item.photo_daily);
         row.photo_license = photos ? (item.photo_license || []) : sanitizeCounselorPhotos(item.photo_license);
+        row.photo_diploma = photos ? (item.photo_diploma || []) : sanitizeCounselorPhotos(item.photo_diploma);
         row.id = isUuid(item.id) ? item.id : uuid();
         if (await findOne('counselors', { id: row.id })) return sendJson(res, 409, { message: '记录已存在' });
         row.edit_token = crypto.randomBytes(24).toString('base64url');
@@ -355,14 +356,15 @@ async function handleRest(req, res, table, params, caller) {
       if (!photos) {
         if ('photo_daily' in allowed) allowed.photo_daily = sanitizeCounselorPhotos(allowed.photo_daily);
         if ('photo_license' in allowed) allowed.photo_license = sanitizeCounselorPhotos(allowed.photo_license);
+        if ('photo_diploma' in allowed) allowed.photo_diploma = sanitizeCounselorPhotos(allowed.photo_diploma);
       }
       // 资质 / 认证字段有实质变更 → 记录更新时间，供平台复核
       // （不改变 review_status：修改档案不会让咨询师下架，也不影响已通过的匹配）
       const CRED_KEYS = ['credential_level', 'years_experience', 'license_number', 'supervisor_cert',
         'extra_credentials', 'extra_credentials_other', 'certifications', 'certifications_other',
-        'therapy_cert', 'photo_license', 'education', 'training_background'];
+        'therapy_cert', 'photo_license', 'photo_diploma', 'education', 'training_background'];
       const credChanged = CRED_KEYS.some(function(k) {
-        const comparable = v => k === 'photo_license' && Array.isArray(v) ? v.map(x => x && typeof x === 'object' ? x.file_id : x) : v;
+        const comparable = v => (k === 'photo_license' || k === 'photo_diploma') && Array.isArray(v) ? v.map(x => x && typeof x === 'object' ? x.file_id : x) : v;
         return (k in allowed) && JSON.stringify(comparable(allowed[k])) !== JSON.stringify(comparable(target[k]));
       });
       if (credChanged) allowed.credential_updated_at = nowIso();

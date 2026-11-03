@@ -2,7 +2,7 @@ const { randomUUID } = require('node:crypto');
 const sharp = require('sharp');
 const { AssessmentError } = require('../assessment/model');
 
-const PHOTO_FIELDS = ['photo_daily', 'photo_license'];
+const PHOTO_FIELDS = ['photo_daily', 'photo_license', 'photo_diploma'];
 const MAX_PHOTOS = 2;
 const MAX_DATA_URL = 260000;
 const LINK_TTL = 300;
