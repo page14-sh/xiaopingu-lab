@@ -1271,7 +1271,7 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="assets/confirm-action.js?v=20261027-platform"></script><script src="supabase-config.js?v=20261103-login-feedback"></script><script src="assets/demo-accounts.js?v=20261027-cloud"></script>
+<script src="assets/confirm-action.js?v=20261027-platform"></script><script src="supabase-config.js?v=20261103-login-retry"></script><script src="assets/demo-accounts.js?v=20261027-cloud"></script>
 <script>
 var currentStep = 1;
 var currentEditToken = null;
@@ -2439,7 +2439,7 @@ async function loadPanelByInput() {
   button.disabled=true;feedback.textContent='正在验证编辑码，请稍候…';
   try{
     if (typeof XPG_API_AUTH === 'undefined') throw new Error('登录服务未加载，请从网站重新打开本页，不要使用下载的网页文件。');
-    var data=await XPG_API_AUTH.loginCounselor(input,document.getElementById('panel-account-password')?.value||'');panelCid=data.counselor.id;
+    var data=await XPG_API_AUTH.loginCounselor(input,document.getElementById('panel-account-password')?.value||'',function(){feedback.textContent='登录服务暂未响应，正在自动重试，请保留此页面。';});panelCid=data.counselor.id;
     localStorage.setItem('xiaopingu_counselor_id',panelCid);
     if(window.XPG_WEB_AUTH)XPG_WEB_AUTH.setSession('counselor',panelCid,{via:'verified_edit_code'});
     field.value='';feedback.textContent='';document.getElementById('panel-login').style.display='none';document.getElementById('panel-content').style.display='block';

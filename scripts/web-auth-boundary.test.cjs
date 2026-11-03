@@ -26,3 +26,15 @@ test('real counselor edit code is not sent to the preview service in demo mode',
  vm.createContext(context);vm.runInContext(fs.readFileSync('legacy-web/supabase-config.js','utf8'),context);context.fetch=context.window.fetch;
  await assert.rejects(context.loginCounselor('synthetic-edit-code',''),/退出演示/);
 });
+
+test('counselor login retries transient gateway failures, never a rejected credential',async()=>{
+ for(const statuses of [[503,200],[401],[503,503,503]]) {
+  let calls=0,retries=0;
+  const store={getItem:()=>null,setItem(){},removeItem(){}};
+  const c={window:{fetch:async()=>{const status=statuses[calls++]; return {status,ok:status===200,json:async()=>({token:'synthetic',counselor:{id:'test'}})};}},location:{href:'https://test.invalid/index.html',pathname:'/index.html'},localStorage:store,sessionStorage:store,AbortController,Headers,URL,setTimeout:(cb,ms)=>ms===2000?queueMicrotask(cb):0,clearTimeout(){}};
+  vm.createContext(c);vm.runInContext(fs.readFileSync('legacy-web/supabase-config.js','utf8'),c);c.fetch=c.window.fetch;
+  const action=c.loginCounselor('synthetic','',()=>retries++);
+  if(statuses.at(-1)===200)assert.equal((await action).token,'synthetic');else await assert.rejects(action,statuses[0]===401?/编辑码未通过验证/:/服务暂不可用/);
+  assert.equal(calls,statuses.length);assert.equal(retries,calls-1);
+ }
+});

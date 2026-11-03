@@ -69,15 +69,27 @@ function loginAdmin(password) {
   });
 }
 
-async function loginCounselor(credential, password) {
+async function loginCounselor(credential, password, onRetry) {
   if (localStorage.getItem('xpg_demo_active') === '1') throw new Error('当前处于演示模式。请先点击「退出演示」，再使用本人的正式编辑码登录。');
   var controller = new AbortController();
-  var timer = setTimeout(function() { controller.abort(); }, 45000);
+  var timer = setTimeout(function() { controller.abort(); }, 110000);
   try {
-    var response = await fetch(SUPABASE_CONFIG.url + '/auth/counselor', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ credential: credential, password: password || '' }), signal: controller.signal
-    });
+    var response;
+    for (var attempt = 0; attempt < 3; attempt++) {
+      // CloudRun may scale from zero; its gateway can return 503 without CORS
+      // headers, which browsers expose as a network TypeError.
+      try {
+        response = await fetch(SUPABASE_CONFIG.url + '/auth/counselor', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ credential: credential, password: password || '' }), signal: controller.signal
+        });
+        if (![502, 503, 504].includes(response.status) || attempt === 2) break;
+      } catch (err) {
+        if (!(err instanceof TypeError) || controller.signal.aborted || attempt === 2) throw err;
+      }
+      if (onRetry) onRetry();
+      await new Promise(function(resolve) { setTimeout(resolve, 2000); });
+    }
     if (response.status === 401) throw new Error('编辑码未通过验证。请让管理员点击「编辑码」复制完整内容，不要使用咨询师 ID 或带省略号的预览。');
     if (!response.ok) throw new Error('登录服务暂不可用（HTTP ' + response.status + '），请稍后重试。');
     var data = await response.json();

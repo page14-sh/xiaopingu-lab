@@ -1026,7 +1026,7 @@ async function doCounselorLogin() {
   button.disabled=true; feedback.textContent='正在验证编辑码，请稍候…';
   try{
     if (typeof XPG_API_AUTH === 'undefined') throw new Error('登录服务未加载，请从网站重新打开本页，不要使用下载的网页文件。');
-    var data=await XPG_API_AUTH.loginCounselor(value,document.getElementById('counselor-login-password').value);
+    var data=await XPG_API_AUTH.loginCounselor(value,document.getElementById('counselor-login-password').value,function(){feedback.textContent='登录服务暂未响应，正在自动重试，请保留此页面。';});
     localStorage.setItem('xiaopingu_counselor_id',data.counselor.id);
     if(window.XPG_WEB_AUTH)XPG_WEB_AUTH.setSession('counselor',data.counselor.id,{via:'verified_login'});
     input.value=''; feedback.textContent='验证成功，正在打开工作台。如果浏览器提示下载网页，请联系管理员确认网站地址。';
@@ -1443,7 +1443,7 @@ async function doCounselorLogin() {
 
 <div class="toast" id="toast"></div>
 <script src="web-auth.js?v=20261027-chain"></script>
-<script src="supabase-config.js?v=20261103-login-feedback"></script><script src="assets/demo-accounts.js?v=20261027-cloud"></script>
+<script src="supabase-config.js?v=20261103-login-retry"></script><script src="assets/demo-accounts.js?v=20261027-cloud"></script>
 <script>
 var scores = { mood:0, anxiety:0, sleep:0, function:0, relation:0 };
 var scaleAnswered = { mood:false, anxiety:false, sleep:false, function:false, relation:false };
