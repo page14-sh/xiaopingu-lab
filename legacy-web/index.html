@@ -865,15 +865,16 @@
       <div id="cl-qr" style="width:180px;height:180px;margin:0 auto;border:1px solid #E8E4DC;border-radius:12px;display:flex;align-items:center;justify-content:center;background:#FAF9F6;color:#A09889;font-size:13px;padding:10px;box-sizing:border-box;line-height:1.6">二维码生成中…</div>
       <p id="cl-qr-tip" style="font-size:12px;color:#7A7268;margin:8px 0 0">用微信「扫一扫」，关注后自动登录</p>
     </div>
-    <details id="cl-alt">
-      <summary style="font-size:12px;color:#A09889;cursor:pointer;margin-bottom:8px">其他登录方式（凭本人编辑码）</summary>
-      <input id="counselor-login-input" type="text" placeholder="本人咨询师编辑码" autocomplete="off"
+    <details id="cl-alt" open>
+      <summary style="font-size:12px;color:#A09889;cursor:pointer;margin-bottom:8px">使用本人编辑码登录</summary>
+      <input id="counselor-login-input" type="password" placeholder="本人咨询师编辑码" autocomplete="off"
         onkeydown="if(event.key==='Enter')doCounselorLogin()" />
       <input id="counselor-login-password" type="password" placeholder="密码（ID / 编辑码登录可留空）" autocomplete="off" style="display:none" />
       <div class="counselor-login-btns">
         <button class="btn-cl-cancel" onclick="closeCounselorLogin()">取消</button>
-        <button class="btn-cl-go" onclick="doCounselorLogin()">进入工作台</button>
+        <button id="cl-login-submit" class="btn-cl-go" onclick="doCounselorLogin()">进入工作台</button>
       </div>
+      <p id="counselor-login-feedback" role="status" aria-live="polite"></p>
     </details>
     <button class="btn-cl-register" onclick="location.href='counselor.html'">还没注册？点此入驻 →</button>
   </div>
@@ -1019,14 +1020,19 @@ function closeCounselorLogin() {
 }
 async function doCounselorLogin() {
   var input=document.getElementById('counselor-login-input'),value=input.value.trim();
-  if(!value){input.style.borderColor='#E53935';return;}
+  var button=document.getElementById('cl-login-submit'), feedback=document.getElementById('counselor-login-feedback');
+  if(button.disabled)return;
+  if(!value){feedback.textContent='请输入本人的完整编辑码。';input.focus();return;}
+  button.disabled=true; feedback.textContent='正在验证编辑码，请稍候…';
   try{
-    var password=document.getElementById('counselor-login-password').value;
-    var data=await XPG_API_AUTH.loginCounselor(value,password);
+    if (typeof XPG_API_AUTH === 'undefined') throw new Error('登录服务未加载，请从网站重新打开本页，不要使用下载的网页文件。');
+    var data=await XPG_API_AUTH.loginCounselor(value,document.getElementById('counselor-login-password').value);
     localStorage.setItem('xiaopingu_counselor_id',data.counselor.id);
     if(window.XPG_WEB_AUTH)XPG_WEB_AUTH.setSession('counselor',data.counselor.id,{via:'verified_login'});
+    input.value=''; feedback.textContent='验证成功，正在打开工作台。如果浏览器提示下载网页，请联系管理员确认网站地址。';
     location.href='counselor.html?panel=1';
-  }catch(error){showToast(error.message||'登录失败','error');}
+  }catch(error){feedback.textContent=error.message||'登录失败，请重试。';}
+  finally{button.disabled=false;}
 }
 
 </script>
@@ -1437,7 +1443,7 @@ async function doCounselorLogin() {
 
 <div class="toast" id="toast"></div>
 <script src="web-auth.js?v=20261027-chain"></script>
-<script src="supabase-config.js?v=20261103-private-photos"></script><script src="assets/demo-accounts.js?v=20261027-cloud"></script>
+<script src="supabase-config.js?v=20261103-login-feedback"></script><script src="assets/demo-accounts.js?v=20261027-cloud"></script>
 <script>
 var scores = { mood:0, anxiety:0, sleep:0, function:0, relation:0 };
 var scaleAnswered = { mood:false, anxiety:false, sleep:false, function:false, relation:false };

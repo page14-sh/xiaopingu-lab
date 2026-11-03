@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
-  <script src="supabase-config.js?v=20261103-private-photos"></script><script src="assets/demo-accounts.js?v=20261027-cloud"></script>
+  <script src="supabase-config.js?v=20261103-login-feedback"></script><script src="assets/demo-accounts.js?v=20261027-cloud"></script>
   <script src="web-auth.js?v=20261027-chain"></script>
   <title>小平菇 · 数据管理后台</title>
   <style>
@@ -1122,26 +1122,20 @@
       setTimeout(() => toast.remove(), 3000);
     }
 
-    function copyToClipboard(text, el) {
-      if (!text || text === '-') return;
-      navigator.clipboard.writeText(text).then(function() {
-        showToast('已复制', 'success');
-        if (el) {
-          var orig = el.querySelector('span').textContent;
-          el.querySelector('span').textContent = '已复制!';
-          setTimeout(function(){ el.querySelector('span').textContent = orig; }, 1500);
-        }
-      }).catch(function() {
-        // 降级方案
+    async function copyToClipboard(text, el) {
+      if (!text || text === '-') { showToast('这份档案没有可复制的值，请核对档案和环境。', 'error'); return; }
+      var copied = false;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        try { await navigator.clipboard.writeText(text); copied = true; } catch (_) { /* try the local fallback */ }
+      }
+      if (!copied) {
         var ta = document.createElement('textarea');
-        ta.value = text;
-        ta.style.position = 'fixed'; ta.style.opacity = '0';
+        ta.value = text; ta.style.cssText = 'position:fixed;opacity:0';
         document.body.appendChild(ta);
-        ta.select();
-        document.execCommand('copy');
-        document.body.removeChild(ta);
-        showToast('已复制', 'success');
-      });
+        try { ta.select(); copied = document.execCommand('copy'); } catch (_) { copied = false; }
+        finally { ta.remove(); }
+      }
+      showToast(copied ? '已复制完整内容' : '未能复制，请允许浏览器访问剪贴板后重试。', copied ? 'success' : 'error');
     }
 
     // ========== 模态框关闭 ==========
@@ -1365,8 +1359,8 @@
         '<td style="cursor:pointer;" title="点击复制完整 ID" onclick="copyToClipboard(\'' + (c.id || '') + '\', this)">' +
           '<span style="font-size:11px;font-family:monospace;color:#5C7A52;">' + ((c.id || '').substring(0, 8) + '…') + '</span>' +
           '<span style="font-size:10px;color:#999;margin-left:4px;">📋</span></td>' +
-        '<td style="cursor:pointer;" title="点击复制编辑码" onclick="copyToClipboard(\'' + (c.edit_token || '') + '\', this)">' +
-          '<span style="font-size:11px;font-family:monospace;color:#E67E22;">' + ((c.edit_token || '').substring(0, 8) + ((c.edit_token || '').length > 8 ? '…' : '')) + '</span>' +
+        '<td style="cursor:pointer;" title="点击复制编辑码" data-code="' + escapeHtml(c.edit_token) + '" onclick="copyToClipboard(this.dataset.code,this)">' +
+          '<span style="font-size:11px;font-family:monospace;color:#E67E22;">' + escapeHtml((c.edit_token || '').substring(0, 8) + ((c.edit_token || '').length > 8 ? '…' : '')) + '</span>' +
           '<span style="font-size:10px;color:#999;margin-left:4px;">📋</span></td>' +
         '<td><strong>' + (c.name || '-') + '</strong></td>' +
         '<td>' + (c.credential_level || '-') + '</td>' +

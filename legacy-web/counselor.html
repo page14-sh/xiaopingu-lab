@@ -1244,8 +1244,9 @@
       </div>
       <div class="panel-login" id="panel-login" style="display:none;">
         <p style="font-size:13px;color:#6B635A;margin-bottom:10px;">使用本人编辑码登录后查看匹配申请</p>
-        <input type="text" id="panel-cid-input" placeholder="本人编辑码（不是咨询师 ID）" autocomplete="off">
-        <button class="req-btn req-btn-primary" onclick="loadPanelByInput()">登录工作台</button>
+        <input type="password" id="panel-cid-input" onkeydown="if(event.key==='Enter')loadPanelByInput()" placeholder="本人编辑码（不是咨询师 ID）" autocomplete="off">
+        <button id="panel-login-submit" class="req-btn req-btn-primary" onclick="loadPanelByInput()">登录工作台</button>
+        <p id="panel-login-feedback" role="status" aria-live="polite"></p>
       </div>
     </div>
   </div>
@@ -1270,7 +1271,7 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="assets/confirm-action.js?v=20261027-platform"></script><script src="supabase-config.js?v=20261103-private-photos"></script><script src="assets/demo-accounts.js?v=20261027-cloud"></script>
+<script src="assets/confirm-action.js?v=20261027-platform"></script><script src="supabase-config.js?v=20261103-login-feedback"></script><script src="assets/demo-accounts.js?v=20261027-cloud"></script>
 <script>
 var currentStep = 1;
 var currentEditToken = null;
@@ -2178,7 +2179,8 @@ function submitProfile() {
     hasCounselorSession = !!localStorage.getItem('xiaopingu_counselor_token');
     inDemoMode = localStorage.getItem('xpg_demo_active') === '1';
   } catch (e) {}
-  if (puzzleVerified || hasCounselorSession || inDemoMode) {
+  var route = new URLSearchParams(location.search);
+  if (puzzleVerified || hasCounselorSession || inDemoMode || (!route.has('edit') && (route.get('panel') === '1' || route.has('cid')))) {
     puzzleVerified = true;
     document.getElementById('main-app').style.display = 'block';
     return; // 已验证或已持有会话，直接显示
@@ -2414,6 +2416,7 @@ function loadPanelIdentity() {
 })();
 
 function showPanel() {
+  document.getElementById('panel-edit-btn').style.display = '';
   document.getElementById('panel-area').style.display = 'block';
   // 初始化 tab 状态
   panelCurrentTab = 'requests';
@@ -2421,21 +2424,28 @@ function showPanel() {
   document.getElementById('tab-clients').classList.remove('active');
 }
 function showPanelLogin() {
+  document.getElementById('form_area').style.display = 'none';
+  document.getElementById('panel-edit-btn').style.display = 'none';
   document.getElementById('panel-area').style.display = 'block';
   document.getElementById('panel-content').style.display = 'none';
   document.getElementById('panel-login').style.display = 'block';
 }
 
 async function loadPanelByInput() {
-  var input=document.getElementById('panel-cid-input').value.trim();if(!input)return;
+  var field=document.getElementById('panel-cid-input'),input=field.value.trim();
+  var button=document.getElementById('panel-login-submit'),feedback=document.getElementById('panel-login-feedback');
+  if(button.disabled)return;
+  if(!input){feedback.textContent='请输入本人的完整编辑码。';field.focus();return;}
+  button.disabled=true;feedback.textContent='正在验证编辑码，请稍候…';
   try{
+    if (typeof XPG_API_AUTH === 'undefined') throw new Error('登录服务未加载，请从网站重新打开本页，不要使用下载的网页文件。');
     var data=await XPG_API_AUTH.loginCounselor(input,document.getElementById('panel-account-password')?.value||'');panelCid=data.counselor.id;
     localStorage.setItem('xiaopingu_counselor_id',panelCid);
     if(window.XPG_WEB_AUTH)XPG_WEB_AUTH.setSession('counselor',panelCid,{via:'verified_edit_code'});
-    document.getElementById('panel-login').style.display='none';document.getElementById('panel-content').style.display='block';
+    field.value='';feedback.textContent='';document.getElementById('panel-login').style.display='none';document.getElementById('panel-content').style.display='block';
     if(document.getElementById('form_area'))document.getElementById('form_area').style.display='none';
     showPanel();loadPanelIdentity();loadPanelRequests();
-  }catch(e){showToast(e.message||'登录失败');}
+  }catch(e){feedback.textContent=e.message||'登录失败，请重试。';}finally{button.disabled=false;}
 }
 
 // ========== 面板 Tab 切换 ==========

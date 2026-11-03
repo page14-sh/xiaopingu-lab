@@ -69,19 +69,26 @@ function loginAdmin(password) {
   });
 }
 
-function loginCounselor(credential, password) {
-  return fetch(SUPABASE_CONFIG.url + '/auth/counselor', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ credential: credential, password: password || '' })
-  }).then(function(response) {
-    if (!response.ok) throw new Error('咨询师账号或编辑码无效');
-    return response.json();
-  }).then(function(data) {
-    sessionStorage.removeItem(XPG_ADMIN_TOKEN_KEY);
+async function loginCounselor(credential, password) {
+  if (localStorage.getItem('xpg_demo_active') === '1') throw new Error('当前处于演示模式。请先点击「退出演示」，再使用本人的正式编辑码登录。');
+  var controller = new AbortController();
+  var timer = setTimeout(function() { controller.abort(); }, 45000);
+  try {
+    var response = await fetch(SUPABASE_CONFIG.url + '/auth/counselor', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ credential: credential, password: password || '' }), signal: controller.signal
+    });
+    if (response.status === 401) throw new Error('编辑码未通过验证。请让管理员点击「编辑码」复制完整内容，不要使用咨询师 ID 或带省略号的预览。');
+    if (!response.ok) throw new Error('登录服务暂不可用（HTTP ' + response.status + '），请稍后重试。');
+    var data = await response.json();
+    if (!data.token || !data.counselor || !data.counselor.id) throw new Error('登录响应异常，请重试。');
     localStorage.setItem(XPG_COUNSELOR_TOKEN_KEY, data.token);
+    sessionStorage.removeItem(XPG_ADMIN_TOKEN_KEY);
     return data;
-  });
+  } catch (err) {
+    if (err.name === 'AbortError' || err instanceof TypeError) throw new Error('未能连接登录服务，请检查网络后重试。');
+    throw err;
+  } finally { clearTimeout(timer); }
 }
 
 window.XPG_API_AUTH = {
