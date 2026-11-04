@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
-  <script src="supabase-config.js?v=20261103-login-retry"></script><script src="assets/demo-accounts.js?v=20261027-cloud"></script>
+  <script src="supabase-config.js?v=20261104-admin-login"></script><script src="assets/demo-accounts.js?v=20261027-cloud"></script>
   <script src="web-auth.js?v=20261027-chain"></script>
   <title>小平菇 · 数据管理后台</title>
   <style>
@@ -561,7 +561,7 @@
       <input type="password" id="login-password" placeholder="请输入管理密码" onkeypress="if(event.key==='Enter') doLogin()">
       <button onclick="doLogin()">进入后台</button>
       <div class="login-error" id="login-error"></div>
-      <div class="login-hint">首次使用默认密码请查看文件内说明</div>
+      <div class="login-hint" id="login-hint">首次使用默认密码请查看文件内说明</div>
     </div>
   </div>
 
@@ -1024,9 +1024,14 @@
     async function doLogin() {
       const input = document.getElementById('login-password').value;
       const errorEl = document.getElementById('login-error');
+      const btn = document.querySelector('#login-screen button');
+      if (!input) { errorEl.textContent = '请输入密码'; return; }
       try {
         errorEl.textContent = '';
-        await XPG_API_AUTH.loginAdmin(input);
+        if (btn) btn.disabled = true;
+        await XPG_API_AUTH.loginAdmin(input, function() {
+          errorEl.textContent = '登录服务正在启动，正在自动重试，请保留此页面（约需 20–40 秒）。';
+        });
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
         if (window.XPG_WEB_AUTH) {
@@ -1036,6 +1041,8 @@
       } catch (error) {
         errorEl.textContent = error && error.message ? error.message : '登录失败，请重试';
         document.getElementById('login-password').value = '';
+      } finally {
+        if (btn) btn.disabled = false;
       }
     }
 
@@ -1053,6 +1060,14 @@
 
     // 页面加载时检查登录状态
     window.addEventListener('load', function() {
+      // 登录屏提示：按当前模式说明可用密码，避免把演示密码输进正式校验
+      var demoActive = localStorage.getItem('xpg_demo_active') === '1';
+      var hintEl = document.getElementById('login-hint');
+      if (hintEl) hintEl.textContent = demoActive
+        ? '当前为演示环境：请输入演示密码（与首页「演示账号登录」相同）。'
+        : '当前为正式环境：请输入管理密码。如仅需查看演示数据，请从首页「演示账号登录」进入。';
+      var pwEl = document.getElementById('login-password');
+      if (pwEl) pwEl.placeholder = demoActive ? '请输入演示密码' : '请输入管理密码';
       if (READONLY_MODE && window.XPG_API_AUTH && XPG_API_AUTH.hasAdminSession()) {
         // 只读模式：直接跳过登录
         document.getElementById('login-screen').style.display = 'none';

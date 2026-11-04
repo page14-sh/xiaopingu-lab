@@ -55,18 +55,43 @@ function currentApiToken() {
   };
 })();
 
-function loginAdmin(password) {
-  return fetch(SUPABASE_CONFIG.url + '/auth/admin', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ password: password })
-  }).then(function(response) {
-    if (!response.ok) throw new Error('管理员密码错误');
-    return response.json();
-  }).then(function(data) {
+async function loginAdmin(password, onRetry) {
+  // 演示模式（首页「演示账号登录」进入后）走演示账号通道：演示密码在此直接可用，
+  // 令牌由演示路由转发 preview 实例并带 xpgdemo. 前缀；正式模式校验后端管理密码。
+  var demo = localStorage.getItem('xpg_demo_active') === '1';
+  var controller = new AbortController();
+  var timer = setTimeout(function() { controller.abort(); }, 110000);
+  try {
+    var response;
+    for (var attempt = 0; attempt < 3; attempt++) {
+      // CloudRun may scale from zero; its gateway can return 503 without CORS
+      // headers, which browsers expose as a network TypeError.
+      try {
+        response = await fetch(demo ? SUPABASE_CONFIG.url + '/auth/account' : SUPABASE_CONFIG.url + '/auth/admin', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(demo ? { role: 'admin', username: 'demo_admin', password: password } : { password: password }),
+          signal: controller.signal
+        });
+        if (![502, 503, 504].includes(response.status) || attempt === 2) break;
+      } catch (err) {
+        if (!(err instanceof TypeError) || controller.signal.aborted || attempt === 2) throw err;
+      }
+      if (onRetry) onRetry();
+      await new Promise(function(resolve) { setTimeout(resolve, 2000); });
+    }
+    if (response.status === 401) throw new Error(demo
+      ? '演示密码不正确。请使用与首页「演示账号登录」一致的演示密码。'
+      : '管理密码不正确。如仅需查看演示数据，请从首页「演示账号登录」进入。');
+    if (response.status === 429) throw new Error('登录尝试过多，请一分钟后重试。');
+    if (!response.ok) throw new Error('登录服务暂不可用（HTTP ' + response.status + '），请稍后重试。');
+    var data = await response.json();
+    if (!data.token) throw new Error('登录响应异常，请重试。');
     sessionStorage.setItem(XPG_ADMIN_TOKEN_KEY, data.token);
     return data;
-  });
+  } catch (err) {
+    if (err.name === 'AbortError' || err instanceof TypeError) throw new Error('未能连接登录服务，请检查网络后重试。');
+    throw err;
+  } finally { clearTimeout(timer); }
 }
 
 async function loginCounselor(credential, password, onRetry) {
