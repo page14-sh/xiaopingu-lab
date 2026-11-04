@@ -59,10 +59,10 @@ test('server decodes raster content and strips metadata; rejects disguised files
 
 test('registration uploads privately and returns no signed certificate; failed upload never creates a profile', async t => {
   const f = await setup(t), image = await picture(), id = randomUUID();
-  const r = await f.request('POST', '/rest/v1/counselors', { id, name: '合成资料', photo_daily: [image], photo_license: [image], photo_diploma: [image] });
-  assert.equal(r.status, 201); assert.ok(r.body[0].edit_token); assert.equal(r.body[0].photo_license, undefined); assert.equal(r.body[0].photo_diploma, undefined);
+  const r = await f.request('POST', '/rest/v1/counselors', { id, name: '合成资料', photo_daily: [image], photo_license: [image], photo_diploma: [image], photo_ethics: [image] });
+  assert.equal(r.status, 201); assert.ok(r.body[0].edit_token); assert.equal(r.body[0].photo_license, undefined); assert.equal(r.body[0].photo_diploma, undefined); assert.equal(r.body[0].photo_ethics, undefined);
   const saved = await f.source.get('counselors', id);
-  assert.match(saved.photo_daily[0], /^cloud:\/\//); assert.match(saved.photo_license[0], /photo_license/); assert.match(saved.photo_diploma[0], /photo_diploma/);
+  assert.match(saved.photo_daily[0], /^cloud:\/\//); assert.match(saved.photo_license[0], /photo_license/); assert.match(saved.photo_diploma[0], /photo_diploma/); assert.match(saved.photo_ethics[0], /photo_ethics/);
   assert.equal(saved.review_status, 'pending'); assert.equal(f.storage.signed.length, 0);
   f.storage.uploadFile = async () => { throw new Error('secret provider error'); };
   const next = randomUUID(), failed = await f.request('POST', '/rest/v1/counselors', { id: next, photo_daily: [image] });
@@ -72,17 +72,17 @@ test('registration uploads privately and returns no signed certificate; failed u
 
 test('only owner/admin receive certificate URLs; anonymous and visitor never cause certificate signing', async t => {
   const f = await setup(t), image = await picture();
-  assert.equal((await f.request('PATCH', f.path, { photo_daily: [image], photo_license: [image], photo_diploma: [image] }, f.owner)).status, 200);
+  assert.equal((await f.request('PATCH', f.path, { photo_daily: [image], photo_license: [image], photo_diploma: [image], photo_ethics: [image] }, f.owner)).status, 200);
   for (const auth of [undefined, f.token('visitor', 'someone'), f.token('counselor', randomUUID())]) {
     f.storage.signed.length = 0;
     const r = await f.request('GET', f.path, null, auth);
-    if (r.status === 200) { assert.equal(r.body[0].photo_license, undefined); assert.equal(r.body[0].photo_diploma, undefined); }
+    if (r.status === 200) { assert.equal(r.body[0].photo_license, undefined); assert.equal(r.body[0].photo_diploma, undefined); assert.equal(r.body[0].photo_ethics, undefined); }
     else assert.equal(r.status, 403);
-    assert.ok(f.storage.signed.every(x => !x.fileID.includes('photo_license') && !x.fileID.includes('photo_diploma')));
+    assert.ok(f.storage.signed.every(x => !x.fileID.includes('photo_license') && !x.fileID.includes('photo_diploma') && !x.fileID.includes('photo_ethics')));
   }
   for (const auth of [f.owner, f.admin]) {
     const r = await f.request('GET', f.path, null, auth);
-    assert.equal(r.status, 200); assert.match(r.body[0].photo_license[0].url, /^https:/); assert.match(r.body[0].photo_diploma[0].url, /^https:/);
+    assert.equal(r.status, 200); assert.match(r.body[0].photo_license[0].url, /^https:/); assert.match(r.body[0].photo_diploma[0].url, /^https:/); assert.match(r.body[0].photo_ethics[0].url, /^https:/);
     assert.equal(r.headers.get('cache-control'), 'no-store');
   }
   assert.ok(f.storage.signed.every(x => x.maxAge === LINK_TTL));
@@ -93,16 +93,18 @@ test('only owner/admin receive certificate URLs; anonymous and visitor never cau
 
 test('references cannot be forged, moved across owners/namespaces or promoted from certificate to public photo', async t => {
   const f = await setup(t), image = await picture();
-  const created = await f.request('PATCH', f.path, { photo_daily: [image], photo_license: [image] }, f.owner);
+  const created = await f.request('PATCH', f.path, { photo_daily: [image], photo_license: [image], photo_ethics: [image] }, f.owner);
   const ref = created.body[0].photo_license[0];
   for (const value of [ref, { file_id: ref.file_id.replace(f.cid, randomUUID()) }, { file_id: ref.file_id.replace(namespace, 'xg_v2_other_') }, { file_id: 'cloud://evil/anything' }, 'https://private.example/reuse']) {
     const r = await f.request('PATCH', f.path, { photo_daily: [value] }, f.owner);
     assert.equal(r.status, 400);
   }
+  const ethicsRef = created.body[0].photo_ethics[0];
+  assert.equal((await f.request('PATCH', f.path, { photo_daily: [{ file_id: ethicsRef.file_id }] }, f.owner)).status, 400);
   assert.equal((await f.request('PATCH', f.path, { photo_daily: [image, image, image] }, f.owner)).status, 400);
   const r = await f.request('PATCH', f.path, { photo_license: [{ file_id: ref.file_id, url: 'https://evil/ignored' }] }, f.owner);
   assert.equal(r.status, 200); assert.doesNotMatch(r.body[0].photo_license[0].url, /evil/);
-  assert.equal(f.storage.objects.size, 2);
+  assert.equal(f.storage.objects.size, 3);
 });
 
 test('legacy photos migrate on save; removing/replacing deletes old objects; failed persistence rolls back new uploads', async t => {

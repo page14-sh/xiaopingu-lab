@@ -672,15 +672,22 @@
         <label>是否参加过伦理培训</label>
         <div style="display:flex;gap:12px;flex-wrap:wrap">
           <label style="display:flex;align-items:center;gap:6px;font-size:14px;color:#6B635A;cursor:pointer">
-            <input type="radio" name="ethics_training" value="是"> 是
+            <input type="radio" name="ethics_training" value="是" onchange="toggleEthicsUpload()"> 是
           </label>
           <label style="display:flex;align-items:center;gap:6px;font-size:14px;color:#6B635A;cursor:pointer">
-            <input type="radio" name="ethics_training" value="否"> 否
+            <input type="radio" name="ethics_training" value="否" onchange="toggleEthicsUpload()"> 否
           </label>
           <label style="display:flex;align-items:center;gap:6px;font-size:14px;color:#6B635A;cursor:pointer">
-            <input type="radio" name="ethics_training" value="进行中"> 培训中
+            <input type="radio" name="ethics_training" value="进行中" onchange="toggleEthicsUpload()"> 培训中
           </label>
         </div>
+      </div>
+
+      <div class="form-row" id="ethics_photo_row" style="display:none">
+        <label class="required">伦理培训证明材料<span style="font-size:12px;font-weight:400;color:#A09889">（选「是」时必传）</span></label>
+        <p style="font-size:12px;color:#A09889;margin:4px 0 8px">请上传伦理培训证书、学时证明或成绩单等材料照片，仅平台审核可见</p>
+        <div class="photo-slots" id="slots_c_ethics"></div>
+        <input type="file" id="file_c_ethics" accept="image/*" hidden onchange="onPhotoPicked('c_ethics', this)">
       </div>
 
       <div class="form-row">
@@ -908,26 +915,26 @@
       <hr class="divider">
 
       <div class="form-row">
-        <label class="required">联系方式（至少公开一种）</label>
-        <div style="font-size:12px;color:#A09889;margin-bottom:12px">请至少填写一种联络方式并勾选"允许对外公布"，让匹配成功的来访者可以主动联动到您。</div>
+        <label class="required">联系方式（微信 / 手机号 / 邮箱均必填）</label>
+        <div style="font-size:12px;color:#A09889;margin-bottom:12px">三项请全部填写完整；并至少勾选一项「对外公开」——你勾选的联系方式将公布给匹配成功的来访者，未勾选的仅平台审核可见。</div>
         <div class="form-grid">
           <div class="form-row">
-            <label style="font-size:13px;font-weight:400;color:#A09889">微信号</label>
-            <input type="text" id="c_wechat" placeholder="选填" autocomplete="off">
+            <label style="font-size:13px;font-weight:400;color:#A09889">微信号 <span style="color:#C4654A">*</span></label>
+            <input type="text" id="c_wechat" placeholder="必填" autocomplete="off">
             <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#6B635A;margin-top:4px;cursor:pointer">
               <input type="checkbox" id="c_wechat_public" style="width:14px;height:14px"> 允许对外公布
             </label>
           </div>
           <div class="form-row">
-            <label style="font-size:13px;font-weight:400;color:#A09889">手机号</label>
-            <input type="tel" id="c_phone" placeholder="选填" autocomplete="off">
+            <label style="font-size:13px;font-weight:400;color:#A09889">手机号 <span style="color:#C4654A">*</span></label>
+            <input type="tel" id="c_phone" placeholder="必填" autocomplete="off">
             <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#6B635A;margin-top:4px;cursor:pointer">
               <input type="checkbox" id="c_phone_public" style="width:14px;height:14px"> 允许对外公布
             </label>
           </div>
           <div class="form-row">
-            <label style="font-size:13px;font-weight:400;color:#A09889">邮箱</label>
-            <input type="email" id="c_email" placeholder="选填" autocomplete="off">
+            <label style="font-size:13px;font-weight:400;color:#A09889">邮箱 <span style="color:#C4654A">*</span></label>
+            <input type="email" id="c_email" placeholder="必填" autocomplete="off">
             <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#6B635A;margin-top:4px;cursor:pointer">
               <input type="checkbox" id="c_email_public" style="width:14px;height:14px"> 允许对外公布
             </label>
@@ -1132,6 +1139,9 @@
           <div class="pe-row">
             <div class="pe-field"><label>学历 / 学位证书照片（仅平台审核可见）</label><div class="photo-slots" id="slots_pe_diploma"></div><input type="file" id="file_pe_diploma" accept="image/*" hidden onchange="onPhotoPicked('pe_diploma', this)"><div style="font-size:12px;color:#A09889;margin-top:4px">最多 2 张，建议最高学历的毕业证书 / 学位证书照片（与「最高学历」一致）</div></div>
           </div>
+          <div class="pe-row" id="pe_ethics_photo_row" style="display:none">
+            <div class="pe-field"><label>伦理培训证明材料（仅平台审核可见）</label><div class="photo-slots" id="slots_pe_ethics"></div><input type="file" id="file_pe_ethics" accept="image/*" hidden onchange="onPhotoPicked('pe_ethics', this)"><div style="font-size:12px;color:#A09889;margin-top:4px">伦理培训选「是」时必传：培训证书、学时证明或成绩单等，最多 2 张</div></div>
+          </div>
         </div>
         <!-- 培训资质 -->
         <div class="pe-section">
@@ -1174,7 +1184,7 @@
           </div>
           <div class="pe-row">
             <div class="pe-field"><label>是否能开体验证明</label><select id="pe_therapy_cert"><option value="">请选择</option><option value="是">是</option><option value="否">否</option></select></div>
-            <div class="pe-field"><label>伦理培训</label><select id="pe_ethics_training"><option value="">请选择</option><option value="是">是</option><option value="否">否</option><option value="进行中">培训中</option></select></div>
+            <div class="pe-field"><label>伦理培训</label><select id="pe_ethics_training" onchange="togglePeEthicsUpload()"><option value="">请选择</option><option value="是">是</option><option value="否">否</option><option value="进行中">培训中</option></select></div>
           </div>
           <div class="pe-field" style="margin-top:6px"><label>专项认证（可多选）</label><div class="pe-chips" id="pe_certifications"></div></div>
           <div class="pe-field" style="margin-top:6px"><label>受训背景</label><textarea id="pe_training" style="width:100%;padding:8px 10px;border:1px solid #D8D2C8;border-radius:6px;font-size:13px;min-height:60px;resize:vertical;font-family:inherit;box-sizing:border-box;" placeholder="简要描述主要受训经历…"></textarea></div>
@@ -1225,18 +1235,19 @@
         </div>
         <!-- 联系方式 -->
         <div class="pe-section">
-          <div class="pe-section-title">联系方式</div>
+          <div class="pe-section-title">联系方式（微信 / 手机号 / 邮箱均必填）</div>
+          <div style="font-size:12px;color:#A09889;margin:-4px 0 10px">三项请全部填写完整；并至少勾选一项「允许对外公布」——勾选的联系方式将公布给匹配成功的来访者，未勾选的仅平台审核可见。</div>
           <div class="pe-row">
             <div class="pe-field">
-              <label>微信</label><input type="text" id="pe_wechat" placeholder="选填">
+              <label>微信 <span style="color:#C4654A">*</span></label><input type="text" id="pe_wechat" placeholder="必填">
               <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#6B635A;margin-top:4px;cursor:pointer"><input type="checkbox" id="pe_wechat_public" style="width:14px;height:14px"> 允许对外公布</label>
             </div>
             <div class="pe-field">
-              <label>手机号</label><input type="text" id="pe_phone" placeholder="选填">
+              <label>手机号 <span style="color:#C4654A">*</span></label><input type="text" id="pe_phone" placeholder="必填">
               <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#6B635A;margin-top:4px;cursor:pointer"><input type="checkbox" id="pe_phone_public" style="width:14px;height:14px"> 允许对外公布</label>
             </div>
             <div class="pe-field">
-              <label>邮箱</label><input type="text" id="pe_email" placeholder="选填">
+              <label>邮箱 <span style="color:#C4654A">*</span></label><input type="text" id="pe_email" placeholder="必填">
               <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#6B635A;margin-top:4px;cursor:pointer"><input type="checkbox" id="pe_email_public" style="width:14px;height:14px"> 允许对外公布</label>
             </div>
           </div>
@@ -1430,7 +1441,7 @@ var otherSpecialties = [];
 var otherCerts = [];
 
 // ===== 咨询师照片（日常照对外可见 / 证书照仅平台审核可见）=====
-var photoStore = { c_daily: [], c_license: [], c_diploma: [], pe_daily: [], pe_license: [], pe_diploma: [] };
+var photoStore = { c_daily: [], c_license: [], c_diploma: [], c_ethics: [], pe_daily: [], pe_license: [], pe_diploma: [], pe_ethics: [] };
 var PHOTO_MAX = 2;
 function renderPhotoSlots(key) {
   var box = document.getElementById('slots_' + key);
@@ -1448,6 +1459,23 @@ function renderPhotoSlots(key) {
 function removePhoto(key, i) {
   photoStore[key].splice(i, 1);
   renderPhotoSlots(key);
+}
+// 伦理培训：选「是 / 培训中」才显示材料上传位（选「是」时必传）
+function toggleEthicsUpload() {
+  var row = document.getElementById('ethics_photo_row');
+  if (!row) return;
+  var el = document.querySelector('input[name="ethics_training"]:checked');
+  var on = !!el && el.value !== '否';
+  row.style.display = on ? 'block' : 'none';
+  if (!on) { photoStore.c_ethics = []; renderPhotoSlots('c_ethics'); }
+}
+function togglePeEthicsUpload() {
+  var row = document.getElementById('pe_ethics_photo_row');
+  if (!row) return;
+  var sel = document.getElementById('pe_ethics_training');
+  var on = !!sel && sel.value !== '' && sel.value !== '否';
+  row.style.display = on ? 'block' : 'none';
+  if (!on) { photoStore.pe_ethics = []; renderPhotoSlots('pe_ethics'); }
 }
 function onPhotoPicked(key, input) {
   var f = input.files && input.files[0];
@@ -1650,6 +1678,7 @@ function restoreFromData(d) {
   if (d.photo_daily && d.photo_daily.length) { photoStore.c_daily = d.photo_daily.slice(); renderPhotoSlots('c_daily'); }
   if (d.photo_license && d.photo_license.length) { photoStore.c_license = d.photo_license.slice(); renderPhotoSlots('c_license'); }
   if (d.photo_diploma && d.photo_diploma.length) { photoStore.c_diploma = d.photo_diploma.slice(); renderPhotoSlots('c_diploma'); }
+  if (d.photo_ethics && d.photo_ethics.length) { photoStore.c_ethics = d.photo_ethics.slice(); renderPhotoSlots('c_ethics'); }
   if (d.supervision_hours) document.getElementById('c_supervision').value = d.supervision_hours;
   if (d.personal_therapy_hours) document.getElementById('c_personal_therapy').value = d.personal_therapy_hours;
   ['personal_therapy_status', 'therapy_cert', 'ethics_training'].forEach(function(name) {
@@ -1659,6 +1688,7 @@ function restoreFromData(d) {
       if (radio) radio.checked = true;
     }
   });
+  toggleEthicsUpload();
   if (d.training_background) document.getElementById('c_training').value = d.training_background;
   if (d.session_duration) {
     var durOptions = Array.from(document.getElementById('c_duration').options).map(function(o){return o.value});
@@ -1848,6 +1878,7 @@ function collectData() {
     photo_daily: counselorPhotoPayload(photoStore.c_daily),
     photo_license: counselorPhotoPayload(photoStore.c_license),
     photo_diploma: counselorPhotoPayload(photoStore.c_diploma),
+    photo_ethics: counselorPhotoPayload(photoStore.c_ethics),
     wx_openid: _wxOpenid || undefined,
     wx_bind_token: _wxBindToken || undefined,
     bio_short: document.getElementById('c_bio_short').value.trim(),
@@ -1918,11 +1949,12 @@ function previewAndSubmit() {
   if (!d.photo_daily.length) { showToast('请上传至少 1 张生活照片（来访者可见）'); goStep(1); return; }
   if (!d.photo_license.length) { showToast('请上传至少 1 张证书 / 凭证照片（仅平台审核可见）'); goStep(1); return; }
   if (!d.photo_diploma.length) { showToast('请上传至少 1 张学历 / 学位证书照片（仅平台审核可见）'); goStep(1); return; }
+  if (d.ethics_training === '是' && !d.photo_ethics.length) { showToast('您参加过伦理培训，请上传至少 1 张伦理培训证明材料（培训证书 / 学时证明）'); goStep(2); return; }
   if (d.approaches.length === 0) { showToast('请至少选择一个咨询取向'); goStep(2); return; }
   if (d.specialties.length === 0) { showToast('请至少选择一个擅长议题'); goStep(3); return; }
+  if (!d.contact_wechat || !d.contact_phone || !d.contact_email) { showToast('请完整填写微信、手机号、邮箱三种联系方式（均必填）'); goStep(4); return; }
+  if (!d.contact_wechat_public && !d.contact_phone_public && !d.contact_email_public) { showToast('请至少勾选一项「允许对外公布」，来访者只能看到你勾选公开的联系方式'); goStep(4); return; }
   if (!d.bio_short) { showToast('请填写一句话简介'); goStep(5); return; }
-  var hasPublicContact = (d.contact_wechat && d.contact_wechat_public) || (d.contact_phone && d.contact_phone_public) || (d.contact_email && d.contact_email_public);
-  if (!hasPublicContact) { showToast('请至少填写一种联络方式并勾选「允许对外公布」，让来访者可以主动联动到您'); return; }
 
     var html = '<div class="preview-card"><h3>' + d.name + '</h3>';
     if (d.gender) { var gMap = {male:'男',female:'女',ta:'TA',other:'其他'}; html += '<span style="font-size:12px;color:#6B635A;margin-left:8px">' + (gMap[d.gender]||d.gender) + '</span>'; }
@@ -1933,6 +1965,7 @@ function previewAndSubmit() {
   if (d.photo_daily && d.photo_daily.length) html += '<div class="preview-row"><span class="preview-label">日常照片</span><span class="preview-val">' + d.photo_daily.length + ' 张（来访者可见）</span></div>';
   if (d.photo_license && d.photo_license.length) html += '<div class="preview-row"><span class="preview-label">证书照片</span><span class="preview-val">' + d.photo_license.length + ' 张（仅平台审核可见）</span></div>';
   if (d.photo_diploma && d.photo_diploma.length) html += '<div class="preview-row"><span class="preview-label">学历学位证书照片</span><span class="preview-val">' + d.photo_diploma.length + ' 张（仅平台审核可见）</span></div>';
+  if (d.photo_ethics && d.photo_ethics.length) html += '<div class="preview-row"><span class="preview-label">伦理培训证明材料</span><span class="preview-val">' + d.photo_ethics.length + ' 张（仅平台审核可见）</span></div>';
   if (d.extra_credentials && d.extra_credentials.length) {
     html += '<div class="preview-row"><span class="preview-label">附加资质</span><span class="preview-val">';
     d.extra_credentials.forEach(function(e) { html += '<span class="preview-tag">' + e + '</span> '; });
@@ -2072,7 +2105,8 @@ function submitProfile() {
     updateCounselor(currentEditId, d).then(function(result) {
       if (result) {
         photoStore.c_daily = result.photo_daily || []; photoStore.c_license = result.photo_license || [];
-        renderPhotoSlots('c_daily'); renderPhotoSlots('c_license');
+        photoStore.c_diploma = result.photo_diploma || []; photoStore.c_ethics = result.photo_ethics || [];
+        renderPhotoSlots('c_daily'); renderPhotoSlots('c_license'); renderPhotoSlots('c_diploma'); renderPhotoSlots('c_ethics');
       }
       if (currentReviewStatus === 'rejected') {
         showToast('✅ 已重新提交审核，请等待管理员审核结果');
@@ -2292,6 +2326,7 @@ function enterLocalCounselorAccount(value) {
       var ethicsRadio = document.querySelector('input[name="ethics_training"][value="' + d.ethics_training + '"]');
       if (ethicsRadio) ethicsRadio.checked = true;
     }
+    toggleEthicsUpload();
     if (d.training_background) document.getElementById('c_training').value = d.training_background;
     if (d.session_duration) {
       var durOptions = Array.from(document.getElementById('c_duration').options).map(function(o){return o.value});
@@ -2318,6 +2353,7 @@ function enterLocalCounselorAccount(value) {
   if (d.photo_daily && d.photo_daily.length) { photoStore.c_daily = d.photo_daily.slice(); renderPhotoSlots('c_daily'); }
   if (d.photo_license && d.photo_license.length) { photoStore.c_license = d.photo_license.slice(); renderPhotoSlots('c_license'); }
   if (d.photo_diploma && d.photo_diploma.length) { photoStore.c_diploma = d.photo_diploma.slice(); renderPhotoSlots('c_diploma'); }
+  if (d.photo_ethics && d.photo_ethics.length) { photoStore.c_ethics = d.photo_ethics.slice(); renderPhotoSlots('c_ethics'); }
   toggleWelfareFee('c_');
     if (d.bio_short) document.getElementById('c_bio_short').value = d.bio_short;
     if (d.bio_full) document.getElementById('c_bio_full').value = d.bio_full;
@@ -3170,10 +3206,11 @@ function loadCounselorProfile() {
     photoStore.pe_daily = (d.photo_daily || []).slice(); renderPhotoSlots('pe_daily');
     photoStore.pe_license = (d.photo_license || []).slice(); renderPhotoSlots('pe_license');
     photoStore.pe_diploma = (d.photo_diploma || []).slice(); renderPhotoSlots('pe_diploma');
+    photoStore.pe_ethics = (d.photo_ethics || []).slice(); renderPhotoSlots('pe_ethics');
     var _note = document.getElementById('pe_credential_note');
     var _cu = d.credential_updated_at || d.updated_at;
     if (_note && _cu) {
-      _note.innerHTML = '资质与认证信息（主资质、附加资质、专项认证、执业证号、证书照片、学历学位证书照片）可随时更新，保存后平台会在 1–2 个工作日内复核；复核期间不影响你现有的匹配与接单。' +
+      _note.innerHTML = '资质与认证信息（主资质、附加资质、专项认证、执业证号、证书照片、学历学位证书照片、伦理培训证明材料）可随时更新，保存后平台会在 1–2 个工作日内复核；复核期间不影响你现有的匹配与接单。' +
         '<br><span style="color:#7A8B72">上次资质更新：' + String(_cu).replace('T', ' ').slice(0, 16) + '</span>';
     }
     document.getElementById('pe_supervisor_cert').value = d.supervisor_cert || '';
@@ -3194,6 +3231,7 @@ function loadCounselorProfile() {
     document.getElementById('pe_therapy_hours').value = d.personal_therapy_hours || '';
     document.getElementById('pe_therapy_cert').value = d.therapy_cert || '';
     document.getElementById('pe_ethics_training').value = d.ethics_training || '';
+    togglePeEthicsUpload();
     setPeChipValues('certifications', d.certifications);
     document.getElementById('pe_training').value = d.training_background || '';
     // 偏好
@@ -3236,6 +3274,16 @@ function saveCounselorProfile() {
   if (!name) { peToast('未能读取档案姓名，请刷新页面重试', 'error'); return; }
   var bioShort = document.getElementById('pe_bio_short').value.trim();
   if (!bioShort) { peToast('请填写一句话简介', 'error'); return; }
+  if (document.getElementById('pe_ethics_training').value === '是' && photoStore.pe_ethics.length === 0) {
+    peToast('您参加过伦理培训，请上传至少 1 张伦理培训证明材料（培训证书 / 学时证明）', 'error'); return;
+  }
+  var peWechat = document.getElementById('pe_wechat').value.trim();
+  var pePhone = document.getElementById('pe_phone').value.trim();
+  var peEmail = document.getElementById('pe_email').value.trim();
+  if (!peWechat || !pePhone || !peEmail) { peToast('请完整填写微信、手机号、邮箱三种联系方式（均必填）', 'error'); return; }
+  if (!document.getElementById('pe_wechat_public').checked && !document.getElementById('pe_phone_public').checked && !document.getElementById('pe_email_public').checked) {
+    peToast('请至少勾选一项「允许对外公布」，来访者只能看到你勾选公开的联系方式', 'error'); return;
+  }
   var btn = document.getElementById('pe-save-btn');
   btn.classList.add('pe-saving');
   btn.textContent = '保存中...';
@@ -3283,11 +3331,12 @@ function saveCounselorProfile() {
     photo_daily: counselorPhotoPayload(photoStore.pe_daily),
     photo_license: counselorPhotoPayload(photoStore.pe_license),
     photo_diploma: counselorPhotoPayload(photoStore.pe_diploma),
-    contact_wechat: document.getElementById('pe_wechat').value || null,
+    photo_ethics: counselorPhotoPayload(photoStore.pe_ethics),
+    contact_wechat: peWechat || null,
     contact_wechat_public: document.getElementById('pe_wechat_public').checked,
-    contact_phone: document.getElementById('pe_phone').value || null,
+    contact_phone: pePhone || null,
     contact_phone_public: document.getElementById('pe_phone_public').checked,
-    contact_email: document.getElementById('pe_email').value || null,
+    contact_email: peEmail || null,
     contact_email_public: document.getElementById('pe_email_public').checked,
     bio_short: bioShort,
     bio_full: document.getElementById('pe_bio_full').value || null
@@ -3304,7 +3353,7 @@ function saveCounselorProfile() {
   })
   .then(function(rows) {
     var saved = rows[0];
-    if (saved) { photoStore.pe_daily = saved.photo_daily || []; photoStore.pe_license = saved.photo_license || []; }
+    if (saved) { photoStore.pe_daily = saved.photo_daily || []; photoStore.pe_license = saved.photo_license || []; photoStore.pe_diploma = saved.photo_diploma || []; photoStore.pe_ethics = saved.photo_ethics || []; }
     peToast('档案已更新 ✓');
     setTimeout(function() { hideEditPanel(); }, 800);
   })

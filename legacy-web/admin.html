@@ -1816,7 +1816,8 @@
         const sections = [
           { key: 'photo_daily', title: '📷 生活照片', note: '（来访者可见）' },
           { key: 'photo_license', title: '📋 证书 / 凭证照片', note: '（仅审核可见）' },
-          { key: 'photo_diploma', title: '🎓 学历 / 学位证书照片', note: '（仅审核可见）' }
+          { key: 'photo_diploma', title: '🎓 学历 / 学位证书照片', note: '（仅审核可见）' },
+          { key: 'photo_ethics', title: '📜 伦理培训证明材料', note: '（仅审核可见）' }
         ];
         sections.forEach(function(s) {
           var arr = item[s.key];
@@ -1832,7 +1833,7 @@
       }
 
       html += '<div class="detail-grid">';
-      const skipKeys = ['has_violation','violation_detail','has_incident','incident_detail','needs_deep_review','match_request_name','match_request_contact','match_request_cid','match_request_status','photo_daily','photo_license','photo_diploma'];
+      const skipKeys = ['has_violation','violation_detail','has_incident','incident_detail','needs_deep_review','match_request_name','match_request_contact','match_request_cid','match_request_status','photo_daily','photo_license','photo_diploma','photo_ethics'];
       Object.keys(item).forEach(key => {
         if (['id','_id','view_token','edit_token','credential_hash','claim_hash'].includes(key)||key.startsWith('migration_')) return;
         if (type === 'counselors' && skipKeys.includes(key)) return;

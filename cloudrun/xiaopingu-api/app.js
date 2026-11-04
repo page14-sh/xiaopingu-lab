@@ -176,6 +176,7 @@ function publicCounselor(row) {
   delete output.reviewed_by;
   delete output.photo_license;
   delete output.photo_diploma;
+  delete output.photo_ethics;
   delete output.wx_openid;
   delete output.wx_bind_token;
   if (!output.contact_wechat_public) delete output.contact_wechat;

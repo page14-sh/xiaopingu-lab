@@ -7,7 +7,7 @@ client_age_prefs orientation_friendly gender_identity_friendly comm_styles cnip_
 cnip_time cnip_stance cnip_homework cnip_relational session_formats session_duration fee_min fee_budget_level
 available_slots contact_wechat contact_wechat_public contact_phone contact_phone_public contact_email
 contact_email_public public_welfare bio_short bio_full has_violation violation_detail has_incident incident_detail
-photo_url avatar_url photo_daily photo_license photo_diploma public_welfare_fee updated_at
+photo_url avatar_url photo_daily photo_license photo_diploma photo_ethics public_welfare_fee updated_at
 `).trim().split(/\s+/));
 const MATCH_REVIEW_FIELDS=new Set(['match_request_status','match_request_reviewed_note','match_request_reviewed_at','match_request_reviewed_by','updated_at']);
 const VISITOR_MATCH_FIELDS=new Set(['selected_counselor_id','selected_counselor_name','selected_at','match_request_name','match_request_contact','match_request_cid','updated_at','visitor_name','score_mood','score_anxiety','score_sleep','score_function','score_relation','total_score','severity']);
