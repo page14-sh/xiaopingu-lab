@@ -1,5 +1,6 @@
 // REST compatibility for existing intake/profile pages. All data uses the injected v2 namespace.
 const crypto=require('node:crypto');
+const { generateUniqueLoginCode } = require('./login-code');
 function createLegacyRest({db,hooks,photos}) {
 const _=db.command;
 const TABLES=['counselors','assessments','sessions','pcoms_ratings','visitor_users'];
@@ -83,7 +84,7 @@ async function updateWhere(coll, where, patch) {
 // ---------------- 身份 ----------------
 // ---------------- 字段策略 ----------------
 // counselors 匿名读剥离（与旧线上一致，另加执照号）
-const COUNSELOR_SENSITIVE = ['edit_token', 'contact_wechat', 'contact_phone', 'contact_email', 'license_number', 'public_welfare_fee', 'photo_license', 'photo_diploma', 'photo_ethics', 'wx_openid', 'wx_bind_token', 'review_note', 'reviewed_by', 'reviewed_at', 'has_violation', 'violation_detail', 'has_incident', 'incident_detail', 'needs_deep_review'];
+const COUNSELOR_SENSITIVE = ['edit_token', 'login_code', 'contact_wechat', 'contact_phone', 'contact_email', 'license_number', 'public_welfare_fee', 'photo_license', 'photo_diploma', 'photo_ethics', 'wx_openid', 'wx_bind_token', 'review_note', 'reviewed_by', 'reviewed_at', 'has_violation', 'violation_detail', 'has_incident', 'incident_detail', 'needs_deep_review'];
 function stripCounselor(row) {
   if (!row) return row;
   const out = { ...row };
@@ -306,6 +307,8 @@ async function handleRest(req, res, table, params, caller) {
         row.id = isUuid(item.id) ? item.id : uuid();
         if (await findOne('counselors', { id: row.id })) return sendJson(res, 409, { message: '记录已存在' });
         row.edit_token = crypto.randomBytes(24).toString('base64url');
+        // 短登录码：6 位数字、全局唯一，咨询师凭它登录工作台（编辑码老用法照常）
+        row.login_code = await generateUniqueLoginCode(async (code) => Boolean(await findOne('counselors', { login_code: code })));
         row.created_at = item.created_at || now;
         row.updated_at = now;
         row.is_active = isAdmin && item.is_active === true;
@@ -315,7 +318,7 @@ async function handleRest(req, res, table, params, caller) {
         if (photos) {
           const saved = await photos.save(row.id, row, null, next => hooks.createCounselor(next), () => findOne('counselors', { id: row.id }));
           // Registration returns identifiers only: certificate URLs require login.
-          results.push({ id: saved.id, edit_token: saved.edit_token, review_status: saved.review_status });
+          results.push({ id: saved.id, edit_token: saved.edit_token, login_code: saved.login_code, review_status: saved.review_status });
           continue;
         }
         await hooks.createCounselor(row);

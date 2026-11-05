@@ -115,7 +115,8 @@ async function loginCounselor(credential, password, onRetry) {
       if (onRetry) onRetry();
       await new Promise(function(resolve) { setTimeout(resolve, 2000); });
     }
-    if (response.status === 401) throw new Error('编辑码未通过验证。请让管理员点击「编辑码」复制完整内容，不要使用咨询师 ID 或带省略号的预览。');
+    if (response.status === 429) throw new Error('登录尝试过多，请 15 分钟后再试。如急需登录，请联系管理员重置。');
+    if (response.status === 401) throw new Error('登录码未通过验证。请输入本人的 6 位短登录码；如使用完整编辑码，请让管理员点击「编辑码」列复制完整内容，不要使用咨询师 ID 或带省略号的预览。');
     if (!response.ok) throw new Error('登录服务暂不可用（HTTP ' + response.status + '），请稍后重试。');
     var data = await response.json();
     if (!data.token || !data.counselor || !data.counselor.id) throw new Error('登录响应异常，请重试。');

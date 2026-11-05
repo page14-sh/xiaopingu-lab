@@ -1082,6 +1082,16 @@
       <div style="margin-top:20px;text-align:center">
         <a href="index.html" class="btn" style="display:inline-block;padding:10px 24px;background:#5C7A52;color:#fff;border-radius:8px;text-decoration:none;font-size:14px">返回小平菇首页</a>
       </div>
+      <div id="login_code_wrap" style="margin-top:20px;padding:16px;background:#FFF8EC;border:1px solid #F0D9A8;border-radius:10px;display:none;text-align:left">
+        <p style="font-size:13px;color:#8A6D1F;margin-bottom:8px;line-height:1.7">
+          🔑 <strong>您的短登录码</strong><br>
+          <span style="font-size:12px;color:#A08B5A">以后登录咨询师工作台，输入这 6 位数字即可，不必再翻上面的长链接。请截图或记在备忘录里。</span>
+        </p>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <span id="login_code_value" style="flex:0 0 auto;padding:10px 20px;font-size:22px;font-weight:700;letter-spacing:4px;font-family:monospace;background:#fff;border:1px solid #F0D9A8;border-radius:8px;color:#8A6D1F;min-width:120px;text-align:center"></span>
+          <button type="button" class="btn btn-outline" style="padding:8px 16px;font-size:13px;white-space:nowrap" onclick="copyLoginCode()">复制短登录码</button>
+        </div>
+      </div>
       <div id="edit_link_wrap" style="margin-top:20px;padding:16px;background:#F0F7EC;border:1px solid #C8DCC0;border-radius:10px;display:none;text-align:left">
         <p style="font-size:13px;color:#5A6B52;margin-bottom:8px;line-height:1.7">
           📝 <strong>您的专属编辑链接</strong><br>
@@ -1264,8 +1274,8 @@
         </div>
       </div>
       <div class="panel-login" id="panel-login" style="display:none;">
-        <p style="font-size:13px;color:#6B635A;margin-bottom:10px;">使用本人编辑码登录后查看匹配申请</p>
-        <input type="password" id="panel-cid-input" onkeydown="if(event.key==='Enter')loadPanelByInput()" placeholder="本人编辑码（不是咨询师 ID）" autocomplete="off">
+        <p style="font-size:13px;color:#6B635A;margin-bottom:10px;">输入 <strong>6 位短登录码</strong>即可登录工作台；如只有完整编辑码，粘贴它也可以</p>
+        <input type="password" id="panel-cid-input" onkeydown="if(event.key==='Enter')loadPanelByInput()" placeholder="6 位短登录码 / 完整编辑码" autocomplete="off">
         <button id="panel-login-submit" class="req-btn req-btn-primary" onclick="loadPanelByInput()">登录工作台</button>
         <p id="panel-login-feedback" role="status" aria-live="polite"></p>
       </div>
@@ -1665,6 +1675,26 @@ function copyEditLink() {
   input.setSelectionRange(0, 99999);
   document.execCommand('copy');
   showToast('编辑链接已复制！');
+}
+
+function copyLoginCode() {
+  var el = document.getElementById('login_code_value');
+  var code = el ? el.textContent.trim() : '';
+  if (!code) return;
+  var done = function() { showToast('短登录码已复制！'); };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(code).then(done).catch(function() { fallbackCopy(code); done(); });
+  } else { fallbackCopy(code); done(); }
+}
+function fallbackCopy(text) {
+  var ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); } catch (e) {}
+  document.body.removeChild(ta);
 }
 
 function restoreFromData(d) {
@@ -2173,6 +2203,15 @@ function submitProfile() {
       if (panelWrap) panelWrap.style.display = 'block';
       if (panelBtn) panelBtn.href = window.location.origin + window.location.pathname + '?cid=' + encodeURIComponent(cid);
     }
+    // 显示短登录码（新注册时）：6 位数字，之后登录工作台直接用
+    if (arguments[2]) {
+      var codeWrap = document.getElementById('login_code_wrap');
+      var codeVal = document.getElementById('login_code_value');
+      if (codeWrap && codeVal) {
+        codeWrap.style.display = 'block';
+        codeVal.textContent = String(arguments[2]).trim();
+      }
+    }
     // 显示编辑链接（新注册时）
     if (arguments[1]) {
       var token = arguments[1];
@@ -2198,18 +2237,21 @@ function submitProfile() {
   if (typeof saveCounselor === 'function' && SUPABASE_CONFIG.enableDataCollection && SUPABASE_CONFIG.url) {
     saveCounselor(d).then(function(result) {
       var token = '';
+      var loginCode = '';
       if (result && Array.isArray(result) && result[0]) {
         // 旧模式：return=representation 返回数组
         localStorage.setItem('xiaopingu_counselor_id', result[0].id);
         token = result[0].edit_token || '';
+        loginCode = result[0].login_code || '';
       } else if (result && result.edit_token) {
         // 新模式：返回输入数据对象
         token = result.edit_token;
+        loginCode = result.login_code || '';
         if (result.id) localStorage.setItem('xiaopingu_counselor_id', result.id);
       } else {
         token = d.edit_token || '';
       }
-      onSuccess('档案已成功提交！', token);
+      onSuccess('档案已成功提交！', token, loginCode);
     }).catch(function(err) {
       onFail('资料未提交成功，请稍后重试。照片仅保留在当前页面，刷新前请先完成提交。');
     });

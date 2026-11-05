@@ -837,6 +837,7 @@
                 <th><input type="checkbox" id="select-all-counselors" onchange="toggleSelectAll('counselors')"></th>
                 <th>ID</th>
                 <th>编辑码</th>
+                <th>短登录码</th>
                 <th>姓名</th>
                 <th>资质等级</th>
                 <th>从业年限</th>
@@ -853,7 +854,7 @@
               </tr>
             </thead>
             <tbody id="tbody-counselors">
-              <tr><td colspan="16" class="loading"><div class="spinner"></div></td></tr>
+              <tr><td colspan="17" class="loading"><div class="spinner"></div></td></tr>
             </tbody>
           </table>
           <div class="empty-state" id="empty-counselors" style="display:none;">
@@ -1153,6 +1154,25 @@
       showToast(copied ? '已复制完整内容' : '未能复制，请允许浏览器访问剪贴板后重试。', copied ? 'success' : 'error');
     }
 
+    // 复制「咨询师自助补齐链接」：对方点开即登录自己的编辑面板，补完保存即回到待复核
+    async function copyCounselorEditLink(token) {
+      if (!token) { showToast('该档案没有编辑码，无法生成补齐链接', 'error'); return; }
+      var base = window.location.origin + window.location.pathname.replace(/[^/]*$/, '');
+      var link = base + 'counselor.html?edit=' + encodeURIComponent(token);
+      var copied = false;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        try { await navigator.clipboard.writeText(link); copied = true; } catch (_) { /* fallback below */ }
+      }
+      if (!copied) {
+        var ta = document.createElement('textarea');
+        ta.value = link; ta.style.cssText = 'position:fixed;opacity:0';
+        document.body.appendChild(ta);
+        try { ta.select(); copied = document.execCommand('copy'); } catch (_) { copied = false; }
+        finally { ta.remove(); }
+      }
+      showToast(copied ? '补齐链接已复制，微信发给这位咨询师即可' : '未能复制，请允许浏览器访问剪贴板后重试。', copied ? 'success' : 'error');
+    }
+
     // ========== 模态框关闭 ==========
     function closeModal(event, id) {
       if (event && event.target !== event.currentTarget) return;
@@ -1377,6 +1397,10 @@
         '<td style="cursor:pointer;" title="点击复制编辑码" data-code="' + escapeHtml(c.edit_token) + '" onclick="copyToClipboard(this.dataset.code,this)">' +
           '<span style="font-size:11px;font-family:monospace;color:#E67E22;">' + escapeHtml((c.edit_token || '').substring(0, 8) + ((c.edit_token || '').length > 8 ? '…' : '')) + '</span>' +
           '<span style="font-size:10px;color:#999;margin-left:4px;">📋</span></td>' +
+        '<td style="cursor:pointer;" title="点击复制短登录码（6 位，咨询师登录工作台用）" data-code="' + escapeHtml(c.login_code || '') + '" onclick="copyToClipboard(this.dataset.code,this)">' +
+          (c.login_code
+            ? '<span style="font-size:13px;font-family:monospace;font-weight:700;color:#8A6D1F;letter-spacing:1px;">' + escapeHtml(c.login_code) + '</span><span style="font-size:10px;color:#999;margin-left:4px;">📋</span>'
+            : '<span style="font-size:11px;color:#C0B8A8;" title="存量档案未生成，待批量回填">未生成</span>') + '</td>' +
         '<td><strong>' + (c.name || '-') + '</strong></td>' +
         '<td>' + (c.credential_level || '-') + '</td>' +
         '<td>' + (c.years_experience || 0) + '年</td>' +
@@ -1391,6 +1415,7 @@
         '<td>' + formatTime(c.created_at) + '</td>' +
         '<td><div class="action-btns">' +
           '<button class="action-btn view" onclick="viewDetail(\'counselors\', \'' + c.id + '\')">查看</button>' +
+          (READONLY_MODE ? '' : '<button class="action-btn" style="background:#EEF2F9;color:#4A5E7A;border:1px solid #C4D3E8;" title="复制自助补齐链接，微信发给这位咨询师，对方点开即可补全信息" onclick="copyCounselorEditLink(\'' + (c.edit_token || '') + '\')">🔗 补齐链接</button>') +
           reviewBtns +
           deleteBtn +
         '</div></td>' +
@@ -1835,7 +1860,7 @@
       html += '<div class="detail-grid">';
       const skipKeys = ['has_violation','violation_detail','has_incident','incident_detail','needs_deep_review','match_request_name','match_request_contact','match_request_cid','match_request_status','photo_daily','photo_license','photo_diploma','photo_ethics'];
       Object.keys(item).forEach(key => {
-        if (['id','_id','view_token','edit_token','credential_hash','claim_hash'].includes(key)||key.startsWith('migration_')) return;
+        if (['id','_id','view_token','edit_token','login_code','credential_hash','claim_hash'].includes(key)||key.startsWith('migration_')) return;
         if (type === 'counselors' && skipKeys.includes(key)) return;
         let value = item[key];
         if (key === 'specials' && Array.isArray(value)) {

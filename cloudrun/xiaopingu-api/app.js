@@ -15,6 +15,7 @@ const { createLlmService } = require('./assessment/llm-service');
 const { createAssessmentHttp } = require('./assessment/http');
 const {createAdmissionBridge}=require('./assessment/admission');
 const { AUDIENCE } = require('./assessment/authorization');
+const { findCounselorByCredential, normalizeCredential, LoginRateLimiter } = require('./portal/login-code');
 
 const TABLES = new Set([
   'assessments',
@@ -335,6 +336,8 @@ function createRequestHandler(options) {
     demoCounselorIds: Object.values(DEMO_COUNSELOR_ALIASES) });
 
   const portalHandler=options.portalEnabled&&store.portal?require('./portal/http').createPortalHttp({portal:store.portal,photos:options.photos,signSession,sessionSecret,readJson,sendJson}):null;
+  // 咨询师登录失败限流（内存，单实例部署）：短登录码仅 6 位数字，无限流可被爆破
+  const loginLimiter = new LoginRateLimiter();
   return async function handler(req, res) {
     try {
       if (req.method === 'OPTIONS') {
@@ -369,22 +372,31 @@ function createRequestHandler(options) {
 
       if (req.method === 'POST' && url.pathname === '/auth/counselor') {
         const body = await readJson(req);
+        const credential = normalizeCredential(body.credential);
+        const ip = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim()
+          || String(req.socket && req.socket.remoteAddress || '');
+        if (!loginLimiter.allowed(ip, credential)) {
+          sendJson(res, 429, { message: '登录尝试过多，请 15 分钟后再试' });
+          return;
+        }
         const counselors = await store.list('counselors');
-        let counselor = typeof body.credential === 'string' && body.credential.length > 0
-          ? counselors.find((item) => typeof item.edit_token === 'string' && item.edit_token.length > 0 && safeEqual(item.edit_token, body.credential))
-          : null;
+        // 凭证优先匹配完整编辑码（老链接/老输法照常），其次匹配 6 位短登录码
+        const matched = findCounselorByCredential(counselors, credential);
+        let counselor = matched.counselor;
         let usedDemo = false;
         if (!counselor && demoMode && demoCounselorPassword && safeEqual(body.password, demoCounselorPassword)) {
-          const counselorId = DEMO_COUNSELOR_ALIASES[String(body.credential || '').trim()];
+          const counselorId = DEMO_COUNSELOR_ALIASES[credential];
           counselor = counselors.find((item) => item.id === counselorId);
           usedDemo = true;
         }
         if (!counselor) {
+          loginLimiter.recordFailure(ip, credential);
           sendJson(res, 401, { message: '咨询师凭据无效' });
           return;
         }
+        loginLimiter.reset(credential);
         const token = signSession({ role: 'counselor', subject: counselor.id, aud: AUDIENCE,
-          auth_method: usedDemo ? 'demo' : 'counselor-edit',
+          auth_method: usedDemo ? 'demo' : (matched.via === 'login-code' ? 'counselor-login-code' : 'counselor-edit'),
           demo: usedDemo || counselor.is_demo === true || Object.values(DEMO_COUNSELOR_ALIASES).includes(counselor.id),
           exp: Date.now() + 24 * 60 * 60 * 1000 }, sessionSecret);
         sendJson(res, 200, { token, counselor: publicRow(counselor), expires_in: 86400 });
