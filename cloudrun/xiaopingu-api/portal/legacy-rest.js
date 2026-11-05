@@ -90,6 +90,25 @@ function stripCounselor(row) {
   COUNSELOR_SENSITIVE.forEach((k) => delete out[k]);
   return out;
 }
+// ---------- 来访者能力凭证：匹配成功后才可见该咨询师勾选公开的联系方式 ----------
+// 来访者凭评估号（view_token）证明「我是谁、我和谁配对」；未匹配或审批中一律看不到。
+const VISITOR_MATCHED_STATUSES = ['approved', 'contacted'];
+async function visitorMatchedCounselorId(req) {
+  const capability = req && req.headers ? req.headers['x-assessment-token'] : '';
+  if (!isUuid(capability || '')) return null;
+  const row = await findOne('assessments', { view_token: capability });
+  if (!row || row.migration_access === 'admin-review') return null;
+  if (!VISITOR_MATCHED_STATUSES.includes(row.match_request_status)) return null;
+  return row.match_request_cid || null;
+}
+// 仅放行咨询师本人勾选「允许对外公布」且已填写的联系方式项
+function publicCounselorContacts(row) {
+  const out = {};
+  if (row.contact_wechat_public === true && row.contact_wechat) out.contact_wechat = row.contact_wechat;
+  if (row.contact_phone_public === true && row.contact_phone) out.contact_phone = row.contact_phone;
+  if (row.contact_email_public === true && row.contact_email) out.contact_email = row.contact_email;
+  return out;
+}
 // Legacy test/local runtime only. Production uses private storage via photos.save.
 function sanitizeCounselorPhotos(v) {
   if (!Array.isArray(v)) return [];
@@ -201,6 +220,7 @@ async function handleRest(req, res, table, params, caller) {
   // ---------- GET ----------
   if (req.method === 'GET') {
     let rows;
+    let visitorMatchedCid = null;
     if (isAdmin) {
       rows = await findMany(table, {});
     } else if (caller.role === 'counselor') {
@@ -224,6 +244,7 @@ async function handleRest(req, res, table, params, caller) {
     } else {
       // 匿名：能力键受限读
       if (table === 'counselors') {
+        visitorMatchedCid = await visitorMatchedCounselorId(req);
         rows = await findMany(table, {});
         rows = rows.filter(r=>r.is_active===true && r.review_status==='approved' && !r.is_demo);
       } else if (table === 'assessments') {
@@ -237,7 +258,13 @@ async function handleRest(req, res, table, params, caller) {
     let out = applyOrderLimit(applyFilters(rows, filters), params);
     if (table === 'counselors' && !isAdmin) {
       // 咨询师令牌看自己完整档案；其余（含匿名）一律剥离敏感字段
-      out = out.map((r) => (caller.role === 'counselor' && r.id === caller.counselorId ? r : stripCounselor(r)));
+      out = out.map((r) => {
+        if (caller.role === 'counselor' && r.id === caller.counselorId) return r;
+        const stripped = stripCounselor(r);
+        // 匹配成功的来访者：只补回该咨询师勾选公开的联系方式，未勾选项绝不返回
+        if (visitorMatchedCid && r.id === visitorMatchedCid) Object.assign(stripped, publicCounselorContacts(r));
+        return stripped;
+      });
     }
     if (table === 'counselors' && photos) out = await photos.present(out);
     return sendJson(res, 200, out);

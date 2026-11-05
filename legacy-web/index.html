@@ -2386,15 +2386,16 @@ function generateResult() {
             chtml+='</div>';
           }
 
-          // 联系方式（按咨询师勾选公开的项目展示：微信优先，其次手机 / 邮箱；无公开项→申请匹配）
+          // 联系方式：只有匹配成功的来访才能看到咨询师勾选公开的联系方式（后端按配对关系放行）；
+          // 推荐页处于匹配前，一律只展示基本情况与推荐信息，引导走申请匹配
           var pubContact = null;
-          if (c.contact_wechat && c.contact_wechat_public !== false) pubContact = { icon: '💬', label: '微信', val: c.contact_wechat };
-          else if (c.contact_phone && c.contact_phone_public !== false) pubContact = { icon: '📞', label: '手机', val: c.contact_phone };
-          else if (c.contact_email && c.contact_email_public !== false) pubContact = { icon: '📧', label: '邮箱', val: c.contact_email };
+          if (c.contact_wechat && c.contact_wechat_public === true) pubContact = { icon: '💬', label: '微信', val: c.contact_wechat };
+          else if (c.contact_phone && c.contact_phone_public === true) pubContact = { icon: '📞', label: '手机', val: c.contact_phone };
+          else if (c.contact_email && c.contact_email_public === true) pubContact = { icon: '📧', label: '邮箱', val: c.contact_email };
           if (pubContact) {
             chtml += '<div class="counselor-contact">' + pubContact.icon + ' ' + pubContact.label + '：' + esc(pubContact.val) + '</div>';
           } else {
-            chtml += '<div class="counselor-contact no-contact"><span>📞 联系方式不公开</span><button class="btn-match-apply" onclick="openMatchApply(\'' + c.id + '\',\'' + esc(c.name) + '\')">申请匹配</button></div>';
+            chtml += '<div class="counselor-contact no-contact"><span>📞 匹配通过后可见联系方式</span><button class="btn-match-apply" onclick="openMatchApply(\'' + c.id + '\',\'' + esc(c.name) + '\')">申请匹配</button></div>';
           }
 
           // 展开详情按钮

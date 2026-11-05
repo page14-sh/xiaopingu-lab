@@ -242,12 +242,21 @@ function switchAid(){
   location.href = 'my-assessment.html';
 }
 
+// 带会话令牌读取（新版来访档案 / 演示账号可用）；令牌失效时回退匿名能力读，原评估号链接始终可用
+function fetchAssessment(url){
+  var token = '';
+  try { token = localStorage.getItem('xpg_v2_visitor_token') || ''; } catch(e){}
+  if (!token) return fetch(url);
+  return fetch(url, { headers: { 'Authorization': 'Bearer ' + token } }).then(function(r){
+    return (r.status === 401 || r.status === 403) ? fetch(url) : r;
+  });
+}
 function load(){
   var url = API + '/assessments?id=eq.' + encodeURIComponent(AID) + '&select=*';
-  fetch(url).then(function(r){ return r.json(); }).then(function(rows){
+  fetchAssessment(url).then(function(r){ return r.json(); }).then(function(rows){
     if (!Array.isArray(rows) || !rows.length) {
       // 兼容：可能只存了 view_token
-      return fetch(API + '/assessments?view_token=eq.' + encodeURIComponent(AID) + '&select=*')
+      return fetchAssessment(API + '/assessments?view_token=eq.' + encodeURIComponent(AID) + '&select=*')
         .then(function(r2){ return r2.json(); });
     }
     return rows;
@@ -331,13 +340,29 @@ document.getElementById('basic').innerHTML = [
     (d.match_request_reviewed_at ? '<p class="note">审批时间：'+esc(String(d.match_request_reviewed_at).replace('T',' ').slice(0,16))+'</p>' : '');
 
   if (d.match_request_cid) {
-    fetch(API + '/counselors?id=eq.' + encodeURIComponent(d.match_request_cid) + '&select=*')
+    // 凭评估号证明配对关系：只有匹配成功（已通过 / 已联系），后端才会返回咨询师勾选公开的联系方式
+    var capability = (d && d.view_token) || AID;
+    fetch(API + '/counselors?id=eq.' + encodeURIComponent(d.match_request_cid) + '&select=*', { headers: { 'x-assessment-token': capability } })
       .then(function(r){ return r.json(); })
       .then(function(cs){
         var c = (cs && cs[0]) || null;
         var el = document.getElementById('c-info');
         if (!el) return;
         if (!c) { el.textContent = '咨询师：' + esc(d.selected_counselor_name || '（已申请）'); return; }
+        var contacts = [];
+        if (c.contact_wechat) contacts.push(['微信', c.contact_wechat]);
+        if (c.contact_phone) contacts.push(['手机号', c.contact_phone]);
+        if (c.contact_email) contacts.push(['邮箱', c.contact_email]);
+        var contactHtml;
+        if (st === 'approved' || st === 'contacted') {
+          contactHtml = contacts.length
+            ? '<div class="divider"></div><p class="sec-title">咨询师公布的联系方式</p><dl class="kv">' +
+              contacts.map(function(p){ return '<dt>'+esc(p[0])+'</dt><dd>'+esc(p[1])+'</dd>'; }).join('') +
+              '</dl><p class="note">以上是咨询师在平台勾选「允许对外公布」的联系方式，你可以直接与咨询师联系。你留下的联系方式只给到这位咨询师。</p>'
+            : '<div class="divider"></div><p class="sec-title">咨询师公布的联系方式</p><p class="note">这位咨询师没有勾选公开的联系方式，你可以在咨询开始时与咨询师约定方便的联络方式。你留下的联系方式只给到这位咨询师。</p>';
+        } else {
+          contactHtml = '<p class="note">匹配通过后，这里会显示咨询师勾选公开的联系方式。</p>';
+        }
         el.innerHTML = '<div class="divider"></div>' +
           '<p class="sec-title">你的咨询师</p>' +
           (c.photo_daily && c.photo_daily[0] ? '<img src="'+counselorPhotoUrl(c.photo_daily[0])+'" referrerpolicy="no-referrer" alt="咨询师照片" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid #F0EDE6;margin-bottom:8px">' : '') +
@@ -346,10 +371,7 @@ document.getElementById('basic').innerHTML = [
           (c.city ? '<dt>城市</dt><dd>'+esc(c.city)+'</dd>' : '') +
           (c.years_experience ? '<dt>从业年限</dt><dd>'+esc(c.years_experience)+' 年</dd>' : '') +
           ([].concat(c.approaches||[]).length ? '<dt>咨询取向</dt><dd>'+esc(c.approaches.join('、'))+'</dd>' : '') +
-          '</dl>' +
-          (st === 'approved' || st === 'contacted'
-            ? '<p class="note">咨询师会通过你留下的联系方式与你联系。你的联系方式只给到这位咨询师。</p>'
-            : '');
+          '</dl>' + contactHtml;
       }).catch(function(){});
   }
 
