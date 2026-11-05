@@ -10,7 +10,7 @@ const { createConsentRepository } = require('./consent');
 const { createEventLifecycle } = require('./event-lifecycle');
 const { memoryAssessmentStore } = require('./test-support');
 const { COLLECTIONS: C, SCALES: S } = require('./model');
-const { AUDIENCE, verifyAssertion } = require('./authorization');
+const { AUDIENCE, verifyAssertion, requirePrincipal } = require('./authorization');
 
 const secret = 'test-session-secret-with-enough-entropy';
 const bridge = { secret: 'test-identity-bridge-secret-32-bytes-minimum', appId: 'wx-test-app', audience: 'xpg-api:test' };
@@ -216,4 +216,15 @@ test('a valid token does not bypass a disabled visitor or an inactive counselor'
   const counselor = await store.findById('counselors', 'ca');
   counselor.is_active = false;
   assert.equal((await request('/v1/xg/me', 'GET', undefined, token('counselor', 'ca'))).status, 403);
+});
+
+test('short login code sessions are first-class counselor sessions', () => {
+  const now = Date.now();
+  const short = signSession({ role: 'counselor', subject: 'ca', aud: AUDIENCE, demo: false,
+    auth_method: 'counselor-login-code', exp: now + 60000 }, secret);
+  assert.equal(requirePrincipal(JSON.parse(Buffer.from(short.split('.')[0], 'base64url').toString())).subject, 'ca');
+  // 未知方法仍然拒绝
+  const forged = signSession({ role: 'counselor', subject: 'ca', aud: AUDIENCE, demo: false,
+    auth_method: 'counselor-forged', exp: now + 60000 }, secret);
+  assert.throws(() => requirePrincipal(JSON.parse(Buffer.from(forged.split('.')[0], 'base64url').toString())), { code: 'XG_UNAUTHORIZED' });
 });

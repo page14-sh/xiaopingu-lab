@@ -9,7 +9,7 @@ function requirePrincipal(session) {
   if (!session || !Number.isFinite(session.exp) || session.exp <= Date.now() ||
       session.aud !== AUDIENCE || typeof session.subject !== 'string') unauthorized();
   if (session.demo !== false) deny('演示会话不可访问四评');
-  const methods = { visitor: ['wechat-cloud','intake-receipt'], counselor: ['counselor-edit'], admin: ['admin-password'] };
+  const methods = { visitor: ['wechat-cloud','intake-receipt'], counselor: ['counselor-edit','counselor-login-code'], admin: ['admin-password'] };
   if (!Object.hasOwn(methods, session.role) || !methods[session.role].includes(session.auth_method)) unauthorized();
   requireId(session.subject, 'subject');
   return session;
