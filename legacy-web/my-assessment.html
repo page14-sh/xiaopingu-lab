@@ -242,15 +242,21 @@ function switchAid(){
   location.href = 'my-assessment.html';
 }
 
-// 带会话令牌读取（新版来访档案 / 演示账号可用）；令牌失效时回退匿名能力读，原评估号链接始终可用
-function fetchAssessment(url){
+// 带会话令牌请求（新版来访档案 / 演示账号可用）；令牌失效时回退匿名能力读，原评估号链接始终可用
+function fetchWithSession(url, extraHeaders){
+  var base = {};
+  for (var k in (extraHeaders || {})) base[k] = extraHeaders[k];
   var token = '';
   try { token = localStorage.getItem('xpg_v2_visitor_token') || ''; } catch(e){}
-  if (!token) return fetch(url);
-  return fetch(url, { headers: { 'Authorization': 'Bearer ' + token } }).then(function(r){
-    return (r.status === 401 || r.status === 403) ? fetch(url) : r;
+  if (!token) return fetch(url, { headers: base });
+  var withAuth = {};
+  for (var k2 in base) withAuth[k2] = base[k2];
+  withAuth.Authorization = 'Bearer ' + token;
+  return fetch(url, { headers: withAuth }).then(function(r){
+    return (r.status === 401 || r.status === 403) ? fetch(url, { headers: base }) : r;
   });
 }
+function fetchAssessment(url){ return fetchWithSession(url); }
 function load(){
   var url = API + '/assessments?id=eq.' + encodeURIComponent(AID) + '&select=*';
   fetchAssessment(url).then(function(r){ return r.json(); }).then(function(rows){
@@ -342,7 +348,7 @@ document.getElementById('basic').innerHTML = [
   if (d.match_request_cid) {
     // 凭评估号证明配对关系：只有匹配成功（已通过 / 已联系），后端才会返回咨询师勾选公开的联系方式
     var capability = (d && d.view_token) || AID;
-    fetch(API + '/counselors?id=eq.' + encodeURIComponent(d.match_request_cid) + '&select=*', { headers: { 'x-assessment-token': capability } })
+    fetchWithSession(API + '/counselors?id=eq.' + encodeURIComponent(d.match_request_cid) + '&select=*', { 'x-assessment-token': capability })
       .then(function(r){ return r.json(); })
       .then(function(cs){
         var c = (cs && cs[0]) || null;
