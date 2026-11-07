@@ -34,7 +34,7 @@ test('counselor login retries transient gateway failures, never a rejected crede
   const c={window:{fetch:async()=>{const status=statuses[calls++]; return {status,ok:status===200,json:async()=>({token:'synthetic',counselor:{id:'test'}})};}},location:{href:'https://test.invalid/index.html',pathname:'/index.html'},localStorage:store,sessionStorage:store,AbortController,Headers,URL,setTimeout:(cb,ms)=>ms===2000?queueMicrotask(cb):0,clearTimeout(){}};
   vm.createContext(c);vm.runInContext(fs.readFileSync('legacy-web/supabase-config.js','utf8'),c);c.fetch=c.window.fetch;
   const action=c.loginCounselor('synthetic','',()=>retries++);
-  if(statuses.at(-1)===200)assert.equal((await action).token,'synthetic');else await assert.rejects(action,statuses[0]===401?/编辑码未通过验证/:/服务暂不可用/);
+  if(statuses.at(-1)===200)assert.equal((await action).token,'synthetic');else await assert.rejects(action,statuses[0]===401?/登录码未通过验证/:/服务暂不可用/);
   assert.equal(calls,statuses.length);assert.equal(retries,calls-1);
  }
 });

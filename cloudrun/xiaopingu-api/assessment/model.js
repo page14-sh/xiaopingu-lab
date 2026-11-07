@@ -1,6 +1,8 @@
 const { createHash } = require('node:crypto');
 
 const COLLECTIONS = Object.freeze({
+  counselorAccounts: 'xg_counselor_accounts',
+  counselorInvites: 'xg_counselor_invites',
   matches: 'xg_matches',
   legacyRecords: 'xg_legacy_records',
   migrationRuns: 'xg_migration_runs',

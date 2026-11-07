@@ -336,6 +336,7 @@ function createRequestHandler(options) {
     demoCounselorIds: Object.values(DEMO_COUNSELOR_ALIASES) });
 
   const portalHandler=options.portalEnabled&&store.portal?require('./portal/http').createPortalHttp({portal:store.portal,photos:options.photos,signSession,sessionSecret,readJson,sendJson}):null;
+  const accessHandler=options.portalEnabled&&store.portal?.access?require('./portal/access-http').createAccessHttp({portal:store.portal,photos:options.photos,signSession,sessionSecret,readJson,sendJson}):null;
   // 咨询师登录失败限流（内存，单实例部署）：短登录码仅 6 位数字，无限流可被爆破
   const loginLimiter = new LoginRateLimiter();
   return async function handler(req, res) {
@@ -350,6 +351,14 @@ function createRequestHandler(options) {
       const session = sessionFromRequest(req, sessionSecret);
       if(options.cutoverReady===false&&!['GET','OPTIONS'].includes(req.method)&&!url.pathname.startsWith('/auth/')){sendJson(res,503,{message:'新版正在迁移校验，请稍后再试'});return;}
 
+      if (session?.auth_method === 'counselor-phone' && !url.pathname.startsWith('/auth/')) {
+        if (!store.portal?.access) throw Object.assign(new Error('登录服务暂不可用'), { statusCode: 503 });
+        await store.portal.access.validatePhone(session);
+      }
+      if (accessHandler && await accessHandler(req,res,url,session)) return;
+      if (session && ['xpg-counselor-password-setup', 'xpg-counselor-profile'].includes(session.aud)) {
+        sendJson(res,403,{message:'此凭证仅限指定的改密或资料填写操作'});return;
+      }
       if (portalHandler && await portalHandler(req,res,url,session)) return;
       if (await xgHandler(req, res, url, session)) return;
 

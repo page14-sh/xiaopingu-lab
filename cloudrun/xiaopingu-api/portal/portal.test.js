@@ -9,7 +9,7 @@ const {COLLECTIONS:C}=require('../assessment/model');
 const {requirePrincipal}=require('../assessment/authorization');
 const {generate,digest}=require('./credentials');
 function fixture(){
- const source=memoryAssessmentStore(),db={command:{gt:v=>({gt:v})},collection:name=>({where(filter){return {orderBy(){return this;},limit(n){this.n=n;return this;},async get(){return {data:[...source.snapshot()[name].values()].filter(r=>Object.entries(filter).every(([k,v])=>v&&typeof v==='object'?r[k]>v.gt:r[k]===v)).sort((a,b)=>a._id.localeCompare(b._id)).slice(0,this.n||100)};}};}})};
+ const source=memoryAssessmentStore(),db={command:{gt:v=>({gt:v})},collection:name=>({where(filter){return {orderBy(){return this;},field(){return this;},limit(n){this.n=n;return this;},async get(){return {data:[...source.snapshot()[name].values()].filter(r=>Object.entries(filter).every(([k,v])=>v&&typeof v==='object'?r[k]>v.gt:r[k]===v)).sort((a,b)=>a._id.localeCompare(b._id)).slice(0,this.n||100)};}};}})};
  const identity=createIdentityRepository(source),assessment=createAssessmentRepository(source),portal=createPortalRepository(db,source,{identity,assessment});
  const request=async(path,body,session,method=body?'POST':'GET')=>{let status,output;const res={setHeader(){},writeHead(s){status=s;},end(raw){output=JSON.parse(raw);}};const handler=createPortalHttp({portal,signSession,sessionSecret:'test-only-secret',readJson:async()=>body,sendJson:(r,s,d)=>{status=s;output=d;}});const handled=await handler({method,headers:{}},res,new URL(path,'http://local'),session);return {status,output,handled};};
  return {source,portal,request};

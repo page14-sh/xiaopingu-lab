@@ -1,0 +1,17 @@
+.c-access-form, .c-access-dialog { color:#3D3831; font-family:'PingFang SC','Microsoft YaHei',sans-serif; text-align:left; }
+.c-access-form { padding:12px 0; border-bottom:1px solid #E8E4DC; margin-bottom:14px; }
+.c-access-form label { display:block; font-size:13px; font-weight:600; margin:12px 0 6px; }
+.c-access-form input, .c-access-dialog input { display:block; box-sizing:border-box; width:100%; max-width:none; border:1px solid #D4CFC8; border-radius:8px; padding:10px 12px; color:#3D3831; background:#fff; font:inherit; }
+.c-access-form input:focus, .c-access-dialog input:focus { outline:2px solid #C8DCC0; border-color:#5C7A52; }
+.c-access-note, .c-access-status { font-size:13px; line-height:1.7; margin:10px 0; white-space:pre-line; overflow-wrap:anywhere; }
+.c-access-status[data-error=true] { color:#B54336; }
+.c-access-actions { display:flex; flex-wrap:wrap; gap:10px; margin:14px 0; }
+.c-access-button { padding:10px 16px; border-radius:8px; border:1px solid #5C7A52; background:#5C7A52; color:#fff; font:inherit; cursor:pointer; }
+.c-access-button.secondary { background:#FAF9F6; color:#5C7A52; }
+.c-access-button:disabled { opacity:.55; cursor:wait; }
+.c-access-dialog { max-width:560px; width:calc(100% - 40px); padding:24px; margin:auto; border:1px solid #E8E4DC; border-radius:12px; background:#FAF9F6; }
+.c-access-dialog::backdrop { background:rgba(38,45,34,.45); }
+.c-access-dialog h2 { font-size:20px; margin:0 0 12px; }
+.c-access-dialog input { font-size:12px; }
+.c-access-shared-status { padding:14px 18px; margin:12px 0; border:1px solid #C8DCC0; background:#F0F7EC; border-radius:8px; }
+#counselor-login-box { max-height:90vh; overflow-y:auto; }

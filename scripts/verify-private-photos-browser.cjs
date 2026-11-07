@@ -11,7 +11,9 @@ const sharp = require(base + '/node_modules/sharp');
 const { createRequestHandler } = require(base + '/app');
 const { createCounselorPhotos } = require(base + '/portal/photos');
 async function main() {
-  const f = await fixture(), objects = new Map(), root = path.resolve(__dirname, '../legacy-web');
+  const f = await fixture();
+  await f.source.transaction(async tx => tx.put('counselors', f.cid, { ...await tx.get('counselors', f.cid), contact_phone: '13800123456', contact_wechat: 'synthetic-only', contact_email: 'synthetic@example.invalid', contact_email_public: true }));
+  const objects = new Map(), root = path.resolve(__dirname, '../legacy-web');
   const photos = createCounselorPhotos({ namespace: 'xg_preview_browser_', storage: {
     async uploadFile({ cloudPath, fileContent }) { const fileID = 'cloud://test.bucket/' + cloudPath; objects.set(fileID, fileContent); return { fileID }; },
     async getTempFileURL({ fileList }) { return { fileList: fileList.map(({ fileID }) => ({ fileID, tempFileURL: 'https://private-photo.test/' + encodeURIComponent(fileID) + '?sign=test' })) }; },
@@ -70,7 +72,7 @@ async function main() {
     await page.locator('#panel-edit-btn').click();
     await page.route('**/api/rest/v1/counselors*', route => route.request().method() === 'PATCH' ? route.fulfill({ status: 503, contentType: 'application/json', body: '{"message":"synthetic failure"}' }) : route.continue());
     await page.locator('#pe-save-btn').click();
-    await page.getByText('保存失败：HTTP 503', { exact: true }).waitFor();
+    await page.getByText('保存失败：synthetic failure', { exact: true }).waitFor();
     assert.equal(await page.evaluate(() => localStorage.getItem('xiaopingu_counselor_draft')), null);
     await page.close();
     const admin = await context.newPage();

@@ -2,9 +2,11 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
+  <meta name="referrer" content="no-referrer">
+  <link rel="stylesheet" href="assets/counselor-access.css?v=20261107">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
-  <script src="supabase-config.js?v=20261104-admin-login"></script><script src="assets/demo-accounts.js?v=20261027-cloud"></script>
+  <script src="supabase-config.js?v=20261104-admin-login"></script><script src="assets/demo-accounts.js?v=20261027-cloud"></script><script src="assets/counselor-access.js?v=20261107"></script>
   <script src="web-auth.js?v=20261027-chain"></script>
   <title>小平菇 · 数据管理后台</title>
   <style>
@@ -1051,6 +1053,10 @@
       if (window.XPG_API_AUTH) XPG_API_AUTH.clearAdminSession();
       if (window.XPG_WEB_AUTH) XPG_WEB_AUTH.clearSession('admin');
       allData = { counselors: [], assessments: [] };
+      document.querySelectorAll('.c-access-dialog').forEach(function(dialog) {
+        dialog.querySelectorAll('input').forEach(function(input) { input.value = ''; });
+        dialog.close(); dialog.remove();
+      });
       document.querySelectorAll('.modal-overlay.active').forEach(function(modal) { modal.classList.remove('active'); });
       document.getElementById('modal-content').textContent = '';
       document.getElementById('modal-photo-img').removeAttribute('src');
@@ -1415,7 +1421,7 @@
         '<td>' + formatTime(c.created_at) + '</td>' +
         '<td><div class="action-btns">' +
           '<button class="action-btn view" onclick="viewDetail(\'counselors\', \'' + c.id + '\')">查看</button>' +
-          (READONLY_MODE ? '' : '<button class="action-btn" style="background:#EEF2F9;color:#4A5E7A;border:1px solid #C4D3E8;" title="复制自助补齐链接，微信发给这位咨询师，对方点开即可补全信息" onclick="copyCounselorEditLink(\'' + (c.edit_token || '') + '\')">🔗 补齐链接</button>') +
+          (READONLY_MODE ? '' : '<button class="action-btn" title="生成可撤销的本人资料填写链接" data-counselor-id="' + escapeHtml(c.id) + '" onclick="XPG_COUNSELOR_ACCESS.openShare(this.dataset.counselorId)">填写链接</button>') +
           reviewBtns +
           deleteBtn +
         '</div></td>' +

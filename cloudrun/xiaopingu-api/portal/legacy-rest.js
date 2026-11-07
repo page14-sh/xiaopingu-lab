@@ -91,6 +91,11 @@ function stripCounselor(row) {
   COUNSELOR_SENSITIVE.forEach((k) => delete out[k]);
   return out;
 }
+function profileOnly(row) {
+  const out = { ...row };
+  for (const key of ['edit_token', 'login_code', 'wx_openid', 'wx_bind_token', 'reviewed_by']) delete out[key];
+  return out;
+}
 // ---------- 来访者能力凭证：匹配成功后才可见该咨询师勾选公开的联系方式 ----------
 // 来访者凭评估号（view_token）证明「我是谁、我和谁配对」；未匹配或审批中一律看不到。
 const VISITOR_MATCHED_STATUSES = ['approved', 'contacted'];
@@ -267,6 +272,7 @@ async function handleRest(req, res, table, params, caller) {
         return stripped;
       });
     }
+    if (table === 'counselors' && caller.profileOnly) out = out.map(profileOnly);
     if (table === 'counselors' && photos) out = await photos.present(out);
     return sendJson(res, 200, out);
   }
@@ -405,7 +411,8 @@ async function handleRest(req, res, table, params, caller) {
       else await updateWhere('counselors', { id: target.id }, allowed);
       const fresh = await findOne('counselors', { id: target.id });
       // The authenticated owner needs their certificate references when editing again.
-      return sendJson(res, 200, photos ? await photos.present([fresh]) : [isAdmin ? fresh : stripCounselor(fresh)]);
+      const output = caller.profileOnly ? profileOnly(fresh) : fresh;
+      return sendJson(res, 200, photos ? await photos.present([output]) : [caller.profileOnly ? output : isAdmin ? fresh : stripCounselor(fresh)]);
     }
 
     if (table === 'assessments') {

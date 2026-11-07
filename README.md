@@ -18,6 +18,7 @@ xiaopingu-lab/
 
 - [v2 源码与准确接口契约](docs/v2-source-and-api.md)
 - [咨询师照片私有存储与发布说明](docs/counselor-photo-storage.md)
+- [咨询师手机号登录与资料分享](docs/counselor-phone-and-sharing.md)
 - [固定账号与平台原页面操作文档](docs/platform-demo-accounts.md)
 - `npm run start:demo`：启动平台原首页 `http://127.0.0.1:8796/`，数据实际写入 CloudBase 合成测试区。
 - `npm run demo:accounts`：首次创建固定演示账号，密码只保存到 `.private/test-chain/platform-accounts.md`，已有账号不会重置。

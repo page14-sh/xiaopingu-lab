@@ -2,6 +2,8 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
+  <meta name="referrer" content="no-referrer">
+  <link rel="stylesheet" href="assets/counselor-access.css?v=20261107">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#5C7A52">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1274,7 +1276,8 @@
         </div>
       </div>
       <div class="panel-login" id="panel-login" style="display:none;">
-        <p style="font-size:13px;color:#6B635A;margin-bottom:10px;">输入 <strong>6 位短登录码</strong>即可登录工作台；如只有完整编辑码，粘贴它也可以</p>
+        <div data-counselor-phone-login></div>
+        <p style="font-size:13px;color:#6B635A;margin-bottom:10px;">也可以输入 <strong>6 位短登录码</strong>即可登录工作台；如只有完整编辑码，粘贴它也可以</p>
         <input type="password" id="panel-cid-input" onkeydown="if(event.key==='Enter')loadPanelByInput()" placeholder="6 位短登录码 / 完整编辑码" autocomplete="off">
         <button id="panel-login-submit" class="req-btn req-btn-primary" onclick="loadPanelByInput()">登录工作台</button>
         <p id="panel-login-feedback" role="status" aria-live="polite"></p>
@@ -1302,7 +1305,7 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="assets/confirm-action.js?v=20261027-platform"></script><script src="supabase-config.js?v=20261103-login-retry"></script><script src="assets/demo-accounts.js?v=20261027-cloud"></script>
+<script src="assets/confirm-action.js?v=20261027-platform"></script><script src="supabase-config.js?v=20261103-login-retry"></script><script src="assets/demo-accounts.js?v=20261027-cloud"></script><script src="assets/counselor-access.js?v=20261107"></script>
 <script>
 var currentStep = 1;
 var currentEditToken = null;
@@ -2270,7 +2273,7 @@ function submitProfile() {
     inDemoMode = localStorage.getItem('xpg_demo_active') === '1';
   } catch (e) {}
   var route = new URLSearchParams(location.search);
-  if (puzzleVerified || hasCounselorSession || inDemoMode || (!route.has('edit') && (route.get('panel') === '1' || route.has('cid')))) {
+  if (puzzleVerified || hasCounselorSession || inDemoMode || (!route.has('edit') && (route.get('panel') === '1' || route.has('cid') || route.get('invite') === '1'))) {
     puzzleVerified = true;
     document.getElementById('main-app').style.display = 'block';
     return; // 已验证或已持有会话，直接显示
@@ -2322,6 +2325,7 @@ function enterLocalCounselorAccount(value) {
 // 检查 URL 中的编辑令牌 → 查 ID 后跳转面板
 (function() {
   var params = new URLSearchParams(window.location.search);
+  if (window.XPG_COUNSELOR_ACCESS?.isShared) return;
   var editToken = params.get('edit');
   if (editToken && enterLocalCounselorAccount(editToken)) {
     return;
@@ -2492,6 +2496,7 @@ function loadPanelIdentity() {
 // Only the backend session establishes counselor identity; an ID selects no permissions.
 (async function initPanel() {
   var params=new URLSearchParams(location.search);
+  if(window.XPG_COUNSELOR_ACCESS?.isShared){await XPG_COUNSELOR_ACCESS.openSharedProfile();return;}
   // Editing links perform their own credential exchange; do not race a cached identity.
   if(params.get('edit'))return;
   if(!params.get('cid')&&!params.get('panel')&&!localStorage.getItem('xiaopingu_counselor_token'))return;
@@ -3215,6 +3220,9 @@ function showEditPanel() {
 }
 
 function hideEditPanel() {
+  if (window.XPG_COUNSELOR_ACCESS?.isShared) {
+    XPG_COUNSELOR_ACCESS.sharedStatus('资料页面已保留；完成后可直接关闭页面。'); return;
+  }
   document.getElementById('panel-edit').style.display = 'none';
   document.getElementById('panel-content').style.display = 'block';
   document.getElementById('panel-edit-btn').style.display = '';
@@ -3224,14 +3232,22 @@ function hideEditPanel() {
   loadPanelRequests();
 }
 
+function counselorProfileRequest(method, body) {
+  if (window.XPG_COUNSELOR_ACCESS?.isShared) return XPG_COUNSELOR_ACCESS.profileRequest(method, body);
+  return fetch(SUPABASE_URL + '/rest/v1/counselors?id=eq.' + encodeURIComponent(panelCid), {
+    method: method, headers: getSupabaseWriteHeaders(), ...(body ? { body: JSON.stringify(body) } : {})
+  });
+}
+async function counselorProfileResponse(response) {
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || '资料读取或保存失败，请重新登录。');
+  return data;
+}
 function loadCounselorProfile() {
   initChipGroups();
-  fetch(SUPABASE_URL + '/rest/v1/counselors?id=eq.' + encodeURIComponent(panelCid) + '&select=*', {
-    headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY }
-  })
-  .then(function(r) { return r.json(); })
+  return counselorProfileRequest('GET').then(counselorProfileResponse)
   .then(function(data) {
-    if (!data || !data.length) { peToast('未找到咨询师档案', 'error'); return; }
+    if (!data || !data.length) throw new Error('未找到咨询师档案');
     var d = data[0];
     // 基本信息
     document.getElementById('pe_name').value = d.name || '';
@@ -3308,7 +3324,7 @@ function loadCounselorProfile() {
     document.getElementById('pe_bio_short').value = d.bio_short || '';
     document.getElementById('pe_bio_full').value = d.bio_full || '';
   })
-  .catch(function() { peToast('加载档案失败，请检查网络', 'error'); });
+  .catch(function(error) { if(window.XPG_COUNSELOR_ACCESS?.isShared)throw error;peToast(error.message || '加载档案失败，请检查网络', 'error'); });
 }
 
 function saveCounselorProfile() {
@@ -3384,23 +3400,17 @@ function saveCounselorProfile() {
     bio_full: document.getElementById('pe_bio_full').value || null
   };
 
-  fetch(SUPABASE_URL + '/rest/v1/counselors?id=eq.' + encodeURIComponent(panelCid), {
-    method: 'PATCH',
-    headers: getSupabaseWriteHeaders(),
-    body: JSON.stringify(payload)
-  })
-  .then(function(r) {
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-    return r.json();
-  })
+  counselorProfileRequest('PATCH', payload).then(counselorProfileResponse)
   .then(function(rows) {
     var saved = rows[0];
     if (saved) { photoStore.pe_daily = saved.photo_daily || []; photoStore.pe_license = saved.photo_license || []; photoStore.pe_diploma = saved.photo_diploma || []; photoStore.pe_ethics = saved.photo_ethics || []; }
     peToast('档案已更新 ✓');
-    setTimeout(function() { hideEditPanel(); }, 800);
+    if(window.XPG_COUNSELOR_ACCESS?.isShared) XPG_COUNSELOR_ACCESS.sharedStatus('档案已保存成功，可以关闭本页；需要继续补充时也可以在此修改后再次保存。');
+    else setTimeout(function() { hideEditPanel(); }, 800);
   })
   .catch(function(e) {
     peToast('保存失败：' + e.message, 'error');
+    if(window.XPG_COUNSELOR_ACCESS?.isShared) XPG_COUNSELOR_ACCESS.sharedStatus('保存失败：' + e.message,true);
   })
   .finally(function() {
     btn.classList.remove('pe-saving');
