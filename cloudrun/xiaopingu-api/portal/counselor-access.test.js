@@ -39,23 +39,44 @@ test('phone normalization accepts +86 formatting without accepting extensions or
   assert.equal(normalizePhone('008613800123456'), PHONE);
   for (const p of [null, '123456', '13800123456转1', '12345678901', '<script>']) assert.equal(normalizePhone(p), null);
 });
-test('default password grants only first-password setup, then scrypt password replaces it permanently', async () => {
+async function installCustomPassword(f) {
+  const initial = await f.access.login(PHONE, PHONE.slice(-6));
+  // Model a still-valid setup credential issued by the preceding release.
+  await f.source.transaction(async tx => tx.put(C.counselorAccounts, f.cid, {
+    ...await tx.get(C.counselorAccounts, f.cid), must_change: true, initial_expires_at: Date.now() + 600000
+  }));
+  return f.access.setPassword(f.setupSession(initial), PASSWORD);
+}
+test('default password directly authenticates and does not expire after seven days', async () => {
   const f = await setup(), initial = await f.access.login(PHONE, PHONE.slice(-6));
-  assert.equal(initial.must_change, true); assert.equal(initial.password_hash, undefined);
-  const token = f.setupSession(initial), updated = await f.access.setPassword(token, PASSWORD);
+  assert.equal(initial.must_change, false);
   const row = await f.source.get(C.counselorAccounts, f.cid);
-  assert.match(row.password_hash, /^scrypt\$/); assert.ok(!JSON.stringify(row).includes(PASSWORD)); assert.ok(!JSON.stringify(row).includes(PHONE));
-  assert.equal(updated.revision, initial.revision + 1);
+  assert.equal(row.initial_expires_at, undefined); assert.equal(row.password_hash, undefined);
+  f.advance(8 * 86400000);
+  assert.equal((await f.access.login(PHONE, PHONE.slice(-6))).must_change, false);
+});
+test('existing custom passwords remain hashed and are never replaced by the default', async () => {
+  const f = await setup(); await installCustomPassword(f);
+  const row = await f.source.get(C.counselorAccounts, f.cid);
+  assert.match(row.password_hash, /^scrypt\$/); assert.ok(!JSON.stringify(row).includes(PASSWORD));
   await assert.rejects(f.access.login(PHONE, PHONE.slice(-6)), { statusCode: 401 });
   assert.equal((await f.access.login(PHONE, PASSWORD)).must_change, false);
-  await assert.rejects(f.access.setPassword(token, 'Another-Password-42'), { statusCode: 401 });
+});
+test('old pending setup accounts, including expired ones, can use the default directly', async () => {
+  const f = await setup(); await f.access.login(PHONE, PHONE.slice(-6));
+  await f.source.transaction(async tx => tx.put(C.counselorAccounts, f.cid, {
+    ...await tx.get(C.counselorAccounts, f.cid), must_change: true, initial_expires_at: 1
+  }));
+  assert.equal((await f.access.login(PHONE, PHONE.slice(-6))).must_change, false);
+  const account = await f.source.get(C.counselorAccounts, f.cid);
+  assert.equal(account.must_change, false); assert.equal(account.initial_expires_at, undefined);
 });
 test('phone failures persist across service instances, lock after five and expire after 15 minutes', async () => {
   const f = await setup();
   for (let i = 0; i < 4; i++) await assert.rejects(f.service().login(PHONE, 'wrong'), { statusCode: 401 });
   await assert.rejects(f.service().login(PHONE, 'wrong'), { statusCode: 429 });
   await assert.rejects(f.service().login(PHONE, PHONE.slice(-6)), { statusCode: 429 });
-  f.advance(900001); assert.equal((await f.service().login(PHONE, PHONE.slice(-6))).must_change, true);
+  f.advance(900001); assert.equal((await f.service().login(PHONE, PHONE.slice(-6))).must_change, false);
 });
 test('missing or duplicate phone, demo and inactive records never auto-provision an account', async () => {
   const f = await setup();
@@ -69,25 +90,23 @@ test('missing or duplicate phone, demo and inactive records never auto-provision
     await assert.rejects(f.access.login(PHONE, PHONE.slice(-6)), { statusCode: 401 });
   }
 });
-test('initial password expires and admin reset revokes existing phone sessions', async () => {
+test('admin reset revokes existing phone sessions and restores direct default login', async () => {
   const f = await setup(), login = await f.access.login(PHONE, PHONE.slice(-6));
-  f.advance(8 * 86400000); await assert.rejects(f.access.login(PHONE, PHONE.slice(-6)), { statusCode: 401 });
-  await f.access.resetPhone(admin, f.cid);
-  const next = await f.access.login(PHONE, PHONE.slice(-6)), changed = await f.access.setPassword(f.setupSession(next), PASSWORD);
-  const full = { ...admin, role: 'counselor', subject: f.cid, auth_method: 'counselor-phone', account_revision: changed.revision };
+  const full = { ...admin, role: 'counselor', subject: f.cid, auth_method: 'counselor-phone', account_revision: login.revision };
   await f.access.validatePhone(full);
-  await f.access.resetPhone(admin, f.cid); await assert.rejects(f.access.validatePhone(full), { statusCode: 401 });
-  await assert.rejects(f.access.setPassword(f.setupSession(login), PASSWORD), { statusCode: 401 });
+  const result = await f.access.resetPhone(admin, f.cid); assert.equal(result.must_change_password, false);
+  await assert.rejects(f.access.validatePhone(full), { statusCode: 401 });
+  assert.equal((await f.access.login(PHONE, PHONE.slice(-6))).must_change, false);
 });
 test('phone change invalidates phone sessions; administrator must explicitly rebind the account', async () => {
   const f = await setup(), initial = await f.access.login(PHONE, PHONE.slice(-6));
-  const changed = await f.access.setPassword(f.setupSession(initial), PASSWORD);
+  const changed = await installCustomPassword(f);
   const full = { ...admin, role: 'counselor', subject: f.cid, auth_method: 'counselor-phone', account_revision: changed.revision };
   await f.source.transaction(async tx => tx.put('counselors', f.cid, { ...await tx.get('counselors', f.cid), contact_phone: '13900123456' }));
   await assert.rejects(f.access.validatePhone(full), { statusCode: 401 });
   await assert.rejects(f.access.login('13900123456', '123456'), { statusCode: 401 });
   await f.access.resetPhone(admin, f.cid);
-  assert.equal((await f.access.login('13900123456', '123456')).must_change, true);
+  assert.equal((await f.access.login('13900123456', '123456')).must_change, false);
 });
 test('invite secret is hashed; replacing, revoking and expiration invalidate links and exchanged sessions', async () => {
   const f = await setup(), issued = await f.access.issueInvite(admin, f.cid);
@@ -102,19 +121,18 @@ test('invite secret is hashed; replacing, revoking and expiration invalidate lin
   const last = await f.access.issueInvite(admin, f.cid); f.advance(8 * 86400000);
   await assert.rejects(f.access.exchangeInvite(last.invite), { statusCode: 401 });
 });
-test('HTTP password setup cannot read any private data; custom password session can enter workspace', async t => {
+test('HTTP default login directly enters workspace without returning setup credentials', async t => {
   const f = await serve(t), first = await f.request('/auth/counselor/phone', { phone: PHONE, password: PHONE.slice(-6) });
-  assert.equal(first.status, 200); assert.ok(first.body.setup_token); assert.equal(first.body.token, undefined); assert.equal(first.body.counselor, undefined);
-  assert.equal(verifySession(first.body.setup_token, f.secret).aud, SETUP_AUDIENCE);
-  for (const path of ['/rest/v1/counselors?id=eq.' + f.cid, '/v1/xg/me', '/v1/xg/portal/shared-profile']) {
-    assert.ok([401, 403].includes((await f.request(path, null, first.body.setup_token)).status));
-  }
-  assert.equal((await f.request('/auth/counselor/password', { new_password: '123456' }, first.body.setup_token)).status, 400);
-  const changed = await f.request('/auth/counselor/password', { new_password: PASSWORD }, first.body.setup_token);
-  assert.equal(changed.status, 200); assert.equal((await f.request('/v1/xg/me', null, changed.body.token)).status, 200);
-  assert.equal((await f.request('/auth/counselor/password', { new_password: PASSWORD }, first.body.setup_token)).status, 401);
+  assert.equal(first.status, 200); assert.ok(first.body.token); assert.equal(first.body.setup_token, undefined);
+  assert.equal(first.body.must_change_password, false);
+  assert.equal(verifySession(first.body.token, f.secret).aud, 'xg-assessment');
+  assert.equal((await f.request('/v1/xg/me', null, first.body.token)).status, 200);
+  assert.equal((await f.request('/rest/v1/counselors?id=eq.' + f.cid, null, first.body.token)).status, 200);
+  const restricted = signSession(f.setupSession({ id: f.cid, revision: 1 }), f.secret);
+  assert.equal((await f.request('/v1/xg/me', null, restricted)).status, 403);
+  assert.equal((await f.request('/auth/counselor/password', { new_password: PASSWORD }, restricted)).status, 401);
   await f.access.resetPhone(admin, f.cid);
-  assert.equal((await f.request('/v1/xg/me', null, changed.body.token)).status, 401);
+  assert.equal((await f.request('/v1/xg/me', null, first.body.token)).status, 401);
 });
 test('HTTP share grant reads/writes only its own profile and never reveals long-lived credentials', async t => {
   const f = await serve(t), issued = await f.request('/v1/xg/portal/counselor-access', { action: 'issue', counselor_id: f.cid }, admin);

@@ -37,49 +37,31 @@
   }
   function installPhoneForm(box) {
     const form = node('form', '', 'c-access-form'); form.setAttribute('aria-label', '手机号登录');
-    const note = node('p', '使用档案中保存的手机号。首次密码为手机号后 6 位，验证后必须设置新密码。', 'c-access-note');
-    const normal = node('div'), setup = node('div'); setup.hidden = true;
-    function field(parent, label, name, type, autocomplete) {
+    const note = node('p', '使用档案中保存的手机号，默认密码为手机号后 6 位；验证通过后直接进入工作台。', 'c-access-note');
+    function field(label, name, type, autocomplete) {
       const wrap = node('label', label), input = document.createElement('input'); input.name = name; input.type = type;
-      input.autocomplete = autocomplete; input.required = true; wrap.append(input); parent.append(wrap); return input;
+      input.autocomplete = autocomplete; input.required = true; wrap.append(input); form.append(wrap); return input;
     }
-    const phone = field(normal, '手机号', 'phone', 'tel', 'username'); phone.inputMode = 'tel'; phone.maxLength = 20;
-    const password = field(normal, '登录密码', 'password', 'password', 'current-password'); password.maxLength = 128;
-    const newPassword = field(setup, '设置新密码（至少 10 位，含字母和数字）', 'new_password', 'password', 'new-password');
-    const confirm = field(setup, '再次输入新密码', 'confirm_password', 'password', 'new-password');
-    newPassword.disabled = confirm.disabled = true; newPassword.maxLength = confirm.maxLength = 128;
+    form.append(note);
+    const phone = field('手机号', 'phone', 'tel', 'username'); phone.inputMode = 'tel'; phone.maxLength = 20;
+    const password = field('登录密码', 'password', 'password', 'current-password'); password.maxLength = 128;
     const feedback = node('p', '', 'c-access-status'); feedback.setAttribute('role', 'status'); feedback.setAttribute('aria-live', 'polite');
-    const actions = node('div', '', 'c-access-actions'), submit = node('button', '手机号登录', 'c-access-button'), restart = node('button', '返回登录', 'c-access-button secondary');
-    submit.type = 'submit'; restart.type = 'button'; restart.hidden = true; actions.append(submit, restart);
-    form.append(note, normal, setup, feedback, actions); box.append(form); let setupToken = '';
-    restart.onclick = () => {
-      setupToken = ''; setup.hidden = true; normal.hidden = false; restart.hidden = true;
-      newPassword.value = confirm.value = password.value = ''; newPassword.disabled = confirm.disabled = true;
-      phone.disabled = password.disabled = false; submit.textContent = '手机号登录'; status(feedback, '');
-    };
+    const actions = node('div', '', 'c-access-actions'), submit = node('button', '手机号登录', 'c-access-button');
+    submit.type = 'submit'; actions.append(submit); form.append(feedback, actions); box.append(form);
     form.onsubmit = async event => {
       event.preventDefault(); if (submit.disabled) return;
       if (localStorage.getItem('xpg_demo_active') === '1') { status(feedback, '当前为演示模式，请先退出演示，再使用本人手机号登录。', true); return; }
-      if (setupToken && newPassword.value !== confirm.value) { status(feedback, '两次输入的新密码不一致。', true); return; }
-      submit.disabled = restart.disabled = true; status(feedback, setupToken ? '正在保存新密码…' : '正在验证手机号和密码…');
+      submit.disabled = true; status(feedback, '正在验证手机号和密码…');
       try {
-        const result = setupToken ? await post('/auth/counselor/password', { new_password: newPassword.value }, setupToken, false) :
-          await post('/auth/counselor/phone', { phone: phone.value.trim(), password: password.value }, '', true,
-            () => status(feedback, '登录服务正在启动，正在自动重试…'));
-        if (result.must_change_password) {
-          if (!result.setup_token) throw Error('登录响应异常。');
-          setupToken = result.setup_token; password.value = ''; normal.hidden = true; setup.hidden = false; restart.hidden = false;
-          phone.disabled = password.disabled = true; newPassword.disabled = confirm.disabled = false;
-          submit.textContent = '设置密码并登录'; status(feedback, '默认密码验证成功。设置新密码后才能查看档案和工作台。'); newPassword.focus(); return;
-        }
+        const result = await post('/auth/counselor/phone', { phone: phone.value.trim(), password: password.value }, '', true,
+          () => status(feedback, '登录服务正在启动，正在自动重试…'));
         if (!result.token || !result.counselor?.id) throw Error('登录响应异常。');
         localStorage.setItem('xiaopingu_counselor_token', result.token);
         localStorage.setItem('xiaopingu_counselor_id', result.counselor.id);
-        sessionStorage.removeItem('xiaopingu_admin_token');
-        setupToken = ''; password.value = newPassword.value = confirm.value = '';
+        sessionStorage.removeItem('xiaopingu_admin_token'); password.value = '';
         status(feedback, '登录成功，正在打开工作台。'); location.href = 'counselor.html?panel=1';
-      } catch (error) { status(feedback, error.message + (setupToken ? ' 若已改密但网络中断，可返回登录并使用新密码。' : ''), true); }
-      finally { submit.disabled = restart.disabled = false; }
+      } catch (error) { status(feedback, error.message, true); }
+      finally { submit.disabled = false; }
     };
   }
   async function copy(text) {
@@ -106,12 +88,12 @@
           url.hash = new URLSearchParams({ invite: data.invite }).toString(); link.value = url.href; copyButton.disabled = false;
           status(feedback, '已生成，有效至 ' + new Date(data.expires_at).toLocaleString('zh-CN') + '。点击复制后单独发给本人。');
         } else if (kind === 'revoke') { link.value = ''; copyButton.disabled = true; status(feedback, '已撤销；旧链接和已打开的填写会话均已失效。'); }
-        else status(feedback, '已重置 ' + data.phone_masked + ' 的手机号登录。请本人使用手机号后 6 位首次登录并设置新密码。');
+        else status(feedback, '已重置 ' + data.phone_masked + ' 的手机号登录。请本人使用手机号后 6 位作为默认密码登录。');
       } catch (error) { status(feedback, error.message, true); }
       finally { generate.disabled = revoke.disabled = reset.disabled = false; }
     }
     generate.onclick = () => action('issue'); revoke.onclick = () => action('revoke');
-    reset.onclick = () => { if (window.confirm('重置后，此手机号的已有登录将失效，并重新使用手机号后 6 位作为初始密码。确认重置？')) action('reset_phone'); };
+    reset.onclick = () => { if (window.confirm('重置后，此手机号的已有登录将失效，并重新使用手机号后 6 位作为默认密码。确认重置？')) action('reset_phone'); };
     copyButton.onclick = async () => { try { await copy(link.value); status(feedback, '填写链接已复制，请单独发给本人。'); } catch (e) { status(feedback, e.message, true); } };
     const dismiss = () => { link.value = ''; dialog.close(); dialog.remove(); };
     close.onclick = dismiss; dialog.addEventListener('cancel', event => { event.preventDefault(); dismiss(); });

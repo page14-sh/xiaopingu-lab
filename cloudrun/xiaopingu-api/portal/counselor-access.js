@@ -45,8 +45,8 @@ function createCounselorAccess({ source, directory, now = Date.now }) {
     return rows.length === 1 && real(rows[0]) ? rows[0] : null;
   }
   function freshAccount(id, phone, revision = 1) {
-    return { counselor_id: id, phone_hash: digest(phone), revision, must_change: true,
-      failures: 0, locked_until: 0, failure_window: 0, initial_expires_at: now() + 7 * DAY, updated_at: stamp() };
+    return { counselor_id: id, phone_hash: digest(phone), revision, must_change: false,
+      failures: 0, locked_until: 0, failure_window: 0, updated_at: stamp() };
   }
   async function login(phoneInput, password) {
     const phone = normalizePhone(phoneInput);
@@ -60,7 +60,7 @@ function createCounselorAccess({ source, directory, now = Date.now }) {
       if (account && account.phone_hash !== digest(phone)) return { failed: true }; // Admin must rebind changed phone numbers.
       if (!account) account = freshAccount(row.id, phone);
       if (account.locked_until > now()) return { locked: true };
-      const valid = account.must_change ? account.initial_expires_at > now() && equal(password, phone.slice(-6)) :
+      const valid = !account.password_hash ? equal(password, phone.slice(-6)) :
         await checkPassword(password, account.password_hash);
       if (!valid) {
         const failures = now() - account.failure_window < LOCK_MS ? account.failures + 1 : 1;
@@ -69,7 +69,8 @@ function createCounselorAccess({ source, directory, now = Date.now }) {
         await tx.put(C.counselorAccounts, row.id, account);
         return { locked: failures >= 5, failed: true };
       }
-      account = { ...account, failures: 0, locked_until: 0, failure_window: 0, updated_at: stamp() };
+      account = { ...account, must_change: false, failures: 0, locked_until: 0, failure_window: 0, updated_at: stamp() };
+      delete account.initial_expires_at;
       await tx.put(C.counselorAccounts, row.id, account);
       return { id: row.id, revision: account.revision, must_change: account.must_change };
     });
@@ -113,7 +114,7 @@ function createCounselorAccess({ source, directory, now = Date.now }) {
       if (normalizePhone(current?.contact_phone) !== phone) deny();
       await tx.put(C.counselorAccounts, id, { ...freshAccount(id, phone, (old?.revision || 0) + 1), reset_by: session.subject });
     });
-    return { reset: true, phone_masked: phone.slice(0, 3) + '****' + phone.slice(-4), must_change_password: true };
+    return { reset: true, phone_masked: phone.slice(0, 3) + '****' + phone.slice(-4), must_change_password: false };
   }
   async function issueInvite(session, id) {
     admin(session); if (!UUID.test(id || '')) deny();

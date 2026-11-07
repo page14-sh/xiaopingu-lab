@@ -1,5 +1,5 @@
 const { createLegacyRest } = require('./legacy-rest');
-const { SETUP_AUDIENCE, PROFILE_AUDIENCE } = require('./counselor-access');
+const { PROFILE_AUDIENCE } = require('./counselor-access');
 const { AUDIENCE, fields } = require('../assessment/authorization');
 const { AssessmentError } = require('../assessment/model');
 const { LoginRateLimiter } = require('./login-code');
@@ -10,13 +10,11 @@ function createAccessHttp({ portal, photos, signSession, sessionSecret, readJson
   const limiter = new LoginRateLimiter();
   const routes = ['/auth/counselor/phone', '/auth/counselor/password', '/auth/counselor/invite',
     '/v1/xg/portal/counselor-access', '/v1/xg/portal/shared-profile'];
-  function signed(data, setup = false) {
-    const exp = Date.now() + (setup ? 10 * 60000 : 24 * 3600000);
+  function signed(data) {
+    const exp = Date.now() + 24 * 3600000;
     const token = signSession({ role: 'counselor', subject: data.id, demo: false, exp,
-      aud: setup ? SETUP_AUDIENCE : AUDIENCE, auth_method: setup ? 'counselor-phone-initial' : 'counselor-phone',
-      account_revision: data.revision }, sessionSecret);
-    return setup ? { must_change_password: true, setup_token: token, expires_at: exp } :
-      { token, expires_at: exp, counselor: { id: data.id }, must_change_password: false };
+      aud: AUDIENCE, auth_method: 'counselor-phone', account_revision: data.revision }, sessionSecret);
+    return { token, expires_at: exp, counselor: { id: data.id }, must_change_password: false };
   }
   return async function handle(req, res, url, session) {
     if (!routes.includes(url.pathname)) return false;
@@ -44,7 +42,7 @@ function createAccessHttp({ portal, photos, signSession, sessionSecret, readJson
         let result;
         try { result = await access.login(body.phone, body.password); }
         catch (error) { if ([401, 429].includes(error.statusCode)) limiter.recordFailure(ip, key); throw error; }
-        limiter.reset(key); sendJson(res, 200, signed(result, result.must_change));
+        limiter.reset(key); sendJson(res, 200, signed(result));
       } else if (p === '/auth/counselor/password') {
         fields(body, ['new_password']); sendJson(res, 200, signed(await access.setPassword(session, body.new_password)));
       } else if (p === '/auth/counselor/invite') {
