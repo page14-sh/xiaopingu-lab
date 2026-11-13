@@ -2478,6 +2478,7 @@ function generateResult() {
     ai_talk_gain:getAiTalkValues().ai_talk_gain,
     expects:Array.from(document.querySelectorAll('#expect_grid input:checked')).map(function(e){return e.value;}),
     issues:issues,description:description,duration:durationText,
+    recommended_approaches:currentRecommendedApproaches.slice(),
     score_mood:scores.mood,score_anxiety:scores.anxiety,score_sleep:scores.sleep,
     score_function:scores.function,score_relation:scores.relation,
     total_score:totalScore,severity:severity,specials:specials,crisis_level:crisisVal,

@@ -364,9 +364,10 @@ function matchCounselors(assessment) {
         details.push('C-NIP风格: +' + cnipScore + '分');
       }
 
-      // 3. 取向匹配（14分）
-      if (c.approaches && assessment.recommendedApproaches) {
-        var approachMatch = assessment.recommendedApproaches.filter(function(a) { return c.approaches.indexOf(a) >= 0; });
+      // 3. 取向匹配（14分）——兼容内存态 recommendedApproaches 与落库字段 recommended_approaches
+      var recApproaches = assessment.recommendedApproaches || assessment.recommended_approaches || null;
+      if (c.approaches && recApproaches && recApproaches.length > 0) {
+        var approachMatch = recApproaches.filter(function(a) { return c.approaches.indexOf(a) >= 0; });
         if (approachMatch.length > 0) {
           score += Math.min(14, approachMatch.length * 7);
           details.push('取向匹配: ' + approachMatch.join('/'));
