@@ -196,7 +196,7 @@ const COUNSELOR_PATCH_FIELDS = [
   // 资质与认证：咨询师可随时自行更新（平台复核后生效，审核状态不变、不影响现有匹配）
   'gender', 'supervisor_cert', 'license_number', 'extra_credentials', 'extra_credentials_other',
   'certifications_other', 'approaches_other', 'specialties_other', 'populations_other',
-  'personal_therapy_status', 'therapy_cert', 'gender_identity_friendly', 'credential_updated_at',
+  'personal_therapy_status', 'therapy_cert', 'gender_identity_friendly',
   'contact_wechat', 'contact_wechat_public', 'contact_phone', 'contact_phone_public',
   'contact_email', 'contact_email_public', 'has_violation', 'violation_detail', 'has_incident', 'incident_detail',
   'approach_evidence', 'updated_at'

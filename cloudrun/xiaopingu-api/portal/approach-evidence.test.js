@@ -186,6 +186,10 @@ test('credential_updated_at：仅咨询师本人变更资质时刷新，管理�
   const selfMark = await f.request('PATCH', f.pathOf(id), { credential_reviewed_at: new Date().toISOString() }, owner);
   assert.equal(selfMark.status, 403);
   assert.equal((await f.source.get('counselors', id)).credential_reviewed_at, undefined);
+  // 「资质更新时间」同样只能服务端写：本人自写旧时间戳无法把自己藏出复核队列
+  const selfUpd = await f.request('PATCH', f.pathOf(id), { credential_updated_at: '2020-01-01T00:00:00.000Z' }, owner);
+  assert.equal(selfUpd.status, 403);
+  assert.equal((await f.source.get('counselors', id)).credential_updated_at, upd1);
   await f.request('PATCH', f.pathOf(id), { credential_reviewed_at: new Date().toISOString() }, f.admin);
   assert.ok((await f.source.get('counselors', id)).credential_reviewed_at);
 });

@@ -83,6 +83,19 @@
   .photo-slot:hover { border-color: #5C7A52; color: #5C7A52; }
   .photo-slot img { width: 100%; height: 100%; object-fit: cover; }
   .photo-slot .photo-del { position: absolute; top: 4px; right: 4px; width: 20px; height: 20px; border-radius: 50%; background: rgba(0,0,0,.55); color: #fff; font-size: 12px; line-height: 20px; text-align: center; cursor: pointer; }
+  /* 流派受训证明 */
+  .ev-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid #E8E4DC; border-radius: 8px; background: #fff; flex-wrap: wrap; }
+  .ev-name { font-size: 13px; font-weight: 600; color: #3D3831; min-width: 64px; }
+  .ev-badge { font-size: 11px; padding: 2px 8px; border-radius: 10px; white-space: nowrap; }
+  .ev-badge.ok { background: #E8F5E9; color: #2E7D32; }
+  .ev-badge.wait { background: #FFF8E1; color: #F57F17; }
+  .ev-badge.no { background: #FEF2F2; color: #991B1B; }
+  .ev-badge.none { background: #F5F2EF; color: #8B7E6B; }
+  .ev-thumb { width: 44px; height: 44px; border-radius: 6px; object-fit: cover; border: 1px solid #E8E4DC; }
+  .ev-btn { font-size: 12px; padding: 5px 12px; border-radius: 6px; border: 1px solid #C8DCC0; background: #F0F7EC; color: #5C7A52; cursor: pointer; white-space: nowrap; font-family: inherit; }
+  .ev-btn:hover { border-color: #5C7A52; }
+  .ev-btn.plain { background: #fff; border-color: #D8D2C8; color: #888; }
+  .ev-empty { font-size: 12px; color: #A09889; padding: 10px 14px; background: #FAF9F6; border: 1px dashed #D8D2C8; border-radius: 8px; line-height: 1.7; }
   .required::after { content: " *"; color: #C4654A; }
   input[type="text"], input[type="number"], input[type="tel"],
   select, textarea {
@@ -621,6 +634,16 @@
         <div id="approach_other_tags" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px"></div>
       </div>
 
+      <div class="form-row" id="approach_evidence_row">
+        <label class="required">流派受训证明 <span class="label-hint">（每个勾选流派各传 1 张，仅平台审核可见）</span></label>
+        <p style="font-size:12px;color:#A09889;margin:4px 0 8px;line-height:1.7">
+          流派标签须凭受训证明通过审核后，才能在来访者匹配中生效。请为每个勾选的咨询取向上传长程 / 阶段受训证书照片（如 EMDR 连续培训证书、家庭治疗系统培训项目证明、精神动力学长程受训证明等）。<br>
+          如某取向暂无系统受训证明，可取消勾选该取向，之后在「咨询师工作台 → 编辑档案」补传。
+        </p>
+        <div id="approach_evidence_list"></div>
+        <input type="file" id="file_approach_evidence" accept="image/*" hidden onchange="onApproachEvidencePicked(this)">
+      </div>
+
       <div class="form-grid">
         <div class="form-row">
           <label class="required">服务设置类型（可多选）</label>
@@ -1094,6 +1117,12 @@
           <button type="button" class="btn btn-outline" style="padding:8px 16px;font-size:13px;white-space:nowrap" onclick="copyLoginCode()">复制短登录码</button>
         </div>
       </div>
+      <div id="approach_evidence_wrap" style="margin-top:20px;padding:16px;background:#F0F7EC;border:1px solid #C8DCC0;border-radius:10px;display:none;text-align:left">
+        <p style="font-size:13px;color:#5A6B52;margin-bottom:8px;line-height:1.7">
+          🏷️ <strong>流派受训证明已提交审核</strong><br>
+          <span style="font-size:12px;color:#7A8B72">您为 <span id="approach_evidence_count">0</span> 个咨询流派上传了受训证明，平台将逐流派审核；审核通过后，该流派标签才会在来访者匹配中生效。审核期间不影响档案其他信息展示，进度可在「咨询师工作台 → 编辑档案」查看。</span>
+        </p>
+      </div>
       <div id="edit_link_wrap" style="margin-top:20px;padding:16px;background:#F0F7EC;border:1px solid #C8DCC0;border-radius:10px;display:none;text-align:left">
         <p style="font-size:13px;color:#5A6B52;margin-bottom:8px;line-height:1.7">
           📝 <strong>您的专属编辑链接</strong><br>
@@ -1129,7 +1158,7 @@
         <!-- 基本信息 -->
         <div class="pe-section">
           <div class="pe-section-title">基本信息</div>
-          <div id="pe_credential_note" style="background:#F0F7EC;border:1px solid #C8DCC0;border-radius:8px;padding:10px 12px;font-size:12px;color:#5A6B52;line-height:1.7;margin-bottom:12px">资质与认证信息（主资质、附加资质、专项认证、执业证号、证书照片、学历学位证书照片）可随时更新，保存后平台会在 1–2 个工作日内复核；复核期间不影响你现有的匹配与接单。</div>
+          <div id="pe_credential_note" style="background:#F0F7EC;border:1px solid #C8DCC0;border-radius:8px;padding:10px 12px;font-size:12px;color:#5A6B52;line-height:1.7;margin-bottom:12px">资质与认证信息（主资质、附加资质、专项认证、执业证号、证书照片、学历学位证书照片、流派受训证明）可随时更新，保存后平台会在 1–2 个工作日内复核；复核期间不影响你现有的匹配与接单。</div>
           <div class="pe-row">
             <div class="pe-field"><label>姓名</label><input type="text" id="pe_name" readonly style="background:#f5f2ef;color:#8B7E6B;cursor:not-allowed;border-color:#E3DDD4;" title="姓名不可修改，须与执业证一致"></div>
             <div class="pe-field"><label>性别</label><select id="pe_gender"><option value="">请选择</option><option value="male">男</option><option value="female">女</option><option value="ta">TA</option><option value="other">其他/不便透露</option></select></div>
@@ -1164,6 +1193,8 @@
         <div class="pe-section">
           <div class="pe-section-title">咨询取向（可多选）</div>
           <div class="pe-chips" id="pe_approaches"></div>
+          <div id="pe_approach_evidence" style="margin-top:10px"></div>
+          <input type="file" id="file_pe_approach_evidence" accept="image/*" hidden onchange="onPeApproachEvidencePicked(this)">
         </div>
         <!-- 擅长议题 -->
         <div class="pe-section">
@@ -1440,6 +1471,7 @@ function toggleOpt(el) {
   el.classList.toggle('selected');
   var cb = el.querySelector('input[type="checkbox"]');
   if (cb) cb.checked = el.classList.contains('selected');
+  if (cb && cb.name === 'approach' && typeof evidenceForm !== 'undefined') evidenceForm.render();
 }
 function toggleDurationOther() {
   var sel = document.getElementById('c_duration');
@@ -1523,12 +1555,147 @@ function compressImage(file, cb) {
   img.src = url;
 }
 
+// ===== 流派受训证明（每流派 1 张；审核通过后流派标签才在匹配中生效）=====
+// store: { [approach]: { photo:'<data-url>' } 本次新上传 | { photo_ref:'cloud://…' } 既有引用 }
+// status: { [approach]: { status:'verified'|'pending'|'rejected', note, photo_ref } } 既有审核状态
+function createEvidenceView(opts) {
+  var store = {}, status = {}, target = null;
+  function selected() { return opts.selected(); }
+  function thumbSrc(entry) {
+    if (!entry) return '';
+    if (typeof entry.photo === 'string') return counselorPhotoUrl(entry.photo);
+    if (entry.photo && typeof entry.photo === 'object') return counselorPhotoUrl(entry.photo);
+    return '';
+  }
+  function badge(a) {
+    var entry = store[a], st = status[a];
+    if (entry && typeof entry.photo === 'string') return '<span class="ev-badge wait">待审核</span>';
+    if (st && st.status === 'verified') return '<span class="ev-badge ok">已认证</span>';
+    if (st && st.status === 'rejected') return '<span class="ev-badge no">已驳回' + (st.note ? '：' + esc(st.note) : '') + '</span>';
+    if (st && st.status === 'pending') return '<span class="ev-badge wait">审核中</span>';
+    return '<span class="ev-badge none">未上传</span>';
+  }
+  function render() {
+    var box = document.getElementById(opts.listId);
+    if (!box) return;
+    var list = selected(), i;
+    Object.keys(store).forEach(function(a) { if (list.indexOf(a) < 0) delete store[a]; });
+    Object.keys(status).forEach(function(a) { if (list.indexOf(a) < 0) delete status[a]; });
+    if (!list.length) {
+      box.innerHTML = '<div class="ev-empty">勾选咨询取向后，这里会为每个流派出现一个受训证明上传位。</div>';
+      return;
+    }
+    var html = '';
+    list.forEach(function(a, idx) {
+      var entry = store[a] || {}, st = status[a] || {};
+      var thumb = thumbSrc(entry) || thumbSrc(st);
+      var hasExisting = !!(entry.photo_ref || st.photo_ref || st.status);
+      html += '<div class="ev-row">'
+        + '<span class="ev-name">' + esc(a) + '</span>'
+        + badge(a)
+        + (thumb ? '<img class="ev-thumb" src="' + esc(thumb) + '" referrerpolicy="no-referrer" alt="' + esc(a) + '受训证明（链接过期请重新打开档案）">'
+                 : (hasExisting ? '<span style="font-size:11px;color:#7A8B72">已上传证明</span>' : ''))
+        + '<span style="flex:1"></span>'
+        + '<button type="button" class="ev-btn" onclick="' + opts.pickFn + '(' + idx + ')">' + (hasExisting ? '重新上传' : '上传证明') + '</button>'
+        + (entry.photo ? '<button type="button" class="ev-btn plain" onclick="' + opts.removeFn + '(' + idx + ')">移除</button>' : '')
+        + '</div>';
+    });
+    box.innerHTML = html;
+  }
+  function pick(idx) {
+    var list = selected();
+    if (idx < 0 || idx >= list.length) return;
+    target = list[idx];
+    var input = document.getElementById(opts.fileId);
+    if (input) input.click();
+  }
+  function onPicked(input) {
+    var f = input.files && input.files[0];
+    var a = target;
+    input.value = '';
+    if (!f || !a) return;
+    if (!/^image\/(jpeg|png|webp)$/.test(f.type) || f.size > 10 * 1024 * 1024) { showToast('请选择 10 MB 以内的 JPG、PNG 或 WebP 图片'); return; }
+    compressImage(f, function(durl) {
+      if (!durl) { showToast('图片读取失败，请换一张'); return; }
+      store[a] = { photo: durl };
+      render();
+      showToast('已选择「' + a + '」受训证明，提交后进入审核');
+    });
+  }
+  function remove(idx) {
+    var list = selected();
+    if (idx < 0 || idx >= list.length) return;
+    var a = list[idx], st = status[a];
+    // 仅移除本次新上传的证明；既有证明（photo_ref）保留
+    if (st && st.photo_ref) store[a] = { photo_ref: st.photo_ref };
+    else delete store[a];
+    render();
+  }
+  // 提交载荷：新上传走 photo（data URL，后端转 pending 待审）；既有走 photo_ref 保留；
+  // 无任何证明的流派不提交条目（匹配不计分，也避免后端对空证据条目报错）
+  function payload() {
+    var out = [];
+    selected().forEach(function(a) {
+      var entry = store[a];
+      if (entry && typeof entry.photo === 'string' && entry.photo) out.push({ approach: a, photo: entry.photo });
+      else if (entry && entry.photo_ref) out.push({ approach: a, photo_ref: entry.photo_ref });
+    });
+    return out.length ? out : undefined;
+  }
+  function freshCount() {
+    return Object.keys(store).filter(function(a) { var e = store[a]; return e && typeof e.photo === 'string'; }).length;
+  }
+  // 编辑模式回填：既有证明状态与引用
+  function restore(list) {
+    store = {}; status = {};
+    (list || []).forEach(function(e) {
+      if (!e || !e.approach) return;
+      if (e.photo_ref) store[e.approach] = { photo_ref: e.photo_ref };
+      status[e.approach] = { status: e.status, note: e.note, photo_ref: e.photo_ref };
+    });
+    render();
+  }
+  // 保存成功后用最新行刷新（photo 为 300 秒临时链接，仅用于缩略图）
+  function refresh(list) {
+    var nextStore = {}, nextStatus = {};
+    (list || []).forEach(function(e) {
+      if (!e || !e.approach) return;
+      var entry = {};
+      if (e.photo_ref) entry.photo_ref = e.photo_ref;
+      if (e.photo && e.photo.url) entry.photo = e.photo;
+      if (Object.keys(entry).length) nextStore[e.approach] = entry;
+      nextStatus[e.approach] = { status: e.status, note: e.note, photo_ref: e.photo_ref };
+    });
+    store = nextStore; status = nextStatus;
+    render();
+  }
+  return { render: render, pick: pick, onPicked: onPicked, remove: remove, payload: payload, freshCount: freshCount, restore: restore, refresh: refresh };
+}
+var evidenceForm = createEvidenceView({
+  listId: 'approach_evidence_list', fileId: 'file_approach_evidence',
+  pickFn: 'evidenceFormPick', removeFn: 'evidenceFormRemove',
+  selected: function() { return getMultiChecked('approach').concat(otherApproaches.slice()); }
+});
+var evidencePanel = createEvidenceView({
+  listId: 'pe_approach_evidence', fileId: 'file_pe_approach_evidence',
+  pickFn: 'evidencePanelPick', removeFn: 'evidencePanelRemove',
+  selected: function() { return getPeChipValues('approaches'); }
+});
+function evidenceFormPick(idx) { evidenceForm.pick(idx); }
+function evidenceFormRemove(idx) { evidenceForm.remove(idx); }
+function evidencePanelPick(idx) { evidencePanel.pick(idx); }
+function evidencePanelRemove(idx) { evidencePanel.remove(idx); }
+function onApproachEvidencePicked(input) { evidenceForm.onPicked(input); }
+function onPeApproachEvidencePicked(input) { evidencePanel.onPicked(input); }
+
 // ===== 照片上传槽位初始化 =====
 // 全新注册（无草稿/无编辑令牌）时，slots 容器是空的，必须主动渲染一次，否则看不到上传入口
 (function initPhotoSlots(){
   ['c_daily','c_license','c_diploma','pe_daily','pe_license','pe_diploma'].forEach(function(k){
     if (document.getElementById('slots_' + k)) renderPhotoSlots(k);
   });
+  evidenceForm.render();
+  evidencePanel.render();
 })();
 
 // ===== 微信扫码绑定（注册第 0 步；WX 未配置时降级提示，不阻塞填写）=====
@@ -1581,11 +1748,13 @@ function addOtherApproach() {
   otherApproaches.push(val);
   input.value = '';
   renderOtherTags('approach');
+  if (typeof evidenceForm !== 'undefined') evidenceForm.render();
 }
 
 function removeOtherApproach(idx) {
   otherApproaches.splice(idx, 1);
   renderOtherTags('approach');
+  if (typeof evidenceForm !== 'undefined') evidenceForm.render();
 }
 
 function addOtherSpecialty() {
@@ -1787,6 +1956,8 @@ function restoreFromData(d) {
       }
     });
   });
+  // 流派受训证明：回填既有审核状态与文件引用（重新上传会转回待审核）
+  if (typeof evidenceForm !== 'undefined') evidenceForm.restore(d.approach_evidence);
 }
 
 function enterEditMode(token) {
@@ -1912,6 +2083,7 @@ function collectData() {
     photo_license: counselorPhotoPayload(photoStore.c_license),
     photo_diploma: counselorPhotoPayload(photoStore.c_diploma),
     photo_ethics: counselorPhotoPayload(photoStore.c_ethics),
+    approach_evidence: (typeof evidenceForm !== 'undefined') ? evidenceForm.payload() : undefined,
     wx_openid: _wxOpenid || undefined,
     wx_bind_token: _wxBindToken || undefined,
     bio_short: document.getElementById('c_bio_short').value.trim(),
@@ -1984,6 +2156,16 @@ function previewAndSubmit() {
   if (!d.photo_diploma.length) { showToast('请上传至少 1 张学历 / 学位证书照片（仅平台审核可见）'); goStep(1); return; }
   if (d.ethics_training === '是' && !d.photo_ethics.length) { showToast('您参加过伦理培训，请上传至少 1 张伦理培训证明材料（培训证书 / 学时证明）'); goStep(2); return; }
   if (d.approaches.length === 0) { showToast('请至少选择一个咨询取向'); goStep(2); return; }
+  // 新注册：每个勾选的咨询流派都须上传受训证明（编辑模式不强制，存量取向可后补）
+  if (!currentEditToken) {
+    var missingEvidence = d.approaches.concat(d.approaches_other).filter(function(a) {
+      return !(d.approach_evidence || []).some(function(e) { return e.approach === a; });
+    });
+    if (missingEvidence.length) {
+      showToast('请为每个勾选的咨询流派上传受训证明：' + missingEvidence.join('、') + '（暂无系统受训证明的取向可取消勾选，之后在工作台补传）');
+      goStep(2); return;
+    }
+  }
   if (d.specialties.length === 0) { showToast('请至少选择一个擅长议题'); goStep(3); return; }
   if (!d.contact_wechat || !d.contact_phone || !d.contact_email) { showToast('请完整填写微信、手机号、邮箱三种联系方式（均必填）'); goStep(4); return; }
   if (!d.contact_wechat_public && !d.contact_phone_public && !d.contact_email_public) { showToast('请至少勾选一项「允许对外公布」，来访者只能看到你勾选公开的联系方式'); goStep(4); return; }
@@ -2011,6 +2193,10 @@ function previewAndSubmit() {
   d.approaches.forEach(function(s) { html += '<span class="preview-tag">' + s + '</span> '; });
   d.approaches_other.forEach(function(s) { html += '<span class="preview-tag" style="background:#FFF3E6;color:#B8860B;border:1px solid #F0D9A8">' + s + '</span> '; });
   html += (d.approaches.length + d.approaches_other.length === 0 ? '—' : '') + '</span></div>';
+  if (d.approach_evidence && d.approach_evidence.length) {
+    html += '<div class="preview-row"><span class="preview-label">流派受训证明</span><span class="preview-val">'
+      + d.approach_evidence.length + ' 个流派已上传（审核通过后，该流派标签才会在匹配中生效）</span></div>';
+  }
   if (d.service_settings && d.service_settings.length) html += '<div class="preview-row"><span class="preview-label">服务设置</span><span class="preview-val">' + d.service_settings.join('、') + '</span></div>';
   if (d.certifications.length) html += '<div class="preview-row"><span class="preview-label">专项认证</span><span class="preview-val">' + d.certifications.join('、');
   d.certifications_other.forEach(function(s) { html += '<span class="preview-tag" style="background:#FFF3E6;color:#B8860B;border:1px solid #F0D9A8">' + s + '</span> '; });
@@ -2140,6 +2326,7 @@ function submitProfile() {
         photoStore.c_daily = result.photo_daily || []; photoStore.c_license = result.photo_license || [];
         photoStore.c_diploma = result.photo_diploma || []; photoStore.c_ethics = result.photo_ethics || [];
         renderPhotoSlots('c_daily'); renderPhotoSlots('c_license'); renderPhotoSlots('c_diploma'); renderPhotoSlots('c_ethics');
+        if (typeof evidenceForm !== 'undefined') evidenceForm.refresh(result.approach_evidence);
       }
       if (currentReviewStatus === 'rejected') {
         showToast('✅ 已重新提交审核，请等待管理员审核结果');
@@ -2213,6 +2400,16 @@ function submitProfile() {
       if (codeWrap && codeVal) {
         codeWrap.style.display = 'block';
         codeVal.textContent = String(arguments[2]).trim();
+      }
+    }
+    // 显示流派受训证明审核提示（新注册时）
+    var evFresh = (typeof evidenceForm !== 'undefined') ? evidenceForm.freshCount() : 0;
+    if (evFresh > 0) {
+      var evWrap = document.getElementById('approach_evidence_wrap');
+      var evCount = document.getElementById('approach_evidence_count');
+      if (evWrap && evCount) {
+        evWrap.style.display = 'block';
+        evCount.textContent = String(evFresh);
       }
     }
     // 显示编辑链接（新注册时）
@@ -3192,6 +3389,7 @@ function initChipGroups() {
 
 function togglePeChip(el) {
   el.classList.toggle('selected');
+  if (el.dataset.group === 'approaches' && typeof evidencePanel !== 'undefined') evidencePanel.render();
 }
 
 function getPeChipValues(group) {
@@ -3277,6 +3475,27 @@ function loadCounselorProfile() {
     // 取向、议题
     setPeChipValues('approaches', d.approaches);
     setPeChipValues('specialties', d.specialties);
+    // 自定义标签（注册时「其他」添加，面板无新增入口）：既有值补渲染为可选 chip，
+    // 否则面板保存时 getPeChipValues 只回标准值，自定义取向/议题/认证会被静默丢弃
+    var PE_CUSTOM_SOURCE = { approaches: 'approaches', specialties: 'specialties', certifications: 'certifications', extra_credentials: 'extra_credentials', populations: 'populations' };
+    Object.keys(PE_CUSTOM_SOURCE).forEach(function(group) {
+      var std = PE_OPTIONS[group] || [];
+      var vals = (d[PE_CUSTOM_SOURCE[group]] || []).filter(function(v) { return std.indexOf(v) < 0; });
+      if (!vals.length) return;
+      var chipBox = document.getElementById('pe_' + group);
+      if (!chipBox) return;
+      vals.forEach(function(v) {
+        var chip = document.createElement('span');
+        chip.className = 'pe-chip selected';
+        chip.dataset.group = group;
+        chip.dataset.value = v;
+        chip.textContent = v;
+        chip.onclick = function() { togglePeChip(chip); };
+        chipBox.appendChild(chip);
+      });
+    });
+    // 流派受训证明：逐流派认证状态 + 既有证明（photo 为 300 秒临时链接）
+    if (typeof evidencePanel !== 'undefined') evidencePanel.restore(d.approach_evidence);
     // 专业范围
     setPeChipValues('populations', d.populations);
     setPeChipValues('severity_levels', d.severity_levels);
@@ -3390,6 +3609,7 @@ function saveCounselorProfile() {
     photo_license: counselorPhotoPayload(photoStore.pe_license),
     photo_diploma: counselorPhotoPayload(photoStore.pe_diploma),
     photo_ethics: counselorPhotoPayload(photoStore.pe_ethics),
+    approach_evidence: (typeof evidencePanel !== 'undefined') ? evidencePanel.payload() : undefined,
     contact_wechat: peWechat || null,
     contact_wechat_public: document.getElementById('pe_wechat_public').checked,
     contact_phone: pePhone || null,
@@ -3403,7 +3623,10 @@ function saveCounselorProfile() {
   counselorProfileRequest('PATCH', payload).then(counselorProfileResponse)
   .then(function(rows) {
     var saved = rows[0];
-    if (saved) { photoStore.pe_daily = saved.photo_daily || []; photoStore.pe_license = saved.photo_license || []; photoStore.pe_diploma = saved.photo_diploma || []; photoStore.pe_ethics = saved.photo_ethics || []; }
+    if (saved) {
+      photoStore.pe_daily = saved.photo_daily || []; photoStore.pe_license = saved.photo_license || []; photoStore.pe_diploma = saved.photo_diploma || []; photoStore.pe_ethics = saved.photo_ethics || [];
+      if (typeof evidencePanel !== 'undefined') evidencePanel.refresh(saved.approach_evidence);
+    }
     peToast('档案已更新 ✓');
     if(window.XPG_COUNSELOR_ACCESS?.isShared) XPG_COUNSELOR_ACCESS.sharedStatus('档案已保存成功，可以关闭本页；需要继续补充时也可以在此修改后再次保存。');
     else setTimeout(function() { hideEditPanel(); }, 800);
