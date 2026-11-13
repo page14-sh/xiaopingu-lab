@@ -165,3 +165,27 @@ test('未认证流派不贡献匹配分：认证集合是唯一入口，声明�
   assert.deepEqual(r.body[0].approaches, ['EMDR', 'CBT', 'EFT']);
   assert.deepEqual(r.body[0].approaches_verified, ['EMDR']);
 });
+
+test('credential_updated_at：仅咨询师本人变更资质时刷新，管理员审核不刷新', async t => {
+  const f = await setup(t), image = await picture(), id = randomUUID();
+  await register(f, { id, name: '复核时间戳', approaches: ['EMDR'], approach_evidence: [{ approach: 'EMDR', photo: image }] });
+  await approveProfile(f, id);
+  const owner = f.ownerOf(id);
+  // 注册与入驻审核都不产生「资质更新时间」
+  assert.equal((await f.source.get('counselors', id)).credential_updated_at, undefined);
+  // 本人更新资质字段 → 刷新
+  await f.request('PATCH', f.pathOf(id), { years_experience: 9 }, owner);
+  const upd1 = (await f.source.get('counselors', id)).credential_updated_at;
+  assert.ok(upd1);
+  // 管理员审核流派证明 → 不刷新（否则「待复核」标记永远擦不掉）
+  await f.request('PATCH', f.pathOf(id), { approach_evidence: [{ approach: 'EMDR', status: 'verified' }] }, f.admin);
+  const afterAdmin = await f.source.get('counselors', id);
+  assert.equal(afterAdmin.credential_updated_at, upd1);
+  assert.equal(afterAdmin.approach_evidence[0].status, 'verified');
+  // 平台标记「已复核」仅本人无法自写（白名单外字段一律 403 严格拒绝，不静默过滤）
+  const selfMark = await f.request('PATCH', f.pathOf(id), { credential_reviewed_at: new Date().toISOString() }, owner);
+  assert.equal(selfMark.status, 403);
+  assert.equal((await f.source.get('counselors', id)).credential_reviewed_at, undefined);
+  await f.request('PATCH', f.pathOf(id), { credential_reviewed_at: new Date().toISOString() }, f.admin);
+  assert.ok((await f.source.get('counselors', id)).credential_reviewed_at);
+});

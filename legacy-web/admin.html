@@ -698,6 +698,7 @@
         <div class="stat-row">
           <button type="button" class="stat-card" onclick="openCounselorDirectory('')" aria-label="查看全部咨询师详情"><div class="num" id="dash-counselors">-</div><div class="label">咨询师总数 · 查看全部</div></button>
           <button type="button" class="stat-card" onclick="openReviewQueue()"><div class="num" id="dash-pending">-</div><div class="label">待审入驻 · 去审批</div></button>
+          <button type="button" class="stat-card" onclick="openCredentialQueue()"><div class="num" id="dash-credential">-</div><div class="label">资质待复核 · 去处理</div></button>
           <div class="stat-card"><div class="num" id="dash-assessments">-</div><div class="label">评估总数</div></div>
           <div class="stat-card"><div class="num" id="dash-avg-score">-</div><div class="label">平均症状评分</div></div>
           <div class="stat-card"><div class="num" id="dash-severe">-</div><div class="label">重度评估</div></div>
@@ -818,7 +819,38 @@
           </div>
         </div>
 
-        <!-- 板块二：咨询师资料（全量档案） -->
+        <!-- 板块二：资质复核（咨询师自行更新的资质/认证材料，不影响入驻审核状态） -->
+        <div class="panel-block" id="block-credential">
+          <div class="panel-head review">
+            <div class="panel-title">
+              🔄 资质复核
+              <span class="panel-count" id="credential-count">0</span>
+              <small>咨询师自行更新的资质 / 流派受训证明 · 复核后流派认证（approaches_verified）方可生效，不影响已通过的入驻状态</small>
+            </div>
+          </div>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>姓名</th>
+                  <th>更新内容</th>
+                  <th>更新时间</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-credential">
+                <tr><td colspan="4" class="loading"><div class="spinner"></div></td></tr>
+              </tbody>
+            </table>
+            <div class="empty-state" id="empty-credential" style="display:none;">
+              <div class="icon">✅</div>
+              <div class="text">暂无待复核的资质更新</div>
+            </div>
+            <div class="pagination" id="pagination-credential"></div>
+          </div>
+        </div>
+
+        <!-- 板块三：咨询师资料（全量档案） -->
         <div class="panel-block" id="block-counselors">
           <div class="panel-head">
             <div class="panel-title">
@@ -1005,6 +1037,26 @@
     </div>
   </div>
 
+  <!-- 流派受训证明驳回弹窗 -->
+  <div class="modal-overlay" id="approach-reject-modal">
+    <div class="modal" style="max-width:500px;">
+      <button class="modal-close" onclick="closeApproachRejectModal()">×</button>
+      <h2>❌ 驳回流派受训证明</h2>
+      <p style="font-size:13px;color:#666;margin-bottom:15px;">
+        咨询师：<strong id="approach-reject-counselor-name"></strong><br>
+        流派：<strong id="approach-reject-approach"></strong>
+      </p>
+      <div style="margin-bottom:15px;">
+        <label style="font-size:13px;color:#333;display:block;margin-bottom:5px;">驳回原因（必填，咨询师可见）</label>
+        <textarea id="approach-reject-note" style="width:100%;height:100px;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:14px;resize:vertical;" placeholder="请填写驳回原因，如：证书无法辨识、非长程项目受训证明、与声明流派不符..."></textarea>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button class="btn btn-secondary" onclick="closeApproachRejectModal()">取消</button>
+        <button class="btn btn-danger" onclick="submitApproachReject()">确认驳回</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     // ========== 只读模式检测 ==========
     const READONLY_MODE = new URLSearchParams(location.search).get('mode') === 'view';
@@ -1016,8 +1068,8 @@
     // ========== 全局状态 ==========
     let currentTab = 'dashboard';
     let allData = { counselors: [], assessments: [] };
-    let filteredData = { counselors: [], assessments: [], 'match-applications': [], review: [] };
-    let currentPage = { counselors: 1, assessments: 1, 'match-applications': 1, review: 1 };
+    let filteredData = { counselors: [], assessments: [], 'match-applications': [], review: [], credential: [] };
+    let currentPage = { counselors: 1, assessments: 1, 'match-applications': 1, review: 1, credential: 1 };
     const PAGE_SIZE = 20;
     let selectedIds = { counselors: new Set(), assessments: new Set(), review: new Set() };
     let sortState = { counselors: { key: 'created_at', dir: 'desc' }, assessments: { key: 'created_at', dir: 'desc' }, 'match-applications': { key: 'updated_at', dir: 'desc' } };
@@ -1303,11 +1355,36 @@
       return (allData.counselors || []).filter(function(c) { return !c.review_status || c.review_status === 'pending'; });
     }
 
+    function openReviewQueue() {
+      switchTab('counselors');
+      refreshCounselorSections();
+      const block = document.getElementById('block-review');
+      if (block) block.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // ========== 资质复核：咨询师自行更新的资质/认证材料 ==========
+    // 两条待复核线：① 流派受训证明存在 pending 条目（逐流派审核，见详情页）；
+    // ② credential_updated_at 晚于 credential_reviewed_at（一般资质变更，看过后标记已复核）。
+    // 平台复核只影响 approaches_verified 生效，不改变入驻审核状态、不让咨询师下架。
+    function credentialPendingCounselors() {
+      return (allData.counselors || []).filter(function(c) {
+        if (c.review_status !== 'approved') return false; // 未通过入驻审核的走「入驻审批」队列
+        const evid = Array.isArray(c.approach_evidence) ? c.approach_evidence : [];
+        if (evid.some(function(e) { return e && e.status === 'pending'; })) return true;
+        const upd = c.credential_updated_at ? new Date(c.credential_updated_at).getTime() : 0;
+        const reviewed = c.credential_reviewed_at ? new Date(c.credential_reviewed_at).getTime() : 0;
+        return upd > 0 && upd > reviewed;
+      });
+    }
+
     function refreshCounselorSections() {
       filteredData.review = pendingCounselors();
+      filteredData.credential = credentialPendingCounselors();
       currentPage.review = 1;
+      currentPage.credential = 1;
       updatePanelCounts();
       renderTable('review');
+      renderTable('credential');
       renderTable('counselors');
     }
 
@@ -1320,15 +1397,43 @@
       }
       const head = document.querySelector('#block-review .panel-head');
       if (head) head.classList.toggle('has-item', pending > 0);
-      const cc = document.getElementById('counselor-count');
-      if (cc) cc.textContent = (allData.counselors || []).length;
+      const cred = credentialPendingCounselors().length;
+      const cc = document.getElementById('credential-count');
+      if (cc) {
+        cc.textContent = cred;
+        cc.className = 'panel-count' + (cred ? ' pending' : '');
+      }
+      const chead = document.querySelector('#block-credential .panel-head');
+      if (chead) chead.classList.toggle('has-item', cred > 0);
+      const cc2 = document.getElementById('counselor-count');
+      if (cc2) cc2.textContent = (allData.counselors || []).length;
     }
 
-    function openReviewQueue() {
+    function openCredentialQueue() {
       switchTab('counselors');
       refreshCounselorSections();
-      const block = document.getElementById('block-review');
+      const block = document.getElementById('block-credential');
       if (block) block.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // 标记一般资质更新「已复核」（流派证明的复核在详情页逐流派进行）
+    function markCredentialReviewed(id) {
+      if (!confirm('确认已查阅该咨询师的资质更新内容？')) return;
+      fetch(SUPABASE_URL + '/rest/v1/counselors?id=eq.' + id, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify({ credential_reviewed_at: new Date().toISOString() })
+      }).then(function(r) {
+        if (r.ok) {
+          showToast('✅ 已标记复核', 'success');
+          loadData('counselors');
+        } else throw new Error('HTTP ' + r.status);
+      }).catch(function() { showToast('操作失败，请重试', 'error'); });
     }
 
     // ========== 渲染表格 ==========
@@ -1356,6 +1461,8 @@
           html += renderCounselorRow(item);
         } else if (type === 'review') {
           html += renderReviewRow(item);
+        } else if (type === 'credential') {
+          html += renderCredentialRow(item);
         } else if (type === 'match-applications') {
           html += renderMatchApplicationRow(item);
         } else {
@@ -1379,6 +1486,19 @@
       const deepReviewTag = c.needs_deep_review
         ? '<span class="tag" style="background:#FFF3CD;color:#856404;border-color:#FFC107">⚠ 加深审核</span>'
         : '';
+      // 资质待复核标识：与「资质复核」板块同源（pending 流派证明 或 未标记已复核的资质更新）
+      let credentialTag = '';
+      if (c.review_status === 'approved') {
+        const evid = Array.isArray(c.approach_evidence) ? c.approach_evidence : [];
+        const pendingApproaches = evid.filter(function(e) { return e && e.status === 'pending'; }).map(function(e) { return e.approach; });
+        if (pendingApproaches.length) {
+          credentialTag = '<span class="tag" style="background:#E8F0FE;color:#1A56DB;border-color:#93B4F5" title="待审流派：' + escapeHtml(pendingApproaches.join('、')) + '">🔄 ' + pendingApproaches.length + ' 项流派待审</span>';
+        } else {
+          const upd = c.credential_updated_at ? new Date(c.credential_updated_at).getTime() : 0;
+          const reviewed = c.credential_reviewed_at ? new Date(c.credential_reviewed_at).getTime() : 0;
+          if (upd > reviewed) credentialTag = '<span class="tag" style="background:#E8F0FE;color:#1A56DB;border-color:#93B4F5" title="资质更新时间：' + escapeHtml(formatTime(c.credential_updated_at)) + '">🔄 资质待复核</span>';
+        }
+      }
 
       const selectCell = READONLY_MODE ? '<td style="display:none"></td>' : '<td><input type="checkbox" ' + checked + ' onchange="toggleSelect(\'counselors\', \'' + c.id + '\', this.checked)"></td>';
 
@@ -1417,7 +1537,7 @@
         '<td>' + formatCnipStyles(c) + '</td>' +
         '<td>¥' + (c.fee_min || 0) + '</td>' +
         '<td>' + statusTag + '</td>' +
-        '<td>' + reviewTag + (deepReviewTag ? '<br>' + deepReviewTag : '') + '</td>' +
+        '<td>' + reviewTag + (deepReviewTag ? '<br>' + deepReviewTag : '') + (credentialTag ? '<br>' + credentialTag : '') + '</td>' +
         '<td>' + formatTime(c.created_at) + '</td>' +
         '<td><div class="action-btns">' +
           '<button class="action-btn view" onclick="viewDetail(\'counselors\', \'' + c.id + '\')">查看</button>' +
@@ -1456,6 +1576,29 @@
         '<td><div class="action-btns">' +
           '<button class="action-btn view" onclick="viewDetail(\'counselors\', \'' + c.id + '\')">查看档案</button>' +
           btns +
+        '</div></td>' +
+      '</tr>';
+    }
+
+    // ========== 渲染「资质复核」行 ==========
+    function renderCredentialRow(c) {
+      const evid = Array.isArray(c.approach_evidence) ? c.approach_evidence : [];
+      const pendingList = evid.filter(function(e) { return e && e.status === 'pending'; });
+      let updateText = '';
+      if (pendingList.length) {
+        updateText = pendingList.map(function(e) {
+          return '<span class="tag" style="background:#FFF3CD;color:#856404;border-color:#FFC107">⏳ ' + escapeHtml(e.approach) + '</span>';
+        }).join(' ');
+      } else {
+        updateText = '<span style="font-size:12px;color:#666;">资质 / 认证材料变更</span>';
+      }
+      return '<tr>' +
+        '<td><strong>' + (c.name || '-') + '</strong><br><span style="font-size:11px;color:#999;">' + escapeHtml(c.city || '') + ' · ' + escapeHtml(c.credential_level || '') + '</span></td>' +
+        '<td>' + updateText + '</td>' +
+        '<td>' + formatTime(c.credential_updated_at) + '</td>' +
+        '<td><div class="action-btns">' +
+          '<button class="action-btn view" onclick="viewDetail(\'counselors\', \'' + c.id + '\')">🔍 查看并审核</button>' +
+          (READONLY_MODE ? '' : '<button class="action-btn" title="一般资质变更已查阅；流派证明请在详情页逐流派审核" onclick="markCredentialReviewed(\'' + c.id + '\')">✅ 标记已复核</button>') +
         '</div></td>' +
       '</tr>';
     }
@@ -1824,6 +1967,27 @@
         html += '</div>';
       }
 
+      // 资质待复核横幅：咨询师更新过资质/认证材料（不影响入驻状态，但复核前流派认证不生效）
+      if (type === 'counselors') {
+        const evidPending = (Array.isArray(item.approach_evidence) ? item.approach_evidence : []).filter(function(e) { return e && e.status === 'pending'; });
+        const updT = item.credential_updated_at ? new Date(item.credential_updated_at).getTime() : 0;
+        const revT = item.credential_reviewed_at ? new Date(item.credential_reviewed_at).getTime() : 0;
+        const credStale = updT > revT;
+        if (evidPending.length || credStale) {
+          html += '<div style="background:#E8F0FE;border:1px solid #93B4F5;border-radius:8px;padding:12px 16px;margin-bottom:16px;display:flex;gap:10px;align-items:flex-start">'
+            + '<span style="font-size:18px;flex-shrink:0">🔄</span>'
+            + '<div style="flex:1">'
+            + '<p style="font-size:13px;font-weight:600;color:#1A56DB;margin:0 0 4px">该咨询师有资质更新待复核</p>'
+            + '<p style="font-size:12px;color:#1A56DB;margin:0">'
+            + (item.credential_updated_at ? '资质材料更新于 ' + escapeHtml(formatTime(item.credential_updated_at)) + '。' : '')
+            + (evidPending.length ? ' 待审流派受训证明：' + escapeHtml(evidPending.map(function(e) { return e.approach; }).join('、')) + '，请在下方「流派标签与受训证明」区块逐流派审核。' : '')
+            + ' 复核通过后，流派认证（approaches_verified）方可在匹配中生效；已通过的入驻状态不受影响。</p>'
+            + '</div>'
+            + (READONLY_MODE ? '' : '<button class="btn btn-secondary" style="flex-shrink:0" onclick="markCredentialReviewed(\'' + (item.id || '') + '\')">✅ 标记已复核</button>')
+            + '</div>';
+        }
+      }
+
       // 匹配申请：显示申请信息摘要卡片
       if (type === 'assessments' && item.match_request_name) {
         var mcName = '-';
@@ -1842,7 +2006,7 @@
           + '</div></div></div>';
       }
 
-      // 咨询师照片：真实图片展示（生活照 + 证书照），证书照仅审核可见
+      // 咨询师照片：真实图片展示（生活照 + 证书照），证书照仅审核可见；未上传的类别显式占位，避免与「显示遗漏」混淆
       if (type === 'counselors') {
         const sections = [
           { key: 'photo_daily', title: '📷 生活照片', note: '（来访者可见）' },
@@ -1859,12 +2023,20 @@
               html += '<img class="photo-thumb" src="' + escapeHtml(counselorPhotoUrl(durl)) + '" referrerpolicy="no-referrer" alt="' + s.title + '（链接过期请重新打开详情）" loading="lazy" onclick="showPhoto(this.src)">';
             });
             html += '</div></div>';
+          } else {
+            html += '<div class="photo-section"><p class="photo-section-title">' + s.title +
+              '<span class="photo-section-note">' + s.note + ' · <span style="color:#B45309">未上传</span></span></p></div>';
           }
         });
       }
 
+      // 流派标签与受训证明：声明流派逐条展示认证状态与证书照片，pending 可在此审核
+      if (type === 'counselors') {
+        html += renderApproachEvidenceBlock(item);
+      }
+
       html += '<div class="detail-grid">';
-      const skipKeys = ['has_violation','violation_detail','has_incident','incident_detail','needs_deep_review','match_request_name','match_request_contact','match_request_cid','match_request_status','photo_daily','photo_license','photo_diploma','photo_ethics'];
+      const skipKeys = ['has_violation','violation_detail','has_incident','incident_detail','needs_deep_review','match_request_name','match_request_contact','match_request_cid','match_request_status','photo_daily','photo_license','photo_diploma','photo_ethics','approach_evidence','credential_updated_at','credential_reviewed_at','approaches_verified'];
       Object.keys(item).forEach(key => {
         if (['id','_id','view_token','edit_token','login_code','credential_hash','claim_hash'].includes(key)||key.startsWith('migration_')) return;
         if (type === 'counselors' && skipKeys.includes(key)) return;
@@ -1887,6 +2059,123 @@
 
       content.innerHTML = html;
       modal.classList.add('active');
+    }
+
+    // ========== 流派标签与受训证明（详情页区块） ==========
+    // 声明流派逐条展示：状态、证书照片（300 秒临时链接）、审核操作。
+    // 仅 verified 流派进入 approaches_verified 参与匹配打分；pending/rejected 不计分但保留声明。
+    function renderApproachEvidenceBlock(item) {
+      const approaches = Array.isArray(item.approaches) ? item.approaches : [];
+      const evid = Array.isArray(item.approach_evidence) ? item.approach_evidence : [];
+      const byApproach = {};
+      evid.forEach(function(e) { if (e && typeof e.approach === 'string') byApproach[e.approach.trim()] = e; });
+      const verified = Array.isArray(item.approaches_verified) ? item.approaches_verified : [];
+
+      let html = '<div class="photo-section" style="border:1px solid #E3E8EF;border-radius:10px;padding:14px 16px;margin-bottom:16px;">'
+        + '<p class="photo-section-title" style="margin-bottom:4px;">🏷️ 流派标签与受训证明'
+        + '<span class="photo-section-note">仅「已认证」流派参与匹配打分</span></p>'
+        + '<p style="font-size:12px;color:#666;margin:0 0 12px;line-height:1.7">咨询师勾选流派后须上传该流派的长程 / 阶段受训证明，经平台审核通过方为「已认证」。'
+        + '当前匹配生效集合（approaches_verified）：'
+        + (verified.length
+            ? verified.map(function(a) { return '<span class="tag tag-green">' + escapeHtml(a) + '</span>'; }).join(' ')
+            : '<span style="color:#B45309">暂无（全部流派未认证或未声明）</span>')
+        + '</p>';
+
+      if (!approaches.length) {
+        html += '<p style="font-size:13px;color:#999;margin:0">该咨询师未声明咨询取向。</p></div>';
+        return html;
+      }
+
+      approaches.forEach(function(approach) {
+        const name = String(approach).replace(/'/g, '');
+        const e = byApproach[name];
+        let statusTag, action = '';
+        if (!e || !e.status) {
+          statusTag = '<span class="tag" style="background:#F3F4F6;color:#6B7280;border-color:#D1D5DB">未上传证明</span>';
+        } else if (e.status === 'verified') {
+          statusTag = '<span class="tag tag-green">✅ 已认证</span>';
+        } else if (e.status === 'rejected') {
+          statusTag = '<span class="tag tag-red">❌ 已驳回</span>';
+        } else {
+          statusTag = '<span class="tag tag-yellow">⏳ 待审核</span>';
+        }
+        if (!READONLY_MODE && e) {
+          action = '<span style="display:inline-flex;gap:6px;margin-left:8px">'
+            + '<button class="action-btn approve" onclick="reviewApproach(\'' + escapeHtml(item.id || '') + '\', \'' + escapeHtml(name) + '\', \'verified\')">✅ 通过认证</button>'
+            + '<button class="action-btn reject" onclick="showApproachRejectModal(\'' + escapeHtml(item.id || '') + '\', \'' + escapeHtml(item.name || '') + '\', \'' + escapeHtml(name) + '\')">❌ 驳回</button>'
+            + '</span>';
+        }
+        html += '<div style="padding:10px 0;border-top:1px dashed #E3E8EF">'
+          + '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px">'
+          + '<strong style="font-size:13px;color:#333;">' + escapeHtml(name) + '</strong>' + statusTag + action + '</div>';
+        if (e) {
+          const meta = [];
+          if (e.reviewed_at) meta.push((e.status === 'verified' ? '通过' : e.status === 'rejected' ? '驳回' : '提交') + '于 ' + formatTime(e.reviewed_at) + (e.reviewed_by ? '（' + escapeHtml(e.reviewed_by) + '）' : ''));
+          if (e.note) meta.push('备注：' + escapeHtml(e.note));
+          if (meta.length) html += '<p style="font-size:12px;color:#888;margin:6px 0 0">' + meta.join(' · ') + '</p>';
+          if (e.photo && e.photo.url) {
+            html += '<div class="photo-grid" style="margin-top:8px">'
+              + '<img class="photo-thumb" src="' + escapeHtml(e.photo.url) + '" referrerpolicy="no-referrer" alt="' + escapeHtml(name) + ' 受训证明（链接 300 秒过期，失效请重开详情）" loading="lazy" onclick="showPhoto(this.src)">'
+              + '</div>';
+          } else if (e.photo_ref) {
+            html += '<p style="font-size:12px;color:#B45309;margin:6px 0 0">证书文件已存储，临时链接未生成（请重新打开详情）</p>';
+          }
+        }
+        html += '</div>';
+      });
+
+      html += '</div>';
+      return html;
+    }
+
+    // 流派认证审核：只提交目标流派条目，其余条目由后端原样保留；
+    // verified/rejected 由后端记录 reviewed_by/reviewed_at 留痕。
+    function reviewApproach(cid, approach, status, note) {
+      if (status === 'verified' && !confirm('确认通过「' + approach + '」的流派认证？通过后该流派将参与匹配打分。')) return;
+      const entry = { approach: approach, status: status };
+      if (note) entry.note = note;
+      return fetch(SUPABASE_URL + '/rest/v1/counselors?id=eq.' + cid, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify({ approach_evidence: [entry] })
+      }).then(function(r) {
+        if (r.ok) return r.json();
+        return r.json().catch(function() { return {}; }).then(function(b) { throw new Error(b.message || 'HTTP ' + r.status); });
+      }).then(function() {
+        showToast(status === 'verified' ? '✅「' + approach + '」已通过认证' : '❌「' + approach + '」已驳回', 'success');
+        return loadData('counselors');
+      }).then(function() {
+        viewDetail('counselors', cid); // 重新拉取：刷新状态与临时链接
+      }).catch(function(e) {
+        console.warn('[小平菇] 流派审核失败:', e);
+        showToast('操作失败：' + (e && e.message ? e.message : '请重试'), 'error');
+      });
+    }
+
+    let currentApproachReject = null;
+    function showApproachRejectModal(cid, name, approach) {
+      currentApproachReject = { cid: cid, approach: approach };
+      document.getElementById('approach-reject-counselor-name').textContent = name || '-';
+      document.getElementById('approach-reject-approach').textContent = approach || '-';
+      document.getElementById('approach-reject-note').value = '';
+      document.getElementById('approach-reject-modal').classList.add('active');
+    }
+    function closeApproachRejectModal() {
+      currentApproachReject = null;
+      document.getElementById('approach-reject-modal').classList.remove('active');
+    }
+    function submitApproachReject() {
+      const note = document.getElementById('approach-reject-note').value.trim();
+      if (!note) { alert('请填写驳回原因'); return; }
+      if (!currentApproachReject) return;
+      const target = currentApproachReject;
+      closeApproachRejectModal();
+      reviewApproach(target.cid, target.approach, 'rejected', note);
     }
 
     function formatLabel(key) {
@@ -1918,7 +2207,12 @@
         match_request_name: '申请者姓名', match_request_contact: '申请者联系方式',
         match_request_cid: '申请咨询师ID',
         selected_counselor_id: '已选咨询师ID', selected_counselor_name: '已选咨询师', selected_at: '选定时间',
-        ai_talk_freq: '💬 会跟 AI 说吗', ai_talk_replace: '💬 还会跟身边人说吗', ai_talk_gain: '💬 AI 最帮到你的地方'
+        ai_talk_freq: '💬 会跟 AI 说吗', ai_talk_replace: '💬 还会跟身边人说吗', ai_talk_gain: '💬 AI 最帮到你的地方',
+        approaches_verified: '已认证流派（匹配生效）', credential_updated_at: '资质材料更新时间', credential_reviewed_at: '资质复核时间',
+        public_welfare: '公益服务', public_welfare_fee: '公益费用', comm_styles: '沟通风格',
+        supervisor_cert: '督导师证书编号', therapy_cert: '治疗专项训练', extra_credentials: '其他资质',
+        available_slots: '可预约时段', session_duration: '咨询时长', service_settings: '服务设置类型',
+        cnip_style: 'C-NIP 风格', cnip_scores: 'C-NIP 得分', orientation_pref: '性取向友善（来访要求）'
       };
       return labels[key] || key;
     }
@@ -2045,6 +2339,7 @@
 
       setText('dash-counselors', c.length);
       setText('dash-pending', pendingC);
+      setText('dash-credential', credentialPendingCounselors().length);
       setText('dash-assessments', a.length);
       setText('dash-avg-score', a.length > 0 ? (a.reduce((s, x) => s + (x.total_score || 0), 0) / a.length).toFixed(1) : '-');
       setText('dash-severe', a.filter(x => x.severity === '重度').length);

@@ -484,10 +484,12 @@ async function handleRest(req, res, table, params, caller) {
       }
       // 资质 / 认证字段有实质变更 → 记录更新时间，供平台复核
       // （不改变 review_status：修改档案不会让咨询师下架，也不影响已通过的匹配）
+      // 仅咨询师本人变更才刷新：平台自己的审核/维护操作不算「资质更新」，
+      // 否则管理员每审一次，「待复核」标记又会被自己刷新，永远擦不掉。
       const CRED_KEYS = ['credential_level', 'years_experience', 'license_number', 'supervisor_cert',
         'extra_credentials', 'extra_credentials_other', 'certifications', 'certifications_other',
         'therapy_cert', 'photo_license', 'photo_diploma', 'photo_ethics', 'education', 'training_background', 'approach_evidence'];
-      const credChanged = CRED_KEYS.some(function(k) {
+      const credChanged = !isAdmin && CRED_KEYS.some(function(k) {
         const comparable = v => (k === 'photo_license' || k === 'photo_diploma' || k === 'photo_ethics') && Array.isArray(v) ? v.map(x => x && typeof x === 'object' ? x.file_id : x) : v;
         return (k in allowed) && JSON.stringify(comparable(allowed[k])) !== JSON.stringify(comparable(target[k]));
       });
