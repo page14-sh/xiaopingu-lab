@@ -84,7 +84,7 @@ async function updateWhere(coll, where, patch) {
 // ---------------- 身份 ----------------
 // ---------------- 字段策略 ----------------
 // counselors 匿名读剥离（与旧线上一致，另加执照号）
-const COUNSELOR_SENSITIVE = ['edit_token', 'login_code', 'contact_wechat', 'contact_phone', 'contact_email', 'license_number', 'public_welfare_fee', 'photo_license', 'photo_diploma', 'photo_ethics', 'wx_openid', 'wx_bind_token', 'review_note', 'reviewed_by', 'reviewed_at', 'has_violation', 'violation_detail', 'has_incident', 'incident_detail', 'needs_deep_review'];
+const COUNSELOR_SENSITIVE = ['edit_token', 'login_code', 'contact_wechat', 'contact_phone', 'contact_email', 'license_number', 'public_welfare_fee', 'photo_license', 'photo_diploma', 'photo_ethics', 'wx_openid', 'wx_bind_token', 'review_note', 'reviewed_by', 'reviewed_at', 'has_violation', 'violation_detail', 'has_incident', 'incident_detail', 'needs_deep_review', 'approach_evidence'];
 function stripCounselor(row) {
   if (!row) return row;
   const out = { ...row };
@@ -94,7 +94,66 @@ function stripCounselor(row) {
 function profileOnly(row) {
   const out = { ...row };
   for (const key of ['edit_token', 'login_code', 'wx_openid', 'wx_bind_token', 'reviewed_by']) delete out[key];
+  // 门户视角只暴露流派认证状态，不下发受训证明文件引用
+  if (Array.isArray(out.approach_evidence)) {
+    out.approach_evidence = out.approach_evidence
+      .filter(e => e && typeof e === 'object')
+      .map(e => ({ approach: e.approach, status: e.status }));
+  }
   return out;
+}
+// 流派标签认证：仅「已通过认证」的流派进入匹配用的 approaches_verified；
+// 演示合成数据豁免（is_demo），真实咨询师须逐流派上传受训证明并经审核。
+const APPROACH_EVIDENCE_STATUSES = ['pending', 'verified', 'rejected'];
+function verifiedApproaches(row) {
+  const declared = Array.isArray(row?.approaches) ? row.approaches.filter(a => typeof a === 'string' && a.trim()) : [];
+  if (row?.is_demo === true) return declared;
+  const ok = new Set((Array.isArray(row?.approach_evidence) ? row.approach_evidence : [])
+    .filter(e => e && e.status === 'verified' && typeof e.approach === 'string').map(e => e.approach));
+  return declared.filter(a => ok.has(a));
+}
+// 流派受训证据清洗：本人提交一律 pending（已验证条目无新证据时原样保留，重新上传须再审）；
+// 管理员可裁定 verified/rejected 并留痕；未声明流派的旧证据一律裁剪。
+function buildApproachEvidence(incoming, previous, finalApproaches, isAdmin, reviewerId, now) {
+  const prevList = (Array.isArray(previous) ? previous : []).filter(e => e && typeof e === 'object' && typeof e.approach === 'string');
+  const prevByApproach = new Map(prevList.map(e => [e.approach.trim(), e]));
+  const declared = (Array.isArray(finalApproaches) ? finalApproaches : []).filter(a => typeof a === 'string' && a.trim()).map(a => a.trim());
+  const byApproach = new Map();
+  for (const entry of Array.isArray(incoming) ? incoming : []) {
+    if (!entry || typeof entry !== 'object' || typeof entry.approach !== 'string' || !entry.approach.trim()) return { error: '流派受训证明格式不正确' };
+    const approach = entry.approach.trim();
+    if (byApproach.has(approach)) return { error: '同一流派的受训证明重复提交：' + approach };
+    byApproach.set(approach, entry);
+  }
+  const entries = [];
+  for (const approach of declared) {
+    const entry = byApproach.get(approach);
+    const before = prevByApproach.get(approach);
+    if (!entry) {
+      if (before) entries.push({ approach, status: before.status === 'verified' ? 'verified' : 'pending', photo_ref: before.photo_ref ?? null, reviewed_by: before.reviewed_by ?? null, reviewed_at: before.reviewed_at ?? null, note: before.note ?? null });
+      continue;
+    }
+    const freshUpload = typeof entry.photo === 'string' && entry.photo.length > 0;
+    let status;
+    if (isAdmin) {
+      if (entry.status !== undefined && !APPROACH_EVIDENCE_STATUSES.includes(entry.status)) return { error: '流派审核状态不合法' };
+      status = entry.status ?? before?.status ?? 'pending';
+    } else {
+      // 本人：重新上传一律回到 pending 重新审核；无新证据时原样保留既有状态
+      status = freshUpload ? 'pending' : (before?.status ?? 'pending');
+    }
+    let reviewed_by = null, reviewed_at = null;
+    if (isAdmin && (status === 'verified' || status === 'rejected') && status !== before?.status) {
+      reviewed_by = reviewerId; reviewed_at = now;
+    } else if (status === before?.status) {
+      reviewed_by = before?.reviewed_by ?? null; reviewed_at = before?.reviewed_at ?? null;
+    }
+    const note = typeof entry.note === 'string' ? entry.note.slice(0, 500) : (before?.note ?? null);
+    const item = { approach, status, photo_ref: typeof entry.photo_ref === 'string' ? entry.photo_ref : (before?.photo_ref ?? null), reviewed_by, reviewed_at, note };
+    if (freshUpload) item.photo = entry.photo;
+    entries.push(item);
+  }
+  return { entries };
 }
 // ---------- 来访者能力凭证：匹配成功后才可见该咨询师勾选公开的联系方式 ----------
 // 来访者凭评估号（view_token）证明「我是谁、我和谁配对」；未匹配或审批中一律看不到。
@@ -139,7 +198,8 @@ const COUNSELOR_PATCH_FIELDS = [
   'certifications_other', 'approaches_other', 'specialties_other', 'populations_other',
   'personal_therapy_status', 'therapy_cert', 'gender_identity_friendly', 'credential_updated_at',
   'contact_wechat', 'contact_wechat_public', 'contact_phone', 'contact_phone_public',
-  'contact_email', 'contact_email_public', 'has_violation', 'violation_detail', 'has_incident', 'incident_detail', 'updated_at'
+  'contact_email', 'contact_email_public', 'has_violation', 'violation_detail', 'has_incident', 'incident_detail',
+  'approach_evidence', 'updated_at'
 ];
 // 兼容字段集合；下方按来访能力凭证、所属咨询师、管理员分别授权。
 const ASSESSMENT_PATCH_FIELDS = [
@@ -262,6 +322,10 @@ async function handleRest(req, res, table, params, caller) {
       }
     }
     let out = applyOrderLimit(applyFilters(rows, filters), params);
+    if (table === 'counselors') {
+      // 匹配用的「已认证流派」集合：任何身份可见，证明原文仍按敏感字段剥离
+      out = out.map((r) => ({ ...r, approaches_verified: verifiedApproaches(r) }));
+    }
     if (table === 'counselors' && !isAdmin) {
       // 咨询师令牌看自己完整档案；其余（含匿名）一律剥离敏感字段
       out = out.map((r) => {
@@ -306,6 +370,10 @@ async function handleRest(req, res, table, params, caller) {
       const now = nowIso();
       if (table === 'counselors') {
         const row = pickAllowed(item, COUNSELOR_PATCH_FIELDS.concat(['id', 'created_at']));
+        // 流派受训证据：注册时按角色清洗（匿名注册一律 pending，管理员可径直裁定）
+        const built = buildApproachEvidence(row.approach_evidence, null, row.approaches, isAdmin, isAdmin ? (caller.counselorId || caller.subject || 'admin') : null, now);
+        if (built.error) return sendJson(res, 400, { message: built.error });
+        row.approach_evidence = built.entries;
         row.photo_daily = photos ? (item.photo_daily || []) : sanitizeCounselorPhotos(item.photo_daily);
         row.photo_license = photos ? (item.photo_license || []) : sanitizeCounselorPhotos(item.photo_license);
         row.photo_diploma = photos ? (item.photo_diploma || []) : sanitizeCounselorPhotos(item.photo_diploma);
@@ -329,6 +397,10 @@ async function handleRest(req, res, table, params, caller) {
         }
         await hooks.createCounselor(row);
         // Only the successful registration response returns this new editing credential.
+        // 本地运行时无私有存储：受训证明二进制不落库，仅保留条目结构。
+        if (Array.isArray(row.approach_evidence)) {
+          row.approach_evidence = row.approach_evidence.map(e => ({ approach: e.approach, status: e.status, photo_ref: null, reviewed_by: e.reviewed_by, reviewed_at: e.reviewed_at, note: e.note }));
+        }
         results.push(row);
       } else if (table === 'assessments') {
         const row = { ...item };
@@ -390,17 +462,31 @@ async function handleRest(req, res, table, params, caller) {
       const allowed = isAdmin ? patch : pickAllowed(patch, COUNSELOR_PATCH_FIELDS);
       if(!isAdmin && target.review_status==='rejected')Object.assign(allowed,{review_status:'pending',is_active:false});
       if(!isAdmin && ('has_violation'in allowed||'has_incident'in allowed))allowed.needs_deep_review=(allowed.has_violation??target.has_violation)==='是'||(allowed.has_incident??target.has_incident)==='是';
+      // 流派受训证据：按角色清洗（本人只能 pending；已验证条目无新证据时原样保留）；
+      // 重新上传须重新审核；已移除流派的旧证据一律裁剪并清理文件。
+      const finalApproaches = allowed.approaches ?? target.approaches;
+      const builtEvidence = buildApproachEvidence('approach_evidence' in allowed ? allowed.approach_evidence : target.approach_evidence,
+        target.approach_evidence, finalApproaches, isAdmin, isAdmin ? (caller.counselorId || caller.subject || 'admin') : null, nowIso());
+      if (builtEvidence.error) return sendJson(res, 400, { message: builtEvidence.error });
+      // 本人提交的证据一律以清洗结果为准（原始载荷可能夹带自审状态）；
+      // 未提交证据时，仅在裁剪了旧条目时才写回。
+      if ('approach_evidence' in allowed || JSON.stringify(builtEvidence.entries) !== JSON.stringify(target.approach_evidence ?? null)) {
+        allowed.approach_evidence = builtEvidence.entries;
+      }
       if (!photos) {
         if ('photo_daily' in allowed) allowed.photo_daily = sanitizeCounselorPhotos(allowed.photo_daily);
         if ('photo_license' in allowed) allowed.photo_license = sanitizeCounselorPhotos(allowed.photo_license);
         if ('photo_diploma' in allowed) allowed.photo_diploma = sanitizeCounselorPhotos(allowed.photo_diploma);
         if ('photo_ethics' in allowed) allowed.photo_ethics = sanitizeCounselorPhotos(allowed.photo_ethics);
+        if (Array.isArray(allowed.approach_evidence)) {
+          allowed.approach_evidence = allowed.approach_evidence.map(e => ({ approach: e.approach, status: e.status, photo_ref: e.photo_ref ?? null, reviewed_by: e.reviewed_by, reviewed_at: e.reviewed_at, note: e.note }));
+        }
       }
       // 资质 / 认证字段有实质变更 → 记录更新时间，供平台复核
       // （不改变 review_status：修改档案不会让咨询师下架，也不影响已通过的匹配）
       const CRED_KEYS = ['credential_level', 'years_experience', 'license_number', 'supervisor_cert',
         'extra_credentials', 'extra_credentials_other', 'certifications', 'certifications_other',
-        'therapy_cert', 'photo_license', 'photo_diploma', 'photo_ethics', 'education', 'training_background'];
+        'therapy_cert', 'photo_license', 'photo_diploma', 'photo_ethics', 'education', 'training_background', 'approach_evidence'];
       const credChanged = CRED_KEYS.some(function(k) {
         const comparable = v => (k === 'photo_license' || k === 'photo_diploma' || k === 'photo_ethics') && Array.isArray(v) ? v.map(x => x && typeof x === 'object' ? x.file_id : x) : v;
         return (k in allowed) && JSON.stringify(comparable(allowed[k])) !== JSON.stringify(comparable(target[k]));
