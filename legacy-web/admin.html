@@ -2036,7 +2036,7 @@
       }
 
       html += '<div class="detail-grid">';
-      const skipKeys = ['has_violation','violation_detail','has_incident','incident_detail','needs_deep_review','match_request_name','match_request_contact','match_request_cid','match_request_status','photo_daily','photo_license','photo_diploma','photo_ethics','approach_evidence','credential_updated_at','credential_reviewed_at','approaches_verified'];
+      const skipKeys = ['has_violation','violation_detail','has_incident','incident_detail','needs_deep_review','match_request_name','match_request_contact','match_request_cid','match_request_status','photo_daily','photo_license','photo_diploma','photo_ethics','approach_evidence','approach_evidence_exempt','credential_updated_at','credential_reviewed_at','approaches_verified'];
       Object.keys(item).forEach(key => {
         if (['id','_id','view_token','edit_token','login_code','credential_hash','claim_hash'].includes(key)||key.startsWith('migration_')) return;
         if (type === 'counselors' && skipKeys.includes(key)) return;
@@ -2064,12 +2064,15 @@
     // ========== 流派标签与受训证明（详情页区块） ==========
     // 声明流派逐条展示：状态、证书照片（300 秒临时链接）、审核操作。
     // 仅 verified 流派进入 approaches_verified 参与匹配打分；pending/rejected 不计分但保留声明。
+    // 存量演示/种子档案打 approach_evidence_exempt 标志：未提交任何证明时声明流派整体视为已认证；
+    // 一旦提交证明即按认证制逐流派计算，豁免不再兜底。
     function renderApproachEvidenceBlock(item) {
       const approaches = Array.isArray(item.approaches) ? item.approaches : [];
       const evid = Array.isArray(item.approach_evidence) ? item.approach_evidence : [];
       const byApproach = {};
       evid.forEach(function(e) { if (e && typeof e.approach === 'string') byApproach[e.approach.trim()] = e; });
       const verified = Array.isArray(item.approaches_verified) ? item.approaches_verified : [];
+      const exempt = item.approach_evidence_exempt === true;
 
       let html = '<div class="photo-section" style="border:1px solid #E3E8EF;border-radius:10px;padding:14px 16px;margin-bottom:16px;">'
         + '<p class="photo-section-title" style="margin-bottom:4px;">🏷️ 流派标签与受训证明'
@@ -2081,6 +2084,15 @@
             : '<span style="color:#B45309">暂无（全部流派未认证或未声明）</span>')
         + '</p>';
 
+      if (exempt && !evid.length) {
+        html += '<p style="font-size:12px;color:#1D4ED8;background:#EFF6FF;border:1px solid #BFDBFE;border-radius:6px;padding:8px 10px;margin:0 0 12px;line-height:1.7">'
+          + '🛡️ <strong>存量演示豁免</strong>：该档案为存量演示 / 种子数据，未提交受训证明期间，声明流派整体视为已认证。'
+          + '一旦该档案开始提交受训证明，即按认证制逐流派审核，豁免不再兜底。</p>';
+      } else if (exempt && evid.length) {
+        html += '<p style="font-size:12px;color:#B45309;background:#FFFBEB;border:1px solid #FDE68A;border-radius:6px;padding:8px 10px;margin:0 0 12px;line-height:1.7">'
+          + '⚠️ <strong>豁免已失效</strong>：该档案已提交受训证明，按认证制逐流派计算，存量豁免不再兜底。</p>';
+      }
+
       if (!approaches.length) {
         html += '<p style="font-size:13px;color:#999;margin:0">该咨询师未声明咨询取向。</p></div>';
         return html;
@@ -2091,7 +2103,9 @@
         const e = byApproach[name];
         let statusTag, action = '';
         if (!e || !e.status) {
-          statusTag = '<span class="tag" style="background:#F3F4F6;color:#6B7280;border-color:#D1D5DB">未上传证明</span>';
+          statusTag = exempt
+            ? '<span class="tag" style="background:#EFF6FF;color:#1D4ED8;border-color:#BFDBFE">🛡️ 存量豁免（未传证明）</span>'
+            : '<span class="tag" style="background:#F3F4F6;color:#6B7280;border-color:#D1D5DB">未上传证明</span>';
         } else if (e.status === 'verified') {
           statusTag = '<span class="tag tag-green">✅ 已认证</span>';
         } else if (e.status === 'rejected') {

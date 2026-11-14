@@ -193,3 +193,44 @@ test('credential_updated_at：仅咨询师本人变更资质时刷新，管理�
   await f.request('PATCH', f.pathOf(id), { credential_reviewed_at: new Date().toISOString() }, f.admin);
   assert.ok((await f.source.get('counselors', id)).credential_reviewed_at);
 });
+
+test('存量演示豁免：exempt 且无证据时声明流派整体视为已认证；提交证明后豁免失效', async t => {
+  const f = await setup(t), image = await picture();
+  const exemptId = randomUUID(), submitId = randomUUID();
+  await f.source.transaction(async tx => {
+    const now = new Date().toISOString();
+    await tx.put('counselors', exemptId, { id: exemptId, name: '存量种子', approaches: ['EMDR', 'CBT'], is_active: true, review_status: 'approved', approach_evidence_exempt: true, created_at: now, updated_at: now });
+    await tx.put('counselors', submitId, { id: submitId, name: '豁免后补传', approaches: ['EMDR', 'CBT'], is_active: true, review_status: 'approved', approach_evidence_exempt: true, created_at: now, updated_at: now });
+  });
+  // 1) 无证据 + exempt → 全部声明流派进入 approaches_verified
+  const exempt = await f.request('GET', f.pathOf(exemptId) + '&select=*', null, f.admin);
+  assert.equal(exempt.status, 200);
+  assert.deepEqual(exempt.body[0].approaches_verified, ['EMDR', 'CBT']);
+  // 2) exempt 行一旦提交证明（pending）→ 豁免不再兜底，按认证制逐流派计算
+  await f.request('PATCH', f.pathOf(submitId), { approach_evidence: [{ approach: 'EMDR', photo: image }] }, f.ownerOf(submitId));
+  const submit = await f.request('GET', f.pathOf(submitId) + '&select=*', null, f.admin);
+  assert.equal(submit.status, 200);
+  assert.deepEqual(submit.body[0].approaches_verified, []); // EMDR pending 不计、CBT 无证据不计
+  // 管理员审核通过 EMDR 后仅 EMDR 计入（CBT 仍无证据）
+  const ref = (await f.source.get('counselors', submitId)).approach_evidence[0].photo_ref;
+  await f.request('PATCH', f.pathOf(submitId), { approach_evidence: [{ approach: 'EMDR', status: 'verified', photo_ref: ref }] }, f.admin);
+  const verified = await f.request('GET', f.pathOf(submitId) + '&select=*', null, undefined);
+  assert.deepEqual(verified.body[0].approaches_verified, ['EMDR']);
+});
+
+test('豁免标志不可自设：注册与本人 PATCH 均无法写入 approach_evidence_exempt', async t => {
+  const f = await setup(t), image = await picture(), id = randomUUID();
+  // 注册时夹带豁免标志 → 白名单过滤，不落库
+  const reg = await register(f, { id, name: '自设豁免', approaches: ['EMDR'], approach_evidence_exempt: true, approach_evidence: [{ approach: 'EMDR', photo: image }] });
+  assert.equal(reg.status, 201);
+  const row = await f.source.get('counselors', id);
+  assert.equal(row.approach_evidence_exempt, undefined);
+  // 本人 PATCH 自设豁免 → 403（白名单外字段严格拒绝）
+  const selfSet = await f.request('PATCH', f.pathOf(id), { approach_evidence_exempt: true }, f.ownerOf(id));
+  assert.equal(selfSet.status, 403);
+  assert.equal((await f.source.get('counselors', id)).approach_evidence_exempt, undefined);
+  // 结果：无证据且无豁免 → approaches_verified 为空
+  await approveProfile(f, id);
+  const r = await f.request('GET', f.pathOf(id) + '&select=*', null, undefined);
+  assert.deepEqual(r.body[0].approaches_verified, []);
+});

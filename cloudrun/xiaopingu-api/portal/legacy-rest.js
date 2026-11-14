@@ -103,12 +103,15 @@ function profileOnly(row) {
   return out;
 }
 // 流派标签认证：仅「已通过认证」的流派进入匹配用的 approaches_verified；
-// 演示合成数据豁免（is_demo），真实咨询师须逐流派上传受训证明并经审核。
+// 演示合成数据豁免（is_demo），存量演示/种子数据豁免（approach_evidence_exempt 且从未提交过任何证明），
+// 真实咨询师须逐流派上传受训证明并经审核。豁免行一旦开始提交证明，即按认证制逐流派计算，豁免不再兜底。
 const APPROACH_EVIDENCE_STATUSES = ['pending', 'verified', 'rejected'];
 function verifiedApproaches(row) {
   const declared = Array.isArray(row?.approaches) ? row.approaches.filter(a => typeof a === 'string' && a.trim()) : [];
   if (row?.is_demo === true) return declared;
-  const ok = new Set((Array.isArray(row?.approach_evidence) ? row.approach_evidence : [])
+  const evidence = Array.isArray(row?.approach_evidence) ? row.approach_evidence : [];
+  if (evidence.length === 0 && row?.approach_evidence_exempt === true) return declared;
+  const ok = new Set(evidence
     .filter(e => e && e.status === 'verified' && typeof e.approach === 'string').map(e => e.approach));
   return declared.filter(a => ok.has(a));
 }
