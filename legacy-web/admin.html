@@ -1531,9 +1531,9 @@
         '<td>' + (c.credential_level || '-') + '</td>' +
         '<td>' + (c.years_experience || 0) + '年</td>' +
         '<td>' + (c.city || '-') + '</td>' +
-        '<td>' + formatArray(c.approaches, 'blue') + '</td>' +
-        '<td>' + formatArray(c.specialties, 'green') + '</td>' +
-        '<td>' + formatArray(c.session_formats, 'yellow') + '</td>' +
+        '<td>' + formatArray(c.approaches, 'blue', 'approaches') + '</td>' +
+        '<td>' + formatArray(c.specialties, 'green', 'specialties') + '</td>' +
+        '<td>' + formatArray(c.session_formats, 'yellow', 'session_formats') + '</td>' +
         '<td>' + formatCnipStyles(c) + '</td>' +
         '<td>¥' + (c.fee_min || 0) + '</td>' +
         '<td>' + statusTag + '</td>' +
@@ -1569,8 +1569,8 @@
         '<td>' + (c.credential_level || '-') + '</td>' +
         '<td>' + (c.years_experience || 0) + '年</td>' +
         '<td>' + (c.city || '-') + '</td>' +
-        '<td>' + formatArray(c.approaches, 'blue') + '</td>' +
-        '<td>' + formatArray(c.specialties, 'green') + '</td>' +
+        '<td>' + formatArray(c.approaches, 'blue', 'approaches') + '</td>' +
+        '<td>' + formatArray(c.specialties, 'green', 'specialties') + '</td>' +
         '<td>¥' + (c.fee_min || 0) + '</td>' +
         '<td>' + formatTime(c.created_at) + '</td>' +
         '<td><div class="action-btns">' +
@@ -1701,7 +1701,7 @@
         '<td><strong>' + (a.total_score || 0) + '</strong></td>' +
         '<td>' + severityTag + '</td>' +
         '<td>' + crisisTag + '</td>' +
-        '<td>' + formatArray(a.preferred_formats, 'yellow') + '</td>' +
+        '<td>' + formatArray(a.preferred_formats, 'yellow', 'preferred_formats') + '</td>' +
         '<td>' + formatBudget(a.budget) + '</td>' +
         '<td>' + formatAiTalk(a) + '</td>' +
         '<td>' + formatTime(a.created_at) + '</td>' +
@@ -1839,21 +1839,24 @@
     }
 
     // ========== 格式化数组 ==========
-    function formatArray(arr, color) {
+    function formatArray(arr, color, key) {
       if (!arr || arr.length === 0) return '-';
-      return arr.slice(0, 2).map(item => '<span class="tag tag-' + color + '">' + item + '</span>').join('') +
+      return arr.slice(0, 2).map(function(item) {
+        return '<span class="tag tag-' + color + '">' + escapeHtml(formatDisplayValue(key, item)) + '</span>';
+      }).join('') +
         (arr.length > 2 ? '<span class="tag tag-' + color + '">+' + (arr.length - 2) + '</span>' : '');
     }
 
     // ========== 格式化 C-NIP 咨询风格 ==========
     function formatCnipStyles(c) {
       var labelMap = {
-        structured: '🎯 结构化', balanced: '⚖️ 适度引导', open: '🌱 开放探索',
+        structured: '🎯 结构化引导', balanced: '⚖️ 适度引导', open: '🌱 开放探索',
         emotional: '💧 深入感受', rational: '🧩 聚焦解决',
-        past: '🕰️ 过去', present: '📌 当下',
-        warm: '🤗 温和支持', direct: '💡 坦诚直接',
-        yes: '📝 有作业', no: '🚫 少作业', neutral: '🤷 视情况',
-        discuss: '💬 讨论关系', skip: '➡️ 少涉及'
+        past: '🕰️ 探讨过去', present: '📌 关注当下', future: '🔭 关注未来',
+        warm: '🤗 温和支持', direct: '💡 坦诚直接', challenging: '💡 适度挑战',
+        yes: '📝 常布置作业', no: '🚫 很少布置作业', neutral: '🤷 视情况',
+        regular: '📝 经常布置作业', occasional: '🤷 偶尔布置作业', none: '🚫 不布置作业',
+        discuss: '💬 经常讨论关系', skip: '➡️ 较少涉及关系', optional: '🤷 按需讨论关系', 'task-focused': '🎯 聚焦议题本身'
       };
       var tags = [];
       var all = [].concat(c.cnip_styles||[], c.cnip_emotion_focus||[], c.cnip_time||[], c.cnip_stance||[], c.cnip_homework||[], c.cnip_relational||[]);
@@ -2038,7 +2041,7 @@
       html += '<div class="detail-grid">';
       const skipKeys = ['has_violation','violation_detail','has_incident','incident_detail','needs_deep_review','match_request_name','match_request_contact','match_request_cid','match_request_status','photo_daily','photo_license','photo_diploma','photo_ethics','approach_evidence','approach_evidence_exempt','credential_updated_at','credential_reviewed_at','approaches_verified'];
       Object.keys(item).forEach(key => {
-        if (['id','_id','view_token','edit_token','login_code','credential_hash','claim_hash'].includes(key)||key.startsWith('migration_')) return;
+        if (shouldHideDataField(key)) return;
         if (type === 'counselors' && skipKeys.includes(key)) return;
         let value = item[key];
         if (key === 'specials' && Array.isArray(value)) {
@@ -2046,10 +2049,8 @@
           value = value.map(function(v){return sm[v]||v;});
         }
         if (value === null || value === undefined || value === '') return; // 跳过空值
-        if (Array.isArray(value)) { value = value.join(', '); if (!value) return; }
-        else if(typeof value==='object')value=JSON.stringify(value);
-        if (key === 'created_at' || key === 'updated_at') value = formatTime(value);
-        if (key === 'crisis_level') value = crisisLabel(value);
+        value = formatDisplayValue(key, value);
+        if (value === '') return;
         html += '<div class="detail-item">' +
           '<div class="detail-label">' + escapeHtml(formatLabel(key)) + '</div>' +
           '<div class="detail-value">' + escapeHtml(value) + '</div>' +
@@ -2231,6 +2232,58 @@
       return labels[key] || key;
     }
 
+    // 管理端展示使用中文；存储层的英文枚举不直接暴露给运营人员。
+    const DETAIL_VALUE_MAPS = {
+      approaches: {
+        CBT: '认知行为疗法（CBT）', ACT: '接纳承诺疗法（ACT）', DBT: '辩证行为疗法（DBT）',
+        EMDR: '眼动脱敏与再加工疗法（EMDR）', EFT: '情绪聚焦治疗（EFT）'
+      },
+      specialties: {
+        emotion: '情绪困扰', relationship: '关系困境', trauma: '创伤经历', growth: '自我成长',
+        adolescent: '青少年问题', marriage: '婚姻／伴侣', personality: '人格成长／发展性议题',
+        crisis: '危机干预', workplace: '职场困扰', eating: '进食障碍', addiction: '成瘾行为',
+        grief: '丧亲哀伤', sexual: '性心理议题', somatic: '心身困扰', family: '家庭系统'
+      },
+      service_settings: { individual: '个体咨询', couple: '伴侣咨询', family: '家庭治疗', group: '团体咨询' },
+      session_formats: { offline: '线下面询', video: '视频咨询', voice: '语音咨询', text: '文字咨询' },
+      preferred_formats: { offline: '线下面询', video: '视频咨询', voice: '语音咨询', text: '文字咨询' },
+      fee_budget_level: { low: '平价（≤300元／次）', mid: '中等（300–600元／次）', high: '偏高（600–1000元／次）', premium: '高端（1000元／次以上）' },
+      budget: { low: '300元／次以内', mid: '300–600元／次', high: '600–1000元／次', premium: '1000元／次以上', welfare: '希望公益价格咨询' },
+      gender: { male: '男', female: '女', ta: 'TA', lgbtq: 'LGBTQ+', other: '其他／不便透露' },
+      visitor_gender: { male: '男', female: '女', ta: 'TA', lgbtq: 'LGBTQ+', other: '其他／不便透露' },
+      client_gender_pref: { male_only: '仅接男性来访者', female_only: '仅接女性来访者', any_with_lgbtq: '不限，具备 LGBTQ+ 友善能力', male: '偏好男性咨询师', female: '偏好女性咨询师', any: '不限' },
+      comm_styles: { listening: '倾听型', guided: '引导型', leading: '带动型', collaborative: '对话型', directive: '指导型' },
+      cnip_styles: { structured: '结构化引导', balanced: '适度引导', open: '开放探索' },
+      cnip_emotion_focus: { emotional: '深入感受', balanced: '两者兼顾', rational: '聚焦解决' },
+      cnip_time: { past: '探讨过去', balanced: '两者兼顾', present: '关注当下', future: '关注未来' },
+      cnip_stance: { warm: '温和支持', balanced: '两者兼顾', direct: '坦诚直接', neutral: '中立客观', challenging: '适度挑战' },
+      cnip_homework: { yes: '常布置作业', neutral: '视情况而定', no: '很少布置作业', regular: '经常布置作业', occasional: '偶尔布置作业', none: '不布置作业' },
+      cnip_relational: { discuss: '经常讨论咨访关系', neutral: '偶尔涉及咨访关系', skip: '较少涉及咨访关系', optional: '按需涉及咨访关系', 'task-focused': '聚焦议题本身' },
+      review_status: { pending: '待审核', approved: '已通过', rejected: '已拒绝' },
+      match_request_status: { pending: '待处理', approved: '已通过', rejected: '已拒绝', contacted: '已联系' },
+      crisis_level: { safe: '无', passive: '低', active: '中', action: '高' },
+      duration: { recent: '近期出现（1个月以内）', months: '几个月（1–6个月）', half_year: '半年到一年', years: '1年以上', childhood: '从儿童／青少年期开始' },
+      education: { bachelor: '本科', master: '硕士', doctorate: '博士' },
+      ai_talk_freq: { none: '不用 AI', rare: '很少用 AI', sometimes: '有时用 AI', often: '常用 AI', mostly: '主要依靠 AI' },
+      ai_talk_replace: { replaced: '较少向身边人倾诉', not_replaced: '仍会向身边人倾诉' }
+    };
+
+    function shouldHideDataField(key) {
+      const hidden = ['id', '_id', 'view_token', 'edit_token', 'login_code'];
+      return hidden.includes(key) || /hash/i.test(key) || key.startsWith('migration_');
+    }
+
+    function formatDisplayValue(key, value) {
+      if (value === null || value === undefined) return '';
+      if (Array.isArray(value)) return value.map(function(item) { return formatDisplayValue(key, item); }).filter(Boolean).join(', ');
+      if (value === true) return '是';
+      if (value === false) return '否';
+      if (key === 'created_at' || key === 'updated_at' || key === 'reviewed_at' || key === 'selected_at') return formatTime(value);
+      if (typeof value === 'object') return JSON.stringify(value);
+      const map = DETAIL_VALUE_MAPS[key];
+      return map && Object.prototype.hasOwnProperty.call(map, value) ? map[value] : String(value);
+    }
+
     // 照片灯箱
     function showPhoto(src) {
       document.getElementById('modal-photo-img').src = src;
@@ -2306,14 +2359,13 @@
       const data = filteredData[type];
       if (data.length === 0) { showToast('没有数据可导出', 'error'); return; }
 
-      const headers = Object.keys(data[0]).filter(k => k !== 'user_agent');
+      const headers = Object.keys(data[0]).filter(k => k !== 'user_agent' && !shouldHideDataField(k));
       let csv = '\uFEFF';
       csv += headers.map(h => formatLabel(h)).join(',') + '\n';
 
       data.forEach(row => {
         csv += headers.map(h => {
-          let val = row[h];
-          if (Array.isArray(val)) val = val.join(';');
+          let val = formatDisplayValue(h, row[h]);
           if (val === null || val === undefined) val = '';
           return '"' + String(val).replace(/"/g, '""') + '"';
         }).join(',') + '\n';
