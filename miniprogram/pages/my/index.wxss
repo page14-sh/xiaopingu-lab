@@ -15,6 +15,15 @@
   border-radius: 16rpx;
 }
 
+.appointment-box {
+  margin-top: 18rpx;
+  padding: 18rpx;
+  border-radius: 16rpx;
+  background: #F5F1EA;
+  color: #5F574D;
+  font-size: 24rpx;
+}
+
 .advice-box {
   margin-top: 18rpx;
   padding: 18rpx;

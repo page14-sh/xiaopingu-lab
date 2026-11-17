@@ -142,6 +142,43 @@ function savePcomsRating(data) {
   return supabase('pcoms_ratings', 'POST', data);
 }
 
+function appointment(path, method, data, assessmentId) {
+  return request({
+    url: `${config.apiBase}/v1/xg/portal/appointments${path}${assessmentId ? `?assessment_id=${encodeURIComponent(assessmentId)}` : ''}`,
+    method,
+    data,
+    header: {
+      'Content-Type': 'application/json',
+      // 评估凭证仅用于证明本人的预约归属；服务端不会将其转换为通用登录态。
+      'x-assessment-token': assessmentId
+    }
+  });
+}
+
+function getCounselorAvailability(assessmentId, counselorId, weekStart) {
+  return request({
+    url: `${config.apiBase}/v1/xg/portal/appointments/availability?assessment_id=${encodeURIComponent(assessmentId)}&counselor_id=${encodeURIComponent(counselorId)}&week_start=${encodeURIComponent(weekStart)}`,
+    method: 'GET',
+    header: { 'x-assessment-token': assessmentId }
+  });
+}
+
+function requestAppointment(assessmentId, counselorId, startAt) {
+  return appointment('/request', 'POST', { assessment_id: assessmentId, counselor_id: counselorId, start_at: startAt }, assessmentId);
+}
+
+function listAppointments(assessmentId) {
+  return appointment('', 'GET', undefined, assessmentId);
+}
+
+function submitAppointmentFeedback(assessmentId, appointmentId, amount, feedback) {
+  return appointment(`/${encodeURIComponent(appointmentId)}/feedback`, 'POST', { amount, feedback }, assessmentId);
+}
+
+function cancelAppointment(assessmentId, appointmentId) {
+  return appointment(`/${encodeURIComponent(appointmentId)}/cancel`, 'POST', {}, assessmentId);
+}
+
 module.exports = {
   miniLogin,
   createAssessment,
@@ -150,5 +187,10 @@ module.exports = {
   updateAssessment,
   createSession,
   savePcomsRating,
+  getCounselorAvailability,
+  requestAppointment,
+  listAppointments,
+  submitAppointmentFeedback,
+  cancelAppointment,
   uuid
 };

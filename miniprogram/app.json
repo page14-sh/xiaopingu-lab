@@ -3,6 +3,8 @@
     "pages/home/index",
     "pages/assessment/index",
     "pages/my/index",
+    "pages/booking/index",
+    "pages/feedback/index",
     "pages/pcoms/index"
   ],
   "window": {

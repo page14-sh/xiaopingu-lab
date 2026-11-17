@@ -38,6 +38,13 @@
         <button class="btn btn-primary" data-id="{{item.id}}" data-cid="{{counselor.id}}" data-name="{{counselor.name}}" bindtap="applyDemoCounselor">选择 {{counselor.name}}</button>
       </view>
     </view>
+    <button wx:if="{{item.can_book}}" class="btn btn-primary" data-id="{{item.id}}" data-cid="{{item.match_request_cid}}" data-name="{{item.selected_counselor_name}}" bindtap="openBooking">选择预约时间</button>
+    <view wx:for="{{item.appointments}}" wx:for-item="appointment" wx:key="appointment_id" class="appointment-box">
+      <view>预约状态：{{appointment.status}}</view>
+      <view wx:if="{{appointment.status === 'confirmed'}}" class="recommend-sub">已双方确认，咨询结束后请提交反馈与已付金额。</view>
+      <button wx:if="{{(appointment.status === 'feedback_pending' || appointment.status === 'payment_mismatch') && !appointment.submitted_feedback}}" class="btn btn-primary" data-aid="{{item.id}}" data-appointment="{{appointment.appointment_id}}" bindtap="openFeedback">提交咨询反馈</button>
+      <button wx:if="{{appointment.can_cancel}}" class="btn btn-ghost" data-aid="{{item.id}}" data-appointment="{{appointment.appointment_id}}" bindtap="cancelAppointment">取消预约</button>
+    </view>
     <button class="btn btn-ghost" data-id="{{item.id}}" bindtap="openPcoms">填写 PCOMS</button>
   </view>
 </view>

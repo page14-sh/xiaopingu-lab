@@ -1152,6 +1152,7 @@
       <div style="display:flex;gap:4px;margin-bottom:12px;border-bottom:2px solid #F0ECE5;padding-bottom:8px">
         <button class="panel-tab active" id="tab-requests" onclick="switchPanelTab('requests')">📩 匹配申请</button>
         <button class="panel-tab" id="tab-clients" onclick="switchPanelTab('clients')">👥 已通过来访</button>
+        <button class="panel-tab" id="tab-calendar" onclick="switchPanelTab('calendar')">📅 预约日历</button>
       </div>
       <div id="panel-content"><div class="panel-loading">加载中...</div></div>
       <div id="panel-edit" style="display:none;">
@@ -2717,6 +2718,7 @@ function showPanel() {
   panelCurrentTab = 'requests';
   document.getElementById('tab-requests').classList.add('active');
   document.getElementById('tab-clients').classList.remove('active');
+  document.getElementById('tab-calendar').classList.remove('active');
 }
 function showPanelLogin() {
   document.getElementById('form_area').style.display = 'none';
@@ -2751,11 +2753,83 @@ function switchPanelTab(tab) {
   panelCurrentTab = tab;
   document.getElementById('tab-requests').classList.toggle('active', tab === 'requests');
   document.getElementById('tab-clients').classList.toggle('active', tab === 'clients');
+  document.getElementById('tab-calendar').classList.toggle('active', tab === 'calendar');
   if (tab === 'requests') {
     loadPanelRequests();
-  } else {
+  } else if (tab === 'clients') {
     loadPanelClients();
+  } else {
+    loadAppointmentCalendar();
   }
+}
+
+var calendarSlots = [], calendarAppointments = [], calendarWeekStart = null;
+function portalHeaders() {
+  var token = localStorage.getItem('xiaopingu_counselor_token') || '';
+  return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token };
+}
+function calendarMonday() {
+  var d = new Date(), offset = (d.getDay() + 6) % 7;
+  d.setDate(d.getDate() - offset);
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+function selectedCalendarWeek() { return calendarWeekStart || calendarMonday(); }
+function setCalendarWeek(value) {
+  var date = new Date(value + 'T12:00:00');
+  if (Number.isNaN(date.getTime())) return;
+  date.setDate(date.getDate() - ((date.getDay() + 6) % 7));
+  calendarWeekStart = date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
+  loadAppointmentCalendar();
+}
+function renderCalendar() {
+  var content = document.getElementById('panel-content');
+  var slots = calendarSlots.map(function(slot, index) {
+    var start = new Date(slot.start_at), end = new Date(slot.end_at);
+    var label = (start.getMonth() + 1) + '月' + start.getDate() + '日 ' + String(start.getHours()).padStart(2, '0') + ':' + String(start.getMinutes()).padStart(2, '0') + '–' + String(end.getHours()).padStart(2, '0') + ':' + String(end.getMinutes()).padStart(2, '0');
+    var color = slot.state === 'booked' ? '#FBE7E7;color:#A63D3D;border-color:#EEB7B7' : '#E8F4E5;color:#2F6B34;border-color:#A9D3A6';
+    return '<div style="display:flex;justify-content:space-between;gap:8px;padding:9px 10px;margin-top:7px;border:1px solid;border-radius:8px;background:' + color + '"><span>' + esc(label) + '</span><span>' + (slot.state === 'booked' ? '已预约' : '<button class="req-btn req-btn-outline" style="padding:2px 7px" onclick="removeCalendarSlot(' + index + ')">移除</button>') + '</span></div>';
+  }).join('') || '<p class="note">本周尚无可预约时段。添加后，来访者即可看到绿色时段。</p>';
+  var feedbacks = calendarAppointments.filter(function(a) { return ['feedback_pending', 'payment_mismatch'].includes(a.status) && !a.submitted_feedback; }).map(function(a) {
+    return '<div style="margin-top:10px;padding-top:10px;border-top:1px solid #eee"><strong>待反馈：</strong>' + esc(new Date(a.start_at).toLocaleString()) + '<br><input id="feedback-amount-' + a.appointment_id + '" type="number" min="0" step="0.01" placeholder="双方确认的已付金额（元）" style="padding:7px;margin-top:6px"><input id="feedback-text-' + a.appointment_id + '" maxlength="2000" placeholder="本次反馈（选填）" style="padding:7px;margin-top:6px"><button class="req-btn req-btn-approve" onclick="submitAppointmentFeedback(\'' + a.appointment_id + '\')">提交反馈</button></div>';
+  }).join('');
+  var cancellable = calendarAppointments.filter(function(a) { return ['awaiting_counselor_confirmation', 'confirmed'].includes(a.status) && new Date(a.start_at) > new Date(); }).map(function(a) {
+    return '<div style="display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-top:1px solid #eee"><span>' + esc(new Date(a.start_at).toLocaleString()) + ' · ' + esc(a.status) + '</span><button class="req-btn req-btn-reject" onclick="cancelCounselorAppointment(\'' + a.appointment_id + '\')">取消预约</button></div>';
+  }).join('');
+  content.innerHTML = '<div class="request-card"><div class="req-name">维护未来一周预约日历</div><p class="req-meta">绿色为可预约，红色为已占用。已预约时段保留在日历中，避免误操作。</p>' +
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><label>选择周 <input id="calendar-week" type="date" value="' + selectedCalendarWeek() + '" onchange="setCalendarWeek(this.value)" style="padding:8px"></label><input id="calendar-start" type="datetime-local" style="padding:8px"><input id="calendar-end" type="datetime-local" style="padding:8px"><button class="req-btn req-btn-primary" onclick="addCalendarSlot()">添加时段</button><button class="req-btn req-btn-approve" onclick="saveCalendar()">保存本周日历</button></div>' + slots + '</div>';
+  if (feedbacks) content.innerHTML += '<div class="request-card"><div class="req-name">咨询后待提交反馈</div><p class="req-meta">请填写已付金额；双方金额一致后，预约流程才会完成。</p>' + feedbacks + '</div>';
+  if (cancellable) content.innerHTML += '<div class="request-card"><div class="req-name">即将开始的预约</div><p class="req-meta">开始前双方都可以取消预约。</p>' + cancellable + '</div>';
+}
+function loadAppointmentCalendar() {
+  document.getElementById('panel-content').innerHTML = '<div class="panel-loading">加载日历…</div>';
+  Promise.all([fetch(SUPABASE_URL + '/v1/xg/portal/appointments/availability?counselor_id=' + encodeURIComponent(panelCid) + '&week_start=' + selectedCalendarWeek(), { headers: portalHeaders() }), fetch(SUPABASE_URL + '/v1/xg/portal/appointments', { headers: portalHeaders() })])
+    .then(function(rows) { if (!rows[0].ok || !rows[1].ok) throw new Error('日历加载失败'); return Promise.all(rows.map(function(r) { return r.json(); })); })
+    .then(function(data) { calendarSlots = data[0].slots || []; calendarAppointments = data[1] || []; renderCalendar(); })
+    .catch(function(error) { document.getElementById('panel-content').innerHTML = '<div class="panel-empty">' + esc(error.message) + '</div>'; });
+}
+function addCalendarSlot() {
+  var start = document.getElementById('calendar-start').value, end = document.getElementById('calendar-end').value;
+  if (!start || !end || new Date(end) <= new Date(start)) return showToast('请填写正确的开始与结束时间');
+  calendarSlots.push({ start_at: new Date(start).toISOString(), end_at: new Date(end).toISOString(), state: 'available' });
+  calendarSlots.sort(function(a, b) { return a.start_at.localeCompare(b.start_at); }); renderCalendar();
+}
+function removeCalendarSlot(index) { if (calendarSlots[index] && calendarSlots[index].state !== 'booked') { calendarSlots.splice(index, 1); renderCalendar(); } }
+function saveCalendar() {
+  fetch(SUPABASE_URL + '/v1/xg/portal/appointments/availability', { method: 'POST', headers: portalHeaders(), body: JSON.stringify({ week_start: selectedCalendarWeek(), slots: calendarSlots.map(function(s) { return { start_at: s.start_at, end_at: s.end_at }; }) }) })
+    .then(function(r) { if (!r.ok) throw new Error('保存失败'); return r.json(); }).then(function() { showToast('日历已保存'); loadAppointmentCalendar(); })
+    .catch(function(error) { showToast(error.message || '保存失败'); });
+}
+function submitAppointmentFeedback(id) {
+  var amount = Number(document.getElementById('feedback-amount-' + id).value), feedback = document.getElementById('feedback-text-' + id).value;
+  fetch(SUPABASE_URL + '/v1/xg/portal/appointments/' + encodeURIComponent(id) + '/feedback', { method: 'POST', headers: portalHeaders(), body: JSON.stringify({ amount: amount, feedback: feedback }) })
+    .then(function(r) { if (!r.ok) throw new Error('反馈提交失败'); return r.json(); }).then(function() { showToast('反馈已提交'); loadAppointmentCalendar(); })
+    .catch(function(error) { showToast(error.message || '反馈提交失败'); });
+}
+async function cancelCounselorAppointment(id) {
+  if (!await XPG_CONFIRM('确认取消这项尚未开始的预约？','取消预约')) return;
+  fetch(SUPABASE_URL + '/v1/xg/portal/appointments/' + encodeURIComponent(id) + '/cancel', { method: 'POST', headers: portalHeaders(), body: '{}' })
+    .then(function(r) { if (!r.ok) throw new Error('取消失败'); return r.json(); }).then(function() { showToast('预约已取消'); loadAppointmentCalendar(); })
+    .catch(function(error) { showToast(error.message || '取消失败'); });
 }
 
 function arrVal(value) {
@@ -3114,6 +3188,7 @@ function loadPanelRequests() {
       var status = a.match_request_status || 'pending';
       var isPending = status === 'pending';
       var statusLabel = status === 'approved' ? '<span style="color:#155724;background:#D4EDDA;padding:2px 8px;border-radius:4px;font-size:11px">✅ 已通过</span>'
+        : status === 'visitor_confirmed' ? '<span style="color:#856404;background:#FFF3CD;padding:2px 8px;border-radius:4px;font-size:11px">📅 待你确认预约</span>'
         : status === 'rejected' ? '<span style="color:#721C24;background:#F8D7DA;padding:2px 8px;border-radius:4px;font-size:11px">❌ 已拒绝</span>'
         : status === 'contacted' ? '<span style="color:#0A58CA;background:#CFE2FF;padding:2px 8px;border-radius:4px;font-size:11px">📞 已联系</span>'
         : '<span style="color:#856404;background:#FFF3CD;padding:2px 8px;border-radius:4px;font-size:11px">⏳ 待处理</span>';
@@ -3238,8 +3313,11 @@ function loadPanelRequests() {
       html += '<button class="req-btn req-btn-blue" onclick="openFourAssessment(\'' + a.id + '\')">进入四评工作台</button>';
       html += '<button class="req-btn req-btn-outline" onclick="copyContact(\'' + esc(a.match_request_contact || '') + '\')">📋 复制联系方式</button>';
       // 审批按钮（仅 pending 状态）
-      if (status === 'pending') {
-        html += '<button class="req-btn req-btn-approve" onclick="approveMatchApplication(\'' + a.id + '\')">✅ 通过</button>';
+      if (status === 'visitor_confirmed') {
+        html += '<button class="req-btn req-btn-approve" onclick="approveMatchApplication(\'' + a.id + '\')">✅ 确认预约与匹配</button>';
+        html += '<button class="req-btn req-btn-reject" onclick="rejectMatchApplication(\'' + a.id + '\')">❌ 拒绝</button>';
+      } else if (status === 'pending') {
+        html += '<span class="req-btn req-btn-outline">等待来访者选择预约时间</span>';
         html += '<button class="req-btn req-btn-reject" onclick="rejectMatchApplication(\'' + a.id + '\')">❌ 拒绝</button>';
       } else if (status === 'approved') {
         html += '<button class="req-btn req-btn-outline" onclick="markContacted(\'' + a.id + '\')">📞 标记已联系</button>';
@@ -3277,17 +3355,13 @@ function updateMatchStatus(id, status, note) {
 }
 
 async function approveMatchApplication(id) {
-  if (!await XPG_CONFIRM('确认通过此匹配申请？通过后将建立咨询周期，来访者可在完成同意后进入四评。','确认通过')) return;
-  updateMatchStatus(id, 'approved').then(function(r) {
-    if (r.ok) {
-      showToast('✅ 已通过！来访者进入「我的评估」页面即可查看你的联系方式和档案信息。');
-      loadPanelRequests();
-    } else {
-      showToast('操作失败，请重试');
-    }
-  }).catch(function() {
-    showToast('网络错误，请重试');
-  });
+  var record = panelAssessmentRecords[id];
+  if (!record || !record.appointment_id) return showToast('请等待来访者先在日历中选择预约时间');
+  if (!await XPG_CONFIRM('确认该预约后，双方将互相开放详细资料并建立咨询周期。','确认预约')) return;
+  fetch(SUPABASE_URL + '/v1/xg/portal/appointments/' + encodeURIComponent(record.appointment_id) + '/confirm', { method: 'POST', headers: portalHeaders(), body: '{}' })
+    .then(function(r) { if (!r.ok) throw new Error('确认失败'); return r.json(); })
+    .then(function() { showToast('已确认预约，双方详细资料已开放'); loadPanelRequests(); })
+    .catch(function(error) { showToast(error.message || '确认失败'); });
 }
 
 function rejectMatchApplication(id) {

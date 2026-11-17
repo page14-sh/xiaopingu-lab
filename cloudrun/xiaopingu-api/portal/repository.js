@@ -48,6 +48,7 @@ function createPortalRepository(db,source,{identity,assessment,consent,provenanc
   if(caller.role!=='admin'&&caller.role!=='counselor'){await member(caller.principal);if(caller.principal.role!=='visitor'||caller.principal.subject!==owner.visitor_id)deny('请使用本人新版填写凭证');}
   const now=new Date().toISOString();
   if(patch.match_request_cid){const counselor=await source.get('counselors',patch.match_request_cid);if(!counselor||!counselor.is_active||counselor.review_status!=='approved'||counselor.is_demo)deny('咨询师不可申请');
+   if(await appointments.isCounselorBlocked(patch.match_request_cid))throw new AssessmentError('XPG_COUNSELOR_FEEDBACK_BLOCKED','该咨询师正在补齐历史反馈，暂不提供新的匹配',409);
    const requestId=randomUUID();return source.transaction(async tx=>{const current=await tx.get('assessments',found.id);if(blocked(current))deny('当前初评不开放咨询匹配');if(current.match_id){const cycle=await tx.get(C.matches,current.match_id);if(cycle?.status==='active')throw new AssessmentError('XG_ACTIVE_MATCH_EXISTS','当前周期尚未结案，请先与咨询师核对',409);}
     const prior=current.current_request_id&&await tx.get(C.requests,current.current_request_id);const reuse=prior?.status==='pending'&&prior.counselor_id===patch.match_request_cid;const rid=reuse?prior.request_id:requestId;
     if(!reuse)await tx.put(C.requests,rid,{request_id:rid,assessment_id:current.id,visitor_id:owner.visitor_id,counselor_id:patch.match_request_cid,status:'pending',created_at:now});
@@ -74,7 +75,14 @@ function createPortalRepository(db,source,{identity,assessment,consent,provenanc
   return {cases:matches.map(m=>{const a=byIntake.get(m.assessment_id),c=byCounselor.get(m.counselor_id),rows=events.filter(e=>e.match_id===m.match_id);return {match_id:m.match_id,assessment_id:m.assessment_id,visitor_name:a?.visitor_name||a?.match_request_name||'未填写姓名',counselor_id:m.counselor_id,counselor_name:c?.name||'咨询师资料待核对',status:m.status,card_submitted:rows.filter(e=>e.status==='submitted').length,card_abandoned:rows.filter(e=>e.status==='abandoned').length,last_activity_at:rows.map(e=>e.submitted_at||e.started_at||'').sort().at(-1)||m.opened_at};}),overview:{events_total:events.length,submitted_total:events.filter(e=>e.status==='submitted').length,cycles_total:matches.length},counselors_total:counselors.length};
  }
  async function context(principal,id){await member(principal);requireId(id,'assessment_id');const a=await source.get('assessments',id);if(!a)throw new AssessmentError('XG_NOT_FOUND','初评不存在',404);if(principal.role==='visitor'&&a.visitor_user_id!==principal.subject)deny();if(principal.role==='counselor'&&a.match_request_cid!==principal.subject)deny();const match=a.match_id?await assessment.getMatch(a.match_id):null;if(match)authorizeMatch(principal,match);return {assessment_id:id,match_id:match?.match_id||null,visitor_id:a.visitor_user_id,counselor_id:match?.counselor_id||a.match_request_cid||null,session_no:Math.max(1,match?.last_session_no||0),historical_only:!match};}
+ const appointments=require('./appointments').createAppointments({source,scan});
  const access=require('./counselor-access').createCounselorAccess({source,directory:()=>scan('counselors',{},2000,{id:true,contact_phone:true,is_demo:true,is_active:true,review_status:true})});
- return {access,db,source,scan,member,receipt,historyReceipt,createCounselor,patchCounselor,createIntake,patchIntake,cases,board,context,identity,assessment,consent,provenance};
+ async function capabilityVisitor(assessmentId, capability) {
+  if(!UUID.test(assessmentId||'')||!equal(capability||'',assessmentId))deny('评估凭证无效');
+  const intake=await source.get('assessments',assessmentId),owner=await source.get(C.intakes,assessmentId);
+  if(!intake||!owner||intake.view_token!==capability)deny('评估凭证无效');
+  return {role:'visitor',subject:owner.visitor_id,auth_method:'intake-receipt',aud:'xg-assessment',demo:false,exp:Date.now()+60000};
+ }
+ return {access,appointments,capabilityVisitor,db,source,scan,member,receipt,historyReceipt,createCounselor,patchCounselor,createIntake,patchIntake,cases,board,context,identity,assessment,consent,provenance};
 }
 module.exports={createPortalRepository,UUID,vid};

@@ -33,6 +33,40 @@ function createPortalHttp({portal,photos,signSession,sessionSecret,readJson,send
     if(['POST','PATCH'].includes(req.method))req.__bodyRaw=JSON.stringify(await readJson(req,p==='/rest/v1/counselors'?2*1024*1024:1024*1024));
     await rest(req,res,p.slice('/rest/v1/'.length),url.searchParams,caller);return true;
    }
+   if(p.startsWith('/v1/xg/portal/appointments')){
+    let principal=session;
+    const assessmentId=url.searchParams.get('assessment_id');
+    if(!principal&&req.headers['x-assessment-token']&&assessmentId)principal=await portal.capabilityVisitor(assessmentId,req.headers['x-assessment-token']);
+    if(!principal)deny();
+    if(principal.role!=='admin')await portal.member(principal);
+    const body=['POST','PATCH'].includes(req.method)?await readJson(req):{};
+    const restPath=p.slice('/v1/xg/portal/appointments'.length);
+    if(restPath===''&&req.method==='GET')sendJson(res,200,await portal.appointments.list(principal,{assessment_id}));
+    else if(restPath==='/availability'&&req.method==='GET'){
+      const counselor_id=url.searchParams.get('counselor_id'),week_start=url.searchParams.get('week_start');
+      sendJson(res,200,await portal.appointments.availability(principal,{counselor_id,week_start,assessment_id}));
+    }else if(restPath==='/availability'&&req.method==='POST'){
+      fields(body,['week_start','slots']);sendJson(res,200,await portal.appointments.setAvailability(principal,body));
+    }else if(restPath==='/request'&&req.method==='POST'){
+      fields(body,['assessment_id','counselor_id','start_at']);
+      if(principal.role==='visitor'&&assessmentId&&body.assessment_id!==assessmentId)deny();
+      sendJson(res,201,await portal.appointments.request(principal,body));
+    }else {
+      const match=restPath.match(/^\/([^/]+)\/(confirm|cancel|feedback|admin-override)$/);
+      if(!match)throw new AssessmentError('XG_NOT_FOUND','接口不存在',404);
+      const [,appointmentId,action]=match;
+      if(action==='confirm'&&req.method==='POST'){
+        fields(body,[]);sendJson(res,200,await portal.appointments.confirm(principal,appointmentId,(intake,counselor)=>portal.patchIntake(intake,{match_request_status:'approved'}, {role:'counselor',principal:counselor})));
+      }else if(action==='cancel'&&req.method==='POST'){
+        fields(body,[]);sendJson(res,200,await portal.appointments.cancel(principal,appointmentId));
+      }else if(action==='feedback'&&req.method==='POST'){
+        fields(body,['amount','feedback']);sendJson(res,200,await portal.appointments.feedback(principal,appointmentId,body));
+      }else if(action==='admin-override'&&req.method==='POST'){
+        fields(body,['status','reason']);sendJson(res,200,await portal.appointments.override(principal,appointmentId,body));
+      }else throw new AssessmentError('XPG_METHOD','不支持的操作',405);
+    }
+    return true;
+   }
    const readOnly=session?.aud===HISTORY_AUDIENCE&&session.role==='visitor'&&session.read_only===true;
    if(readOnly){
     if(p!=='/v1/xg/portal/history'||req.method!=='GET'||url.searchParams.get('assessment_id')!==session.assessment_id)deny('旧链接仅供查阅对应历史');

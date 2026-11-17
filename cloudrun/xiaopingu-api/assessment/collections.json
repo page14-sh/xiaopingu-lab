@@ -18,6 +18,8 @@
     {"name": "xg_intake_owners", "document_id": "assessment_id"},
     {"name": "xg_match_requests", "document_id": "request_id"},
     {"name": "xg_case_switches", "document_id": "match_id"},
+    {"name": "xg_counselor_availability", "document_id": "sha256(JSON([counselor_id,week_start]))", "scope": "server-only weekly appointment slots"},
+    {"name": "xg_appointments", "document_id": "sha256(JSON([counselor_id,start_at]))", "scope": "server-only bilateral booking, feedback and payment confirmation", "indexes": [{"name":"counselor_start","unique":false,"fields":[{"name":"counselor_id","direction":"asc"},{"name":"start_at","direction":"asc"},{"name":"_id","direction":"asc"}]},{"name":"visitor_start","unique":false,"fields":[{"name":"visitor_id","direction":"asc"},{"name":"start_at","direction":"asc"},{"name":"_id","direction":"asc"}]}]},
     {"name": "xg_llm_results", "document_id": "event_id", "required_scope": ["match_id", "visitor_id", "counselor_id"], "indexes": [{"name": "match_result_id", "unique": false, "fields": [{"name": "match_id", "direction": "asc"}, {"name": "_id", "direction": "asc"}]}]},
     {"name": "xg_consent_policies", "document_id": "scope"},
     {"name": "xg_consent_documents", "document_id": "sha256(JSON([scope,version]))", "immutable": true},

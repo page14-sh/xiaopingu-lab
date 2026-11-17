@@ -1,4 +1,4 @@
-const { listMyAssessments, listApprovedCounselors, updateAssessment } = require('../../utils/api');
+const { listMyAssessments, listApprovedCounselors, listAppointments, cancelAppointment, updateAssessment } = require('../../utils/api');
 const config = require('../../utils/config');
 const { buildCounselorMatches, buildReferralAdvice } = require('../../utils/matching');
 
@@ -65,14 +65,20 @@ Page({
     }).then((rows) => {
       const assessmentsRows = rows[0] || [];
       const counselors = rows[1] || [];
-      const assessments = assessmentsRows.map((item) => ({
+      return Promise.all(assessmentsRows.map((item) => listAppointments(item.id).catch(() => []))).then((appointmentRows) => ({ assessmentsRows, counselors, appointmentRows }));
+    }).then(({ assessmentsRows, counselors, appointmentRows }) => {
+      const assessments = assessmentsRows.map((item, index) => ({
         ...item,
         assessment_no: item.id ? item.id.slice(0, 8) : '',
         created_at_text: item.created_at ? item.created_at.slice(0, 10) : '',
         status_text: this.statusText(item.match_request_status),
         can_apply_demo: !item.match_request_cid,
+        can_book: Boolean(item.match_request_cid) && ['pending', 'visitor_confirmed'].includes(item.match_request_status),
         referral_advice_cards: buildReferralAdvice(item).cards,
-        recommended_counselors: !item.match_request_cid ? buildCounselorMatches(item, counselors, 2) : []
+        recommended_counselors: !item.match_request_cid ? buildCounselorMatches(item, counselors, 2) : [],
+        appointments: (appointmentRows[index] || []).map((appointment) => ({ ...appointment,
+          can_cancel: ['awaiting_counselor_confirmation', 'confirmed'].includes(appointment.status) && new Date(appointment.start_at).getTime() > Date.now()
+        }))
       }));
       this.currentVisitor = currentVisitor;
       const now = new Date();
@@ -110,12 +116,30 @@ Page({
       selected_counselor_name: counselorName,
       selected_at: new Date().toISOString()
     }).then(() => {
-      wx.showToast({ title: '已提交申请', icon: 'success' });
-      this.load();
+      wx.showToast({ title: '请选择预约时间', icon: 'success' });
+      wx.navigateTo({ url: `/pages/booking/index?aid=${encodeURIComponent(id)}&cid=${encodeURIComponent(counselorId)}&name=${encodeURIComponent(counselorName)}` });
     }).catch((err) => {
       wx.showModal({ title: '申请失败', content: err.message || '请稍后重试', showCancel: false });
     }).finally(() => {
       wx.hideLoading();
     });
+  }
+,
+  openBooking(e) {
+    const id = e.currentTarget.dataset.id;
+    const counselorId = e.currentTarget.dataset.cid;
+    const counselorName = e.currentTarget.dataset.name || '咨询师';
+    wx.navigateTo({ url: `/pages/booking/index?aid=${encodeURIComponent(id)}&cid=${encodeURIComponent(counselorId)}&name=${encodeURIComponent(counselorName)}` });
+  },
+  openFeedback(e) {
+    wx.navigateTo({ url: `/pages/feedback/index?aid=${encodeURIComponent(e.currentTarget.dataset.aid)}&appointment=${encodeURIComponent(e.currentTarget.dataset.appointment)}` });
+  },
+  cancelAppointment(e) {
+    const assessmentId = e.currentTarget.dataset.aid, appointmentId = e.currentTarget.dataset.appointment;
+    wx.showModal({ title: '取消预约', content: '预约开始前双方均可取消。确定取消吗？', success: (modal) => {
+      if (!modal.confirm) return;
+      cancelAppointment(assessmentId, appointmentId).then(() => { wx.showToast({ title: '已取消' }); this.load(); })
+        .catch((error) => wx.showModal({ title: '取消失败', content: error.message || '请稍后重试', showCancel: false }));
+    } });
   }
 });

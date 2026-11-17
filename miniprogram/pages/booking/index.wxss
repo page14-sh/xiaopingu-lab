@@ -1,0 +1,4 @@
+.slot { display:flex; justify-content:space-between; align-items:center; padding:22rpx; margin-top:14rpx; border-radius:14rpx; font-size:28rpx; }
+.slot-available { background:#E8F4E5; color:#2F6B34; border:2rpx solid #A9D3A6; }
+.slot-booked { background:#FBE7E7; color:#A63D3D; border:2rpx solid #EEB7B7; }
+.slot-state { font-size:24rpx; font-weight:700; }

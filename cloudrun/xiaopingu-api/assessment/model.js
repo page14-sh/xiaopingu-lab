@@ -17,6 +17,8 @@ const COLLECTIONS = Object.freeze({
   intakes: 'xg_intake_owners',
   requests: 'xg_match_requests',
   switches: 'xg_case_switches',
+  availability: 'xg_counselor_availability',
+  appointments: 'xg_appointments',
   llmResults: 'xg_llm_results',
   llmJobs: 'xg_llm_jobs',
   llmAttempts: 'xg_llm_attempts',

@@ -91,6 +91,25 @@ function stripCounselor(row) {
   COUNSELOR_SENSITIVE.forEach((k) => delete out[k]);
   return out;
 }
+// 未完成双向确认前，目录只提供匹配所需的履历与资历，不提供可识别资料或联系方式。
+function counselorPreview(row) {
+  const source = stripCounselor(row);
+  return {
+    id: source.id, city: source.city || null, credential_level: source.credential_level || null,
+    years_experience: source.years_experience || null, education: source.education || null,
+    training_background: source.training_background || null, certifications: source.certifications || [],
+    approaches: source.approaches || [], approaches_verified: source.approaches_verified || [], specialties: source.specialties || [],
+    session_formats: source.session_formats || [], session_duration: source.session_duration || null,
+    fee_min: source.fee_min ?? null, bio_short: source.bio_short || null
+  };
+}
+function visitorPreview(row) {
+  const age = Number(row.visitor_age);
+  const age_range = Number.isFinite(age) ? (age < 18 ? '18 岁以下' : age < 30 ? '18–29 岁' : age < 45 ? '30–44 岁' : age < 60 ? '45–59 岁' : '60 岁及以上') : (row.visitor_age_range || '未提供');
+  return { id: row.id, match_request_status: row.match_request_status || 'pending', description: row.description || '',
+    visitor_age_range: age_range, visitor_gender: row.visitor_gender || '未提供', visitor_city: row.visitor_city || '未提供',
+    appointment_id: row.appointment_id || null, created_at: row.created_at || null };
+}
 function profileOnly(row) {
   const out = { ...row };
   for (const key of ['edit_token', 'login_code', 'wx_openid', 'wx_bind_token', 'reviewed_by']) delete out[key];
@@ -333,11 +352,15 @@ async function handleRest(req, res, table, params, caller) {
       // 咨询师令牌看自己完整档案；其余（含匿名）一律剥离敏感字段
       out = out.map((r) => {
         if (caller.role === 'counselor' && r.id === caller.counselorId) return r;
-        const stripped = stripCounselor(r);
+        const matched = visitorMatchedCid && r.id === visitorMatchedCid;
+        const stripped = matched ? stripCounselor(r) : counselorPreview(r);
         // 匹配成功的来访者：只补回该咨询师勾选公开的联系方式，未勾选项绝不返回
-        if (visitorMatchedCid && r.id === visitorMatchedCid) Object.assign(stripped, publicCounselorContacts(r));
+        if (matched) Object.assign(stripped, publicCounselorContacts(r));
         return stripped;
       });
+    }
+    if (table === 'assessments' && caller.role === 'counselor') {
+      out = out.map((row) => ['approved', 'contacted'].includes(row.match_request_status) ? row : visitorPreview(row));
     }
     if (table === 'counselors' && caller.profileOnly) out = out.map(profileOnly);
     if (table === 'counselors' && photos) out = await photos.present(out);
